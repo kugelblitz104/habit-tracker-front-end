@@ -7,31 +7,30 @@ export const getHabits = async (
     userId = 1,
 ): Promise<{
     data: Habit[];
-    meta: Meta;
 }> => {
     return await api.get(`/habits?user_id=${userId}`)
 }
 
-export const getHabitQueryOptions = ({
-  userId,
-}: { userId?: number } = {}) => {
-  return queryOptions({
-    queryKey: userId ? ['habits', { userId }] : ['habits'],
-    queryFn: () => getHabits(userId),
-  });
-};
+// export const getHabitQueryOptions = ({
+//   userId,
+// }: { userId?: number } = {}) => {
+//   return queryOptions({
+//     queryKey: userId ? ['habits', { userId }] : ['habits'],
+//     queryFn: () => getHabits(userId),
+//   });
+// };
 
-type UseHabitOptions = {
-  userId?: number;
-  queryConfig?: QueryConfig<typeof getHabitQueryOptions>;
-};
+// type UseHabitOptions = {
+//   userId?: number;
+//   queryConfig?: QueryConfig<typeof getHabitQueryOptions>;
+// };
 
-export const useHabits = ({
-  queryConfig,
-  userId = 1,
-}: UseHabitOptions) => {
-  return useQuery({
-    ...getHabitQueryOptions({ userId }),
-    ...queryConfig,
-  });
-};
+// export const useHabits = ({
+//   queryConfig,
+//   userId = 1,
+// }: UseHabitOptions) => {
+//   return useQuery({
+//     ...getHabitQueryOptions({ userId }),
+//     ...queryConfig,
+//   });
+// };

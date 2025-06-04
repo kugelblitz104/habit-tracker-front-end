@@ -1,6 +1,5 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getHabits, useHabits } from "@/features/habits/api/get-habits";
-import { api } from "@/lib/api-client";
+import { useQuery } from "@tanstack/react-query";
+import { getHabits} from "@/features/habits/api/get-habits";
 
 export type HabitListProps = {
     userId: number;
@@ -20,7 +19,8 @@ export const HabitList = ({
     }
 
     const habits = habitsQuery.data?.data;
-
+    console.log("Habits API response:", habitsQuery.data);
+    
     if (!habits || habits.length === 0) {
         return <div>No habits found.</div>;
     }
