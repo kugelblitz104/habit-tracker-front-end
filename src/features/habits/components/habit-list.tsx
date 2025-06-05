@@ -1,9 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { getHabits} from "@/features/habits/api/get-habits";
+import { HabitListElement } from "./habit-list-element";
 
 export type HabitListProps = {
     userId: number;
 }
+
+// TODO: context to hold number of days?
 
 export const HabitList = ({
     userId,
@@ -18,21 +21,20 @@ export const HabitList = ({
         return <div>Loading...</div>;
     }
 
-    const habits = habitsQuery.data?.data;
-    console.log("Habits API response:", habitsQuery.data);
-    
+    const habits = habitsQuery.data?.habits;
+    if (habitsQuery.isError) {
+        return <div>Error loading habits: {habitsQuery.error.message}</div>;
+    }
+
     if (!habits || habits.length === 0) {
         return <div>No habits found.</div>;
     }
 
     return (
         <div>
-            <h2>Habit List</h2>
             <ul>
                 {habits.map((habit) => (
-                    <li key={habit.id}>
-                        {habit.name} - {habit.question}
-                    </li>
+                    <HabitListElement key={habit.id} habit={habit} days={30}/>
                 ))}
             </ul>
         </div>

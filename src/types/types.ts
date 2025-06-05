@@ -36,3 +36,9 @@ export type Meta = {
   total: number;
   total_pages: number;
 }
+
+export enum Status {
+    NOT_COMPLETED = "not_completed",
+    COMPLETED = "completed",
+    SKIPPED = "skipped",
+}

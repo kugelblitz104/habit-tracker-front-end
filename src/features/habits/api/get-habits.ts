@@ -6,9 +6,9 @@ import type { QueryConfig } from "@/lib/react-query";
 export const getHabits = async (
     userId = 1,
 ): Promise<{
-    data: Habit[];
+    habits: Habit[];
 }> => {
-    return await api.get(`/habits?user_id=${userId}`)
+    return await api.get(`/habits/?user_id=${userId}`)
 }
 
 // export const getHabitQueryOptions = ({
