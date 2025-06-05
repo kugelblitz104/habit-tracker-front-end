@@ -5,7 +5,7 @@ export type LabelProps = {
 
 export const Label = ({ mainText, subText }: LabelProps) => {
     return (
-        <label className="flex-1">
+        <label className="flex-1 items-center">
             <span className="font-semibold">
                 {mainText}
             </span>
