@@ -12,10 +12,14 @@ export const HabitListElement = ({
     days = 5
 }: HabitListElementProps) => {
     return (
-        <li key={habit.id} className="flex justify-stretch 
+        <li key={habit.id} className="
+            flex justify-stretch 
             mx-4 my-1 p-2
-            border-2 rounded-sm border-slate-800 hover:border-slate-500
-            bg-slate-800/50 hover:bg-slate-800
+            border-2 rounded-sm 
+            border-slate-800 
+            bg-slate-800/50 
+            hover:border-slate-500
+            hover:bg-slate-800
             align-items-center"
         >
             <Label mainText={habit.name} subText={habit.frequency} />

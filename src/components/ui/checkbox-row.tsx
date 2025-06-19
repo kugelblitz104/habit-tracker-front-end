@@ -1,6 +1,5 @@
 import { useRef, useEffect, useContext } from "react";
 import { Status } from "@/types/types";
-import { ScrollSyncContext } from "./scroll-sync-context";
 
 
 export type TrackerCheckboxProps = {
@@ -32,31 +31,11 @@ export const CheckboxRow = (
     {num}: ButtonRowProps
 ) => {
     const buttons = [...Array(num).keys()];
-    const scrollRef = useRef<HTMLDivElement>(null);
-    const scrollSync = useContext(ScrollSyncContext);
-
-    // Update scroll position when context changes
-    useEffect(() => {
-        if (scrollRef.current && scrollSync) {
-            if (scrollRef.current.scrollLeft !== scrollSync.scrollLeft) {
-                scrollRef.current.scrollLeft = scrollSync.scrollLeft;
-            }
-        }
-    }, [scrollSync?.scrollLeft]);
-
-    // When this row is scrolled, update context
-    const onScroll = () => {
-        if (scrollRef.current && scrollSync) {
-            scrollSync.setScrollLeft(scrollRef.current.scrollLeft);
-        }
-    };
 
     return (
         <div
-            ref={scrollRef}
-            className="flex-2 flex justify-between items-center mx-4 my-1 overflow-x-auto"
+            className="flex-2 flex justify-between items-center mx-4 my-1"
             style={{ minWidth: 0 }}
-            onScroll={onScroll}
         >
             {buttons.map((button) => (
                 <TrackerCheckbox status={Status.NOT_COMPLETED} key={button} />

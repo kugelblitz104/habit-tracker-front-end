@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getHabits} from "@/features/habits/api/get-habits";
 import { HabitListElement } from "./habit-list-element";
-import { ScrollSyncProvider } from "@/components/ui/scroll-sync-context";
 
 export type HabitListProps = {
     userId: number;
@@ -41,18 +40,16 @@ export const HabitList = ({
 
         //     </tr>
         // </thead>
-        <div>
-            <ScrollSyncProvider>
-                <ul>
-                    {habits.map((habit) => (
-                        <HabitListElement 
-                            key={habit.id} 
-                            habit={habit} 
-                            days={31}
-                        />
-                    ))}
-                </ul>
-            </ScrollSyncProvider>
+        <div className='overflow-x-auto'>
+            <ul>
+                {habits.map((habit) => (
+                    <HabitListElement 
+                        key={habit.id} 
+                        habit={habit} 
+                        days={100}
+                    />
+                ))}
+            </ul>
         </div>
     );
 };
