@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { getHabits} from "@/features/habits/api/get-habits";
 import { HabitListElement } from "./habit-list-element";
+import { SaveButton } from "@/components/ui/save_button";
+import { useState } from "react";
 
 export type HabitListProps = {
     userId: number;
@@ -18,6 +20,7 @@ export const HabitList = ({
         queryFn: () => getHabits(userId),
         staleTime: 1000 * 60, // 1 minute
     });
+    const [isLoading, setIsLoading] = useState(false);
 
     if (habitsQuery.isLoading) {
         return <div>Loading...</div>;
@@ -57,6 +60,13 @@ export const HabitList = ({
                     ))}
                 </tbody>
             </table>
+            <SaveButton onClick={() => {
+                // TODO: implement save functionality
+                setIsLoading(true);
+                setTimeout(() => {
+                    setIsLoading(false);
+                }, 5000);
+            }} isLoading={isLoading} />
         </div>
     );
 };

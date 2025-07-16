@@ -13,7 +13,7 @@ const TrackerCheckbox = ({
     onClick,
 }: TrackerCheckboxProps) => {
     return (
-        <button className="text-blue-500 hover:text-blue-700"
+        <button type="button" className="text-blue-500 hover:text-blue-700"
         onClick={onClick}
         >
         {
