@@ -11,7 +11,7 @@ export type HabitListProps = {
 
 export const HabitList = ({
     userId,
-    days = 7
+    days = 10
 }: HabitListProps) => {
     const habitsQuery = useQuery ({
         queryKey: ['habits', { userId }],
@@ -33,28 +33,30 @@ export const HabitList = ({
     }
 
     return (
-        <div className='overflow-x-auto'>
-            <thead>
-                <tr>
-                    <th>Habit</th>
+        <div className="overflow-x-auto mx-4">
+            <table className="min-w-full table-auto">
+                <thead>
+                    <tr>
+                    <th className="px-4 py-2 text-left">Habit</th>
                     {
                         Array.from({ length: days }, (_, i) => (
-                            <th key={i}>
-                                Day {i + 1}
-                            </th>
+                        <th key={i} className="px-4 py-2 text-center">
+                            Day {i + 1}
+                        </th>
                         ))
                     }
-                </tr>
-            </thead>
-            <tbody>
-                {habits.map((habit) => (
+                    </tr>
+                </thead>
+                <tbody>
+                    {habits.map((habit) => (
                     <HabitListElement 
                         key={habit.id} 
                         habit={habit} 
                         days={days}
                     />
-                ))}
-            </tbody>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 };

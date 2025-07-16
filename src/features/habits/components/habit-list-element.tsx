@@ -13,9 +13,7 @@ const TrackerCheckbox = ({
     onClick,
 }: TrackerCheckboxProps) => {
     return (
-        <button className="
-        text-blue-500 hover:text-blue-700 
-        focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <button className="text-blue-500 hover:text-blue-700"
         onClick={onClick}
         >
         {
@@ -45,10 +43,10 @@ export const HabitListElement = ({
             const newStatus = [...prevStatus];
             switch (newStatus[index]) {
                 case Status.NOT_COMPLETED:
-                    newStatus[index] = Status.SKIPPED;
-                    break;
-                case Status.SKIPPED:
                     newStatus[index] = Status.COMPLETED;
+                    break;
+                case Status.COMPLETED:
+                    newStatus[index] = Status.SKIPPED;
                     break;
                 default:
                     newStatus[index] = Status.NOT_COMPLETED;
@@ -59,15 +57,20 @@ export const HabitListElement = ({
     }
 
     return (
-        <tr key={habit.id} className="
+        <tr
+            key={habit.id}
+            className="
             bg-slate-800/50 
-            hover:bg-slate-800"
+            hover:bg-slate-800
+            h-12
+            align-middle
+            "
         >
             <td>
                 <Label mainText={habit.name} subText={habit.frequency} />
             </td>
             {buttons.map((button) => (
-                <td key={button}>
+                <td className="text-center" key={button}>
                     <TrackerCheckbox status={status[button]} onClick={() => handleCheckboxClick(button)} />
                 </td>
             ))}
