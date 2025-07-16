@@ -33,23 +33,28 @@ export const HabitList = ({
     }
 
     return (
-        // TODO: make this a table
-        // <thead>
-        //     <tr>
-        //         <th scope='col'>Habit</th>
-
-        //     </tr>
-        // </thead>
         <div className='overflow-x-auto'>
-            <ul>
+            <thead>
+                <tr>
+                    <th>Habit</th>
+                    {
+                        Array.from({ length: days }, (_, i) => (
+                            <th key={i}>
+                                Day {i + 1}
+                            </th>
+                        ))
+                    }
+                </tr>
+            </thead>
+            <tbody>
                 {habits.map((habit) => (
                     <HabitListElement 
                         key={habit.id} 
                         habit={habit} 
-                        days={100}
+                        days={days}
                     />
                 ))}
-            </ul>
+            </tbody>
         </div>
     );
 };
