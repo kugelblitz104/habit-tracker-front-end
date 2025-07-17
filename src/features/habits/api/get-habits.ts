@@ -8,7 +8,7 @@ export const getHabits = async (
 ): Promise<{
     habits: Habit[];
 }> => {
-    return await api.get(`/habits/?user_id=${userId}`)
+    return await api.get(`/users/${userId}/habits`)
 }
 
 // export const getHabitQueryOptions = ({
