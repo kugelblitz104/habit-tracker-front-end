@@ -7,7 +7,7 @@ export type User = {
     last_name: string;
     email: string;
     password_hash: string;
-    habits: []
+    habits: Habit[]
 }
 
 export type Habit = {
@@ -19,13 +19,14 @@ export type Habit = {
   frequency: string;
   reminder: boolean;
   notes: string;
-  trackers: [];
+  trackers: Tracker[];
 }
 
 export type Tracker = {
     id: number;
     habit_id: number;
-    timestamp: string;
+    dated: string;
+    timed: string;
     completed: boolean;
     skipped: boolean;
     note: string;
