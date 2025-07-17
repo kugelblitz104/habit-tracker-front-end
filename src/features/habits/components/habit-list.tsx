@@ -21,6 +21,11 @@ export const HabitList = ({
         staleTime: 1000 * 60, // 1 minute
     });
     const [isLoading, setIsLoading] = useState(false);
+    const today = new Date()
+    const date_formatter = new Intl.DateTimeFormat("en-US", {
+        month: "2-digit",
+        day: "2-digit"
+    });
 
     if (habitsQuery.isLoading) {
         return <div>Loading...</div>;
@@ -44,7 +49,7 @@ export const HabitList = ({
                     {
                         Array.from({ length: days }, (_, i) => (
                         <th key={i} className="px-4 py-2 text-center">
-                            Day {i + 1}
+                            {date_formatter.format(new Date(today.getFullYear(), today.getMonth(), today.getDate() - i))}
                         </th>
                         ))
                     }
