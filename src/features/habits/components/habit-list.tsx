@@ -17,7 +17,7 @@ export const HabitList = ({
 }: HabitListProps) => {
     const habitsQuery = useQuery ({
         queryKey: ['habits', { userId }],
-        queryFn: () => getHabits(userId),
+        queryFn: () => getHabits(userId, days),
         staleTime: 1000 * 60, // 1 minute
     });
     const [isLoading, setIsLoading] = useState(false);

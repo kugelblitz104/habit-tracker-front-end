@@ -5,10 +5,11 @@ import type { QueryConfig } from "@/lib/react-query";
 
 export const getHabits = async (
     userId = 1,
+    limit: number
 ): Promise<{
     habits: Habit[];
 }> => {
-    return await api.get(`/users/${userId}/habits`)
+    return await api.get(`/users/${userId}/habits?limit=${limit}`)
 }
 
 // export const getHabitQueryOptions = ({

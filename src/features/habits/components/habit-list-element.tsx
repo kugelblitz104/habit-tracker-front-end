@@ -35,25 +35,24 @@ export const HabitListElement = ({
     habit,
     days = 5
 }: HabitListElementProps) => {
-    const buttons = [...Array(days).keys()];
-    const [status, setStatus] = useState<Status[]>(Array(days).fill(Status.NOT_COMPLETED));
+    const today = new Date();
+    const dates = [...Array(days).keys()].map((day) => {
+        return new Date(today.getFullYear(), today.getMonth(), today.getDate() - day);
+    });
+    
+    const getStatus = (h: Habit, date: Date): Status => {
+        const tracker = h.trackers.find(tracker =>
+            new Date(tracker.dated).toDateString() === date.toDateString()
+        );
 
-    const handleCheckboxClick = (index: number) => {
-        setStatus((prevStatus) => {
-            const newStatus = [...prevStatus];
-            switch (newStatus[index]) {
-                case Status.NOT_COMPLETED:
-                    newStatus[index] = Status.COMPLETED;
-                    break;
-                case Status.COMPLETED:
-                    newStatus[index] = Status.SKIPPED;
-                    break;
-                default:
-                    newStatus[index] = Status.NOT_COMPLETED;
-                    break;
-            }
-            return newStatus;
-        });
+        if (!tracker) {
+            console.log(`No tracker found for ${h.name} on ${date.toISOString()}`);
+            return Status.NOT_COMPLETED;
+        }
+        
+        if (tracker?.completed) return Status.COMPLETED;
+        if (tracker?.skipped) return Status.SKIPPED;
+        return Status.NOT_COMPLETED;
     }
 
     return (
@@ -69,9 +68,11 @@ export const HabitListElement = ({
             <td>
                 <Label mainText={habit.name} subText={habit.frequency} />
             </td>
-            {buttons.map((button) => (
-                <td className="text-center" key={button}>
-                    <TrackerCheckbox status={status[button]} onClick={() => handleCheckboxClick(button)} />
+            {dates.map((date) => (
+                <td className="text-center" key={date.toISOString()}>
+                    <TrackerCheckbox status={getStatus(habit, date)} 
+                    // onClick={() => handleCheckboxClick(button)} 
+                    />
                 </td>
             ))}
         </tr>   
