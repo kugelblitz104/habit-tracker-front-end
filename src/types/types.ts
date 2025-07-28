@@ -32,6 +32,15 @@ export type Tracker = {
     note: string;
 }
 
+export type TrackerCreate = {
+    habit_id: number;
+    dated: string;
+    timed: string;
+    completed: boolean;
+    skipped: boolean;
+    note: string;
+}
+
 export type Meta = {
   page: number;
   total: number;

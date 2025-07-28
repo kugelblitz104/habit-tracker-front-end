@@ -1,6 +1,9 @@
 import { Label } from "@/components/ui/label";
-import type { Habit } from "@/types/types";
+import { createTracker } from "@/features/trackers/api/create-trackers";
+import { updateTracker } from "@/features/trackers/api/update-trackers";
+import type { Habit, Tracker, TrackerCreate } from "@/types/types";
 import { Status } from "@/types/types";
+import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 
 export type TrackerCheckboxProps = {
@@ -29,24 +32,43 @@ const TrackerCheckbox = ({
 export type HabitListElementProps = {
     habit: Habit;
     days?: number;
+    // onHabitUpdate: (habit: Habit) => void;
 };
 
 export const HabitListElement = ({
     habit,
-    days = 5
+    days = 5,
+    // onHabitUpdate,
 }: HabitListElementProps) => {
     const today = new Date();
     const dates = [...Array(days).keys()].map((day) => {
-        return new Date(today.getFullYear(), today.getMonth(), today.getDate() - day);
+        return new Date(today.getFullYear(), today.getMonth(), today.getDate() - day, today.getHours(), today.getMinutes(), today.getSeconds(), today.getMilliseconds());
     });
-    
-    const getStatus = (h: Habit, date: Date): Status => {
-        const tracker = h.trackers.find(tracker =>
+    const [trackers, setTrackers] = useState<Tracker[]>(habit.trackers);
+    const trackerCreate = useMutation({
+        mutationFn: (tracker: TrackerCreate) => createTracker(tracker),
+        onError: (error) => {
+            console.error("Error adding tracker:", error);
+        }
+    });
+    const trackerUpdate = useMutation({
+        mutationFn: (tracker: Tracker) => updateTracker(tracker),
+        onError: (error) => {
+            console.error("Error updating tracker:", error);
+        }
+    });
+
+    // functions
+    const getTracker = (date: Date): Tracker | undefined => {
+        return trackers.find(tracker =>
             new Date(tracker.dated).toDateString() === date.toDateString()
         );
+    };
+
+    const getStatus = (date: Date): Status => {
+        const tracker = getTracker(date);
 
         if (!tracker) {
-            console.log(`No tracker found for ${h.name} on ${date.toISOString()}`);
             return Status.NOT_COMPLETED;
         }
         
@@ -55,6 +77,69 @@ export const HabitListElement = ({
         return Status.NOT_COMPLETED;
     }
 
+    const handleCheckboxClick = (date: Date) => {
+        const tracker = getTracker(date);
+
+        console.log(`Tracker for ${habit.name} on ${date.toISOString()}:`, tracker);
+
+        if (!tracker) {
+            // create tracker if it doesn't exist
+            const newTracker = {
+                habit_id: habit.id,
+                dated: date.toISOString().split("T")[0],
+                timed: date.toTimeString().split(" ")[0],
+                completed: true,
+                skipped: false,
+                note: "",
+            }
+            trackerCreate.mutate(newTracker, {
+                onSuccess: (data) => {
+                    setTrackers([...trackers, data]);
+                }
+            });
+            return;
+        }
+
+        if(!tracker.completed && !tracker.skipped) {
+            // toggle completed
+            trackerUpdate.mutate({
+                ...tracker,
+                completed: true,
+                skipped: false,
+            }, {
+                onSuccess: (data) => {
+                    setTrackers(trackers.map(t => t.id === tracker.id ? data : t));
+                }
+            });
+        }
+        else if(tracker.completed) {
+            // toggle skipped
+            trackerUpdate.mutate({
+                ...tracker,
+                completed: false,
+                skipped: true,
+            }, {
+                onSuccess: (data) => {
+                    setTrackers(trackers.map(t => t.id === tracker.id ? data : t));
+                }
+            });
+        }
+        else if(tracker.skipped) {
+            // toggle not completed
+            trackerUpdate.mutate({
+                ...tracker,
+                completed: false,
+                skipped: false,
+            }, {
+                onSuccess: (data) => {
+                    setTrackers(trackers.map(t => t.id === tracker.id ? data : t));
+                }
+            });
+        }
+    };
+
+
+    // render
     return (
         <tr
             key={habit.id}
@@ -70,8 +155,8 @@ export const HabitListElement = ({
             </td>
             {dates.map((date) => (
                 <td className="text-center" key={date.toISOString()}>
-                    <TrackerCheckbox status={getStatus(habit, date)} 
-                    // onClick={() => handleCheckboxClick(button)} 
+                    <TrackerCheckbox status={getStatus(date)} 
+                    onClick={() => handleCheckboxClick(date)} 
                     />
                 </td>
             ))}

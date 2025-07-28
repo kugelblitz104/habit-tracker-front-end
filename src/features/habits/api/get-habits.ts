@@ -1,7 +1,5 @@
-import { queryOptions, useQuery } from "@tanstack/react-query"
 import { api } from "@/lib/api-client";
-import type { Habit, Meta } from "@/types/types";
-import type { QueryConfig } from "@/lib/react-query";
+import type { Habit } from "@/types/types";
 
 export const getHabits = async (
     userId = 1,
