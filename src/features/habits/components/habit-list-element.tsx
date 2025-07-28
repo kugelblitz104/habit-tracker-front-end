@@ -61,7 +61,7 @@ export const HabitListElement = ({
     // functions
     const getTracker = (date: Date): Tracker | undefined => {
         return trackers.find(tracker =>
-            new Date(tracker.dated).toDateString() === date.toDateString()
+            tracker.dated === date.toISOString().split("T")[0]
         );
     };
 
@@ -79,9 +79,7 @@ export const HabitListElement = ({
 
     const handleCheckboxClick = (date: Date) => {
         const tracker = getTracker(date);
-
-        console.log(`Tracker for ${habit.name} on ${date.toISOString()}:`, tracker);
-
+        
         if (!tracker) {
             // create tracker if it doesn't exist
             const newTracker = {
