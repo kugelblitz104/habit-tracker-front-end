@@ -51,3 +51,9 @@ export enum Status {
     COMPLETED = "completed",
     SKIPPED = "skipped",
 }
+
+export enum LoadingStatus {
+    PENDING = "pending",
+    SUCCESS = "success",
+    ERROR = "error",
+}

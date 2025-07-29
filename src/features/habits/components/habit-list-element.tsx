@@ -20,9 +20,9 @@ const TrackerCheckbox = ({
         onClick={onClick}
         >
         {
-            status === "completed" ? "✔️" :
-            status === "skipped" ? "⏭️" :
-            status === "not_completed" ? "❌" :
+            status === Status.COMPLETED ? "✔️" :
+            status === Status.SKIPPED ? "⏭️" :
+            status === Status.NOT_COMPLETED ? "❌" :
             "?"
         }
         </button>

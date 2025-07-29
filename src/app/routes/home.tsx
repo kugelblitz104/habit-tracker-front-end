@@ -1,6 +1,6 @@
 // import type { Route } from "./+types/home";
 import type { Route } from "./+types/home";
-import { Dashboard } from "@/components/layouts/dashboard"
+import { HabitsDashboard } from "@/components/layouts/dashboard"
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -12,7 +12,7 @@ export function meta({}: Route.MetaArgs) {
 export default function Home() {
   return (
     <>
-      <Dashboard />
+      <HabitsDashboard userId={1}/>
     </>
   );
 }
