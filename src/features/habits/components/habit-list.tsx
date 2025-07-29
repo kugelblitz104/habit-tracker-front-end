@@ -58,16 +58,16 @@ export const HabitList = ({
 
     // Render
     if (habitsQuery.isLoading) {
-        return <div>Loading...</div>;
+        return <div className='m-4'>Loading...</div>;
     }
 
     if (habitsQuery.isError) {
-        return <div>Error loading habits: {habitsQuery.error.message}</div>;
+        return <div className='m-4'>Error loading habits: {habitsQuery.error.message}</div>;
     }
 
     const habitsResult = habitsQuery.data?.habits;
     if (!habitsResult || habitsResult.length === 0) {
-        return <div>No habits found.</div>;
+        return <div className='m-4'>No habits found.</div>;
     } 
 
     return (
