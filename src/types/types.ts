@@ -23,6 +23,16 @@ export type Habit = {
   trackers: Tracker[];
 }
 
+export type HabitCreate = {
+    user_id: number;
+    name: string;
+    question: string;
+    color: string;
+    frequency: string;
+    reminder: boolean;
+    notes: string;
+}
+
 export type Tracker = {
     id: number;
     habit_id: number;
