@@ -3,6 +3,7 @@ import { createTracker } from "@/features/trackers/api/create-trackers";
 import { updateTracker } from "@/features/trackers/api/update-trackers";
 import type { Habit, Tracker, TrackerCreate } from "@/types/types";
 import { Status } from "@/types/types";
+import { Button } from "@headlessui/react";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -16,7 +17,7 @@ const TrackerCheckbox = ({
     onClick,
 }: TrackerCheckboxProps) => {
     return (
-        <button type="button" className="text-blue-500 hover:text-blue-700"
+        <Button type="button" className="text-blue-500 hover:text-blue-700"
         onClick={onClick}
         >
         {
@@ -25,7 +26,7 @@ const TrackerCheckbox = ({
             status === Status.NOT_COMPLETED ? "❌" :
             "?"
         }
-        </button>
+        </Button>
     )
 }
 

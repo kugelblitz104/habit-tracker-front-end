@@ -1,10 +1,12 @@
 import { HabitList } from "@/features/habits/components/habit-list";
 import { TitleBar } from "@/components/ui/title-bar";
-import { LoadingStatus, type Habit } from "@/types/types";
+import { LoadingStatus, type Habit, type HabitCreate } from "@/types/types";
 import { useEffect, useState } from "react";
 import { getHabits } from "@/features/habits/api/get-habits";
-import { updateHabit } from "@/features/habits/api/update-habits";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { createHabit } from "@/features/habits/api/create-habits";
+import { Dialog, DialogTitle } from "@headlessui/react";
+import { AddHabitModal } from "@/features/habits/components/add-modal";
 
 
 type HabitsDashboardProps = {
@@ -18,38 +20,19 @@ export const HabitsDashboard = ({
 }: HabitsDashboardProps) => {
     // hooks
     const [habits, setHabits] = useState<Habit[]>([]);
+    const [addHabitModalOpen, setAddHabitModalOpen] = useState(false);
     const habitsQuery = useQuery ({
         queryKey: ['habits', { userId }],
         queryFn: () => getHabits(userId, days),
         staleTime: 1000 * 60, // 1 minute
     });
-    const habitsUpdate = useMutation({
-        mutationFn: (updatedHabit: Habit) => updateHabit(updatedHabit),
+
+    const habitsAdd = useMutation({
+        mutationFn: (newHabit: HabitCreate) => createHabit(newHabit),
         onSuccess: () => {
             habitsQuery.refetch();
         }
     });
-    
-
-    // functions
-    const handleHabitUpdate = (habit: Habit) => {
-        habitsUpdate.mutate(habit, {
-            onSuccess: (data) => {
-                setHabits(habits.map(h => h.id === data.habit.id ? data.habit : h));
-            }
-        });
-    };
-
-    // Effect to set habits from query data
-    useEffect(() => {
-        if (habitsQuery.data?.habits !== undefined) {
-            setHabits(habitsQuery.data.habits);
-        }
-    }, [habitsQuery.data?.habits]);
-
-    if (habitsQuery.isError) {
-        console.log("Error loading habits:", habitsQuery.error);
-    }
 
     const loadingStatusToEnum = (status: string) => {
         switch (status) {
@@ -63,11 +46,35 @@ export const HabitsDashboard = ({
                 return LoadingStatus.PENDING;
         }
     }
+
+    // Effect to set habits from query data
+    useEffect(() => {
+        if (habitsQuery.data?.habits !== undefined) {
+            setHabits(habitsQuery.data.habits);
+        }
+    }, [habitsQuery.data?.habits]);
+
+    if (habitsQuery.isError) {
+        console.log("Error loading habits:", habitsQuery.error);
+    }
     
     return (
-        <>
-            <TitleBar />
-            <HabitList habits={habits} loadingStatus={loadingStatusToEnum(habitsQuery.status)} days={days} />
-        </>
+        <div className="static">
+            <TitleBar onAddHabitClick={() => setAddHabitModalOpen(true)} />
+            <HabitList 
+                habits={habits} 
+                loadingStatus={loadingStatusToEnum(habitsQuery.status)} 
+                days={days} 
+            />
+            <AddHabitModal 
+                isOpen={addHabitModalOpen} 
+                onClose={() => setAddHabitModalOpen(false)} 
+                handleAddHabit={(newHabit: HabitCreate) => {
+                    habitsAdd.mutate(newHabit, {
+                        onSuccess: (data) => {setHabits([...habits, data])}
+                    })
+                }}
+            />
+        </div>
     );
 }

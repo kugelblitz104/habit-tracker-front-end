@@ -1,5 +1,4 @@
 import { HabitListElement } from "./habit-list-element";
-import { SaveButton } from "@/components/ui/save_button";
 import { LoadingStatus, type Habit } from "@/types/types";
 
 export type HabitListProps = {
@@ -15,10 +14,7 @@ export const HabitList = ({
     loadingStatus = LoadingStatus.PENDING,
     days = 5
 }: HabitListProps) => {
-    //TODO: add a function to break out an mutated habits object into discreet tracker create/update operations
-    //TODO: add a mutator to update habits.trackers
-    //TODO: track habits in state
-    // Hooks
+    // hooks
     const today = new Date()
     const date_formatter = new Intl.DateTimeFormat("en-US", {
         month: "2-digit",

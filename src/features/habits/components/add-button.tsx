@@ -1,3 +1,4 @@
+import { Button } from "@headlessui/react";
 import { Plus } from "lucide-react";
 
 type AddButtonProps = {
@@ -10,11 +11,12 @@ export const AddButton = ({
     className
 }: AddButtonProps) => {
     return (
-        <button 
-            className={`flex items-center ${className}`} 
+        <Button 
+            className={`p-2 flex items-center rounded-md ${className}
+            hover:bg-slate-700`} 
             onClick={onClick}
         >
             <Plus className="mr-1" /> Add Habit
-        </button>
+        </Button>
     );
 }
