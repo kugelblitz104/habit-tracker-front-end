@@ -16,7 +16,8 @@ export type Habit = {
   name: string;
   question: string;
   color: string;
-  frequency: string;
+  frequency: number;
+  range: number;
   reminder: boolean;
   notes: string;
   trackers: Tracker[];
@@ -26,7 +27,6 @@ export type Tracker = {
     id: number;
     habit_id: number;
     dated: string;
-    timed: string;
     completed: boolean;
     skipped: boolean;
     note: string;
@@ -35,7 +35,6 @@ export type Tracker = {
 export type TrackerCreate = {
     habit_id: number;
     dated: string;
-    timed: string;
     completed: boolean;
     skipped: boolean;
     note: string;
