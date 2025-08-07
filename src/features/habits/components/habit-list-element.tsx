@@ -68,13 +68,17 @@ export const HabitListElement = ({
     const getStatus = (date: Date): Status => {
         const tracker = getTracker(date);
 
-        if (!tracker) {
-            return Status.NOT_COMPLETED;
-        }
-        
+        if (!tracker) return Status.NOT_COMPLETED;
         if (tracker?.completed) return Status.COMPLETED;
         if (tracker?.skipped) return Status.SKIPPED;
         return Status.NOT_COMPLETED;
+    }
+
+    const getFrequencyString = (frequency: number, range: number) => {
+        if (frequency === range ) return "daily";
+        if (frequency === 1 && range === 7) return "weekly";
+        if (frequency === 1 && range === 30) return "monthly";
+        // if (frequency === 1 && range === 365) return "yearly"
     }
 
     const handleCheckboxClick = (date: Date) => {
@@ -85,7 +89,6 @@ export const HabitListElement = ({
             const newTracker = {
                 habit_id: habit.id,
                 dated: date.toISOString().split("T")[0],
-                timed: date.toTimeString().split(" ")[0],
                 completed: true,
                 skipped: false,
                 note: "",
@@ -149,7 +152,7 @@ export const HabitListElement = ({
             "
         >
             <td>
-                <Label mainText={habit.name} subText={habit.frequency} />
+                <Label mainText={habit.name} subText={getFrequencyString(habit.frequency, habit.range)} />
             </td>
             {dates.map((date) => (
                 <td className="text-center" key={date.toISOString()}>
