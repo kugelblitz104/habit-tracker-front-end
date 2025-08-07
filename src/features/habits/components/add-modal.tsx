@@ -1,6 +1,6 @@
 import { TextField } from "@/components/ui/forms/text-field";
 import type { Habit, HabitCreate } from "@/types/types";
-import { CloseButton, Dialog, DialogBackdrop, DialogPanel, DialogTitle, Field, Fieldset, Input, Label, Radio, RadioGroup } from "@headlessui/react";
+import { CloseButton, Dialog, DialogBackdrop, DialogPanel, DialogTitle, Field, Fieldset, Input, Label, Radio, RadioGroup, Switch, Textarea } from "@headlessui/react";
 import { useState } from "react";
 
 type AddHabitModalProps = {
@@ -37,9 +37,9 @@ export const AddHabitModal = ({
 }: AddHabitModalProps) => {
     const [showCustomFreq, setShowCustomFreq] = useState(false)
     const [selected, setSelected] = useState(frequencies[0])
+    const [reminderChecked, setReminderChecked] = useState(false)
 
-
-    const onSubmit = () => {
+    const onSubmit = (formData: FormData) => {
         console.log('submitted!')
     }
     return (
@@ -86,12 +86,24 @@ export const AddHabitModal = ({
                                     )))}
                                 </RadioGroup>
                             <span className={`mt-2 ${(selected.name != 'custom') && 'hidden'}`}>
-                                <InlineNumberField name="frequencies"/>time(s) every
+                                <InlineNumberField name="frequency"/>time(s) every
                                 <InlineNumberField name="range"/>days
                             </span>
                             </Field>
-                            <TextField label="Reminder" name="question" /> 
-                            <TextField label="Notes" name="question" />
+                            <Field className="items-center">
+                                <Label className="mr-2">Reminder</Label> 
+                                <Switch
+                                    checked={reminderChecked}
+                                    onChange={setReminderChecked}
+                                    className="group inline-flex h-6 w-11 items-center rounded-full bg-black transition data-checked:bg-blue-600"
+                                >
+                                    <span className="size-4 translate-x-1 rounded-full bg-white transition group-data-checked:translate-x-6" />
+                                </Switch>
+                            </Field>
+                            <Field>
+                                <Label className="block">Notes</Label>
+                                <Textarea name="note" className="block bg-black border-slate rounded-md py-1 px-2 w-full"/>
+                            </Field>
                         </Fieldset>
                         <CloseButton>Close</CloseButton>
                     </form>
