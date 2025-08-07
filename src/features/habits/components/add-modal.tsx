@@ -1,7 +1,8 @@
 import { TextField } from "@/components/ui/forms/text-field";
 import type { Habit, HabitCreate } from "@/types/types";
-import { CloseButton, Dialog, DialogBackdrop, DialogPanel, DialogTitle, Field, Fieldset, Input, Label, Radio, RadioGroup, Switch, Textarea } from "@headlessui/react";
+import { CloseButton, Dialog, DialogBackdrop, DialogPanel, DialogTitle, Field, Fieldset, Input, Label, Radio, RadioGroup, Switch, Textarea, Button} from "@headlessui/react";
 import { useState } from "react";
+import { HexColorPicker } from "react-colorful";
 
 type AddHabitModalProps = {
     isOpen: boolean;
@@ -11,9 +12,11 @@ type AddHabitModalProps = {
 
 type InlineNumberFieldProps = {
     name: string
+    placeholder: string
 }
 
 const frequencies = [
+    // TODO: enum?
     {name: 'daily', frequency: 1, range: 1}
 ,   {name: 'weekly', frequency: 1, range: 7}
 ,   {name: 'monthly', frequency: 1, range: 30}
@@ -21,11 +24,12 @@ const frequencies = [
 ]
 
 const InlineNumberField = ({
-    name
+    name,
+    placeholder
 }: InlineNumberFieldProps) => {
     return (
         <Field className="mx-1 inline-block border-color-white">
-            <Input name={name} className="w-6 text-center bg-black rounded-md"/>
+            <Input name={name} placeholder={placeholder} className="w-6 text-center bg-black rounded-md"/>
         </Field>
     )
 }
@@ -35,13 +39,24 @@ export const AddHabitModal = ({
     onClose,
     handleAddHabit
 }: AddHabitModalProps) => {
-    const [showCustomFreq, setShowCustomFreq] = useState(false)
-    const [selected, setSelected] = useState(frequencies[0])
-    const [reminderChecked, setReminderChecked] = useState(false)
+    const [showCustomFreq, setShowCustomFreq] = useState(false);
+    const [selected, setSelected] = useState(frequencies[0]);
+    const [reminderChecked, setReminderChecked] = useState(false);
+    const [color, setColor] = useState("#aabbcc");
 
     const onSubmit = (formData: FormData) => {
-        console.log('submitted!')
-    }
+        const customChecked = (selected.name === 'custom')
+        const newHabit = {
+            name: formData.get('name'),
+            question: formData.get('question'),
+            color: color,
+            frequency: customChecked? formData.get('frequency') : selected.frequency,
+            range: customChecked? formData.get('range') : selected.range,
+            reminder: reminderChecked,
+            notes: formData.get('note')
+        }
+        handleAddHabit(newHabit);
+    };
     return (
         <Dialog open={isOpen} onClose={onClose} transition 
         className="
@@ -59,12 +74,28 @@ export const AddHabitModal = ({
                         <Fieldset className="space-y-1">
                             <TextField label="Habit name" name="name" placeholder="What will you do?" />
                             <TextField label="Question" name="question" placeholder="What signifies completion?"/>
-                            {/* TODO: Change input types:
-                                Color: color picker
-                                Frequency: radio/dropdown?
-                                Reminder: Switch?
-                                Notes: Text Area?
-                            */}
+                            <Field>
+                                <Label className="block">Color</Label>
+                                <div className="flex space-x-2">
+                                    <HexColorPicker color={color} onChange={setColor} className="w-10 h-10" />
+                                    <div>
+                                        <div
+                                            style={{ backgroundColor: color }}
+                                            className="
+                                                w-22 h-22 rounded-md border-2 border-gray-300
+                                            "
+                                        />  
+                                        <Input
+                                            name="color"
+                                            value={color}
+                                            onChange={e => setColor(e.target.value)}
+                                            className="block bg-black border-slate rounded-md py-1 px-2 w-22
+                                            my-2"
+                                        />
+                                    </div>
+                                </div>
+
+                            </Field>
                             <Field className="my-2 space-y-1">
                                 <Label className="block">Frequency</Label>
                                 <RadioGroup value={selected} onChange={setSelected}
@@ -86,8 +117,8 @@ export const AddHabitModal = ({
                                     )))}
                                 </RadioGroup>
                             <span className={`mt-2 ${(selected.name != 'custom') && 'hidden'}`}>
-                                <InlineNumberField name="frequency"/>time(s) every
-                                <InlineNumberField name="range"/>days
+                                <InlineNumberField name="frequency" placeholder="1"/>time(s) every
+                                <InlineNumberField name="range" placeholder="7"/>days
                             </span>
                             </Field>
                             <Field className="items-center">
@@ -100,12 +131,15 @@ export const AddHabitModal = ({
                                     <span className="size-4 translate-x-1 rounded-full bg-white transition group-data-checked:translate-x-6" />
                                 </Switch>
                             </Field>
-                            <Field>
+                            <Field className="mb-2">
                                 <Label className="block">Notes</Label>
-                                <Textarea name="note" className="block bg-black border-slate rounded-md py-1 px-2 w-full"/>
+                                <Textarea name="notes" className="block bg-black border-slate rounded-md py-1 px-2 w-full"/>
                             </Field>
                         </Fieldset>
-                        <CloseButton>Close</CloseButton>
+                        <div className="flex space-x-2">
+                            <Button type="submit" className="flex-auto bg-sky-500 rounded-md px-2 py-1">Submit</Button>
+                            <CloseButton className="flex-auto bg-red-500 rounded-md px-2 py-1">Close</CloseButton>
+                        </div>
                     </form>
                 </DialogPanel>   
             </div>
