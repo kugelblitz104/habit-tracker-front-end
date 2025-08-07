@@ -14,7 +14,7 @@ export const TextField = ({
     return (
         <Field className="my-2">
             {label && <Label className="block">{label}</Label>}
-            <Input className="block bg-black border-slate rounded-md py-1 px-2" name={name} type="text" placeholder={placeholder}/>
+            <Input className="block bg-black border-slate rounded-md py-1 px-2 w-full" name={name} type="text" placeholder={placeholder}/>
         </Field>
     )
 }
