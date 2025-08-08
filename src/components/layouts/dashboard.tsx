@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { getHabits } from "@/features/habits/api/get-habits";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createHabit } from "@/features/habits/api/create-habits";
-import { AddHabitModal } from "@/features/habits/components/add-modal";
+import { AddHabitModal } from "@/features/habits/components/add-habit-modal";
 
 
 type HabitsDashboardProps = {
@@ -67,9 +67,10 @@ export const HabitsDashboard = ({
             />
             <AddHabitModal 
                 isOpen={addHabitModalOpen} 
+                userId={userId}
                 onClose={() => setAddHabitModalOpen(false)} 
                 handleAddHabit={(newHabit: HabitCreate) => {
-                    habitsAdd.mutate({...newHabit, user_id: userId}, {
+                    habitsAdd.mutate(newHabit, {
                         onSuccess: (data) => {setHabits([...habits, data])}
                     })
                 }}

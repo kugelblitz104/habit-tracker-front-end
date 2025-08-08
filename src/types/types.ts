@@ -28,7 +28,8 @@ export type HabitCreate = {
     name: string;
     question: string;
     color: string;
-    frequency: string;
+    frequency: number;
+    range: number;
     reminder: boolean;
     notes: string;
 }
@@ -40,6 +41,8 @@ export type Tracker = {
     completed: boolean;
     skipped: boolean;
     note: string;
+    created_date: string;
+    updated_date: string;
 }
 
 export type TrackerCreate = {
@@ -66,4 +69,10 @@ export enum LoadingStatus {
     PENDING = "pending",
     SUCCESS = "success",
     ERROR = "error",
+}
+
+export type Frequency = {
+    name: string,
+    frequency: number,
+    range: number
 }
