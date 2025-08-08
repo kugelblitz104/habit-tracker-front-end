@@ -60,15 +60,15 @@ export type Meta = {
 }
 
 export enum Status {
-    NOT_COMPLETED = "not_completed",
-    COMPLETED = "completed",
-    SKIPPED = "skipped",
+    NOT_COMPLETED = 'not_completed',
+    COMPLETED = 'completed',
+    SKIPPED = 'skipped',
 }
 
 export enum LoadingStatus {
-    PENDING = "pending",
-    SUCCESS = "success",
-    ERROR = "error",
+    PENDING = 'pending',
+    SUCCESS = 'success',
+    ERROR = 'error',
 }
 
 export type Frequency = {

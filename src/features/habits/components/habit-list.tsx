@@ -1,5 +1,5 @@
-import { HabitListElement } from "./habit-list-element";
-import { LoadingStatus, type Habit } from "@/types/types";
+import { HabitListElement } from './habit-list-element';
+import { LoadingStatus, type Habit } from '@/types/types';
 
 export type HabitListProps = {
     habits: Habit[];
@@ -16,9 +16,9 @@ export const HabitList = ({
 }: HabitListProps) => {
     // hooks
     const today = new Date()
-    const date_formatter = new Intl.DateTimeFormat("en-US", {
-        month: "2-digit",
-        day: "2-digit"
+    const date_formatter = new Intl.DateTimeFormat('en-US', {
+        month: '2-digit',
+        day: '2-digit'
     });
 
     // Render
@@ -35,14 +35,14 @@ export const HabitList = ({
     } 
 
     return (
-        <div className="overflow-x-auto mx-4">
-            <table className="min-w-full table-auto">
+        <div className='overflow-x-auto mx-4'>
+            <table className='min-w-full table-auto'>
                 <thead>
                     <tr>
-                    <th className="px-4 py-2 text-left">Habit</th>
+                    <th className='px-4 py-2 text-left'>Habit</th>
                     {
                         Array.from({ length: days }, (_, i) => (
-                        <th key={i} className="px-4 py-2 text-center">
+                        <th key={i} className='px-4 py-2 text-center'>
                             {date_formatter.format(new Date(today.getFullYear(), today.getMonth(), today.getDate() - i))}
                         </th>
                         ))

@@ -1,5 +1,5 @@
-import { Button } from "@headlessui/react";
-import { Plus } from "lucide-react";
+import { Button } from '@headlessui/react';
+import { Plus } from 'lucide-react';
 
 type AddButtonProps = {
     onClick?: () => void;
@@ -16,7 +16,7 @@ export const AddButton = ({
             hover:bg-slate-700`} 
             onClick={onClick}
         >
-            <Plus className="mr-1" /> Add Habit
+            <Plus className='mr-1' /> Add Habit
         </Button>
     );
 }

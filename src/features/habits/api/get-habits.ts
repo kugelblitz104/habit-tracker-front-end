@@ -1,5 +1,5 @@
-import { api } from "@/lib/api-client";
-import type { Habit } from "@/types/types";
+import { api } from '@/lib/api-client';
+import type { Habit } from '@/types/types';
 
 export const getHabits = async (
     userId = 1,

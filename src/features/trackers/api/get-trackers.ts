@@ -1,5 +1,5 @@
-import { api } from "@/lib/api-client";
-import type { Tracker } from "@/types/types"
+import { api } from '@/lib/api-client';
+import type { Tracker } from '@/types/types'
 
 export const getTrackers = async (
     habitId: number,

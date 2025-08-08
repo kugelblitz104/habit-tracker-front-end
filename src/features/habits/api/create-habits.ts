@@ -1,5 +1,5 @@
-import { api } from "@/lib/api-client";
-import type { Habit, HabitCreate } from "@/types/types";
+import { api } from '@/lib/api-client';
+import type { Habit, HabitCreate } from '@/types/types';
 
 export const createHabit = async (
     habit: HabitCreate

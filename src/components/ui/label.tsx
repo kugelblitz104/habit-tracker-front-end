@@ -5,12 +5,12 @@ export type LabelProps = {
 
 export const Label = ({ mainText, subText }: LabelProps) => {
     return (
-        <label className="mx-4">
-            <span className="font-semibold">
+        <label className='mx-4'>
+            <span className='font-semibold'>
                 {mainText}
             </span>
             {subText && (
-            <span className="ml-2 text-sm text-gray-600">
+            <span className='ml-2 text-sm text-gray-600'>
                 {subText}
             </span>
             )}

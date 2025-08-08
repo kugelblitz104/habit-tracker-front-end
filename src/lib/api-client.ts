@@ -7,7 +7,7 @@ export const api = Axios.create({
 
 api.interceptors.response.use(
     (response) => {
-        console.log("intercepted!");
+        console.log('intercepted!');
         return response.data;
     },
     (error) => {

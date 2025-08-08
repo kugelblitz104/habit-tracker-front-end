@@ -1,11 +1,11 @@
-import { HabitList } from "@/features/habits/components/habit-list";
-import { TitleBar } from "@/components/ui/title-bar";
-import { LoadingStatus, type Habit, type HabitCreate } from "@/types/types";
-import { useEffect, useState } from "react";
-import { getHabits } from "@/features/habits/api/get-habits";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { createHabit } from "@/features/habits/api/create-habits";
-import { AddHabitModal } from "@/features/habits/components/add-habit-modal";
+import { HabitList } from '@/features/habits/components/habit-list';
+import { TitleBar } from '@/components/ui/title-bar';
+import { LoadingStatus, type Habit, type HabitCreate } from '@/types/types';
+import { useEffect, useState } from 'react';
+import { getHabits } from '@/features/habits/api/get-habits';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { createHabit } from '@/features/habits/api/create-habits';
+import { AddHabitModal } from '@/features/habits/components/add-habit-modal';
 
 
 type HabitsDashboardProps = {
@@ -54,11 +54,11 @@ export const HabitsDashboard = ({
     }, [habitsQuery.data?.habits]);
 
     if (habitsQuery.isError) {
-        console.log("Error loading habits:", habitsQuery.error);
+        console.log('Error loading habits:', habitsQuery.error);
     }
     
     return (
-        <div className="static">
+        <div className='static'>
             <TitleBar onAddHabitClick={() => setAddHabitModalOpen(true)} />
             <HabitList 
                 habits={habits} 

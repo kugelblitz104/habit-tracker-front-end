@@ -1,11 +1,11 @@
-import { Label } from "@/components/ui/label";
-import { createTracker } from "@/features/trackers/api/create-trackers";
-import { updateTracker } from "@/features/trackers/api/update-trackers";
-import type { Habit, Tracker, TrackerCreate } from "@/types/types";
-import { Status } from "@/types/types";
-import { Button } from "@headlessui/react";
-import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
+import { Label } from '@/components/ui/label';
+import { createTracker } from '@/features/trackers/api/create-trackers';
+import { updateTracker } from '@/features/trackers/api/update-trackers';
+import type { Habit, Tracker, TrackerCreate } from '@/types/types';
+import { Status } from '@/types/types';
+import { Button } from '@headlessui/react';
+import { useMutation } from '@tanstack/react-query';
+import { useState } from 'react';
 
 export type TrackerCheckboxProps = {
     status: Status;
@@ -17,14 +17,14 @@ const TrackerCheckbox = ({
     onClick,
 }: TrackerCheckboxProps) => {
     return (
-        <Button type="button" className="text-blue-500 hover:text-blue-700"
+        <Button type='button' className='text-blue-500 hover:text-blue-700'
         onClick={onClick}
         >
         {
-            status === Status.COMPLETED ? "✔️" :
-            status === Status.SKIPPED ? "⏭️" :
-            status === Status.NOT_COMPLETED ? "❌" :
-            "?"
+            status === Status.COMPLETED ? '✔️' :
+            status === Status.SKIPPED ? '⏭️' :
+            status === Status.NOT_COMPLETED ? '❌' :
+            '?'
         }
         </Button>
     )
@@ -49,20 +49,20 @@ export const HabitListElement = ({
     const trackerCreate = useMutation({
         mutationFn: (tracker: TrackerCreate) => createTracker(tracker),
         onError: (error) => {
-            console.error("Error adding tracker:", error);
+            console.error('Error adding tracker:', error);
         }
     });
     const trackerUpdate = useMutation({
         mutationFn: (tracker: Tracker) => updateTracker(tracker),
         onError: (error) => {
-            console.error("Error updating tracker:", error);
+            console.error('Error updating tracker:', error);
         }
     });
 
     // functions
     const getTracker = (date: Date): Tracker | undefined => {
         return trackers.find(tracker =>
-            tracker.dated === date.toISOString().split("T")[0]
+            tracker.dated === date.toISOString().split('T')[0]
         );
     };
 
@@ -76,10 +76,10 @@ export const HabitListElement = ({
     }
 
     const getFrequencyString = (frequency: number, range: number) => {
-        if (frequency === range ) return "daily";
-        if (frequency === 1 && range === 7) return "weekly";
-        if (frequency === 1 && range === 30) return "monthly";
-        // if (frequency === 1 && range === 365) return "yearly"
+        if (frequency === range ) return 'daily';
+        if (frequency === 1 && range === 7) return 'weekly';
+        if (frequency === 1 && range === 30) return 'monthly';
+        // if (frequency === 1 && range === 365) return 'yearly'
     }
 
     const handleCheckboxClick = (date: Date) => {
@@ -89,10 +89,10 @@ export const HabitListElement = ({
             // create tracker if it doesn't exist
             const newTracker = {
                 habit_id: habit.id,
-                dated: date.toISOString().split("T")[0],
+                dated: date.toISOString().split('T')[0],
                 completed: true,
                 skipped: false,
-                note: "",
+                note: '',
             }
             trackerCreate.mutate(newTracker, {
                 onSuccess: (data) => {
@@ -145,18 +145,18 @@ export const HabitListElement = ({
     return (
         <tr
             key={habit.id}
-            className="
+            className='
             bg-slate-800/50 
             hover:bg-slate-800
             h-12
             align-middle
-            "
+            '
         >
             <td>
                 <Label mainText={habit.name} subText={getFrequencyString(habit.frequency, habit.range)} />
             </td>
             {dates.map((date) => (
-                <td className="text-center" key={date.toISOString()}>
+                <td className='text-center' key={date.toISOString()}>
                     <TrackerCheckbox status={getStatus(date)} 
                     onClick={() => handleCheckboxClick(date)} 
                     />
