@@ -1,5 +1,5 @@
-import { api } from "@/lib/api-client";
-import type { Tracker, TrackerCreate } from "@/types/types"
+import { api } from '@/lib/api-client';
+import type { Tracker, TrackerCreate } from '@/types/types'
 
 export const createTracker = async (
     tracker: TrackerCreate

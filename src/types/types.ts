@@ -23,6 +23,17 @@ export type Habit = {
   trackers: Tracker[];
 }
 
+export type HabitCreate = {
+    user_id: number;
+    name: string;
+    question: string;
+    color: string;
+    frequency: number;
+    range: number;
+    reminder: boolean;
+    notes: string;
+}
+
 export type Tracker = {
     id: number;
     habit_id: number;
@@ -30,6 +41,8 @@ export type Tracker = {
     completed: boolean;
     skipped: boolean;
     note: string;
+    created_date: string;
+    updated_date: string;
 }
 
 export type TrackerCreate = {
@@ -47,7 +60,19 @@ export type Meta = {
 }
 
 export enum Status {
-    NOT_COMPLETED = "not_completed",
-    COMPLETED = "completed",
-    SKIPPED = "skipped",
+    NOT_COMPLETED = 'not_completed',
+    COMPLETED = 'completed',
+    SKIPPED = 'skipped',
+}
+
+export enum LoadingStatus {
+    PENDING = 'pending',
+    SUCCESS = 'success',
+    ERROR = 'error',
+}
+
+export type Frequency = {
+    name: string,
+    frequency: number,
+    range: number
 }
