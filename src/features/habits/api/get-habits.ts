@@ -10,6 +10,12 @@ export const getHabits = async (
     return await api.get(`/users/${userId}/habits?limit=${limit}`)
 }
 
+export const getHabit = async (
+    habitId?: number
+): Promise<Habit> => {
+    return await api.get(`/habits/${habitId}`)
+}
+
 // export const getHabitQueryOptions = ({
 //   userId,
 // }: { userId?: number } = {}) => {

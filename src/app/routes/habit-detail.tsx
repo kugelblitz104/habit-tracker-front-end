@@ -1,6 +1,6 @@
 // import type { Route } from './+types/home';
+import { HabitDetailView } from '@/components/layouts/habit-detail-view';
 import type { Route } from './+types/home';
-import { HabitsDashboard } from '@/components/layouts/habits-dashboard'
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -9,10 +9,10 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export default function Home() {
+export default function HabitDetail({
+  params,
+}: Route.ComponentProps & { params: { habitId: string } }) {
   return (
-    <>
-      <HabitsDashboard userId={1}/>
-    </>
+    <HabitDetailView userId={1} habitId={Number(params.habitId)} />
   );
 }
