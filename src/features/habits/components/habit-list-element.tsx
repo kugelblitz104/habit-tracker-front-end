@@ -5,6 +5,7 @@ import type { Habit, Tracker, TrackerCreate } from '@/types/types';
 import { Status } from '@/types/types';
 import { Button } from '@headlessui/react';
 import { useMutation } from '@tanstack/react-query';
+import { Check, Circle, CircleCheckBig, CircleDot } from 'lucide-react';
 import { useState } from 'react';
 
 export type TrackerCheckboxProps = {
@@ -20,12 +21,9 @@ const TrackerCheckbox = ({
         <Button type='button' className='text-blue-500 hover:text-blue-700'
         onClick={onClick}
         >
-        {
-            status === Status.COMPLETED ? '✔️' :
-            status === Status.SKIPPED ? '⏭️' :
-            status === Status.NOT_COMPLETED ? '❌' :
-            '?'
-        }
+        {status === Status.COMPLETED &&     <CircleCheckBig color='green' strokeWidth={3}/>}
+        {status === Status.SKIPPED &&       <CircleDot color='lightblue' strokeWidth={3}/>}
+        {status === Status.NOT_COMPLETED && <Circle color='white' strokeWidth={1}/>}
         </Button>
     )
 }
@@ -153,7 +151,12 @@ export const HabitListElement = ({
             '
         >
             <td>
-                <Label mainText={habit.name} subText={getFrequencyString(habit.frequency, habit.range)} />
+                <Label 
+                    mainText={habit.name} 
+                    subText={getFrequencyString(habit.frequency, habit.range)} 
+                    textColor={habit.color}
+                    mainTextLink={`details/${habit.id}`}
+                />
             </td>
             {dates.map((date) => (
                 <td className='text-center' key={date.toISOString()}>
