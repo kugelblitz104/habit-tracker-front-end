@@ -7,14 +7,12 @@ export const getHabits = async (
 ): Promise<{
     habits: Habit[];
 }> => {
-    return await api.get(`/users/${userId}/habits?limit=${limit}`)
-}
+    return await api.get(`/users/${userId}/habits?limit=${limit}`);
+};
 
-export const getHabit = async (
-    habitId?: number
-): Promise<Habit> => {
-    return await api.get(`/habits/${habitId}`)
-}
+export const getHabit = async (habitId?: number): Promise<Habit> => {
+    return await api.get(`/habits/${habitId}`);
+};
 
 // export const getHabitQueryOptions = ({
 //   userId,

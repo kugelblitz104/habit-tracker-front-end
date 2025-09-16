@@ -3,11 +3,11 @@ export type SaveButtonProps = {
     isLoading: boolean;
 };
 
-export const SaveButton = ({ onClick, isLoading}: SaveButtonProps) => {
+export const SaveButton = ({ onClick, isLoading }: SaveButtonProps) => {
     return (
-        <button 
-            type='button' 
-            onClick={onClick} 
+        <button
+            type='button'
+            onClick={onClick}
             disabled={isLoading}
             className='
             bg-blue-500 text-white py-2 px-4 rounded

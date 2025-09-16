@@ -7,23 +7,22 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { createHabit } from '@/features/habits/api/create-habits';
 import { AddHabitModal } from '@/features/habits/components/add-habit-modal';
 
-
 type HabitsDashboardProps = {
     userId: number;
     days?: number;
-}
+};
 
-export const HabitsDashboard = ({ 
+export const HabitsDashboard = ({
     userId,
     days = 10
 }: HabitsDashboardProps) => {
     // hooks
     const [habits, setHabits] = useState<Habit[]>([]);
     const [addHabitModalOpen, setAddHabitModalOpen] = useState(false);
-    const habitsQuery = useQuery ({
+    const habitsQuery = useQuery({
         queryKey: ['habits', { userId }],
         queryFn: () => getHabits(userId, days),
-        staleTime: 1000 * 60, // 1 minute
+        staleTime: 1000 * 60 // 1 minute
     });
 
     const habitsAdd = useMutation({
@@ -44,7 +43,7 @@ export const HabitsDashboard = ({
             default:
                 return LoadingStatus.PENDING;
         }
-    }
+    };
 
     // Effect to set habits from query data
     useEffect(() => {
@@ -56,25 +55,27 @@ export const HabitsDashboard = ({
     if (habitsQuery.isError) {
         console.log('Error loading habits:', habitsQuery.error);
     }
-    
+
     return (
         <div className='static'>
             <TitleBar onAddHabitClick={() => setAddHabitModalOpen(true)} />
-            <HabitList 
-                habits={habits} 
-                loadingStatus={loadingStatusToEnum(habitsQuery.status)} 
-                days={days} 
+            <HabitList
+                habits={habits}
+                loadingStatus={loadingStatusToEnum(habitsQuery.status)}
+                days={days}
             />
-            <AddHabitModal 
-                isOpen={addHabitModalOpen} 
+            <AddHabitModal
+                isOpen={addHabitModalOpen}
                 userId={userId}
-                onClose={() => setAddHabitModalOpen(false)} 
+                onClose={() => setAddHabitModalOpen(false)}
                 handleAddHabit={(newHabit: HabitCreate) => {
                     habitsAdd.mutate(newHabit, {
-                        onSuccess: (data) => {setHabits([...habits, data])}
-                    })
+                        onSuccess: (data) => {
+                            setHabits([...habits, data]);
+                        }
+                    });
                 }}
             />
         </div>
     );
-}
+};

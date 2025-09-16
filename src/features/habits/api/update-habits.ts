@@ -6,5 +6,5 @@ export const updateHabit = async (
 ): Promise<{
     habit: Habit;
 }> => {
-    return await api.put(`/habits/${habit.id}`, habit)
-}
+    return await api.put(`/habits/${habit.id}`, habit);
+};

@@ -1,10 +1,10 @@
-import { Field, Label, Switch } from '@headlessui/react'
+import { Field, Label, Switch } from '@headlessui/react';
 
 type LabeledSwitchProps = {
-    label: string
-    checked: boolean
-    onChange: (checked: boolean) => void
-}
+    label: string;
+    checked: boolean;
+    onChange: (checked: boolean) => void;
+};
 
 export const LabeledSwitch = ({
     label,
@@ -13,7 +13,7 @@ export const LabeledSwitch = ({
 }: LabeledSwitchProps) => {
     return (
         <Field className='items-center'>
-            <Label className='mr-2'>{label}</Label> 
+            <Label className='mr-2'>{label}</Label>
             <Switch
                 checked={checked}
                 onChange={onChange}
@@ -22,5 +22,5 @@ export const LabeledSwitch = ({
                 <span className='size-4 translate-x-1 rounded-full bg-white transition group-data-checked:translate-x-6' />
             </Switch>
         </Field>
-    )
-}
+    );
+};
