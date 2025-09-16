@@ -3,9 +3,9 @@ import { LoadingStatus, type Habit } from '@/types/types';
 
 export type HabitListProps = {
     habits: Habit[];
-    loadingStatus: LoadingStatus
+    loadingStatus: LoadingStatus;
     days?: number;
-}
+};
 
 // TODO: context to hold number of days?
 
@@ -15,7 +15,7 @@ export const HabitList = ({
     days = 5
 }: HabitListProps) => {
     // hooks
-    const today = new Date()
+    const today = new Date();
     const date_formatter = new Intl.DateTimeFormat('en-US', {
         month: '2-digit',
         day: '2-digit'
@@ -32,31 +32,35 @@ export const HabitList = ({
 
     if (!habits || habits.length === 0) {
         return <div className='m-4'>No habits found.</div>;
-    } 
+    }
 
     return (
         <div className='overflow-x-auto mx-4'>
             <table className='min-w-full table-auto'>
                 <thead>
                     <tr>
-                    <th className='px-4 py-2 text-left'>Habit</th>
-                    {
-                        Array.from({ length: days }, (_, i) => (
-                        <th key={i} className='px-4 py-2 text-center'>
-                            {date_formatter.format(new Date(today.getFullYear(), today.getMonth(), today.getDate() - i))}
-                        </th>
-                        ))
-                    }
+                        <th className='px-4 py-2 text-left'>Habit</th>
+                        {Array.from({ length: days }, (_, i) => (
+                            <th key={i} className='px-4 py-2 text-center'>
+                                {date_formatter.format(
+                                    new Date(
+                                        today.getFullYear(),
+                                        today.getMonth(),
+                                        today.getDate() - i
+                                    )
+                                )}
+                            </th>
+                        ))}
                     </tr>
                 </thead>
                 <tbody>
                     {habits.map((habit) => (
-                    <HabitListElement 
-                        key={habit.id} 
-                        habit={habit} 
-                        days={days}
-                        // onHabitUpdate={handleHabitUpdate}
-                    />
+                        <HabitListElement
+                            key={habit.id}
+                            habit={habit}
+                            days={days}
+                            // onHabitUpdate={handleHabitUpdate}
+                        />
                     ))}
                 </tbody>
             </table>

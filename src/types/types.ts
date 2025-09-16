@@ -7,21 +7,21 @@ export type User = {
     last_name: string;
     email: string;
     password_hash: string;
-    habits: Habit[]
-}
+    habits: Habit[];
+};
 
 export type Habit = {
-  id: number;
-  user_id: number;
-  name: string;
-  question: string;
-  color: string;
-  frequency: number;
-  range: number;
-  reminder: boolean;
-  notes: string;
-  trackers: Tracker[];
-}
+    id: number;
+    user_id: number;
+    name: string;
+    question: string;
+    color: string;
+    frequency: number;
+    range: number;
+    reminder: boolean;
+    notes: string;
+    trackers: Tracker[];
+};
 
 export type HabitCreate = {
     user_id: number;
@@ -32,7 +32,7 @@ export type HabitCreate = {
     range: number;
     reminder: boolean;
     notes: string;
-}
+};
 
 export type Tracker = {
     id: number;
@@ -43,7 +43,7 @@ export type Tracker = {
     note: string;
     created_date: string;
     updated_date: string;
-}
+};
 
 export type TrackerCreate = {
     habit_id: number;
@@ -51,28 +51,28 @@ export type TrackerCreate = {
     completed: boolean;
     skipped: boolean;
     note: string;
-}
+};
 
 export type Meta = {
-  page: number;
-  total: number;
-  total_pages: number;
-}
+    page: number;
+    total: number;
+    total_pages: number;
+};
 
 export enum Status {
     NOT_COMPLETED = 'not_completed',
     COMPLETED = 'completed',
-    SKIPPED = 'skipped',
+    SKIPPED = 'skipped'
 }
 
 export enum LoadingStatus {
     PENDING = 'pending',
     SUCCESS = 'success',
-    ERROR = 'error',
+    ERROR = 'error'
 }
 
 export type Frequency = {
-    name: string,
-    frequency: number,
-    range: number
-}
+    name: string;
+    frequency: number;
+    range: number;
+};

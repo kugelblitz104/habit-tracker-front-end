@@ -11,22 +11,30 @@ import { useState } from 'react';
 export type TrackerCheckboxProps = {
     status: Status;
     onClick?: () => void;
-}
+};
 
 const TrackerCheckbox = ({
     status = Status.NOT_COMPLETED,
-    onClick,
+    onClick
 }: TrackerCheckboxProps) => {
     return (
-        <Button type='button' className='text-blue-500 hover:text-blue-700'
-        onClick={onClick}
+        <Button
+            type='button'
+            className='text-blue-500 hover:text-blue-700'
+            onClick={onClick}
         >
-        {status === Status.COMPLETED &&     <CircleCheckBig color='green' strokeWidth={3}/>}
-        {status === Status.SKIPPED &&       <CircleDot color='lightblue' strokeWidth={3}/>}
-        {status === Status.NOT_COMPLETED && <Circle color='white' strokeWidth={1}/>}
+            {status === Status.COMPLETED && (
+                <CircleCheckBig color='green' strokeWidth={3} />
+            )}
+            {status === Status.SKIPPED && (
+                <CircleDot color='lightblue' strokeWidth={3} />
+            )}
+            {status === Status.NOT_COMPLETED && (
+                <Circle color='white' strokeWidth={1} />
+            )}
         </Button>
-    )
-}
+    );
+};
 
 export type HabitListElementProps = {
     habit: Habit;
@@ -36,12 +44,20 @@ export type HabitListElementProps = {
 
 export const HabitListElement = ({
     habit,
-    days = 5,
-    // onHabitUpdate,
-}: HabitListElementProps) => {
+    days = 5
+}: // onHabitUpdate,
+HabitListElementProps) => {
     const today = new Date();
     const dates = [...Array(days).keys()].map((day) => {
-        return new Date(today.getFullYear(), today.getMonth(), today.getDate() - day, today.getHours(), today.getMinutes(), today.getSeconds(), today.getMilliseconds());
+        return new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate() - day,
+            today.getHours(),
+            today.getMinutes(),
+            today.getSeconds(),
+            today.getMilliseconds()
+        );
     });
     const [trackers, setTrackers] = useState<Tracker[]>(habit.trackers);
     const trackerCreate = useMutation({
@@ -59,8 +75,8 @@ export const HabitListElement = ({
 
     // functions
     const getTracker = (date: Date): Tracker | undefined => {
-        return trackers.find(tracker =>
-            tracker.dated === date.toISOString().split('T')[0]
+        return trackers.find(
+            (tracker) => tracker.dated === date.toISOString().split('T')[0]
         );
     };
 
@@ -71,20 +87,20 @@ export const HabitListElement = ({
         if (tracker?.completed) return Status.COMPLETED;
         if (tracker?.skipped) return Status.SKIPPED;
         return Status.NOT_COMPLETED;
-    }
+    };
 
     const getFrequencyString = (frequency: number, range: number) => {
-        if (frequency === range ) return 'daily';
+        if (frequency === range) return 'daily';
         else if (frequency === 1 && range === 7) return 'weekly';
         else if (frequency === 1 && range === 30) return 'monthly';
-        else if (frequency === 1) return `once every ${range}`
-        else return `${frequency} times every ${range} days`
+        else if (frequency === 1) return `once every ${range}`;
+        else return `${frequency} times every ${range} days`;
         // if (frequency === 1 && range === 365) return 'yearly'
-    }
+    };
 
     const handleCheckboxClick = (date: Date) => {
         const tracker = getTracker(date);
-        
+
         if (!tracker) {
             // create tracker if it doesn't exist
             const newTracker = {
@@ -92,8 +108,8 @@ export const HabitListElement = ({
                 dated: date.toISOString().split('T')[0],
                 completed: true,
                 skipped: false,
-                note: '',
-            }
+                note: ''
+            };
             trackerCreate.mutate(newTracker, {
                 onSuccess: (data) => {
                     setTrackers([...trackers, data]);
@@ -102,44 +118,62 @@ export const HabitListElement = ({
             return;
         }
 
-        if(!tracker.completed && !tracker.skipped) {
+        if (!tracker.completed && !tracker.skipped) {
             // toggle completed
-            trackerUpdate.mutate({
-                ...tracker,
-                completed: true,
-                skipped: false,
-            }, {
-                onSuccess: (data) => {
-                    setTrackers(trackers.map(t => t.id === tracker.id ? data : t));
+            trackerUpdate.mutate(
+                {
+                    ...tracker,
+                    completed: true,
+                    skipped: false
+                },
+                {
+                    onSuccess: (data) => {
+                        setTrackers(
+                            trackers.map((t) =>
+                                t.id === tracker.id ? data : t
+                            )
+                        );
+                    }
                 }
-            });
-        }
-        else if(tracker.completed) {
+            );
+        } else if (tracker.completed) {
             // toggle skipped
-            trackerUpdate.mutate({
-                ...tracker,
-                completed: false,
-                skipped: true,
-            }, {
-                onSuccess: (data) => {
-                    setTrackers(trackers.map(t => t.id === tracker.id ? data : t));
+            trackerUpdate.mutate(
+                {
+                    ...tracker,
+                    completed: false,
+                    skipped: true
+                },
+                {
+                    onSuccess: (data) => {
+                        setTrackers(
+                            trackers.map((t) =>
+                                t.id === tracker.id ? data : t
+                            )
+                        );
+                    }
                 }
-            });
-        }
-        else if(tracker.skipped) {
+            );
+        } else if (tracker.skipped) {
             // toggle not completed
-            trackerUpdate.mutate({
-                ...tracker,
-                completed: false,
-                skipped: false,
-            }, {
-                onSuccess: (data) => {
-                    setTrackers(trackers.map(t => t.id === tracker.id ? data : t));
+            trackerUpdate.mutate(
+                {
+                    ...tracker,
+                    completed: false,
+                    skipped: false
+                },
+                {
+                    onSuccess: (data) => {
+                        setTrackers(
+                            trackers.map((t) =>
+                                t.id === tracker.id ? data : t
+                            )
+                        );
+                    }
                 }
-            });
+            );
         }
     };
-
 
     // render
     return (
@@ -153,20 +187,21 @@ export const HabitListElement = ({
             '
         >
             <td>
-                <Label 
-                    mainText={habit.name} 
-                    subText={getFrequencyString(habit.frequency, habit.range)} 
+                <Label
+                    mainText={habit.name}
+                    subText={getFrequencyString(habit.frequency, habit.range)}
                     textColor={habit.color}
                     mainTextLink={`details/${habit.id}`}
                 />
             </td>
             {dates.map((date) => (
                 <td className='text-center' key={date.toISOString()}>
-                    <TrackerCheckbox status={getStatus(date)} 
-                    onClick={() => handleCheckboxClick(date)} 
+                    <TrackerCheckbox
+                        status={getStatus(date)}
+                        onClick={() => handleCheckboxClick(date)}
                     />
                 </td>
             ))}
-        </tr>   
+        </tr>
     );
 };

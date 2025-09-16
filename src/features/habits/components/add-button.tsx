@@ -6,17 +6,14 @@ type AddButtonProps = {
     className?: string;
 };
 
-export const AddButton = ({ 
-    onClick, 
-    className
-}: AddButtonProps) => {
+export const AddButton = ({ onClick, className }: AddButtonProps) => {
     return (
-        <Button 
+        <Button
             className={`p-2 flex items-center rounded-md ${className}
-            hover:bg-slate-700`} 
+            hover:bg-slate-700`}
             onClick={onClick}
         >
             <Plus className='mr-1' /> Add Habit
         </Button>
     );
-}
+};

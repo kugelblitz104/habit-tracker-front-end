@@ -3,7 +3,7 @@ import Axios from 'axios';
 export const api = Axios.create({
     baseURL: 'http://localhost:8000/',
     timeout: 1000
-})
+});
 
 api.interceptors.response.use(
     (response) => {
@@ -14,4 +14,4 @@ api.interceptors.response.use(
         const message = error.response?.data?.message || 'An error occurred';
         return Promise.reject(error);
     }
-)
+);

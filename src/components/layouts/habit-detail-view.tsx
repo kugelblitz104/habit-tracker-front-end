@@ -1,24 +1,24 @@
-import { useQuery } from "@tanstack/react-query";
-import { TitleBar } from "../ui/title-bar";
-import { getHabit } from "@/features/habits/api/get-habits";
-import type { Habit } from "@/types/types";
-import { Link } from "react-router";
-import { useEffect, useState } from "react";
+import { useQuery } from '@tanstack/react-query';
+import { TitleBar } from '../ui/title-bar';
+import { getHabit } from '@/features/habits/api/get-habits';
+import type { Habit } from '@/types/types';
+import { Link } from 'react-router';
+import { useEffect, useState } from 'react';
 
 type HabitDetailViewProps = {
     userId: number;
     habitId?: number;
-}
+};
 
 export const HabitDetailView = ({
     userId = 1,
     habitId
 }: HabitDetailViewProps) => {
-    const [habit, setHabit] = useState<Habit>()
-    const habitQuery = useQuery ({
+    const [habit, setHabit] = useState<Habit>();
+    const habitQuery = useQuery({
         queryKey: ['habit', { habitId }],
         queryFn: () => getHabit(habitId),
-        staleTime: 1000 * 60, // 1 minute
+        staleTime: 1000 * 60 // 1 minute
     });
 
     // Effect to set habits from query data
@@ -40,23 +40,21 @@ export const HabitDetailView = ({
         console.log('Error loading habits:', habitQuery.error);
         return (
             <>
-                <TitleBar title="Error loading habit" />
-                <Link to="/">
-                    Click here to return to dashboard page
-                </Link>
+                <TitleBar title='Error loading habit' />
+                <Link to='/'>Click here to return to dashboard page</Link>
             </>
         );
     }
 
-    console.log(habitQuery.data)
+    console.log(habitQuery.data);
 
     return (
         <>
-            <TitleBar title={`${habit?.name}`}/>
+            <TitleBar title={`${habit?.name}`} />
             <p>
                 Habit: {habitId}
                 Habit Name: {habit?.name}
-            </p>        
+            </p>
         </>
-    )
-}
+    );
+};

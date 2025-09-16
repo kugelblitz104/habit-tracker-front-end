@@ -1,53 +1,61 @@
-import { Field, Label, RadioGroup, Radio, Input} from '@headlessui/react'
-import {type Frequency } from '@/types/types'
-import { useState } from 'react'
+import { Field, Label, RadioGroup, Radio, Input } from '@headlessui/react';
+import { type Frequency } from '@/types/types';
+import { useState } from 'react';
 
 type InlineNumberFieldProps = {
-    name: string
-    placeholder: string
-    onChange: (newString: string) => void
-}
+    name: string;
+    placeholder: string;
+    onChange: (newString: string) => void;
+};
 
 type FrequencyPickerProps = {
-    selected: Frequency
-    onSelectedChange: (newFrequency: Frequency) => void
-    frequencies?: Frequency[]
-}
+    selected: Frequency;
+    onSelectedChange: (newFrequency: Frequency) => void;
+    frequencies?: Frequency[];
+};
 
 const InlineNumberField = ({
     name,
     placeholder,
     onChange
 }: InlineNumberFieldProps) => {
-    // right now custom values are not working, so disable user input 
+    // right now custom values are not working, so disable user input
     // until I can figure that out
     return (
-        <Field disabled className='mx-1 inline-block border-color-white'>
-            <Input name={name} placeholder={placeholder} className='w-6 text-center bg-black rounded-md'/>
+        <Field className='mx-1 inline-block border-color-white'>
+            <Input
+                name={name}
+                placeholder={placeholder}
+                className='w-6 text-center bg-black rounded-md'
+            />
         </Field>
-    )
-}
+    );
+};
 
 export const FrequencyPicker = ({
     selected,
     onSelectedChange,
     frequencies = [
         // TODO: enum?
-        {name: 'daily', frequency: 1, range: 1}
-    ,   {name: 'weekly', frequency: 1, range: 7}
-    ,   {name: 'monthly', frequency: 1, range: 30}
-    ,   {name: 'custom', frequency: 3, range: 7}
+        { name: 'daily', frequency: 1, range: 1 },
+        { name: 'weekly', frequency: 1, range: 7 },
+        { name: 'monthly', frequency: 1, range: 30 },
+        { name: 'custom', frequency: 3, range: 7 }
     ]
 }: FrequencyPickerProps) => {
+    const [freq, setFreq] = useState(frequencies[3].frequency);
+    const [range, setRange] = useState(frequencies[3].range);
 
-        
     return (
         <Field className='my-2 space-y-1'>
             <Label className='block'>Frequency</Label>
-            <RadioGroup value={selected} onChange={onSelectedChange}
-            className='flex'>
-                {frequencies.map((freq => (
-                    <Radio 
+            <RadioGroup
+                value={selected}
+                onChange={onSelectedChange}
+                className='flex'
+            >
+                {frequencies.map((freq) => (
+                    <Radio
                         key={freq.name}
                         value={freq}
                         className={`
@@ -60,26 +68,41 @@ export const FrequencyPicker = ({
                     >
                         {freq.name}
                     </Radio>
-                )))}
+                ))}
             </RadioGroup>
-            <span className={`mt-2 ${(selected.name != 'custom') && 'hidden'}`}>
+            <span className={`mt-2 ${selected.name != 'custom' && 'hidden'}`}>
                 <InlineNumberField
                     name='frequency'
                     placeholder='3'
-                    onChange={e => {
+                    onChange={(e) => {
                         const value = Number.parseInt(e) || 3;
-                        onSelectedChange({ ...selected, frequency: value });
+                        setFreq(value);
+                        if (freq > range) {
+                            setRange(value);
+                        }
+                        onSelectedChange({
+                            name: 'custom',
+                            frequency: freq,
+                            range: range
+                        });
                     }}
-                />time(s) every
+                />
+                time(s) every
                 <InlineNumberField
                     name='range'
                     placeholder='7'
-                    onChange={e => {
+                    onChange={(e) => {
                         const value = Number.parseInt(e) || 7;
-                        onSelectedChange({ ...selected, range: value });
+                        setRange(value);
+                        onSelectedChange({
+                            name: 'custom',
+                            frequency: freq,
+                            range: range
+                        });
                     }}
-                />days
+                />
+                days
             </span>
         </Field>
-    )
-}
+    );
+};

@@ -1,18 +1,18 @@
 // import type { Route } from './+types/home';
 import type { Route } from './+types/home';
-import { HabitsDashboard } from '@/components/layouts/habits-dashboard'
+import { HabitsDashboard } from '@/components/layouts/habits-dashboard';
 
 export function meta({}: Route.MetaArgs) {
-  return [
-    { title: 'Habit Tracker' },
-    { name: 'description', content: 'Welcome to React Router!' },
-  ];
+    return [
+        { title: 'Habit Tracker' },
+        { name: 'description', content: 'Welcome to React Router!' }
+    ];
 }
 
 export default function Home() {
-  return (
-    <>
-      <HabitsDashboard userId={1}/>
-    </>
-  );
+    return (
+        <>
+            <HabitsDashboard userId={1} />
+        </>
+    );
 }
