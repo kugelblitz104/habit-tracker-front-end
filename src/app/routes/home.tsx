@@ -9,9 +9,5 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
-    return (
-        <>
-            <HabitsDashboard userId={1} />
-        </>
-    );
+    return <HabitsDashboard userId={1} />;
 }
