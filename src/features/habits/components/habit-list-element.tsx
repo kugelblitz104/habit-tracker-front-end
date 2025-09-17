@@ -18,17 +18,21 @@ const TrackerCheckbox = ({
     status = Status.NOT_COMPLETED,
     onClick
 }: TrackerCheckboxProps) => {
+    const getIcon = (status: Status) => {
+        switch (status) {
+            case Status.COMPLETED:
+                return <CircleCheckBig color='green' strokeWidth={3} />;
+            case Status.SKIPPED:
+                return <CircleDot color='lightblue' strokeWidth={3} />;
+            case Status.NOT_COMPLETED:
+            default:
+                return <Circle color='white' strokeWidth={1} />;
+        }
+    };
+
     return (
         <Button type='button' className='align-middle' onClick={onClick}>
-            {status === Status.COMPLETED && (
-                <CircleCheckBig color='green' strokeWidth={3} />
-            )}
-            {status === Status.SKIPPED && (
-                <CircleDot color='lightblue' strokeWidth={3} />
-            )}
-            {status === Status.NOT_COMPLETED && (
-                <Circle color='white' strokeWidth={1} />
-            )}
+            {getIcon(status)}
         </Button>
     );
 };
