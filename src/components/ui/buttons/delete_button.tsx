@@ -12,6 +12,15 @@ export const DeleteButton = ({
     isActive = false
 }: DeleteButtonProps) => {
     const [isHover, setIsHover] = useState(false);
+    const getButtonColor = (isActive: any, isHover: any) => {
+        if (isActive && isHover) {
+            return 'red';
+        } else if (isActive && !isHover) {
+            return 'white';
+        } else if (!isActive && !isHover) {
+            return 'bg-gray-950';
+        }
+    };
 
     return (
         <div className='flex absolute inset-0 bg-gray-950'>
@@ -23,7 +32,7 @@ export const DeleteButton = ({
                 onMouseEnter={() => setIsHover(true)}
                 onMouseLeave={() => setIsHover(false)}
             >
-                <Trash size={18} color={isHover ? 'red' : 'white'} />
+                <Trash size={18} color={getButtonColor(isActive, isHover)} />
             </Button>
         </div>
     );

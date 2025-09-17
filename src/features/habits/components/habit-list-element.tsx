@@ -61,6 +61,7 @@ export const HabitListElement = ({
             today.getMilliseconds()
         );
     });
+    const [rowIsActive, setRowIsActive] = useState<boolean>(false);
     const [trackers, setTrackers] = useState<Tracker[]>(
         habit.trackers ? habit.trackers : []
     );
@@ -183,6 +184,8 @@ export const HabitListElement = ({
     return (
         <tr
             key={habit.id}
+            onMouseEnter={() => setRowIsActive(true)}
+            onMouseLeave={() => setRowIsActive(false)}
             className='
             bg-slate-800/50 
             hover:bg-slate-800
@@ -211,7 +214,10 @@ export const HabitListElement = ({
                 </td>
             ))}
             <td className='relative'>
-                <DeleteButton onClick={() => onHabitDeleteClick(habit)} />
+                <DeleteButton
+                    onClick={() => onHabitDeleteClick(habit)}
+                    isActive={rowIsActive}
+                />
             </td>
         </tr>
     );
