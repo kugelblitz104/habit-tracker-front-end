@@ -46,8 +46,6 @@ export const HabitDetailView = ({
         );
     }
 
-    console.log(habitQuery.data);
-
     return (
         <>
             <TitleBar title={`${habit?.name}`} />
