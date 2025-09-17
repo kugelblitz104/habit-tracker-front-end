@@ -47,7 +47,9 @@ export const DeleteHabitModal = ({
                     <DialogTitle as='h2' className='text-2xl font-bold'>
                         Are you sure that you want to delete this habit?
                     </DialogTitle>
-                    <Label mainText={habit.name} textColor={habit.color} />
+                    <div className='p2'>
+                        <Label mainText={habit.name} textColor={habit.color} />
+                    </div>
                     <div className='flex space-x-2'>
                         <Button
                             type='submit'
