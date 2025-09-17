@@ -6,19 +6,23 @@ import { getHabits } from '@/features/habits/api/get-habits';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createHabit } from '@/features/habits/api/create-habits';
 import { AddHabitModal } from '@/features/habits/components/add-habit-modal';
+import { deleteHabit } from '@/features/habits/api/delete-habits';
+import { DeleteHabitModal } from '@/features/habits/components/delete-habit-modal';
 
 type HabitsDashboardProps = {
     userId: number;
     days?: number;
 };
 
-export const HabitsDashboard = ({
-    userId,
-    days = 10
-}: HabitsDashboardProps) => {
+export const HabitsDashboard = ({ userId, days = 9 }: HabitsDashboardProps) => {
     // hooks
     const [habits, setHabits] = useState<Habit[]>([]);
     const [addHabitModalOpen, setAddHabitModalOpen] = useState(false);
+    const [deleteHabitModalOpen, setDeleteHabitModalOpen] = useState(false);
+    const [selectedHabit, setSelectedHabit] = useState<Habit>({
+        id: 1,
+        name: 'Placeholder'
+    });
     const habitsQuery = useQuery({
         queryKey: ['habits', { userId }],
         queryFn: () => getHabits(userId, days),
@@ -27,6 +31,13 @@ export const HabitsDashboard = ({
 
     const habitsAdd = useMutation({
         mutationFn: (newHabit: HabitCreate) => createHabit(newHabit),
+        onSuccess: () => {
+            habitsQuery.refetch();
+        }
+    });
+
+    const habitsDelete = useMutation({
+        mutationFn: (habit: Habit) => deleteHabit(habit),
         onSuccess: () => {
             habitsQuery.refetch();
         }
@@ -63,6 +74,10 @@ export const HabitsDashboard = ({
                 habits={habits}
                 loadingStatus={loadingStatusToEnum(habitsQuery.status)}
                 days={days}
+                onHabitDeleteClick={(habit) => {
+                    setDeleteHabitModalOpen(true);
+                    setSelectedHabit(habit);
+                }}
             />
             <AddHabitModal
                 isOpen={addHabitModalOpen}
@@ -75,6 +90,20 @@ export const HabitsDashboard = ({
                         }
                     });
                 }}
+            />
+            <DeleteHabitModal
+                isOpen={deleteHabitModalOpen}
+                habit={selectedHabit}
+                onClose={() => setDeleteHabitModalOpen(false)}
+                handleDeleteHabit={(habit: Habit) =>
+                    habitsDelete.mutate(selectedHabit, {
+                        onSuccess: (data) => {
+                            setHabits(
+                                habits.filter((item) => item !== selectedHabit)
+                            );
+                        }
+                    })
+                }
             />
         </div>
     );

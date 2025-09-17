@@ -1,4 +1,3 @@
-// import type { Route } from './+types/home';
 import { HabitDetailView } from '@/components/layouts/habit-detail-view';
 import type { Route } from './+types/home';
 
