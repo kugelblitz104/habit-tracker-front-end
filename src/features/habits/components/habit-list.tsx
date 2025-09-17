@@ -5,6 +5,7 @@ export type HabitListProps = {
     habits: Habit[];
     loadingStatus: LoadingStatus;
     days?: number;
+    onHabitDeleteClick: (habit: Habit) => void;
 };
 
 // TODO: context to hold number of days?
@@ -12,7 +13,8 @@ export type HabitListProps = {
 export const HabitList = ({
     habits,
     loadingStatus = LoadingStatus.PENDING,
-    days = 5
+    days = 0,
+    onHabitDeleteClick
 }: HabitListProps) => {
     // hooks
     const today = new Date();
@@ -59,7 +61,7 @@ export const HabitList = ({
                             key={habit.id}
                             habit={habit}
                             days={days}
-                            // onHabitUpdate={handleHabitUpdate}
+                            onHabitDeleteClick={onHabitDeleteClick}
                         />
                     ))}
                 </tbody>

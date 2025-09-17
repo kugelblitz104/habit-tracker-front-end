@@ -12,15 +12,15 @@ export type User = {
 
 export type Habit = {
     id: number;
-    user_id: number;
+    user_id?: number;
     name: string;
-    question: string;
-    color: string;
-    frequency: number;
-    range: number;
-    reminder: boolean;
-    notes: string;
-    trackers: Tracker[];
+    question?: string;
+    color?: string;
+    frequency?: number;
+    range?: number;
+    reminder?: boolean;
+    notes?: string;
+    trackers?: Tracker[];
 };
 
 export type HabitCreate = {

@@ -1,3 +1,4 @@
+import { DeleteButton } from '@/components/ui/buttons/delete_button';
 import { Label } from '@/components/ui/label';
 import { createTracker } from '@/features/trackers/api/create-trackers';
 import { updateTracker } from '@/features/trackers/api/update-trackers';
@@ -40,13 +41,14 @@ export type HabitListElementProps = {
     habit: Habit;
     days?: number;
     // onHabitUpdate: (habit: Habit) => void;
+    onHabitDeleteClick: (habit: Habit) => void;
 };
 
 export const HabitListElement = ({
     habit,
-    days = 5
-}: // onHabitUpdate,
-HabitListElementProps) => {
+    days,
+    onHabitDeleteClick
+}: HabitListElementProps) => {
     const today = new Date();
     const dates = [...Array(days).keys()].map((day) => {
         return new Date(
@@ -59,7 +61,9 @@ HabitListElementProps) => {
             today.getMilliseconds()
         );
     });
-    const [trackers, setTrackers] = useState<Tracker[]>(habit.trackers);
+    const [trackers, setTrackers] = useState<Tracker[]>(
+        habit.trackers ? habit.trackers : []
+    );
     const trackerCreate = useMutation({
         mutationFn: (tracker: TrackerCreate) => createTracker(tracker),
         onError: (error) => {
@@ -189,7 +193,11 @@ HabitListElementProps) => {
             <td>
                 <Label
                     mainText={habit.name}
-                    subText={getFrequencyString(habit.frequency, habit.range)}
+                    subText={
+                        habit.frequency && habit.range
+                            ? getFrequencyString(habit.frequency, habit.range)
+                            : undefined
+                    }
                     textColor={habit.color}
                     mainTextLink={`details/${habit.id}`}
                 />
@@ -202,6 +210,9 @@ HabitListElementProps) => {
                     />
                 </td>
             ))}
+            <td className='relative'>
+                <DeleteButton onClick={() => onHabitDeleteClick(habit)} />
+            </td>
         </tr>
     );
 };

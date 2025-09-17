@@ -1,4 +1,3 @@
-// import type { Route } from './+types/home';
 import type { Route } from './+types/home';
 import { HabitsDashboard } from '@/components/layouts/habits-dashboard';
 
