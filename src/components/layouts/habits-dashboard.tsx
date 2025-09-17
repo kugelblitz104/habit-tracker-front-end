@@ -43,6 +43,20 @@ export const HabitsDashboard = ({ userId, days = 9 }: HabitsDashboardProps) => {
         }
     });
 
+    const handleAddHabit = (newHabit: HabitCreate) =>
+        habitsAdd.mutate(newHabit, {
+            onSuccess: (data) => {
+                setHabits([...habits, data]);
+            }
+        });
+
+    const handleDeleteHabit = (habit: Habit) =>
+        habitsDelete.mutate(selectedHabit, {
+            onSuccess: (data) => {
+                setHabits(habits.filter((item) => item !== selectedHabit));
+            }
+        });
+
     const loadingStatusToEnum = (status: string) => {
         switch (status) {
             case 'loading':
@@ -83,27 +97,15 @@ export const HabitsDashboard = ({ userId, days = 9 }: HabitsDashboardProps) => {
                 isOpen={addHabitModalOpen}
                 userId={userId}
                 onClose={() => setAddHabitModalOpen(false)}
-                handleAddHabit={(newHabit: HabitCreate) => {
-                    habitsAdd.mutate(newHabit, {
-                        onSuccess: (data) => {
-                            setHabits([...habits, data]);
-                        }
-                    });
-                }}
+                handleAddHabit={(newHabit: HabitCreate) =>
+                    handleAddHabit(newHabit)
+                }
             />
             <DeleteHabitModal
                 isOpen={deleteHabitModalOpen}
                 habit={selectedHabit}
                 onClose={() => setDeleteHabitModalOpen(false)}
-                handleDeleteHabit={(habit: Habit) =>
-                    habitsDelete.mutate(selectedHabit, {
-                        onSuccess: (data) => {
-                            setHabits(
-                                habits.filter((item) => item !== selectedHabit)
-                            );
-                        }
-                    })
-                }
+                handleDeleteHabit={(habit: Habit) => handleDeleteHabit(habit)}
             />
         </div>
     );
