@@ -23,12 +23,12 @@ export const DeleteButton = ({
     };
 
     return (
-        <div className='flex absolute inset-0 bg-gray-950'>
+        <div className='bg-gray-950'>
             <Button
                 type='button'
                 onClick={onClick}
                 title='Delete Habit'
-                className='px-4 align-middle'
+                className='px-2 align-middle'
                 onMouseEnter={() => setIsHover(true)}
                 onMouseLeave={() => setIsHover(false)}
             >

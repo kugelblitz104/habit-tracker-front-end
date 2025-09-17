@@ -19,11 +19,7 @@ const TrackerCheckbox = ({
     onClick
 }: TrackerCheckboxProps) => {
     return (
-        <Button
-            type='button'
-            className='text-blue-500 hover:text-blue-700'
-            onClick={onClick}
-        >
+        <Button type='button' className='align-middle' onClick={onClick}>
             {status === Status.COMPLETED && (
                 <CircleCheckBig color='green' strokeWidth={3} />
             )}
@@ -187,13 +183,11 @@ export const HabitListElement = ({
             onMouseEnter={() => setRowIsActive(true)}
             onMouseLeave={() => setRowIsActive(false)}
             className='
-            bg-slate-800/50 
-            hover:bg-slate-800
             h-12
             align-middle
             '
         >
-            <td>
+            <td className={rowIsActive ? 'bg-slate-800' : 'bg-slate-800/50'}>
                 <Label
                     mainText={habit.name}
                     subText={
@@ -206,14 +200,19 @@ export const HabitListElement = ({
                 />
             </td>
             {dates.map((date) => (
-                <td className='text-center' key={date.toISOString()}>
+                <td
+                    className={`text-center ${
+                        rowIsActive ? 'bg-slate-800' : 'bg-slate-800/50'
+                    }`}
+                    key={date.toISOString()}
+                >
                     <TrackerCheckbox
                         status={getStatus(date)}
                         onClick={() => handleCheckboxClick(date)}
                     />
                 </td>
             ))}
-            <td className='relative'>
+            <td className='text-center bg-gray-950'>
                 <DeleteButton
                     onClick={() => onHabitDeleteClick(habit)}
                     isActive={rowIsActive}
