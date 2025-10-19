@@ -1,10 +1,9 @@
-import { api } from '@/lib/api-client';
-import type { Habit } from '@/types/types';
+import { HabitsService } from '@/api';
+import type { HabitRead, HabitUpdate } from '@/api';
 
 export const updateHabit = async (
-    habit: Habit
-): Promise<{
-    habit: Habit;
-}> => {
-    return await api.put(`/habits/${habit.id}`, habit);
+    habitId: number,
+    habit: HabitUpdate
+): Promise<HabitRead> => {
+    return await HabitsService.patchHabitHabitsHabitIdPatch(habitId, habit);
 };

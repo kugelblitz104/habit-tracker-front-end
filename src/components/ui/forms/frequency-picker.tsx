@@ -43,8 +43,8 @@ export const FrequencyPicker = ({
         { name: 'custom', frequency: 3, range: 7 }
     ]
 }: FrequencyPickerProps) => {
-    const [freq, setFreq] = useState(frequencies[3].frequency);
-    const [range, setRange] = useState(frequencies[3].range);
+    const [freq, setFreq] = useState(frequencies[3]?.frequency ?? 3);
+    const [range, setRange] = useState(frequencies[3]?.range ?? 7);
 
     return (
         <Field className='my-2 space-y-1'>

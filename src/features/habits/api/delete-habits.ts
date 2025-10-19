@@ -1,6 +1,5 @@
-import { api } from '@/lib/api-client';
-import type { Habit } from '@/types/types';
+import { HabitsService } from '@/api';
 
-export const deleteHabit = async (habit: Habit): Promise<void> => {
-    return await api.delete(`/habits/${habit.id}`);
+export const deleteHabit = async (habitId: number): Promise<void> => {
+    await HabitsService.deleteHabitHabitsHabitIdDelete(habitId);
 };

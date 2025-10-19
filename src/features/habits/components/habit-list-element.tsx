@@ -2,12 +2,18 @@ import { DeleteButton } from '@/components/ui/buttons/delete_button';
 import { Label } from '@/components/ui/label';
 import { createTracker } from '@/features/trackers/api/create-trackers';
 import { updateTracker } from '@/features/trackers/api/update-trackers';
-import type { Habit, Tracker, TrackerCreate } from '@/types/types';
+import type {
+    HabitRead,
+    TrackerRead,
+    TrackerCreate,
+    TrackerUpdate
+} from '@/api';
 import { Status } from '@/types/types';
 import { Button } from '@headlessui/react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Check, Circle, CircleCheckBig, CircleDot } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { getTrackers } from '@/features/trackers/api/get-trackers';
 
 export type TrackerCheckboxProps = {
     status: Status;
@@ -38,10 +44,10 @@ const TrackerCheckbox = ({
 };
 
 export type HabitListElementProps = {
-    habit: Habit;
-    days?: number;
-    // onHabitUpdate: (habit: Habit) => void;
-    onHabitDeleteClick: (habit: Habit) => void;
+    habit: HabitRead;
+    days: number;
+    // onHabitUpdate: (habit: HabitRead) => void;
+    onHabitDeleteClick: (habit: HabitRead) => void;
 };
 
 export const HabitListElement = ({
@@ -49,22 +55,31 @@ export const HabitListElement = ({
     days,
     onHabitDeleteClick
 }: HabitListElementProps) => {
-    const today = new Date();
-    const dates = [...Array(days).keys()].map((day) => {
-        return new Date(
-            today.getFullYear(),
-            today.getMonth(),
-            today.getDate() - day,
-            today.getHours(),
-            today.getMinutes(),
-            today.getSeconds(),
-            today.getMilliseconds()
-        );
-    });
-    const [rowIsActive, setRowIsActive] = useState<boolean>(false);
-    const [trackers, setTrackers] = useState<Tracker[]>(
-        habit.trackers ? habit.trackers : []
+    // Use useMemo to prevent hydration mismatch - date created once and stable
+    const today = useMemo(() => new Date(), []);
+    const dates = useMemo(
+        () =>
+            [...Array(days).keys()].map((day) => {
+                return new Date(
+                    today.getFullYear(),
+                    today.getMonth(),
+                    today.getDate() - day,
+                    today.getHours(),
+                    today.getMinutes(),
+                    today.getSeconds(),
+                    today.getMilliseconds()
+                );
+            }),
+        [days, today]
     );
+    const [rowIsActive, setRowIsActive] = useState<boolean>(false);
+    const [trackers, setTrackers] = useState<TrackerRead[]>([]);
+    const trackersQuery = useQuery({
+        queryKey: ['trackers', { habitId: habit.id }],
+        queryFn: () => getTrackers(habit.id, days),
+        staleTime: 1000 * 60 // 1 minute
+    });
+
     const trackerCreate = useMutation({
         mutationFn: (tracker: TrackerCreate) => createTracker(tracker),
         onError: (error) => {
@@ -72,14 +87,15 @@ export const HabitListElement = ({
         }
     });
     const trackerUpdate = useMutation({
-        mutationFn: (tracker: Tracker) => updateTracker(tracker),
+        mutationFn: ({ id, update }: { id: number; update: TrackerUpdate }) =>
+            updateTracker(id, update),
         onError: (error) => {
             console.error('Error updating tracker:', error);
         }
     });
 
     // functions
-    const getTracker = (date: Date): Tracker | undefined => {
+    const getTracker = (date: Date): TrackerRead | undefined => {
         return trackers.find(
             (tracker) => tracker.dated === date.toISOString().split('T')[0]
         );
@@ -127,9 +143,11 @@ export const HabitListElement = ({
             // toggle completed
             trackerUpdate.mutate(
                 {
-                    ...tracker,
-                    completed: true,
-                    skipped: false
+                    id: tracker.id,
+                    update: {
+                        completed: true,
+                        skipped: false
+                    }
                 },
                 {
                     onSuccess: (data) => {
@@ -145,9 +163,11 @@ export const HabitListElement = ({
             // toggle skipped
             trackerUpdate.mutate(
                 {
-                    ...tracker,
-                    completed: false,
-                    skipped: true
+                    id: tracker.id,
+                    update: {
+                        completed: false,
+                        skipped: true
+                    }
                 },
                 {
                     onSuccess: (data) => {
@@ -163,9 +183,11 @@ export const HabitListElement = ({
             // toggle not completed
             trackerUpdate.mutate(
                 {
-                    ...tracker,
-                    completed: false,
-                    skipped: false
+                    id: tracker.id,
+                    update: {
+                        completed: false,
+                        skipped: false
+                    }
                 },
                 {
                     onSuccess: (data) => {
@@ -179,6 +201,12 @@ export const HabitListElement = ({
             );
         }
     };
+
+    useEffect(() => {
+        if (trackersQuery.data?.trackers) {
+            setTrackers(trackersQuery.data.trackers);
+        }
+    }, [trackersQuery.data]);
 
     // render
     return (

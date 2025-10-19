@@ -1,6 +1,7 @@
 import { HabitList } from '@/features/habits/components/habit-list';
 import { TitleBar } from '@/components/ui/title-bar';
-import { LoadingStatus, type Habit, type HabitCreate } from '@/types/types';
+import { LoadingStatus } from '@/types/types';
+import type { HabitRead, HabitCreate } from '@/api';
 import { useEffect, useState } from 'react';
 import { getHabits } from '@/features/habits/api/get-habits';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -16,13 +17,10 @@ type HabitsDashboardProps = {
 
 export const HabitsDashboard = ({ userId, days = 9 }: HabitsDashboardProps) => {
     // hooks
-    const [habits, setHabits] = useState<Habit[]>([]);
+    const [habits, setHabits] = useState<HabitRead[]>([]);
     const [addHabitModalOpen, setAddHabitModalOpen] = useState(false);
     const [deleteHabitModalOpen, setDeleteHabitModalOpen] = useState(false);
-    const [selectedHabit, setSelectedHabit] = useState<Habit>({
-        id: 1,
-        name: 'Placeholder'
-    });
+    const [selectedHabit, setSelectedHabit] = useState<HabitRead | null>(null);
     const habitsQuery = useQuery({
         queryKey: ['habits', { userId }],
         queryFn: () => getHabits(userId, days),
@@ -37,7 +35,7 @@ export const HabitsDashboard = ({ userId, days = 9 }: HabitsDashboardProps) => {
     });
 
     const habitsDelete = useMutation({
-        mutationFn: (habit: Habit) => deleteHabit(habit),
+        mutationFn: (habitId: number) => deleteHabit(habitId),
         onSuccess: () => {
             habitsQuery.refetch();
         }
@@ -50,12 +48,14 @@ export const HabitsDashboard = ({ userId, days = 9 }: HabitsDashboardProps) => {
             }
         });
 
-    const handleDeleteHabit = (habit: Habit) =>
-        habitsDelete.mutate(selectedHabit, {
-            onSuccess: (data) => {
-                setHabits(habits.filter((item) => item !== selectedHabit));
+    const handleDeleteHabit = (habit: HabitRead) => {
+        if (!habit) return;
+        habitsDelete.mutate(habit.id, {
+            onSuccess: () => {
+                setHabits(habits.filter((item) => item.id !== habit.id));
             }
         });
+    };
 
     const loadingStatusToEnum = (status: string) => {
         switch (status) {
@@ -72,10 +72,10 @@ export const HabitsDashboard = ({ userId, days = 9 }: HabitsDashboardProps) => {
 
     // Effect to set habits from query data
     useEffect(() => {
-        if (habitsQuery.data?.habits !== undefined) {
+        if (habitsQuery.data?.habits) {
             setHabits(habitsQuery.data.habits);
         }
-    }, [habitsQuery.data?.habits]);
+    }, [habitsQuery.data]);
 
     if (habitsQuery.isError) {
         console.log('Error loading habits:', habitsQuery.error);
@@ -101,12 +101,14 @@ export const HabitsDashboard = ({ userId, days = 9 }: HabitsDashboardProps) => {
                     handleAddHabit(newHabit)
                 }
             />
-            <DeleteHabitModal
-                isOpen={deleteHabitModalOpen}
-                habit={selectedHabit}
-                onClose={() => setDeleteHabitModalOpen(false)}
-                handleDeleteHabit={(habit: Habit) => handleDeleteHabit(habit)}
-            />
+            {selectedHabit && (
+                <DeleteHabitModal
+                    isOpen={deleteHabitModalOpen}
+                    habit={selectedHabit}
+                    onClose={() => setDeleteHabitModalOpen(false)}
+                    handleDeleteHabit={(habit: HabitRead) => handleDeleteHabit(habit)}
+                />
+            )}
         </div>
     );
 };

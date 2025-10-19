@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { TitleBar } from '../ui/title-bar';
 import { getHabit } from '@/features/habits/api/get-habits';
-import type { Habit } from '@/types/types';
+import type { HabitRead } from '@/api';
 import { Link } from 'react-router';
 import { useEffect, useState } from 'react';
 
@@ -14,7 +14,7 @@ export const HabitDetailView = ({
     userId = 1,
     habitId
 }: HabitDetailViewProps) => {
-    const [habit, setHabit] = useState<Habit>();
+    const [habit, setHabit] = useState<HabitRead>();
     const habitQuery = useQuery({
         queryKey: ['habit', { habitId }],
         queryFn: () => getHabit(habitId),

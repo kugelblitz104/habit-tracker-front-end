@@ -1,8 +1,8 @@
-import { api } from '@/lib/api-client';
-import type { Tracker, TrackerCreate } from '@/types/types';
+import { TrackersService } from '@/api';
+import type { TrackerRead, TrackerCreate } from '@/api';
 
 export const createTracker = async (
     tracker: TrackerCreate
-): Promise<Tracker> => {
-    return await api.post(`/trackers/`, tracker);
+): Promise<TrackerRead> => {
+    return await TrackersService.createTrackerTrackersPost(tracker);
 };
