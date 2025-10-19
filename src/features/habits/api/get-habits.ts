@@ -1,15 +1,14 @@
-import { api } from '@/lib/api-client';
-import type { Habit } from '@/types/types';
+import { HabitsService, UsersService } from '@/api';
+import type { HabitRead, HabitList } from '@/api';
 
 export const getHabits = async (
     userId = 1,
     limit: number
-): Promise<{
-    habits: Habit[];
-}> => {
-    return await api.get(`/users/${userId}/habits?limit=${limit}`);
+): Promise<HabitList> => {
+    return await UsersService.listUserHabitsUsersUserIdHabitsGet(userId, limit);
 };
 
-export const getHabit = async (habitId?: number): Promise<Habit> => {
-    return await api.get(`/habits/${habitId}`);
+export const getHabit = async (habitId?: number): Promise<HabitRead> => {
+    if (!habitId) throw new Error('habitId is required');
+    return await HabitsService.readHabitHabitsHabitIdGet(habitId);
 };

@@ -14,6 +14,9 @@ import type { Route } from './+types/root';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 
+// Configure OpenAPI client base URL
+import '@/lib/api-client';
+
 export const links: Route.LinksFunction = () => [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
     {

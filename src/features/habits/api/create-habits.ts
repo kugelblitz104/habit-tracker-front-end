@@ -1,6 +1,6 @@
-import { api } from '@/lib/api-client';
-import type { Habit, HabitCreate } from '@/types/types';
+import { HabitsService } from '@/api';
+import type { HabitRead, HabitCreate } from '@/api';
 
-export const createHabit = async (habit: HabitCreate): Promise<Habit> => {
-    return await api.post(`/habits/`, habit);
+export const createHabit = async (habit: HabitCreate): Promise<HabitRead> => {
+    return await HabitsService.createHabitHabitsPost(habit);
 };

@@ -1,5 +1,6 @@
 import { Label } from '@/components/ui/label';
-import type { Frequency, Habit, HabitCreate } from '@/types/types';
+import type { Frequency } from '@/types/types';
+import type { HabitRead } from '@/api';
 import {
     CloseButton,
     Dialog,
@@ -12,9 +13,9 @@ import { FormProvider, type SubmitHandler } from 'react-hook-form';
 
 type DeleteHabitModalProps = {
     isOpen: boolean;
-    habit: Habit;
+    habit: HabitRead;
     onClose: () => void;
-    handleDeleteHabit: (habit: Habit) => void;
+    handleDeleteHabit: (habit: HabitRead) => void;
 };
 
 export const DeleteHabitModal = ({
@@ -23,7 +24,7 @@ export const DeleteHabitModal = ({
     onClose,
     handleDeleteHabit
 }: DeleteHabitModalProps) => {
-    const onSubmit = (data: Habit) => {
+    const onSubmit = (data: HabitRead) => {
         handleDeleteHabit(data);
         onClose();
     };
@@ -49,6 +50,13 @@ export const DeleteHabitModal = ({
                     </DialogTitle>
                     <div className='p2'>
                         <Label mainText={habit.name} textColor={habit.color} />
+                    </div>
+                    <div>
+                        <p>
+                            This action is <strong>irreversible</strong>. All
+                            habit data including tracking history will be
+                            permanently deleted.
+                        </p>
                     </div>
                     <div className='flex space-x-2'>
                         <Button

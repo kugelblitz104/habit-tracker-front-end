@@ -1,6 +1,7 @@
-import { api } from '@/lib/api-client';
-import type { Tracker, TrackerCreate } from '@/types/types';
+import { TrackersService } from '@/api';
+import type { TrackerRead, TrackerUpdate } from '@/api';
 
-export const updateTracker = async (tracker: Tracker): Promise<Tracker> => {
-    return await api.put(`/trackers/${tracker.id}`, tracker);
+export const updateTracker = async (trackerId: number, tracker: TrackerUpdate): Promise<TrackerRead> => {
+    console.log('Updating tracker:', tracker);
+    return await TrackersService.patchTrackerTrackersTrackerIdPatch(trackerId, tracker);
 };

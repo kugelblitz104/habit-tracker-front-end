@@ -1,11 +1,13 @@
 import { HabitListElement } from './habit-list-element';
-import { LoadingStatus, type Habit } from '@/types/types';
+import { LoadingStatus } from '@/types/types';
+import type { HabitRead } from '@/api';
+import { useMemo } from 'react';
 
 export type HabitListProps = {
-    habits: Habit[];
+    habits: HabitRead[];
     loadingStatus: LoadingStatus;
     days?: number;
-    onHabitDeleteClick: (habit: Habit) => void;
+    onHabitDeleteClick: (habit: HabitRead) => void;
 };
 
 // TODO: context to hold number of days?
@@ -16,8 +18,8 @@ export const HabitList = ({
     days = 0,
     onHabitDeleteClick
 }: HabitListProps) => {
-    // hooks
-    const today = new Date();
+    // hooks - use useMemo to prevent hydration mismatch
+    const today = useMemo(() => new Date(), []);
     const date_formatter = new Intl.DateTimeFormat('en-US', {
         month: '2-digit',
         day: '2-digit'

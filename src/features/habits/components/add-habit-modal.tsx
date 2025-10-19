@@ -2,7 +2,8 @@ import { ColorPicker } from '@/components/ui/forms/color-picker';
 import { FrequencyPicker } from '@/components/ui/forms/frequency-picker';
 import { LabeledSwitch } from '@/components/ui/forms/labeled-switch';
 import { TextField } from '@/components/ui/forms/text-field';
-import type { Frequency, HabitCreate } from '@/types/types';
+import type { Frequency } from '@/types/types';
+import type { HabitCreate } from '@/api';
 import {
     CloseButton,
     Dialog,
