@@ -8,3 +8,9 @@
 /.idea/
 
 /src/api/*
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
