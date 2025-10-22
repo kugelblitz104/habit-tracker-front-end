@@ -1,5 +1,5 @@
-import { Field, Label, RadioGroup, Radio, Input } from '@headlessui/react';
 import { type Frequency } from '@/types/types';
+import { Field, Input, Label, Radio, RadioGroup } from '@headlessui/react';
 import { useState } from 'react';
 
 type InlineNumberFieldProps = {

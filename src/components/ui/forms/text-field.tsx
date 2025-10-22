@@ -1,5 +1,5 @@
 import { Field, Input, Label } from '@headlessui/react';
-import { useFormContext, type UseFormRegister } from 'react-hook-form';
+import { useFormContext } from 'react-hook-form';
 
 type TextFieldProps = {
     name: string;

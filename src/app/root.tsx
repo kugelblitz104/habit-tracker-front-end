@@ -16,6 +16,7 @@ import React from 'react';
 
 // Configure OpenAPI client base URL
 import '@/lib/api-client';
+import { queryConfig } from '@/lib/react-query';
 
 export const links: Route.LinksFunction = () => [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -52,7 +53,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-    const [queryClient] = React.useState(() => new QueryClient());
+    const [queryClient] = React.useState(
+        () =>
+            new QueryClient({
+                defaultOptions: queryConfig
+            })
+    );
     return (
         <QueryClientProvider client={queryClient}>
             <Outlet />

@@ -1,5 +1,5 @@
-import { TrackersService } from '@/api';
 import type { TrackerRead, TrackerUpdate } from '@/api';
+import { TrackersService } from '@/api';
 
 export const updateTracker = async (
     trackerId: number,

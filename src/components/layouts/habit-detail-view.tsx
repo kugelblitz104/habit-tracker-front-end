@@ -1,9 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
-import { TitleBar } from '../ui/title-bar';
-import { getHabit } from '@/features/habits/api/get-habits';
 import type { HabitRead } from '@/api';
-import { Link } from 'react-router';
+import { getHabit } from '@/features/habits/api/get-habits';
+import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
+import { TitleBar } from '../ui/title-bar';
 
 type HabitDetailViewProps = {
     userId: number;
@@ -37,7 +37,6 @@ export const HabitDetailView = ({
     }
 
     if (habitQuery.isError) {
-        console.log('Error loading habits:', habitQuery.error);
         return (
             <>
                 <TitleBar title='Error loading habit' />
