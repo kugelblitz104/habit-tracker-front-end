@@ -1,14 +1,14 @@
-import { HabitList } from '@/features/habits/components/habit-list';
+import type { HabitCreate, HabitRead } from '@/api';
 import { TitleBar } from '@/components/ui/title-bar';
-import { LoadingStatus } from '@/types/types';
-import type { HabitRead, HabitCreate } from '@/api';
-import { useEffect, useState } from 'react';
-import { getHabits } from '@/features/habits/api/get-habits';
-import { useMutation, useQuery } from '@tanstack/react-query';
 import { createHabit } from '@/features/habits/api/create-habits';
-import { AddHabitModal } from '@/features/habits/components/add-habit-modal';
 import { deleteHabit } from '@/features/habits/api/delete-habits';
+import { getHabits } from '@/features/habits/api/get-habits';
+import { AddHabitModal } from '@/features/habits/components/add-habit-modal';
+import { HabitList } from '@/features/habits/components/dashboard/habit-list';
 import { DeleteHabitModal } from '@/features/habits/components/delete-habit-modal';
+import { LoadingStatus } from '@/types/types';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 
 type HabitsDashboardProps = {
     userId: number;
@@ -106,7 +106,9 @@ export const HabitsDashboard = ({ userId, days = 9 }: HabitsDashboardProps) => {
                     isOpen={deleteHabitModalOpen}
                     habit={selectedHabit}
                     onClose={() => setDeleteHabitModalOpen(false)}
-                    handleDeleteHabit={(habit: HabitRead) => handleDeleteHabit(habit)}
+                    handleDeleteHabit={(habit: HabitRead) =>
+                        handleDeleteHabit(habit)
+                    }
                 />
             )}
         </div>

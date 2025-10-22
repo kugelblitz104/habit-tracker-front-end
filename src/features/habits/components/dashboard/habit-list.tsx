@@ -1,7 +1,7 @@
-import { HabitListElement } from './habit-list-element';
-import { LoadingStatus } from '@/types/types';
 import type { HabitRead } from '@/api';
+import { LoadingStatus } from '@/types/types';
 import { useMemo } from 'react';
+import { HabitListElement } from './habit-list-element';
 
 export type HabitListProps = {
     habits: HabitRead[];

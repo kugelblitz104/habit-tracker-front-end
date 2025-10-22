@@ -1,5 +1,5 @@
+import type { HabitList, HabitRead } from '@/api';
 import { HabitsService, UsersService } from '@/api';
-import type { HabitRead, HabitList } from '@/api';
 
 export const getHabits = async (
     userId = 1,

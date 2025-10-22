@@ -1,19 +1,19 @@
+import type {
+    HabitRead,
+    TrackerCreate,
+    TrackerRead,
+    TrackerUpdate
+} from '@/api';
 import { DeleteButton } from '@/components/ui/buttons/delete_button';
 import { Label } from '@/components/ui/label';
 import { createTracker } from '@/features/trackers/api/create-trackers';
+import { getTrackers } from '@/features/trackers/api/get-trackers';
 import { updateTracker } from '@/features/trackers/api/update-trackers';
-import type {
-    HabitRead,
-    TrackerRead,
-    TrackerCreate,
-    TrackerUpdate
-} from '@/api';
 import { Status } from '@/types/types';
 import { Button } from '@headlessui/react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Check, Circle, CircleCheckBig, CircleDot } from 'lucide-react';
-import { useState, useMemo, useEffect } from 'react';
-import { getTrackers } from '@/features/trackers/api/get-trackers';
+import { Circle, CircleCheckBig, CircleDot } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
 export type TrackerCheckboxProps = {
     status: Status;

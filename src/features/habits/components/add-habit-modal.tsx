@@ -1,10 +1,11 @@
+import type { HabitCreate } from '@/api';
 import { ColorPicker } from '@/components/ui/forms/color-picker';
 import { FrequencyPicker } from '@/components/ui/forms/frequency-picker';
 import { LabeledSwitch } from '@/components/ui/forms/labeled-switch';
 import { TextField } from '@/components/ui/forms/text-field';
 import type { Frequency } from '@/types/types';
-import type { HabitCreate } from '@/api';
 import {
+    Button,
     CloseButton,
     Dialog,
     DialogBackdrop,
@@ -12,15 +13,9 @@ import {
     DialogTitle,
     Field,
     Fieldset,
-    Input,
     Label,
-    Radio,
-    RadioGroup,
-    Switch,
-    Textarea,
-    Button
+    Textarea
 } from '@headlessui/react';
-import { useEffect, useState } from 'react';
 import {
     Controller,
     FormProvider,

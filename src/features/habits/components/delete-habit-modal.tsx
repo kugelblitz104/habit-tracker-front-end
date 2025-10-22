@@ -1,15 +1,13 @@
-import { Label } from '@/components/ui/label';
-import type { Frequency } from '@/types/types';
 import type { HabitRead } from '@/api';
+import { Label } from '@/components/ui/label';
 import {
+    Button,
     CloseButton,
     Dialog,
     DialogBackdrop,
     DialogPanel,
-    DialogTitle,
-    Button
+    DialogTitle
 } from '@headlessui/react';
-import { FormProvider, type SubmitHandler } from 'react-hook-form';
 
 type DeleteHabitModalProps = {
     isOpen: boolean;
