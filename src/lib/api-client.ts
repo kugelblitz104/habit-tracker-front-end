@@ -1,5 +1,5 @@
-import Axios from 'axios';
 import { OpenAPI } from '@/api';
 
 // Configure the OpenAPI generated client
-OpenAPI.BASE = 'http://localhost:8000';
+declare const __API_BASE_URL__: string;
+OpenAPI.BASE = __API_BASE_URL__;
