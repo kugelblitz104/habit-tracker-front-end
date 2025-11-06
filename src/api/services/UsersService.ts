@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { HabitList } from '../models/HabitList';
-import type { UserCreate } from '../models/UserCreate';
 import type { UserList } from '../models/UserList';
 import type { UserRead } from '../models/UserRead';
 import type { UserUpdate } from '../models/UserUpdate';
@@ -11,59 +10,6 @@ import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class UsersService {
-    /**
-     * Create a new user
-     * Create a new user with the following information:
-     *
-     * - **username**: Unique username for the user
-     * - **first_name**: User's first name
-     * - **last_name**: User's last name
-     * - **email**: User's email address
-     * - **password_hash**: Hashed password for authentication
-     * @param requestBody
-     * @returns UserRead Successful Response
-     * @throws ApiError
-     */
-    public static createUserUsersPost(
-        requestBody: UserCreate,
-    ): CancelablePromise<UserRead> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/users/',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                404: `Not found`,
-                422: `Validation Error`,
-            },
-        });
-    }
-    /**
-     * List all users
-     * Get a paginated list of all users in the system.
-     *
-     * - **limit**: Maximum number of users to return (default: 5, max: 100)
-     *
-     * Returns a list of users with pagination metadata including total count.
-     * @param limit Maximum number of users to return (1-100)
-     * @returns UserList Successful Response
-     * @throws ApiError
-     */
-    public static listUsersUsersGet(
-        limit: number = 5,
-    ): CancelablePromise<UserList> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/users/',
-            query: {
-                'limit': limit,
-            },
-            errors: {
-                404: `Not found`,
-                422: `Validation Error`,
-            },
-        });
-    }
     /**
      * Get a user by ID
      * Retrieve a specific user by their ID.
@@ -204,6 +150,34 @@ export class UsersService {
             path: {
                 'user_id': userId,
             },
+            query: {
+                'limit': limit,
+            },
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * List all users
+     * Get a paginated list of all users in the system.
+     * Regular users can only see their own account.
+     * Admins can see all users.
+     *
+     * - **limit**: Maximum number of users to return (default: 5, max: 100)
+     *
+     * Returns a list of users with pagination metadata including total count.
+     * @param limit Maximum number of users to return (1-100)
+     * @returns UserList Successful Response
+     * @throws ApiError
+     */
+    public static listUsersUsersGet(
+        limit: number = 5,
+    ): CancelablePromise<UserList> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/users/',
             query: {
                 'limit': limit,
             },
