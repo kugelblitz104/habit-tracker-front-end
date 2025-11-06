@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export type HabitCreate = {
-    user_id: number;
     name: string;
     question: string;
     color: string;
