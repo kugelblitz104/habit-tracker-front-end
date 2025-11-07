@@ -9,13 +9,15 @@ import { DeleteHabitModal } from '@/features/habits/components/delete-habit-moda
 import { LoadingStatus } from '@/types/types';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/lib/auth-context';
 
 type HabitsDashboardProps = {
-    userId: number;
     days?: number;
 };
 
-export const HabitsDashboard = ({ userId, days = 9 }: HabitsDashboardProps) => {
+export const HabitsDashboard = ({ days = 9 }: HabitsDashboardProps) => {
+    const { user } = useAuth();
+    const userId = user?.id || 1; // Fallback to 1 if no user (shouldn't happen in protected routes)
     // hooks
     const [habits, setHabits] = useState<HabitRead[]>([]);
     const [addHabitModalOpen, setAddHabitModalOpen] = useState(false);
@@ -95,7 +97,6 @@ export const HabitsDashboard = ({ userId, days = 9 }: HabitsDashboardProps) => {
             />
             <AddHabitModal
                 isOpen={addHabitModalOpen}
-                userId={userId}
                 onClose={() => setAddHabitModalOpen(false)}
                 handleAddHabit={(newHabit: HabitCreate) =>
                     handleAddHabit(newHabit)
