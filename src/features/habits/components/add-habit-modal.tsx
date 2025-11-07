@@ -25,7 +25,6 @@ import {
 
 type AddHabitModalProps = {
     isOpen: boolean;
-    userId: number;
     onClose: () => void;
     handleAddHabit: (habit: HabitCreate) => void; //should return a habit?
 };
@@ -41,7 +40,6 @@ interface IAddModalFormInput {
 
 export const AddHabitModal = ({
     isOpen = false,
-    userId,
     onClose,
     handleAddHabit
 }: AddHabitModalProps) => {
@@ -51,8 +49,7 @@ export const AddHabitModal = ({
         handleAddHabit({
             ...data,
             range: data.frequency.range,
-            frequency: data.frequency.frequency,
-            user_id: userId
+            frequency: data.frequency.frequency
         });
         onClose();
     };

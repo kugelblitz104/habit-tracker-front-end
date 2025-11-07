@@ -4,16 +4,14 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { TitleBar } from '../ui/title-bar';
+import { useAuth } from '@/lib/auth-context';
 
 type HabitDetailViewProps = {
-    userId: number;
     habitId?: number;
 };
 
-export const HabitDetailView = ({
-    userId = 1,
-    habitId
-}: HabitDetailViewProps) => {
+export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
+    const { user } = useAuth();
     const [habit, setHabit] = useState<HabitRead>();
     const habitQuery = useQuery({
         queryKey: ['habit', { habitId }],
