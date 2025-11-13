@@ -7,6 +7,7 @@ type TextFieldProps = {
     placeholder?: string;
     isRequired?: boolean;
     isValid?: boolean;
+    type?: string;
 };
 
 export const TextField = ({
@@ -14,7 +15,8 @@ export const TextField = ({
     label,
     placeholder = '',
     isRequired = false,
-    isValid = true
+    isValid = true,
+    type = 'text'
 }: TextFieldProps) => {
     const {
         register,
@@ -30,7 +32,7 @@ export const TextField = ({
                     ${isValid && 'border-slate'} 
                     rounded-md py-1 px-2 w-full`}
                 {...register(name, { required: isRequired, maxLength: 50 })}
-                type='text'
+                type={type}
                 placeholder={placeholder}
             />
         </Field>

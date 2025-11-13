@@ -1,106 +1,78 @@
-import { useState } from 'react';
-import type { FormEvent } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { TitleBar } from '../ui/title-bar';
 import { useAuth } from '@/lib/auth-context';
-import { AuthenticationService } from '@/api';
+import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
+import { Button, Fieldset } from '@headlessui/react';
+import { Login } from '@/features/auth/api/login';
+import { TextField } from '../ui/forms/text-field';
 
 type LoginFormProps = {};
 
+interface ILoginFormInput {
+    username: string;
+    password: string;
+}
+
 export const LoginForm = (props: LoginFormProps) => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-
-    const { login } = useAuth();
+    const { login, isAuthenticated } = useAuth();
     const navigate = useNavigate();
+    const methods = useForm<ILoginFormInput>();
+    const errors = methods.formState.errors;
+    const onSubmit: SubmitHandler<ILoginFormInput> = async (data) => {
+        const response = await Login(data.username, data.password);
 
-    const handleSubmit = async (e: FormEvent) => {
-        e.preventDefault();
-        setError('');
-        setIsLoading(true);
+        // Store tokens using auth context
+        login(response.access_token, response.refresh_token);
 
-        try {
-            const response = await AuthenticationService.loginAuthLoginPost({
-                username: email,
-                password: password
-            });
-
-            // Store tokens using auth context
-            login(response.access_token, response.refresh_token);
-
-            // Redirect to home page
-            navigate('/', { replace: true });
-        } catch (err: any) {
-            console.error('Login failed:', err);
-            setError(
-                err?.body?.detail ||
-                    'Login failed. Please check your credentials.'
-            );
-        } finally {
-            setIsLoading(false);
-        }
+        // Redirect to home page
+        navigate('/', { replace: true });
     };
 
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/', { replace: true });
+        }
+    }, [isAuthenticated, navigate]);
+
     return (
-        <div className='min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8'>
-            <div className='max-w-md w-full space-y-8'>
-                <TitleBar title='Login' />
-
-                <form className='mt-8 space-y-6' onSubmit={handleSubmit}>
-                    {error && (
-                        <div className='rounded-md bg-red-50 p-4'>
-                            <p className='text-sm text-red-800'>{error}</p>
-                        </div>
-                    )}
-
-                    <div className='rounded-md shadow-sm -space-y-px'>
-                        <div>
-                            <label htmlFor='email' className='sr-only'>
-                                Email or Username
-                            </label>
-                            <input
-                                id='email'
-                                name='email'
-                                type='text'
-                                required
-                                className='appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm'
-                                placeholder='Email or Username'
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                disabled={isLoading}
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor='password' className='sr-only'>
-                                Password
-                            </label>
-                            <input
-                                id='password'
-                                name='password'
-                                type='password'
-                                required
-                                className='appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm'
-                                placeholder='Password'
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                disabled={isLoading}
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <button
-                            type='submit'
-                            disabled={isLoading}
-                            className='group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed'
-                        >
-                            {isLoading ? 'Signing in...' : 'Sign in'}
-                        </button>
-                    </div>
+        <>
+            <TitleBar title='Login' />
+            <FormProvider {...methods}>
+                <form
+                    className='
+                            bg-slate-800
+                            rounded-md
+                            p-4
+                            max-w-lg
+                            mx-auto
+                            mt-8
+                            '
+                    onSubmit={methods.handleSubmit(onSubmit)}
+                >
+                    <Fieldset className='space-y-1'>
+                        <TextField
+                            isRequired
+                            label='Username'
+                            name='username'
+                            isValid={!errors.username}
+                        />
+                        <TextField
+                            isRequired
+                            label='Password'
+                            name='password'
+                            type='password'
+                            isValid={!errors.password}
+                        />
+                    </Fieldset>
+                    <Button
+                        type='submit'
+                        className='bg-sky-500 rounded-md px-4 py-2'
+                    >
+                        Login
+                    </Button>
                 </form>
-            </div>
-        </div>
+            </FormProvider>
+        </>
     );
 };
