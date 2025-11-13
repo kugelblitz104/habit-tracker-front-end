@@ -5,7 +5,6 @@ import { HabitListElement } from './habit-list-element';
 
 export type HabitListProps = {
     habits: HabitRead[];
-    loadingStatus: LoadingStatus;
     days?: number;
     onHabitDeleteClick: (habit: HabitRead) => void;
 };
@@ -14,7 +13,6 @@ export type HabitListProps = {
 
 export const HabitList = ({
     habits,
-    loadingStatus = LoadingStatus.PENDING,
     days = 0,
     onHabitDeleteClick
 }: HabitListProps) => {
@@ -24,15 +22,6 @@ export const HabitList = ({
         month: '2-digit',
         day: '2-digit'
     });
-
-    // Render
-    if (loadingStatus === LoadingStatus.PENDING) {
-        return <div className='m-4'>Loading...</div>;
-    }
-
-    if (loadingStatus === LoadingStatus.ERROR) {
-        return <div className='m-4'>Error loading habits</div>;
-    }
 
     if (!habits || habits.length === 0) {
         return <div className='m-4'>No habits found.</div>;
