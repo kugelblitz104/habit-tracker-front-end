@@ -9,7 +9,7 @@ type AddButtonProps = {
 export const AddButton = ({ onClick, className }: AddButtonProps) => {
     return (
         <Button
-            className={`p-2 flex items-center rounded-md ${className}
+            className={`px-4 py-2 flex items-center rounded-md font-medium ${className}
             hover:bg-slate-700`}
             onClick={onClick}
         >
