@@ -6,7 +6,6 @@ import { getHabits } from '@/features/habits/api/get-habits';
 import { AddHabitModal } from '@/features/habits/components/add-habit-modal';
 import { HabitList } from '@/features/habits/components/dashboard/habit-list';
 import { DeleteHabitModal } from '@/features/habits/components/delete-habit-modal';
-import { LoadingStatus } from '@/types/types';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
