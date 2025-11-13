@@ -11,6 +11,7 @@ import {
 import { Button, Fieldset } from '@headlessui/react';
 import { Login } from '@/features/auth/api/login';
 import { TextField } from '../ui/forms/text-field';
+import classNames from 'classnames';
 
 type LoginFormProps = {};
 
@@ -83,12 +84,21 @@ export const LoginForm = (props: LoginFormProps) => {
                                     isValid={!errors.password}
                                 />
                             </Fieldset>
-                            <Button
-                                type='submit'
-                                className='bg-sky-500 rounded-md px-4 py-2'
-                            >
-                                Login
-                            </Button>
+                            <div className='flex items-center gap-3'>
+                                <Button
+                                    disabled={isSubmitting}
+                                    type='submit'
+                                    className={classNames(
+                                        'bg-sky-500 rounded-md px-4 py-2',
+                                        { 'bg-sky-950': isSubmitting }
+                                    )}
+                                >
+                                    Login
+                                </Button>
+                                {isSubmitting && (
+                                    <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500'></div>
+                                )}
+                            </div>
                         </form>
                     </FormProvider>
                     {loginError && (
