@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { OpenAPI, UsersService } from '@/api';
+import { OpenAPI } from '@/api';
 import { getUserIdFromToken, isTokenExpired } from './token-utils';
+import { getUser } from '@/features/users/api/get-users';
 
 interface User {
     id: number;
@@ -82,9 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         if (userId) {
             try {
                 // Fetch user details from API
-                const userData = await UsersService.readUserUsersUserIdGet(
-                    userId
-                );
+                const userData = await getUser(userId);
                 localStorage.setItem('user', JSON.stringify(userData));
                 setUser(userData);
             } catch (error) {
