@@ -27,9 +27,11 @@
   "devDependencies": {
     "@react-router/dev": "^7.5.3",
     "@tailwindcss/vite": "^4.1.8",
+    "@types/dompurify": "^3.0.5",
     "@types/node": "^20",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
+    "dompurify": "^3.3.0",
     "openapi-typescript": "^7.10.1",
     "openapi-typescript-codegen": "^0.29.0",
     "tailwindcss": "^4.1.8",

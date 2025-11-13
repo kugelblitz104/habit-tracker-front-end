@@ -12,6 +12,11 @@ import { Button, Fieldset } from '@headlessui/react';
 import { Login } from '@/features/auth/api/login';
 import { TextField } from '../ui/forms/text-field';
 import classNames from 'classnames';
+import {
+    sanitizeUsername,
+    sanitizeFormData,
+    validationPatterns
+} from '@/lib/input-sanitization';
 
 type LoginFormProps = {};
 
@@ -31,8 +36,17 @@ export const LoginForm = (props: LoginFormProps) => {
         setIsSubmitting(true);
         setLoginError(null);
 
+        // Sanitize form inputs
+        const sanitizedData = sanitizeFormData(data, {
+            username: sanitizeUsername,
+            password: (pwd: string) => pwd.trim() // Don't modify password too much
+        });
+
         try {
-            const response = await Login(data.username, data.password);
+            const response = await Login(
+                sanitizedData.username,
+                sanitizedData.password
+            );
 
             // Store tokens using auth context
             login(response.access_token, response.refresh_token);
@@ -75,6 +89,7 @@ export const LoginForm = (props: LoginFormProps) => {
                                     label='Username'
                                     name='username'
                                     isValid={!errors.username}
+                                    validation={validationPatterns.username}
                                 />
                                 <TextField
                                     isRequired
@@ -82,6 +97,7 @@ export const LoginForm = (props: LoginFormProps) => {
                                     name='password'
                                     type='password'
                                     isValid={!errors.password}
+                                    validation={validationPatterns.password}
                                 />
                             </Fieldset>
                             <div className='flex items-center gap-3'>
