@@ -10,6 +10,7 @@ import { LoadingStatus } from '@/types/types';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { LoadingScreen } from './loading-screen';
 
 type HabitsDashboardProps = {
     days?: number;
@@ -30,46 +31,26 @@ export const HabitsDashboard = ({ days = 9 }: HabitsDashboardProps) => {
     });
 
     const habitsAdd = useMutation({
-        mutationFn: (newHabit: HabitCreate) => createHabit(newHabit),
-        onSuccess: () => {
+        mutationFn: createHabit,
+        onSuccess: (data) => {
+            setHabits((prev) => [...prev, data]);
             habitsQuery.refetch();
         }
     });
 
     const habitsDelete = useMutation({
-        mutationFn: (habitId: number) => deleteHabit(habitId),
-        onSuccess: () => {
+        mutationFn: deleteHabit,
+        onSuccess: (_data, habitId) => {
+            setHabits((prev) => prev.filter((item) => item.id !== habitId));
             habitsQuery.refetch();
         }
     });
 
     const handleAddHabit = (newHabit: HabitCreate) =>
-        habitsAdd.mutate(newHabit, {
-            onSuccess: (data) => {
-                setHabits([...habits, data]);
-            }
-        });
+        habitsAdd.mutate(newHabit);
 
     const handleDeleteHabit = (habit: HabitRead) => {
-        if (!habit) return;
-        habitsDelete.mutate(habit.id, {
-            onSuccess: () => {
-                setHabits(habits.filter((item) => item.id !== habit.id));
-            }
-        });
-    };
-
-    const loadingStatusToEnum = (status: string) => {
-        switch (status) {
-            case 'loading':
-                return LoadingStatus.PENDING;
-            case 'error':
-                return LoadingStatus.ERROR;
-            case 'success':
-                return LoadingStatus.SUCCESS;
-            default:
-                return LoadingStatus.PENDING;
-        }
+        if (habit) habitsDelete.mutate(habit.id);
     };
 
     // Effect to set habits from query data
@@ -78,6 +59,10 @@ export const HabitsDashboard = ({ days = 9 }: HabitsDashboardProps) => {
             setHabits(habitsQuery.data.habits);
         }
     }, [habitsQuery.data]);
+
+    if (habitsQuery.isLoading) {
+        return <LoadingScreen />;
+    }
 
     if (habitsQuery.isError) {
         console.log('Error loading habits:', habitsQuery.error);
@@ -88,7 +73,6 @@ export const HabitsDashboard = ({ days = 9 }: HabitsDashboardProps) => {
             <TitleBar onAddHabitClick={() => setAddHabitModalOpen(true)} />
             <HabitList
                 habits={habits}
-                loadingStatus={loadingStatusToEnum(habitsQuery.status)}
                 days={days}
                 onHabitDeleteClick={(habit) => {
                     setDeleteHabitModalOpen(true);
