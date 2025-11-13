@@ -5,6 +5,12 @@ import { LabeledSwitch } from '@/components/ui/forms/labeled-switch';
 import { TextField } from '@/components/ui/forms/text-field';
 import type { Frequency } from '@/types/types';
 import {
+    sanitizeText,
+    sanitizeMultilineText,
+    sanitizeFormData,
+    validationPatterns
+} from '@/lib/input-sanitization';
+import {
     Button,
     CloseButton,
     Dialog,
@@ -46,10 +52,17 @@ export const AddHabitModal = ({
     const methods = useForm<IAddModalFormInput>();
     const errors = methods.formState.errors;
     const onSubmit: SubmitHandler<IAddModalFormInput> = (data) => {
+        // Sanitize form inputs
+        const sanitizedData = sanitizeFormData(data, {
+            name: sanitizeText,
+            question: sanitizeText,
+            notes: sanitizeMultilineText
+        });
+
         handleAddHabit({
-            ...data,
-            range: data.frequency.range,
-            frequency: data.frequency.frequency
+            ...sanitizedData,
+            range: sanitizedData.frequency.range,
+            frequency: sanitizedData.frequency.frequency
         });
         onClose();
     };
@@ -89,12 +102,14 @@ export const AddHabitModal = ({
                                     name='name'
                                     placeholder='What will you do?'
                                     isValid={!errors.name}
+                                    validation={validationPatterns.habitName}
                                 />
                                 <TextField
                                     label='Question'
                                     name='question'
                                     placeholder='What signifies completion?'
                                     isValid={!errors.question}
+                                    validation={validationPatterns.question}
                                 />
                                 <Controller
                                     name='color'
@@ -137,13 +152,24 @@ export const AddHabitModal = ({
                                 <Field className='mb-2'>
                                     <Label className='block'>Notes</Label>
                                     <Textarea
-                                        {...methods.register('notes')}
+                                        {...methods.register(
+                                            'notes',
+                                            validationPatterns.notes
+                                        )}
                                         className={`block bg-black border-slate rounded-md py-1 px-2 w-full
                                         ${
                                             methods.formState.errors.notes &&
                                             'border-red-500'
                                         }`}
                                     />
+                                    {methods.formState.errors.notes && (
+                                        <span className='text-red-400 text-sm'>
+                                            {
+                                                methods.formState.errors.notes
+                                                    .message as string
+                                            }
+                                        </span>
+                                    )}
                                 </Field>
                             </Fieldset>
                             <div className='flex space-x-2'>
