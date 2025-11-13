@@ -25,7 +25,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
     // Don't render children if not authenticated
     if (!isAuthenticated) {
-        return null;
+        return <LoadingScreen />;
     }
 
     return <>{children}</>;
