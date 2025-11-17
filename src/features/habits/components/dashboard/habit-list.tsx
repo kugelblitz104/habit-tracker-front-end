@@ -28,7 +28,7 @@ export const HabitList = ({
     }
 
     return (
-        <div className='overflow-x-auto mx-4'>
+        <div className='overflow-x-auto m-4'>
             <table className='min-w-full table-auto'>
                 <thead>
                     <tr>

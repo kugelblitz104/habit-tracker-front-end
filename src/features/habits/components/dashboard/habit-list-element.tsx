@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { createTracker } from '@/features/trackers/api/create-trackers';
 import { getTrackers } from '@/features/trackers/api/get-trackers';
 import { updateTracker } from '@/features/trackers/api/update-trackers';
+import { getFrequencyString } from '@/lib/date-utils';
 import { Status } from '@/types/types';
 import { Button } from '@headlessui/react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -108,15 +109,6 @@ export const HabitListElement = ({
         if (tracker?.completed) return Status.COMPLETED;
         if (tracker?.skipped) return Status.SKIPPED;
         return Status.NOT_COMPLETED;
-    };
-
-    const getFrequencyString = (frequency: number, range: number) => {
-        if (frequency === range) return 'daily';
-        else if (frequency === 1 && range === 7) return 'weekly';
-        else if (frequency === 1 && range === 30) return 'monthly';
-        else if (frequency === 1) return `once every ${range}`;
-        else return `${frequency} times every ${range} days`;
-        // if (frequency === 1 && range === 365) return 'yearly'
     };
 
     const handleCheckboxClick = (date: Date) => {
