@@ -1,10 +1,18 @@
 import type { HabitRead } from '@/api';
-import { getHabit } from '@/features/habits/api/get-habits';
-import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router';
-import { TitleBar } from '../ui/title-bar';
+import {
+    getHabit,
+    getHabitKPIs,
+    getHabitStreaks
+} from '@/features/habits/api/get-habits';
+import { KpiBoard } from '@/features/habits/components/details/kpi-board';
 import { useAuth } from '@/lib/auth-context';
+import { getFrequencyString } from '@/lib/date-utils';
+import { useQuery } from '@tanstack/react-query';
+import { Bell, Calendar } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { TitleBar } from '../ui/title-bar';
+import { ErrorScreen } from './error-screen';
+import { LoadingScreen } from './loading-screen';
 
 type HabitDetailViewProps = {
     habitId?: number;
@@ -18,6 +26,16 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
         queryFn: () => getHabit(habitId),
         staleTime: 1000 * 60 // 1 minute
     });
+    const habitKPIQuery = useQuery({
+        queryKey: ['habit-kpis', { habitId }],
+        queryFn: () => getHabitKPIs(habitId),
+        enabled: !!habitId
+    });
+    const streakQuery = useQuery({
+        queryKey: ['habit-streaks', { habitId }],
+        queryFn: () => getHabitStreaks(habitId),
+        enabled: !!habitId
+    });
 
     // Effect to set habits from query data
     useEffect(() => {
@@ -27,29 +45,33 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
     }, [habitQuery.data]);
 
     if (habitQuery.isLoading) {
-        return (
-            <>
-                <TitleBar title='Loading...' />
-            </>
-        );
+        return <LoadingScreen />;
     }
 
     if (habitQuery.isError) {
-        return (
-            <>
-                <TitleBar title='Error loading habit' />
-                <Link to='/'>Click here to return to dashboard page</Link>
-            </>
-        );
+        return <ErrorScreen message='Error Loading habit query data' />;
     }
 
     return (
         <>
             <TitleBar title={`${habit?.name}`} />
-            <p>
-                Habit: {habitId}
-                Habit Name: {habit?.name}
-            </p>
+            <div className='flex bg-slate-800 p-4 gap-4 text-sm items-center'>
+                <span
+                    className={'font-semibold'}
+                    style={{ color: habit?.color }}
+                >
+                    {habit?.question}
+                </span>
+                <span className='flex items-center'>
+                    <Calendar size={16} className='inline-flex mr-1' />
+                    {habit && getFrequencyString(habit.frequency, habit.range)}
+                </span>
+                <span className='flex items-center'>
+                    <Bell size={16} className='inline-flex mr-1' />
+                    {habit && (habit.reminder ? 'on' : 'off')}
+                </span>
+            </div>
+            <KpiBoard habitKPIS={habitKPIQuery.data} />
         </>
     );
 };
