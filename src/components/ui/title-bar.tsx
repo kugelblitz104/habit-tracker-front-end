@@ -2,7 +2,7 @@ import { AddButton } from '@/features/habits/components/add-button';
 import { useAuth } from '@/lib/auth-context';
 import { LogoutButton } from '../auth/logout-button';
 import { Link, useLocation } from 'react-router';
-import { ChevronLeft } from 'lucide-react';
+import { CheckCheck, ChevronLeft } from 'lucide-react';
 
 type TitleBarProps = {
     title?: string;
@@ -25,6 +25,7 @@ export const TitleBar = ({
                         <ChevronLeft className='mr-2' />
                     </Link>
                 )}
+                {!showBackButton && <CheckCheck className='mr-2' />}
                 <h1 className='text-xl'>{title}</h1>
                 <div className='flex flex-row-reverse items-center gap-2 ml-auto'>
                     {isAuthenticated && <LogoutButton />}

@@ -13,7 +13,7 @@ import { getFrequencyString } from '@/lib/date-utils';
 import { Status } from '@/types/types';
 import { Button } from '@headlessui/react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Circle, CircleCheckBig, CircleDot } from 'lucide-react';
+import { Check, ChevronsRight, Square } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 export type TrackerCheckboxProps = {
@@ -28,12 +28,12 @@ const TrackerCheckbox = ({
     const getIcon = (status: Status) => {
         switch (status) {
             case Status.COMPLETED:
-                return <CircleCheckBig color='green' strokeWidth={3} />;
+                return <Check color='green' strokeWidth={3} />;
             case Status.SKIPPED:
-                return <CircleDot color='lightblue' strokeWidth={3} />;
+                return <ChevronsRight color='lightblue' strokeWidth={3} />;
             case Status.NOT_COMPLETED:
             default:
-                return <Circle color='white' strokeWidth={1} />;
+                return <Square color='white' strokeWidth={1} />;
         }
     };
 
