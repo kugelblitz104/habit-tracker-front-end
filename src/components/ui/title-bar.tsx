@@ -1,9 +1,7 @@
-import { AddButton } from '@/features/habits/components/buttons/add-button';
+import { ActionButton } from '@/components/ui/buttons/action-button';
 import { useAuth } from '@/lib/auth-context';
-import { LogoutButton } from '../../features/auth/components/logout-button';
-import { Link, useLocation } from 'react-router';
-import { CheckCheck, ChevronLeft } from 'lucide-react';
-import { DeleteButton } from '@/features/habits/components/buttons/delete-button';
+import { CheckCheck, ChevronLeft, LogOut, Plus, Trash } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router';
 
 type TitleBarProps = {
     title?: string;
@@ -16,9 +14,10 @@ export const TitleBar = ({
     onAddHabitClick,
     onDeleteHabitClick
 }: TitleBarProps) => {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, logout } = useAuth();
     const location = useLocation();
     const showBackButton = !['/', '/login'].includes(location.pathname);
+    const navigate = useNavigate();
 
     return (
         <div className='p-4 bg-slate-700 relative'>
@@ -31,17 +30,34 @@ export const TitleBar = ({
                 {!showBackButton && <CheckCheck className='mr-2' />}
                 <h1 className='text-xl'>{title}</h1>
                 <div className='flex flex-row-reverse items-center gap-2 ml-auto'>
-                    {isAuthenticated && !showBackButton && <LogoutButton />}
+                    {isAuthenticated && !showBackButton && (
+                        <ActionButton
+                            className='flex-row-reverse'
+                            onClick={() => {
+                                logout();
+                                navigate('/login', { replace: true });
+                            }}
+                            variant='danger'
+                            label='Logout'
+                            icon={<LogOut />}
+                        />
+                    )}
                     {onAddHabitClick && (
-                        <AddButton
+                        <ActionButton
                             className=''
                             onClick={() => onAddHabitClick?.()}
+                            variant='primary'
+                            label='Add Habit'
+                            icon={<Plus />}
                         />
                     )}
                     {onDeleteHabitClick && (
-                        <DeleteButton
+                        <ActionButton
                             className=''
                             onClick={() => onDeleteHabitClick?.()}
+                            variant='danger'
+                            label='Delete'
+                            icon={<Trash />}
                         />
                     )}
                 </div>
