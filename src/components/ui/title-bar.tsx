@@ -1,18 +1,27 @@
-import { ActionButton } from '@/components/ui/buttons/action-button';
+import {
+    ActionButton,
+    ButtonVariant
+} from '@/components/ui/buttons/action-button';
 import { useAuth } from '@/lib/auth-context';
-import { CheckCheck, ChevronLeft, LogOut, Plus, Trash } from 'lucide-react';
+import { CheckCheck, ChevronLeft, LogOut } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router';
+
+type ActionConfig = {
+    onClick: () => void;
+    label: string;
+    icon: React.ReactNode;
+    variant?: ButtonVariant;
+    reversed?: boolean;
+};
 
 type TitleBarProps = {
     title?: string;
-    onAddHabitClick?: () => void;
-    onDeleteHabitClick?: () => void;
+    actions?: ActionConfig[];
 };
 
 export const TitleBar = ({
     title = 'Habit Tracker',
-    onAddHabitClick,
-    onDeleteHabitClick
+    actions = []
 }: TitleBarProps) => {
     const { isAuthenticated, logout } = useAuth();
     const location = useLocation();
@@ -37,29 +46,23 @@ export const TitleBar = ({
                                 logout();
                                 navigate('/login', { replace: true });
                             }}
-                            variant='danger'
+                            variant={ButtonVariant.Danger}
                             label='Logout'
                             icon={<LogOut />}
                         />
                     )}
-                    {onAddHabitClick && (
+                    {actions.map((action, index) => (
                         <ActionButton
-                            className=''
-                            onClick={() => onAddHabitClick?.()}
-                            variant='primary'
-                            label='Add Habit'
-                            icon={<Plus />}
+                            key={index}
+                            className={
+                                action.reversed ? 'flex-row-reverse' : ''
+                            }
+                            onClick={action.onClick}
+                            variant={action.variant}
+                            label={action.label}
+                            icon={action.icon}
                         />
-                    )}
-                    {onDeleteHabitClick && (
-                        <ActionButton
-                            className=''
-                            onClick={() => onDeleteHabitClick?.()}
-                            variant='danger'
-                            label='Delete'
-                            icon={<Trash />}
-                        />
-                    )}
+                    ))}
                 </div>
             </div>
         </div>

@@ -9,9 +9,10 @@ import { KpiBoard } from '@/features/habits/components/details/kpi-board';
 import { DeleteHabitModal } from '@/features/habits/components/modals/delete-habit-modal';
 import { getFrequencyString } from '@/lib/date-utils';
 import { useQuery } from '@tanstack/react-query';
-import { Bell, Calendar } from 'lucide-react';
+import { Bell, Calendar, Pencil, Trash } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { ButtonVariant } from '../ui/buttons/action-button';
 import { TitleBar } from '../ui/title-bar';
 import { ErrorScreen } from './error-screen';
 import { LoadingScreen } from './loading-screen';
@@ -59,7 +60,20 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
         <>
             <TitleBar
                 title={`${habit?.name}`}
-                onDeleteHabitClick={() => setIsDeleteModalOpen(true)}
+                actions={[
+                    {
+                        label: 'Delete',
+                        onClick: () => setIsDeleteModalOpen(true),
+                        icon: <Trash />,
+                        variant: ButtonVariant.Danger
+                    },
+                    {
+                        label: 'Edit',
+                        onClick: () => {},
+                        icon: <Pencil />,
+                        variant: ButtonVariant.Secondary
+                    }
+                ]}
             />
             <div className='flex bg-slate-800 p-4 gap-4 text-sm items-center'>
                 <span
