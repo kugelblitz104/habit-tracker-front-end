@@ -15,6 +15,7 @@ import { Button } from '@headlessui/react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Check, ChevronsRight, Square } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router';
 
 export type TrackerCheckboxProps = {
     status: Status;
@@ -211,17 +212,28 @@ export const HabitListElement = ({
             align-middle
             '
         >
-            <td className={rowIsActive ? 'bg-slate-800' : 'bg-slate-800/50'}>
-                <Label
-                    mainText={habit.name}
-                    subText={
-                        habit.frequency && habit.range
-                            ? getFrequencyString(habit.frequency, habit.range)
-                            : undefined
-                    }
-                    textColor={habit.color}
-                    mainTextLink={`details/${habit.id}`}
-                />
+            <td
+                className={`relative w-60 ${
+                    rowIsActive ? 'bg-slate-800' : 'bg-slate-800/50'
+                }`}
+            >
+                <Link
+                    to={`details/${habit.id}`}
+                    className='absolute inset-0 flex items-center'
+                >
+                    <Label
+                        mainText={habit.name}
+                        subText={
+                            habit.frequency && habit.range
+                                ? getFrequencyString(
+                                      habit.frequency,
+                                      habit.range
+                                  )
+                                : undefined
+                        }
+                        textColor={habit.color}
+                    />
+                </Link>
             </td>
             {dates.map((date) => (
                 <td
