@@ -1,21 +1,15 @@
 import type { HabitRead } from '@/api';
-import { LoadingStatus } from '@/types/types';
 import { useMemo } from 'react';
 import { HabitListElement } from './habit-list-element';
 
 export type HabitListProps = {
     habits: HabitRead[];
     days?: number;
-    onHabitDeleteClick: (habit: HabitRead) => void;
 };
 
 // TODO: context to hold number of days?
 
-export const HabitList = ({
-    habits,
-    days = 0,
-    onHabitDeleteClick
-}: HabitListProps) => {
+export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
     // hooks - use useMemo to prevent hydration mismatch
     const today = useMemo(() => new Date(), []);
     const date_formatter = new Intl.DateTimeFormat('en-US', {
@@ -52,7 +46,6 @@ export const HabitList = ({
                             key={habit.id}
                             habit={habit}
                             days={days}
-                            onHabitDeleteClick={onHabitDeleteClick}
                         />
                     ))}
                 </tbody>

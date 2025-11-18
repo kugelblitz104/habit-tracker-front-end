@@ -1,6 +1,6 @@
-import type { Route } from './+types/home';
 import { HabitsDashboard } from '@/components/layouts/habits-dashboard';
-import { ProtectedRoute } from '@/components/auth/protected-route';
+import { ProtectedRoute } from '@/features/auth/components/protected-route';
+import type { Route } from './+types/home';
 
 export function meta({}: Route.MetaArgs) {
     return [
