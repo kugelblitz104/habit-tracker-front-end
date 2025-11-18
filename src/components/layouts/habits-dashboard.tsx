@@ -10,6 +10,7 @@ import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ButtonVariant } from '../ui/buttons/action-button';
 import { LoadingScreen } from './loading-screen';
+import { ErrorScreen } from './error-screen';
 
 type HabitsDashboardProps = {
     days?: number;
@@ -35,9 +36,6 @@ export const HabitsDashboard = ({ days = 9 }: HabitsDashboardProps) => {
         }
     });
 
-    const handleAddHabit = (newHabit: HabitCreate) =>
-        habitsAdd.mutate(newHabit);
-
     // Effect to set habits from query data
     useEffect(() => {
         if (habitsQuery.data?.habits) {
@@ -50,7 +48,7 @@ export const HabitsDashboard = ({ days = 9 }: HabitsDashboardProps) => {
     }
 
     if (habitsQuery.isError) {
-        console.log('Error loading habits:', habitsQuery.error);
+        return <ErrorScreen message='Error loading habits' />;
     }
 
     return (
@@ -70,7 +68,7 @@ export const HabitsDashboard = ({ days = 9 }: HabitsDashboardProps) => {
                 isOpen={addHabitModalOpen}
                 onClose={() => setAddHabitModalOpen(false)}
                 handleAddHabit={(newHabit: HabitCreate) =>
-                    handleAddHabit(newHabit)
+                    habitsAdd.mutate(newHabit)
                 }
             />
         </div>

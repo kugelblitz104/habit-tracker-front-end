@@ -1,15 +1,16 @@
-import type { HabitCreate } from '@/api';
+import type { HabitCreate, HabitRead } from '@/api';
 import { ColorPicker } from '@/components/ui/forms/color-picker';
 import { FrequencyPicker } from '@/components/ui/forms/frequency-picker';
 import { LabeledSwitch } from '@/components/ui/forms/labeled-switch';
 import { TextField } from '@/components/ui/forms/text-field';
-import type { Frequency } from '@/types/types';
+import { getFrequencyString } from '@/lib/date-utils';
 import {
-    sanitizeText,
-    sanitizeMultilineText,
     sanitizeFormData,
+    sanitizeMultilineText,
+    sanitizeText,
     validationPatterns
 } from '@/lib/input-sanitization';
+import type { Frequency } from '@/types/types';
 import {
     Button,
     CloseButton,
@@ -32,7 +33,8 @@ import {
 type AddHabitModalProps = {
     isOpen: boolean;
     onClose: () => void;
-    handleAddHabit: (habit: HabitCreate) => void; //should return a habit?
+    handleAddHabit: (habit: HabitCreate) => void;
+    habit?: HabitRead;
 };
 
 interface IAddModalFormInput {
@@ -47,9 +49,25 @@ interface IAddModalFormInput {
 export const AddHabitModal = ({
     isOpen = false,
     onClose,
-    handleAddHabit
+    handleAddHabit,
+    habit
 }: AddHabitModalProps) => {
-    const methods = useForm<IAddModalFormInput>();
+    const methods = useForm<IAddModalFormInput>({
+        values: habit
+            ? {
+                  name: habit.name,
+                  question: habit.question,
+                  color: habit.color,
+                  frequency: {
+                      name: getFrequencyString(habit.frequency, habit.range),
+                      frequency: habit.frequency,
+                      range: habit.range
+                  },
+                  reminder: habit.reminder ?? true,
+                  notes: habit.notes ?? ''
+              }
+            : undefined
+    });
     const errors = methods.formState.errors;
     const onSubmit: SubmitHandler<IAddModalFormInput> = (data) => {
         // Sanitize form inputs
@@ -66,13 +84,6 @@ export const AddHabitModal = ({
         });
         onClose();
     };
-
-    // prefill data
-    // useEffect(()=> {
-    //     methods.reset({
-    //         name: 'data'
-    //     })
-    // }, [methods.reset]);
 
     return (
         <Dialog
@@ -91,7 +102,7 @@ export const AddHabitModal = ({
             <div className='fixed inset-0 flex items-center justify-center p-4'>
                 <DialogPanel className='max-w-lg space-y-4 rounded-md bg-slate-800 p-8'>
                     <DialogTitle as='h2' className='text-2xl font-bold'>
-                        Add a new Habit
+                        {habit ? 'Edit Habit' : 'Add a new Habit'}
                     </DialogTitle>
                     <FormProvider {...methods}>
                         <form onSubmit={methods.handleSubmit(onSubmit)}>
@@ -190,11 +201,3 @@ export const AddHabitModal = ({
         </Dialog>
     );
 };
-
-// user_id: number;
-// name: string;
-// question: string;
-// color: string;
-// frequency: string;
-// reminder: boolean;
-// notes: string;

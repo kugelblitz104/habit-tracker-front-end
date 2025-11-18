@@ -240,7 +240,7 @@ export class HabitsService {
      * @throws ApiError
      */
     public static getHabitStreaksHabitsHabitIdStreaksGet(
-        habitId: any,
+        habitId: number,
     ): CancelablePromise<Array<Streak>> {
         return __request(OpenAPI, {
             method: 'GET',
