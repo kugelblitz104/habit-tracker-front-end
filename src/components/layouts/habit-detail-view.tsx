@@ -1,4 +1,4 @@
-import type { HabitRead } from '@/api';
+import type { HabitRead, HabitUpdate } from '@/api';
 import { deleteHabit } from '@/features/habits/api/delete-habits';
 import {
     getHabit,
@@ -8,7 +8,7 @@ import {
 import { KpiBoard } from '@/features/habits/components/details/kpi-board';
 import { DeleteHabitModal } from '@/features/habits/components/modals/delete-habit-modal';
 import { getFrequencyString } from '@/lib/date-utils';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Bell, Calendar, Pencil, Trash } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -16,6 +16,8 @@ import { ButtonVariant } from '../ui/buttons/action-button';
 import { TitleBar } from '../ui/title-bar';
 import { ErrorScreen } from './error-screen';
 import { LoadingScreen } from './loading-screen';
+import { AddHabitModal } from '@/features/habits/components/modals/add-habit-modal';
+import { updateHabit } from '@/features/habits/api/update-habits';
 
 type HabitDetailViewProps = {
     habitId?: number;
@@ -24,6 +26,7 @@ type HabitDetailViewProps = {
 export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
     const [habit, setHabit] = useState<HabitRead>();
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const navigate = useNavigate();
     const habitQuery = useQuery({
         queryKey: ['habit', { habitId }],
@@ -39,6 +42,14 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
         queryKey: ['habit-streaks', { habitId }],
         queryFn: () => getHabitStreaks(habitId),
         enabled: !!habitId
+    });
+
+    const habitsEdit = useMutation({
+        mutationFn: ({ id, update }: { id: number; update: HabitUpdate }) =>
+            updateHabit(id, update),
+        onSuccess: (data) => {
+            setHabit(data);
+        }
     });
 
     // Effect to set habits from query data
@@ -69,7 +80,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                     },
                     {
                         label: 'Edit',
-                        onClick: () => {},
+                        onClick: () => setIsEditModalOpen(true),
                         icon: <Pencil />,
                         variant: ButtonVariant.Secondary
                     }
@@ -100,9 +111,23 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                     handleDeleteHabit={() => {
                         deleteHabit(habit.id).then(() => {
                             setIsDeleteModalOpen(false);
-                            // Redirect to dashboard or another page after deletion
                             navigate('/', { replace: true });
                         });
+                    }}
+                />
+            )}
+            {habit && (
+                <AddHabitModal
+                    isOpen={isEditModalOpen}
+                    onClose={() => setIsEditModalOpen(false)}
+                    habit={habit}
+                    handleAddHabit={(updatedHabit: HabitUpdate) => {
+                        if (habit?.id) {
+                            habitsEdit.mutate({
+                                id: habit.id,
+                                update: updatedHabit
+                            });
+                        }
                     }}
                 />
             )}

@@ -7,6 +7,7 @@ export type HabitUpdate = {
     question?: (string | null);
     color?: (string | null);
     frequency?: (number | null);
+    range?: (number | null);
     reminder?: (boolean | null);
     notes?: (string | null);
     updated_date?: string;

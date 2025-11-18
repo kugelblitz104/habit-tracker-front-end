@@ -36,7 +36,7 @@ export const TitleBar = ({
                         <ChevronLeft className='mr-2' />
                     </Link>
                 )}
-                {!showBackButton && <CheckCheck className='mr-2' />}
+                {location.pathname === '/' && <CheckCheck className='mr-2' />}
                 <h1 className='text-xl'>{title}</h1>
                 <div className='flex flex-row-reverse items-center gap-2 ml-auto'>
                     {isAuthenticated && !showBackButton && (
