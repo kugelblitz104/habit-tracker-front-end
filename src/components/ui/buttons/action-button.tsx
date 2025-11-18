@@ -1,12 +1,17 @@
 import { Button } from '@headlessui/react';
-import { Plus } from 'lucide-react';
+
+export enum ButtonVariant {
+    Primary = 'primary',
+    Secondary = 'secondary',
+    Danger = 'danger'
+}
 
 type ActionButtonProps = {
     label: string;
     onClick?: () => void;
     className?: string;
     icon?: React.ReactNode;
-    variant?: 'primary' | 'secondary' | 'danger';
+    variant?: ButtonVariant;
 };
 
 export const ActionButton = ({
@@ -14,11 +19,11 @@ export const ActionButton = ({
     onClick,
     className,
     icon,
-    variant = 'primary'
+    variant = ButtonVariant.Primary
 }: ActionButtonProps) => {
     const variants = {
-        primary: 'hover:bg-slate-700',
-        secondary: 'hover:bg-slate-600 hover:bg-slate-700',
+        primary: 'bg-slate-700 hover:bg-slate-600',
+        secondary: 'bg-slate-600 hover:bg-slate-700',
         danger: 'bg-red-700 hover:bg-red-800'
     };
 

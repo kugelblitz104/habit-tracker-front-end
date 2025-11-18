@@ -2,11 +2,13 @@ import type { HabitCreate, HabitRead } from '@/api';
 import { TitleBar } from '@/components/ui/title-bar';
 import { createHabit } from '@/features/habits/api/create-habits';
 import { getHabits } from '@/features/habits/api/get-habits';
-import { AddHabitModal } from '@/features/habits/components/modals/add-habit-modal';
 import { HabitList } from '@/features/habits/components/dashboard/habit-list';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { AddHabitModal } from '@/features/habits/components/modals/add-habit-modal';
 import { useAuth } from '@/lib/auth-context';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ButtonVariant } from '../ui/buttons/action-button';
 import { LoadingScreen } from './loading-screen';
 
 type HabitsDashboardProps = {
@@ -53,7 +55,16 @@ export const HabitsDashboard = ({ days = 9 }: HabitsDashboardProps) => {
 
     return (
         <div className='static'>
-            <TitleBar onAddHabitClick={() => setAddHabitModalOpen(true)} />
+            <TitleBar
+                actions={[
+                    {
+                        label: 'Add Habit',
+                        onClick: () => setAddHabitModalOpen(true),
+                        icon: <Plus />,
+                        variant: ButtonVariant.Primary
+                    }
+                ]}
+            />
             <HabitList habits={habits} days={days} />
             <AddHabitModal
                 isOpen={addHabitModalOpen}
