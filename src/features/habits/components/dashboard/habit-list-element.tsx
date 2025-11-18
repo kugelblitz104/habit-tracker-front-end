@@ -4,7 +4,6 @@ import type {
     TrackerRead,
     TrackerUpdate
 } from '@/api';
-import { DeleteButton } from '@/components/ui/buttons/delete_button';
 import { Label } from '@/components/ui/label';
 import { createTracker } from '@/features/trackers/api/create-trackers';
 import { getTrackers } from '@/features/trackers/api/get-trackers';
@@ -49,14 +48,9 @@ export type HabitListElementProps = {
     habit: HabitRead;
     days: number;
     // onHabitUpdate: (habit: HabitRead) => void;
-    onHabitDeleteClick: (habit: HabitRead) => void;
 };
 
-export const HabitListElement = ({
-    habit,
-    days,
-    onHabitDeleteClick
-}: HabitListElementProps) => {
+export const HabitListElement = ({ habit, days }: HabitListElementProps) => {
     // Use useMemo to prevent hydration mismatch - date created once and stable
     const today = useMemo(() => new Date(), []);
     const dates = useMemo(
@@ -248,12 +242,6 @@ export const HabitListElement = ({
                     />
                 </td>
             ))}
-            <td className='text-center bg-gray-950'>
-                <DeleteButton
-                    onClick={() => onHabitDeleteClick(habit)}
-                    isActive={rowIsActive}
-                />
-            </td>
         </tr>
     );
 };

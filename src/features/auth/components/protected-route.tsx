@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '@/lib/auth-context';
-import { LoadingScreen } from '../layouts/loading-screen';
+import { LoadingScreen } from '@/components/layouts/loading-screen';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;

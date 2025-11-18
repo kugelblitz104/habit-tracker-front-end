@@ -1,11 +1,9 @@
 import type { HabitCreate, HabitRead } from '@/api';
 import { TitleBar } from '@/components/ui/title-bar';
 import { createHabit } from '@/features/habits/api/create-habits';
-import { deleteHabit } from '@/features/habits/api/delete-habits';
 import { getHabits } from '@/features/habits/api/get-habits';
-import { AddHabitModal } from '@/features/habits/components/add-habit-modal';
+import { AddHabitModal } from '@/features/habits/components/modals/add-habit-modal';
 import { HabitList } from '@/features/habits/components/dashboard/habit-list';
-import { DeleteHabitModal } from '@/features/habits/components/delete-habit-modal';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
@@ -21,8 +19,6 @@ export const HabitsDashboard = ({ days = 9 }: HabitsDashboardProps) => {
     // hooks
     const [habits, setHabits] = useState<HabitRead[]>([]);
     const [addHabitModalOpen, setAddHabitModalOpen] = useState(false);
-    const [deleteHabitModalOpen, setDeleteHabitModalOpen] = useState(false);
-    const [selectedHabit, setSelectedHabit] = useState<HabitRead | null>(null);
     const habitsQuery = useQuery({
         queryKey: ['habits', { userId }],
         queryFn: () => getHabits(userId, days),
@@ -37,20 +33,8 @@ export const HabitsDashboard = ({ days = 9 }: HabitsDashboardProps) => {
         }
     });
 
-    const habitsDelete = useMutation({
-        mutationFn: deleteHabit,
-        onSuccess: (_data, habitId) => {
-            setHabits((prev) => prev.filter((item) => item.id !== habitId));
-            habitsQuery.refetch();
-        }
-    });
-
     const handleAddHabit = (newHabit: HabitCreate) =>
         habitsAdd.mutate(newHabit);
-
-    const handleDeleteHabit = (habit: HabitRead) => {
-        if (habit) habitsDelete.mutate(habit.id);
-    };
 
     // Effect to set habits from query data
     useEffect(() => {
@@ -70,14 +54,7 @@ export const HabitsDashboard = ({ days = 9 }: HabitsDashboardProps) => {
     return (
         <div className='static'>
             <TitleBar onAddHabitClick={() => setAddHabitModalOpen(true)} />
-            <HabitList
-                habits={habits}
-                days={days}
-                onHabitDeleteClick={(habit) => {
-                    setDeleteHabitModalOpen(true);
-                    setSelectedHabit(habit);
-                }}
-            />
+            <HabitList habits={habits} days={days} />
             <AddHabitModal
                 isOpen={addHabitModalOpen}
                 onClose={() => setAddHabitModalOpen(false)}
@@ -85,16 +62,6 @@ export const HabitsDashboard = ({ days = 9 }: HabitsDashboardProps) => {
                     handleAddHabit(newHabit)
                 }
             />
-            {selectedHabit && (
-                <DeleteHabitModal
-                    isOpen={deleteHabitModalOpen}
-                    habit={selectedHabit}
-                    onClose={() => setDeleteHabitModalOpen(false)}
-                    handleDeleteHabit={(habit: HabitRead) =>
-                        handleDeleteHabit(habit)
-                    }
-                />
-            )}
         </div>
     );
 };

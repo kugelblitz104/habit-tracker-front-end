@@ -1,6 +1,6 @@
 import { HabitDetailView } from '@/components/layouts/habit-detail-view';
+import { ProtectedRoute } from '@/features/auth/components/protected-route';
 import type { Route } from './+types/home';
-import { ProtectedRoute } from '@/components/auth/protected-route';
 
 export function meta({}: Route.MetaArgs) {
     return [

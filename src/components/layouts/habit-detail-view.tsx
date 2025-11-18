@@ -1,15 +1,17 @@
 import type { HabitRead } from '@/api';
+import { deleteHabit } from '@/features/habits/api/delete-habits';
 import {
     getHabit,
     getHabitKPIs,
     getHabitStreaks
 } from '@/features/habits/api/get-habits';
 import { KpiBoard } from '@/features/habits/components/details/kpi-board';
-import { useAuth } from '@/lib/auth-context';
+import { DeleteHabitModal } from '@/features/habits/components/modals/delete-habit-modal';
 import { getFrequencyString } from '@/lib/date-utils';
 import { useQuery } from '@tanstack/react-query';
 import { Bell, Calendar } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { TitleBar } from '../ui/title-bar';
 import { ErrorScreen } from './error-screen';
 import { LoadingScreen } from './loading-screen';
@@ -19,8 +21,9 @@ type HabitDetailViewProps = {
 };
 
 export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
-    const { user } = useAuth();
     const [habit, setHabit] = useState<HabitRead>();
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const navigate = useNavigate();
     const habitQuery = useQuery({
         queryKey: ['habit', { habitId }],
         queryFn: () => getHabit(habitId),
@@ -54,7 +57,10 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
 
     return (
         <>
-            <TitleBar title={`${habit?.name}`} />
+            <TitleBar
+                title={`${habit?.name}`}
+                onDeleteHabitClick={() => setIsDeleteModalOpen(true)}
+            />
             <div className='flex bg-slate-800 p-4 gap-4 text-sm items-center'>
                 <span
                     className={'font-semibold'}
@@ -72,6 +78,20 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                 </span>
             </div>
             <KpiBoard habitKPIS={habitKPIQuery.data} />
+            {habit && (
+                <DeleteHabitModal
+                    isOpen={isDeleteModalOpen}
+                    habit={habit}
+                    onClose={() => setIsDeleteModalOpen(false)}
+                    handleDeleteHabit={() => {
+                        deleteHabit(habit.id).then(() => {
+                            setIsDeleteModalOpen(false);
+                            // Redirect to dashboard or another page after deletion
+                            navigate('/', { replace: true });
+                        });
+                    }}
+                />
+            )}
         </>
     );
 };
