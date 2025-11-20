@@ -5,7 +5,10 @@ import {
     getHabitKPIs,
     getHabitStreaks
 } from '@/features/habits/api/get-habits';
+import { updateHabit } from '@/features/habits/api/update-habits';
+import { CalendarBoard } from '@/features/habits/components/details/calendar-board';
 import { KpiBoard } from '@/features/habits/components/details/kpi-board';
+import { AddHabitModal } from '@/features/habits/components/modals/add-habit-modal';
 import { DeleteHabitModal } from '@/features/habits/components/modals/delete-habit-modal';
 import { getFrequencyString } from '@/lib/date-utils';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -16,8 +19,6 @@ import { ButtonVariant } from '../ui/buttons/action-button';
 import { TitleBar } from '../ui/title-bar';
 import { ErrorScreen } from './error-screen';
 import { LoadingScreen } from './loading-screen';
-import { AddHabitModal } from '@/features/habits/components/modals/add-habit-modal';
-import { updateHabit } from '@/features/habits/api/update-habits';
 
 type HabitDetailViewProps = {
     habitId?: number;
@@ -103,6 +104,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                 </span>
             </div>
             <KpiBoard habitKPIS={habitKPIQuery.data} />
+            <CalendarBoard habit={habit} />
             {habit && (
                 <DeleteHabitModal
                     isOpen={isDeleteModalOpen}

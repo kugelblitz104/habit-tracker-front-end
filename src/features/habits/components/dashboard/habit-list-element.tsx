@@ -8,11 +8,16 @@ import { Label } from '@/components/ui/label';
 import { createTracker } from '@/features/trackers/api/create-trackers';
 import { getTrackers } from '@/features/trackers/api/get-trackers';
 import { updateTracker } from '@/features/trackers/api/update-trackers';
+import {
+    createNewTracker,
+    getNextTrackerState,
+    getTrackerIcon,
+    getTrackerStatus
+} from '@/features/trackers/utils/tracker-utils';
 import { getFrequencyString } from '@/lib/date-utils';
 import { Status } from '@/types/types';
 import { Button } from '@headlessui/react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Check, ChevronsRight, Square } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 
@@ -25,21 +30,9 @@ const TrackerCheckbox = ({
     status = Status.NOT_COMPLETED,
     onClick
 }: TrackerCheckboxProps) => {
-    const getIcon = (status: Status) => {
-        switch (status) {
-            case Status.COMPLETED:
-                return <Check color='green' strokeWidth={3} />;
-            case Status.SKIPPED:
-                return <ChevronsRight color='lightblue' strokeWidth={3} />;
-            case Status.NOT_COMPLETED:
-            default:
-                return <Square color='white' strokeWidth={1} />;
-        }
-    };
-
     return (
         <Button type='button' className='align-middle' onClick={onClick}>
-            {getIcon(status)}
+            {getTrackerIcon(status)}
         </Button>
     );
 };
@@ -99,11 +92,7 @@ export const HabitListElement = ({ habit, days }: HabitListElementProps) => {
 
     const getStatus = (date: Date): Status => {
         const tracker = getTracker(date);
-
-        if (!tracker) return Status.NOT_COMPLETED;
-        if (tracker?.completed) return Status.COMPLETED;
-        if (tracker?.skipped) return Status.SKIPPED;
-        return Status.NOT_COMPLETED;
+        return getTrackerStatus(tracker);
     };
 
     const handleCheckboxClick = (date: Date) => {
@@ -111,13 +100,7 @@ export const HabitListElement = ({ habit, days }: HabitListElementProps) => {
 
         if (!tracker) {
             // create tracker if it doesn't exist
-            const newTracker = {
-                habit_id: habit.id,
-                dated: date.toISOString().split('T')[0],
-                completed: true,
-                skipped: false,
-                note: ''
-            };
+            const newTracker = createNewTracker(habit.id, date);
             trackerCreate.mutate(newTracker, {
                 onSuccess: (data) => {
                     setTrackers([...trackers, data]);
@@ -126,67 +109,19 @@ export const HabitListElement = ({ habit, days }: HabitListElementProps) => {
             return;
         }
 
-        if (!tracker.completed && !tracker.skipped) {
-            // toggle completed
-            trackerUpdate.mutate(
-                {
-                    id: tracker.id,
-                    update: {
-                        completed: true,
-                        skipped: false
-                    }
-                },
-                {
-                    onSuccess: (data) => {
-                        setTrackers(
-                            trackers.map((t) =>
-                                t.id === tracker.id ? data : t
-                            )
-                        );
-                    }
+        // Cycle through states: not completed → completed → skipped → not completed
+        const update = getNextTrackerState(tracker);
+
+        trackerUpdate.mutate(
+            { id: tracker.id, update },
+            {
+                onSuccess: (data) => {
+                    setTrackers(
+                        trackers.map((t) => (t.id === tracker.id ? data : t))
+                    );
                 }
-            );
-        } else if (tracker.completed) {
-            // toggle skipped
-            trackerUpdate.mutate(
-                {
-                    id: tracker.id,
-                    update: {
-                        completed: false,
-                        skipped: true
-                    }
-                },
-                {
-                    onSuccess: (data) => {
-                        setTrackers(
-                            trackers.map((t) =>
-                                t.id === tracker.id ? data : t
-                            )
-                        );
-                    }
-                }
-            );
-        } else if (tracker.skipped) {
-            // toggle not completed
-            trackerUpdate.mutate(
-                {
-                    id: tracker.id,
-                    update: {
-                        completed: false,
-                        skipped: false
-                    }
-                },
-                {
-                    onSuccess: (data) => {
-                        setTrackers(
-                            trackers.map((t) =>
-                                t.id === tracker.id ? data : t
-                            )
-                        );
-                    }
-                }
-            );
-        }
+            }
+        );
     };
 
     useEffect(() => {

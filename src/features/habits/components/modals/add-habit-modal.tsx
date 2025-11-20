@@ -100,7 +100,7 @@ export const AddHabitModal = ({
         >
             <DialogBackdrop className='fixed inset-0 bg-black/50' />
             <div className='fixed inset-0 flex items-center justify-center p-4'>
-                <DialogPanel className='max-w-lg space-y-4 rounded-md bg-slate-800 p-8'>
+                <DialogPanel className='max-w-lg space-y-4 rounded-lg bg-slate-800 p-8'>
                     <DialogTitle as='h2' className='text-2xl font-bold'>
                         {habit ? 'Edit Habit' : 'Add a new Habit'}
                     </DialogTitle>
@@ -174,7 +174,7 @@ export const AddHabitModal = ({
                                         }`}
                                     />
                                     {methods.formState.errors.notes && (
-                                        <span className='text-red-400 text-sm'>
+                                        <span className='text-red-400 text-sm mt-1 block'>
                                             {
                                                 methods.formState.errors.notes
                                                     .message as string
