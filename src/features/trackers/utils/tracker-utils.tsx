@@ -71,3 +71,15 @@ export const createNewTracker = (
         note: ''
     };
 };
+
+/**
+ * Find a tracker for a specific date from a list of trackers
+ */
+export const findTrackerByDate = (
+    trackers: TrackerRead[],
+    date: Date
+): TrackerRead | undefined => {
+    return trackers.find(
+        (tracker) => tracker.dated === date.toISOString().split('T')[0]
+    );
+};

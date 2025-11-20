@@ -13,6 +13,7 @@ import { getTrackers } from '@/features/trackers/api/get-trackers';
 import { updateTracker } from '@/features/trackers/api/update-trackers';
 import {
     createNewTracker,
+    findTrackerByDate,
     getNextTrackerState,
     getTrackerIcon,
     getTrackerStatus
@@ -40,6 +41,7 @@ type TrackerCellProps = {
     onStatusClick: (date: Date) => void;
     onNoteClick: (date: Date, tracker: TrackerRead | undefined) => void;
     isToday: boolean;
+    isLastRow?: boolean;
 };
 
 const TrackerCell = ({
@@ -47,7 +49,8 @@ const TrackerCell = ({
     tracker,
     onStatusClick,
     onNoteClick,
-    isToday
+    isToday,
+    isLastRow = false
 }: TrackerCellProps) => {
     const status = getTrackerStatus(tracker);
     const hasNote = tracker?.note && tracker.note.trim().length > 0;
@@ -55,7 +58,7 @@ const TrackerCell = ({
     return (
         <td
             className={`
-                relative p-2 border border-slate-700
+                relative p-2 ${isLastRow ? '' : 'border-b'} border-slate-700
                 ${isToday ? 'bg-slate-700/50' : 'bg-slate-800/50'}
                 hover:bg-slate-700
                 transition-colors
@@ -194,27 +197,48 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
         return new Date(now.getFullYear(), now.getMonth(), now.getDate());
     }, []);
 
-    // Generate dates for last 10 weeks
+    // Calculate how many days after today to fill the current week
+    const daysAfterToday = useMemo(() => {
+        return 6 - today.getDay(); // Days until Saturday
+    }, [today]);
+
+    // Generate dates: past dates + today + empty slots for future days this week
     const dates = useMemo(() => {
-        return [...Array(TOTAL_DAYS).keys()]
+        const pastDates = [...Array(TOTAL_DAYS - daysAfterToday).keys()]
             .map((day) => {
                 const date = new Date(today);
                 date.setDate(today.getDate() - day);
                 return date;
             })
             .reverse(); // Oldest first
-    }, [today, TOTAL_DAYS]);
 
-    // Organize dates into weeks (columns)
+        return pastDates;
+    }, [today, TOTAL_DAYS, daysAfterToday]);
+
+    // Organize dates into weeks (columns), with null for future days in the current week
     const weeks = useMemo(() => {
-        const weeksArray: Date[][] = [];
-        for (let i = 0; i < WEEKS; i++) {
+        const weeksArray: (Date | null)[][] = [];
+
+        // Fill complete past weeks
+        for (let i = 0; i < WEEKS - 1; i++) {
             weeksArray.push(
                 dates.slice(i * DAYS_PER_WEEK, (i + 1) * DAYS_PER_WEEK)
             );
         }
+
+        // Handle the current week (last week)
+        const currentWeekDates = dates.slice((WEEKS - 1) * DAYS_PER_WEEK);
+        const currentWeek: (Date | null)[] = [...currentWeekDates];
+
+        // Add null values for days after today in the current week
+        for (let i = 0; i < daysAfterToday; i++) {
+            currentWeek.push(null);
+        }
+
+        weeksArray.push(currentWeek);
+
         return weeksArray;
-    }, [dates, WEEKS, DAYS_PER_WEEK]);
+    }, [dates, WEEKS, DAYS_PER_WEEK, daysAfterToday]);
 
     const trackersQuery = useQuery({
         queryKey: ['trackers', { habitId: habit?.id }],
@@ -244,12 +268,6 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
         }
     }, [trackersQuery.data]);
 
-    const getTracker = (date: Date): TrackerRead | undefined => {
-        return trackers.find(
-            (tracker) => tracker.dated === date.toISOString().split('T')[0]
-        );
-    };
-
     const isToday = (date: Date): boolean => {
         return date.toDateString() === today.toDateString();
     };
@@ -257,7 +275,7 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
     const handleStatusClick = (date: Date) => {
         if (!habit) return;
 
-        const tracker = getTracker(date);
+        const tracker = findTrackerByDate(trackers, date);
 
         if (!tracker) {
             // Create tracker if it doesn't exist
@@ -326,24 +344,29 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
     }
 
     const weekHeaders = weeks.map((week, idx) => {
-        const firstDate = week[0];
-        const lastDate = week[week.length - 1];
-        if (!firstDate || !lastDate) return null;
+        const firstDate = week.find((d) => d !== null);
+        const lastDate = [...week].reverse().find((d) => d !== null);
+
         return (
             <th
                 key={idx}
-                className='p-2 text-sm text-slate-400 font-normal border border-slate-700'
+                className='p-2 text-sm text-slate-400 font-normal border-b border-slate-700'
             >
                 <div className='text-xs text-slate-500'>
-                    {firstDate.toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric'
-                    })}{' '}
-                    -{' '}
-                    {lastDate.toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric'
-                    })}
+                    {firstDate &&
+                        firstDate.toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric'
+                        })}
+                    {lastDate && lastDate !== firstDate && (
+                        <>
+                            {' - '}
+                            {lastDate.toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric'
+                            })}
+                        </>
+                    )}
                 </div>
             </th>
         );
@@ -352,7 +375,7 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
     const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     return (
-        <div className='overflow-x-auto select-none'>
+        <div className='overflow-hidden select-none mx-4 rounded-lg border border-slate-700'>
             <table className='w-full border-collapse table-fixed'>
                 <colgroup>
                     <col className='w-20' />
@@ -362,7 +385,7 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
                 </colgroup>
                 <thead>
                     <tr>
-                        <th className='p-2 text-left text-sm text-slate-400 font-normal border border-slate-700'>
+                        <th className='p-2 text-left text-sm text-slate-400 font-normal border-b border-r border-slate-700'>
                             Day
                         </th>
                         {weekHeaders}
@@ -371,13 +394,36 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
                 <tbody>
                     {[...Array(DAYS_PER_WEEK).keys()].map((dayIndex) => (
                         <tr key={dayIndex}>
-                            <td className='p-2 text-sm text-slate-400 border border-slate-700 bg-slate-800/50'>
+                            <td
+                                className={`p-2 text-sm text-slate-400 border-r bg-slate-800/50 ${
+                                    dayIndex < DAYS_PER_WEEK - 1
+                                        ? 'border-b'
+                                        : ''
+                                } border-slate-700`}
+                            >
                                 {dayLabels[dayIndex]}
                             </td>
                             {weeks.map((week, weekIndex) => {
                                 const date = week[dayIndex];
-                                if (!date) return null;
-                                const tracker = getTracker(date);
+                                const isLastRow =
+                                    dayIndex === DAYS_PER_WEEK - 1;
+                                const borderClasses = isLastRow
+                                    ? ''
+                                    : 'border-b';
+
+                                if (!date) {
+                                    // Empty cell for future days
+                                    return (
+                                        <td
+                                            key={`${weekIndex}-${dayIndex}`}
+                                            className={`p-2 ${borderClasses} border-slate-700 bg-slate-900/50`}
+                                        />
+                                    );
+                                }
+                                const tracker = findTrackerByDate(
+                                    trackers,
+                                    date
+                                );
                                 return (
                                     <TrackerCell
                                         key={`${weekIndex}-${dayIndex}`}
@@ -386,6 +432,7 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
                                         onStatusClick={handleStatusClick}
                                         onNoteClick={handleNoteClick}
                                         isToday={isToday(date)}
+                                        isLastRow={isLastRow}
                                     />
                                 );
                             })}

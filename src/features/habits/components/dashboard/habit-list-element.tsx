@@ -10,6 +10,7 @@ import { getTrackers } from '@/features/trackers/api/get-trackers';
 import { updateTracker } from '@/features/trackers/api/update-trackers';
 import {
     createNewTracker,
+    findTrackerByDate,
     getNextTrackerState,
     getTrackerIcon,
     getTrackerStatus
@@ -84,19 +85,13 @@ export const HabitListElement = ({ habit, days }: HabitListElementProps) => {
     });
 
     // functions
-    const getTracker = (date: Date): TrackerRead | undefined => {
-        return trackers.find(
-            (tracker) => tracker.dated === date.toISOString().split('T')[0]
-        );
-    };
-
     const getStatus = (date: Date): Status => {
-        const tracker = getTracker(date);
+        const tracker = findTrackerByDate(trackers, date);
         return getTrackerStatus(tracker);
     };
 
     const handleCheckboxClick = (date: Date) => {
-        const tracker = getTracker(date);
+        const tracker = findTrackerByDate(trackers, date);
 
         if (!tracker) {
             // create tracker if it doesn't exist
