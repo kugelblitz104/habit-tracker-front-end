@@ -30,7 +30,7 @@ import {
     Label,
     Textarea
 } from '@headlessui/react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MessageSquare, Save, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
@@ -187,6 +187,7 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
     const DAYS_PER_WEEK = 7;
     const TOTAL_DAYS = WEEKS * DAYS_PER_WEEK;
 
+    const queryClient = useQueryClient();
     const [trackers, setTrackers] = useState<TrackerRead[]>([]);
     const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -243,7 +244,7 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
     }, [dates, WEEKS, DAYS_PER_WEEK, daysAfterToday]);
 
     const trackersQuery = useQuery({
-        queryKey: ['trackers', { habitId: habit?.id }],
+        queryKey: ['trackers', { habitId: habit?.id }, TOTAL_DAYS],
         queryFn: () => getTrackers(habit!.id, TOTAL_DAYS),
         enabled: !!habit,
         staleTime: 1000 * 60
@@ -251,6 +252,11 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
 
     const trackerCreate = useMutation({
         mutationFn: (tracker: TrackerCreate) => createTracker(tracker),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: ['trackers', { habitId: habit?.id }, TOTAL_DAYS]
+            });
+        },
         onError: (error) => {
             console.error('Error adding tracker:', error);
         }
@@ -259,6 +265,11 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
     const trackerUpdate = useMutation({
         mutationFn: ({ id, update }: { id: number; update: TrackerUpdate }) =>
             updateTracker(id, update),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: ['trackers', { habitId: habit?.id }, TOTAL_DAYS]
+            });
+        },
         onError: (error) => {
             console.error('Error updating tracker:', error);
         }

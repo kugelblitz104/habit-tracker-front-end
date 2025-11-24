@@ -18,7 +18,7 @@ import {
 import { getFrequencyString } from '@/lib/date-utils';
 import { Status } from '@/types/types';
 import { Button } from '@headlessui/react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 
@@ -64,14 +64,20 @@ export const HabitListElement = ({ habit, days }: HabitListElementProps) => {
     );
     const [rowIsActive, setRowIsActive] = useState<boolean>(false);
     const [trackers, setTrackers] = useState<TrackerRead[]>([]);
+    const queryClient = useQueryClient();
     const trackersQuery = useQuery({
-        queryKey: ['trackers', { habitId: habit.id }],
+        queryKey: ['trackers', { habitId: habit.id }, days],
         queryFn: () => getTrackers(habit.id, days),
         staleTime: 1000 * 60 // 1 minute
     });
 
     const trackerCreate = useMutation({
         mutationFn: (tracker: TrackerCreate) => createTracker(tracker),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: ['trackers', { habitId: habit.id }, days]
+            });
+        },
         onError: (error) => {
             console.error('Error adding tracker:', error);
         }
@@ -79,6 +85,11 @@ export const HabitListElement = ({ habit, days }: HabitListElementProps) => {
     const trackerUpdate = useMutation({
         mutationFn: ({ id, update }: { id: number; update: TrackerUpdate }) =>
             updateTracker(id, update),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: ['trackers', { habitId: habit.id }, days]
+            });
+        },
         onError: (error) => {
             console.error('Error updating tracker:', error);
         }
