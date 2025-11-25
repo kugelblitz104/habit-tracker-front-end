@@ -151,7 +151,7 @@ export const HabitListElement = ({ habit, days }: HabitListElementProps) => {
             >
                 <Link
                     to={`details/${habit.id}`}
-                    className='absolute inset-0 flex items-center'
+                    className='absolute inset-0 flex items-center cursor-pointer'
                 >
                     <Label
                         mainText={habit.name}
@@ -164,6 +164,7 @@ export const HabitListElement = ({ habit, days }: HabitListElementProps) => {
                                 : undefined
                         }
                         textColor={habit.color}
+                        className='cursor-pointer'
                     />
                 </Link>
             </td>
