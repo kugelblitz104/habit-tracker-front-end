@@ -3,7 +3,8 @@ import { Button } from '@headlessui/react';
 export enum ButtonVariant {
     Primary = 'primary',
     Secondary = 'secondary',
-    Danger = 'danger'
+    Danger = 'danger',
+    Submit = 'submit'
 }
 
 type ActionButtonProps = {
@@ -24,7 +25,8 @@ export const ActionButton = ({
     const variants = {
         primary: 'bg-slate-700 hover:bg-slate-600',
         secondary: 'bg-slate-600 hover:bg-slate-700',
-        danger: 'bg-red-700 hover:bg-red-800'
+        danger: 'bg-red-700 hover:bg-red-800',
+        submit: 'bg-sky-600 hover:bg-sky-700'
     };
 
     return (

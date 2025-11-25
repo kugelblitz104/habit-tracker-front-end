@@ -5,19 +5,21 @@ import {
     getHabitKPIs,
     getHabitStreaks
 } from '@/features/habits/api/get-habits';
+import { updateHabit } from '@/features/habits/api/update-habits';
+import { CalendarBoard } from '@/features/habits/components/details/calendar-board';
 import { KpiBoard } from '@/features/habits/components/details/kpi-board';
+import { AddHabitModal } from '@/features/habits/components/modals/add-habit-modal';
 import { DeleteHabitModal } from '@/features/habits/components/modals/delete-habit-modal';
 import { getFrequencyString } from '@/lib/date-utils';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Bell, Calendar, Pencil, Trash } from 'lucide-react';
+import { Bell, Calendar, CalendarPlus, Pencil, Trash } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ButtonVariant } from '../ui/buttons/action-button';
 import { TitleBar } from '../ui/title-bar';
 import { ErrorScreen } from './error-screen';
 import { LoadingScreen } from './loading-screen';
-import { AddHabitModal } from '@/features/habits/components/modals/add-habit-modal';
-import { updateHabit } from '@/features/habits/api/update-habits';
+import { SubtitleBar } from '../ui/subtitle-bar';
 
 type HabitDetailViewProps = {
     habitId?: number;
@@ -67,6 +69,11 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
         return <ErrorScreen message='Error Loading habit query data' />;
     }
 
+    const freqStr = habit
+        ? getFrequencyString(habit.frequency, habit.range)
+        : '';
+    const reminderStatus = habit ? (habit.reminder ? 'on' : 'off') : '';
+
     return (
         <>
             <TitleBar
@@ -86,23 +93,42 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                     }
                 ]}
             />
-            <div className='flex bg-slate-800 p-4 gap-4 text-sm items-center'>
-                <span
-                    className={'font-semibold'}
-                    style={{ color: habit?.color }}
-                >
-                    {habit?.question}
-                </span>
-                <span className='flex items-center'>
-                    <Calendar size={16} className='inline-flex mr-1' />
-                    {habit && getFrequencyString(habit.frequency, habit.range)}
-                </span>
-                <span className='flex items-center'>
-                    <Bell size={16} className='inline-flex mr-1' />
-                    {habit && (habit.reminder ? 'on' : 'off')}
-                </span>
-            </div>
+            <SubtitleBar
+                subtitles={[
+                    {
+                        text: habit?.question || '',
+                        color: habit?.color,
+                        bold: true
+                    },
+                    {
+                        text: freqStr,
+                        icon: (
+                            <Calendar size={16} className='inline-flex mr-1' />
+                        )
+                    },
+                    {
+                        text: `Created: ${
+                            habit
+                                ? new Date(
+                                      habit.created_date
+                                  ).toLocaleDateString()
+                                : ''
+                        }`,
+                        icon: (
+                            <CalendarPlus
+                                size={16}
+                                className='inline-flex mr-1'
+                            />
+                        )
+                    },
+                    {
+                        text: reminderStatus,
+                        icon: <Bell size={16} className='inline-flex mr-1' />
+                    }
+                ]}
+            />
             <KpiBoard habitKPIS={habitKPIQuery.data} />
+            <CalendarBoard habit={habit} />
             {habit && (
                 <DeleteHabitModal
                     isOpen={isDeleteModalOpen}

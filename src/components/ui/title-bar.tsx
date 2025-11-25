@@ -33,11 +33,11 @@ export const TitleBar = ({
             <div className='flex items-center min-h-10'>
                 {showBackButton && (
                     <Link to='/'>
-                        <ChevronLeft className='mr-2' />
+                        <ChevronLeft size={24} className='mr-2' />
                     </Link>
                 )}
                 {location.pathname === '/' && <CheckCheck className='mr-2' />}
-                <h1 className='text-xl'>{title}</h1>
+                <h1 className='text-xl truncate'>{title}</h1>
                 <div className='flex flex-row-reverse items-center gap-2 ml-auto'>
                     {isAuthenticated && !showBackButton && (
                         <ActionButton

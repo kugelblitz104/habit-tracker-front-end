@@ -1,24 +1,35 @@
-# Welcome to React Router!
+# Habit Tracker Front-End
 
-A modern, production-ready template for building full-stack React applications using React Router.
-
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+A modern web application for tracking habits, built with React Router v7, React 19, and TailwindCSS.
 
 ## Features
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+- **Habit Management**: Create, update, and track habits
+- **User Authentication**: Secure login and registration system
+- **Tracker System**: Monitor habit progress over time
+- **Responsive Design**: Mobile-friendly interface with Tailwind CSS
+- **Type-Safe API**: Auto-generated TypeScript API client from OpenAPI spec
+
+## Tech Stack
+
+- **Framework**: React Router v7 (with server-side rendering)
+- **UI Library**: React 19
+- **Styling**: TailwindCSS v4
+- **State Management**: TanStack Query (React Query)
+- **Form Handling**: React Hook Form
+- **HTTP Client**: Axios
+- **Icons**: Lucide React
+- **Type Safety**: TypeScript
+
+## Prerequisites
+
+- Node.js 20 or higher
+- npm or compatible package manager
+- Backend API running (default: <http://localhost:8080>)
 
 ## Getting Started
 
 ### Installation
-
-Install the dependencies:
 
 ```bash
 npm install
@@ -26,62 +37,100 @@ npm install
 
 ### Development
 
-Start the development server with HMR:
+Run the development server:
 
 ```bash
 npm run dev
 ```
 
-Your application will be available at `http://localhost:5173`.
+The application will be available at `http://localhost:5173` (or the port Vite assigns).
 
-## Building for Production
-
-Create a production build:
+### Building for Production
 
 ```bash
 npm run build
 ```
 
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
+### Starting Production Server
 
 ```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
+npm run start
 ```
 
-The containerized application can be deployed to any platform that supports Docker, including:
+### Type Checking
 
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
+```bash
+npm run typecheck
 ```
 
-## Styling
+## API Client Generation
 
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+The project uses OpenAPI TypeScript Codegen to automatically generate type-safe API clients from the backend OpenAPI specification.
 
----
+To regenerate the API client:
 
-Built with ❤️ using React Router.
+```bash
+npm run generate-api
+```
+
+**Note**: Ensure the backend API is running at `http://localhost:8080` before generating the API client.
+
+## Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+VITE_API_BASE_URL=http://localhost:8080
+```
+
+## Docker Support
+
+Build the Docker image:
+
+```bash
+docker build -t habit-tracker-front-end:latest .
+```
+
+Run the container:
+
+```bash
+docker run -p 3000:3000 habit-tracker-front-end:latest
+```
+
+Or use with Podman:
+
+```bash
+podman build -t habit-tracker-front-end:latest .
+podman run -p 3000:3000 habit-tracker-front-end:latest
+```
+
+## Project Structure
+
+```
+src/
+├── api/                    # Auto-generated API client
+├── app/                    # React Router app configuration
+│   └── routes/             # Application routes
+├── components/             # Reusable components
+│   ├── layouts/            # Page Layouts
+│   └── ui/                 # UI components
+├── features/               # Feature-based modules
+│   ├── auth/               # Authentication
+│   ├── habits/             # Habit management
+│   ├── trackers/           # Habit tracking
+│   └── users/              # User management
+├── lib/                    # Global Utilities
+└── types/                  # Global Types
+```
+
+## Related Projects
+
+- [Habit Tracker API](https://github.com/kugelblitz104/habit-tracker) - Backend API service
+
+## Code Style
+
+The project uses Prettier with custom configuration. Settings are defined in `package.json`.
+
+## License
+
+This project is private and not licensed for public use.

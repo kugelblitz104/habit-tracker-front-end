@@ -8,11 +8,17 @@ import { Label } from '@/components/ui/label';
 import { createTracker } from '@/features/trackers/api/create-trackers';
 import { getTrackers } from '@/features/trackers/api/get-trackers';
 import { updateTracker } from '@/features/trackers/api/update-trackers';
+import {
+    createNewTracker,
+    findTrackerByDate,
+    getNextTrackerState,
+    getTrackerIcon,
+    getTrackerStatus
+} from '@/features/trackers/utils/tracker-utils';
 import { getFrequencyString } from '@/lib/date-utils';
 import { Status } from '@/types/types';
 import { Button } from '@headlessui/react';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { Check, ChevronsRight, Square } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 
@@ -25,21 +31,9 @@ const TrackerCheckbox = ({
     status = Status.NOT_COMPLETED,
     onClick
 }: TrackerCheckboxProps) => {
-    const getIcon = (status: Status) => {
-        switch (status) {
-            case Status.COMPLETED:
-                return <Check color='green' strokeWidth={3} />;
-            case Status.SKIPPED:
-                return <ChevronsRight color='lightblue' strokeWidth={3} />;
-            case Status.NOT_COMPLETED:
-            default:
-                return <Square color='white' strokeWidth={1} />;
-        }
-    };
-
     return (
         <Button type='button' className='align-middle' onClick={onClick}>
-            {getIcon(status)}
+            {getTrackerIcon(status)}
         </Button>
     );
 };
@@ -51,33 +45,36 @@ export type HabitListElementProps = {
 };
 
 export const HabitListElement = ({ habit, days }: HabitListElementProps) => {
-    // Use useMemo to prevent hydration mismatch - date created once and stable
-    const today = useMemo(() => new Date(), []);
-    const dates = useMemo(
-        () =>
-            [...Array(days).keys()].map((day) => {
-                return new Date(
-                    today.getFullYear(),
-                    today.getMonth(),
-                    today.getDate() - day,
-                    today.getHours(),
-                    today.getMinutes(),
-                    today.getSeconds(),
-                    today.getMilliseconds()
-                );
-            }),
-        [days, today]
-    );
+    // useMemo to prevent hydration mismatch
+    const today = useMemo(() => {
+        const now = new Date();
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    }, []);
+
+    const dates = useMemo(() => {
+        return [...Array(days).keys()].map((day) => {
+            const date = new Date(today);
+            date.setDate(today.getDate() - day);
+            return date;
+        });
+    }, [days, today]);
+
     const [rowIsActive, setRowIsActive] = useState<boolean>(false);
     const [trackers, setTrackers] = useState<TrackerRead[]>([]);
+    const queryClient = useQueryClient();
     const trackersQuery = useQuery({
-        queryKey: ['trackers', { habitId: habit.id }],
+        queryKey: ['trackers', { habitId: habit.id }, days],
         queryFn: () => getTrackers(habit.id, days),
         staleTime: 1000 * 60 // 1 minute
     });
 
     const trackerCreate = useMutation({
         mutationFn: (tracker: TrackerCreate) => createTracker(tracker),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: ['trackers', { habitId: habit.id }, days]
+            });
+        },
         onError: (error) => {
             console.error('Error adding tracker:', error);
         }
@@ -85,39 +82,28 @@ export const HabitListElement = ({ habit, days }: HabitListElementProps) => {
     const trackerUpdate = useMutation({
         mutationFn: ({ id, update }: { id: number; update: TrackerUpdate }) =>
             updateTracker(id, update),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: ['trackers', { habitId: habit.id }, days]
+            });
+        },
         onError: (error) => {
             console.error('Error updating tracker:', error);
         }
     });
 
     // functions
-    const getTracker = (date: Date): TrackerRead | undefined => {
-        return trackers.find(
-            (tracker) => tracker.dated === date.toISOString().split('T')[0]
-        );
-    };
-
     const getStatus = (date: Date): Status => {
-        const tracker = getTracker(date);
-
-        if (!tracker) return Status.NOT_COMPLETED;
-        if (tracker?.completed) return Status.COMPLETED;
-        if (tracker?.skipped) return Status.SKIPPED;
-        return Status.NOT_COMPLETED;
+        const tracker = findTrackerByDate(trackers, date);
+        return getTrackerStatus(tracker);
     };
 
     const handleCheckboxClick = (date: Date) => {
-        const tracker = getTracker(date);
+        const tracker = findTrackerByDate(trackers, date);
 
         if (!tracker) {
             // create tracker if it doesn't exist
-            const newTracker = {
-                habit_id: habit.id,
-                dated: date.toISOString().split('T')[0],
-                completed: true,
-                skipped: false,
-                note: ''
-            };
+            const newTracker = createNewTracker(habit.id, date);
             trackerCreate.mutate(newTracker, {
                 onSuccess: (data) => {
                     setTrackers([...trackers, data]);
@@ -126,67 +112,19 @@ export const HabitListElement = ({ habit, days }: HabitListElementProps) => {
             return;
         }
 
-        if (!tracker.completed && !tracker.skipped) {
-            // toggle completed
-            trackerUpdate.mutate(
-                {
-                    id: tracker.id,
-                    update: {
-                        completed: true,
-                        skipped: false
-                    }
-                },
-                {
-                    onSuccess: (data) => {
-                        setTrackers(
-                            trackers.map((t) =>
-                                t.id === tracker.id ? data : t
-                            )
-                        );
-                    }
+        // Cycle through states: not completed → completed → skipped → not completed
+        const update = getNextTrackerState(tracker);
+
+        trackerUpdate.mutate(
+            { id: tracker.id, update },
+            {
+                onSuccess: (data) => {
+                    setTrackers(
+                        trackers.map((t) => (t.id === tracker.id ? data : t))
+                    );
                 }
-            );
-        } else if (tracker.completed) {
-            // toggle skipped
-            trackerUpdate.mutate(
-                {
-                    id: tracker.id,
-                    update: {
-                        completed: false,
-                        skipped: true
-                    }
-                },
-                {
-                    onSuccess: (data) => {
-                        setTrackers(
-                            trackers.map((t) =>
-                                t.id === tracker.id ? data : t
-                            )
-                        );
-                    }
-                }
-            );
-        } else if (tracker.skipped) {
-            // toggle not completed
-            trackerUpdate.mutate(
-                {
-                    id: tracker.id,
-                    update: {
-                        completed: false,
-                        skipped: false
-                    }
-                },
-                {
-                    onSuccess: (data) => {
-                        setTrackers(
-                            trackers.map((t) =>
-                                t.id === tracker.id ? data : t
-                            )
-                        );
-                    }
-                }
-            );
-        }
+            }
+        );
     };
 
     useEffect(() => {
@@ -213,7 +151,7 @@ export const HabitListElement = ({ habit, days }: HabitListElementProps) => {
             >
                 <Link
                     to={`details/${habit.id}`}
-                    className='absolute inset-0 flex items-center'
+                    className='absolute inset-0 flex items-center cursor-pointer'
                 >
                     <Label
                         mainText={habit.name}
@@ -226,6 +164,7 @@ export const HabitListElement = ({ habit, days }: HabitListElementProps) => {
                                 : undefined
                         }
                         textColor={habit.color}
+                        className='cursor-pointer'
                     />
                 </Link>
             </td>

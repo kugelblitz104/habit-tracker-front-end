@@ -19,14 +19,13 @@ const InlineNumberField = ({
     placeholder,
     onChange
 }: InlineNumberFieldProps) => {
-    // right now custom values are not working, so disable user input
-    // until I can figure that out
     return (
         <Field className='mx-1 inline-block border-color-white'>
             <Input
                 name={name}
                 placeholder={placeholder}
                 className='w-6 text-center bg-black rounded-md'
+                onChange={(e) => onChange(e.target.value)}
             />
         </Field>
     );
@@ -77,13 +76,14 @@ export const FrequencyPicker = ({
                     onChange={(e) => {
                         const value = Number.parseInt(e) || 3;
                         setFreq(value);
-                        if (freq > range) {
+                        const newRange = Math.max(value, range);
+                        if (value > range) {
                             setRange(value);
                         }
                         onSelectedChange({
                             name: 'custom',
-                            frequency: freq,
-                            range: range
+                            frequency: value,
+                            range: newRange
                         });
                     }}
                 />
@@ -93,11 +93,15 @@ export const FrequencyPicker = ({
                     placeholder='7'
                     onChange={(e) => {
                         const value = Number.parseInt(e) || 7;
+                        const newFreq = Math.min(freq, value);
+                        if (freq > value) {
+                            setFreq(value);
+                        }
                         setRange(value);
                         onSelectedChange({
                             name: 'custom',
-                            frequency: freq,
-                            range: range
+                            frequency: newFreq,
+                            range: value
                         });
                     }}
                 />
