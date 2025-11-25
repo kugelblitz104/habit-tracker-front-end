@@ -18,6 +18,7 @@ import {
     getTrackerIcon,
     getTrackerStatus
 } from '@/features/trackers/utils/tracker-utils';
+import { getWeeksDifference } from '@/lib/date-utils';
 import {
     sanitizeMultilineText,
     validationPatterns
@@ -183,9 +184,14 @@ type CalendarBoardProps = {
 };
 
 export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
-    const WEEKS = 10;
+    // Calculate weeks since habit was created for fetching data
+    const weeksSinceCreated = habit?.created_date
+        ? getWeeksDifference(habit.created_date)
+        : 10;
+
+    const WEEKS = Math.max(10, weeksSinceCreated); // show min of 10 weeks
     const DAYS_PER_WEEK = 7;
-    const TOTAL_DAYS = WEEKS * DAYS_PER_WEEK;
+    const TOTAL_DAYS = Math.min(1000, WEEKS * DAYS_PER_WEEK); // 1000 is api limit
 
     const queryClient = useQueryClient();
     const [trackers, setTrackers] = useState<TrackerRead[]>([]);
@@ -194,6 +200,13 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
     const [selectedTracker, setSelectedTracker] = useState<
         TrackerRead | undefined
     >(undefined);
+
+    // auto scroll to the right on initial load
+    const scrollRef = (node: HTMLDivElement) => {
+        if (node) {
+            node.scrollLeft = node.scrollWidth;
+        }
+    };
 
     const today = useMemo(() => {
         const now = new Date();
@@ -380,17 +393,20 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
     const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     return (
-        <div className='overflow-hidden select-none mx-4 rounded-lg border border-slate-700'>
-            <table className='w-full border-collapse table-fixed'>
+        <div
+            className='overflow-x-auto select-none mx-4 rounded-lg border border-slate-700'
+            ref={scrollRef}
+        >
+            <table className='w-full border-collapse table-fixed min-w-max'>
                 <colgroup>
                     <col className='w-20' />
                     {weeks.map((_, idx) => (
-                        <col key={idx} />
+                        <col key={idx} className='min-w-30' />
                     ))}
                 </colgroup>
                 <thead>
                     <tr>
-                        <th className='p-2 text-left text-sm text-slate-400 font-normal border-b border-r border-slate-700'>
+                        <th className='p-2 text-left text-sm text-slate-400 font-normal border-b border-r border-slate-700 sticky left-0 bg-gray-950 z-10'>
                             Day
                         </th>
                         {weekHeaders}
@@ -400,7 +416,7 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
                     {[...Array(DAYS_PER_WEEK).keys()].map((dayIndex) => (
                         <tr key={dayIndex}>
                             <td
-                                className={`p-2 text-sm text-slate-400 border-r bg-slate-800/50 ${
+                                className={`p-2 text-sm text-slate-400 border-r bg-slate-800 sticky left-0 z-10 ${
                                     dayIndex < DAYS_PER_WEEK - 1
                                         ? 'border-b'
                                         : ''
