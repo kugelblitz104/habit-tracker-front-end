@@ -8,15 +8,30 @@ import { useAuth } from '@/lib/auth-context';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useMediaQuery } from 'react-responsive';
 import { ButtonVariant } from '../ui/buttons/action-button';
 import { LoadingScreen } from './loading-screen';
 import { ErrorScreen } from './error-screen';
 
-type HabitsDashboardProps = {
-    days?: number;
+const useResponsiveDays = () => {
+    const isXl = useMediaQuery({ minWidth: 1280 });
+    const isLg = useMediaQuery({ minWidth: 1024 });
+    const isMd = useMediaQuery({ minWidth: 768 });
+
+    switch (true) {
+        case isXl:
+            return 14;
+        case isLg:
+            return 11;
+        case isMd:
+            return 8;
+        default:
+            return 4;
+    }
 };
 
-export const HabitsDashboard = ({ days = 9 }: HabitsDashboardProps) => {
+export const HabitsDashboard = () => {
+    const days = useResponsiveDays();
     const { user } = useAuth();
     const userId = user?.id || 1; // Fallback to 1 if no user (shouldn't happen in protected routes)
     // hooks
