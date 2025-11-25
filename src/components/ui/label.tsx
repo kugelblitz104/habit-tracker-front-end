@@ -10,7 +10,7 @@ export const Label = ({
     textColor = '#FFFFFF'
 }: LabelProps) => {
     return (
-        <label className='mx-4'>
+        <label className='mx-4 truncate'>
             <span className='font-semibold' style={{ color: textColor }}>
                 {mainText}
             </span>
