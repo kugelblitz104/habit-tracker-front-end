@@ -45,23 +45,20 @@ export type HabitListElementProps = {
 };
 
 export const HabitListElement = ({ habit, days }: HabitListElementProps) => {
-    // Use useMemo to prevent hydration mismatch - date created once and stable
-    const today = useMemo(() => new Date(), []);
-    const dates = useMemo(
-        () =>
-            [...Array(days).keys()].map((day) => {
-                return new Date(
-                    today.getFullYear(),
-                    today.getMonth(),
-                    today.getDate() - day,
-                    today.getHours(),
-                    today.getMinutes(),
-                    today.getSeconds(),
-                    today.getMilliseconds()
-                );
-            }),
-        [days, today]
-    );
+    // useMemo to prevent hydration mismatch
+    const today = useMemo(() => {
+        const now = new Date();
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    }, []);
+
+    const dates = useMemo(() => {
+        return [...Array(days).keys()].map((day) => {
+            const date = new Date(today);
+            date.setDate(today.getDate() - day);
+            return date;
+        });
+    }, [days, today]);
+
     const [rowIsActive, setRowIsActive] = useState<boolean>(false);
     const [trackers, setTrackers] = useState<TrackerRead[]>([]);
     const queryClient = useQueryClient();

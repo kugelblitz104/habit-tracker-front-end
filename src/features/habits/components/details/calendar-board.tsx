@@ -200,26 +200,19 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
         return new Date(now.getFullYear(), now.getMonth(), now.getDate());
     }, []);
 
-    // Calculate how many days after today to fill the current week
-    const daysAfterToday = useMemo(() => {
-        return 6 - today.getDay(); // Days until Saturday
-    }, [today]);
+    // Generate calendar weeks with dates
+    const weeks = useMemo(() => {
+        const daysAfterToday = 6 - today.getDay(); // Days until Saturday
 
-    // Generate dates: past dates + today + empty slots for future days this week
-    const dates = useMemo(() => {
-        const pastDates = [...Array(TOTAL_DAYS - daysAfterToday).keys()]
+        // Generate past dates (oldest first)
+        const dates = [...Array(TOTAL_DAYS - daysAfterToday).keys()]
             .map((day) => {
                 const date = new Date(today);
                 date.setDate(today.getDate() - day);
                 return date;
             })
-            .reverse(); // Oldest first
+            .reverse();
 
-        return pastDates;
-    }, [today, TOTAL_DAYS, daysAfterToday]);
-
-    // Organize dates into weeks (columns), with null for future days in the current week
-    const weeks = useMemo(() => {
         const weeksArray: (Date | null)[][] = [];
 
         // Fill complete past weeks
@@ -229,11 +222,10 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
             );
         }
 
-        // Handle the current week (last week)
+        // Handle the current week (last week) with null for future days
         const currentWeekDates = dates.slice((WEEKS - 1) * DAYS_PER_WEEK);
         const currentWeek: (Date | null)[] = [...currentWeekDates];
 
-        // Add null values for days after today in the current week
         for (let i = 0; i < daysAfterToday; i++) {
             currentWeek.push(null);
         }
@@ -241,7 +233,7 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
         weeksArray.push(currentWeek);
 
         return weeksArray;
-    }, [dates, WEEKS, DAYS_PER_WEEK, daysAfterToday]);
+    }, [today, WEEKS, DAYS_PER_WEEK, TOTAL_DAYS]);
 
     const trackersQuery = useQuery({
         queryKey: ['trackers', { habitId: habit?.id }, TOTAL_DAYS],
