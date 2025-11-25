@@ -12,7 +12,7 @@ import { AddHabitModal } from '@/features/habits/components/modals/add-habit-mod
 import { DeleteHabitModal } from '@/features/habits/components/modals/delete-habit-modal';
 import { getFrequencyString } from '@/lib/date-utils';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Bell, Calendar, Pencil, Trash } from 'lucide-react';
+import { Bell, Calendar, CalendarPlus, Pencil, Trash } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ButtonVariant } from '../ui/buttons/action-button';
@@ -104,6 +104,21 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                         text: freqStr,
                         icon: (
                             <Calendar size={16} className='inline-flex mr-1' />
+                        )
+                    },
+                    {
+                        text: `Created: ${
+                            habit
+                                ? new Date(
+                                      habit.created_date
+                                  ).toLocaleDateString()
+                                : ''
+                        }`,
+                        icon: (
+                            <CalendarPlus
+                                size={16}
+                                className='inline-flex mr-1'
+                            />
                         )
                     },
                     {
