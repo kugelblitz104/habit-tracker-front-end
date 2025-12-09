@@ -46,31 +46,32 @@ export const getTrackerStatus = (
 
 /**
  * Get the icon component for a tracker status
+ * @param status - The tracker status
+ * @param className - Optional CSS class for the icon
+ * @param habitColor - Optional habit color to use for completed/auto-skipped states
  */
-export const getTrackerIcon = (status: Status, className?: string) => {
-    const iconClass = className || 'w-5 h-5';
+export const getTrackerIcon = (status: Status, habitColor?: string) => {
+    const iconClass = 'w-5 h-5';
 
     switch (status) {
         case Status.COMPLETED:
             return (
-                <Check className={iconClass} color='green' strokeWidth={3} />
+                <Check
+                    className={iconClass}
+                    color={habitColor || 'green'}
+                    strokeWidth={3}
+                />
             );
         case Status.SKIPPED:
             return (
                 <ChevronsRight
                     className={iconClass}
-                    color='lightblue'
+                    color={habitColor || 'lightblue'}
                     strokeWidth={3}
                 />
             );
         case Status.AUTO_SKIPPED:
-            return (
-                <CircleCheck
-                    className={iconClass}
-                    color='gray'
-                    strokeWidth={2}
-                />
-            );
+            return <Check className={iconClass} color='gray' strokeWidth={2} />;
         case Status.NOT_COMPLETED:
         default:
             return (

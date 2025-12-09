@@ -42,6 +42,7 @@ type TrackerCellProps = {
     trackers: TrackerRead[];
     frequency: number;
     range: number;
+    habitColor: string;
     onStatusClick: (date: Date) => void;
     onNoteClick: (date: Date, tracker: TrackerRead | undefined) => void;
     isToday: boolean;
@@ -54,6 +55,7 @@ const TrackerCell = ({
     trackers,
     frequency,
     range,
+    habitColor,
     onStatusClick,
     onNoteClick,
     isToday,
@@ -85,7 +87,7 @@ const TrackerCell = ({
         >
             <div className='flex items-center justify-center gap-1'>
                 <div className='relative'>
-                    {getTrackerIcon(status)}
+                    {getTrackerIcon(status, habitColor)}
                     {hasNote && (
                         <div className='absolute -top-0 -right-3.5 pointer-events-none'>
                             <MessageSquare
@@ -465,6 +467,7 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
                                             trackers={trackers}
                                             frequency={habit.frequency}
                                             range={habit.range}
+                                            habitColor={habit.color}
                                             onStatusClick={handleStatusClick}
                                             onNoteClick={handleNoteClick}
                                             isToday={isToday(date)}

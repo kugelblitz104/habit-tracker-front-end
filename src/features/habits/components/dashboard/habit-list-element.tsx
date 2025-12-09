@@ -24,16 +24,18 @@ import { Link } from 'react-router';
 
 export type TrackerCheckboxProps = {
     status: Status;
+    habitColor?: string;
     onClick?: () => void;
 };
 
 const TrackerCheckbox = ({
     status = Status.NOT_COMPLETED,
+    habitColor,
     onClick
 }: TrackerCheckboxProps) => {
     return (
         <Button type='button' className='align-middle' onClick={onClick}>
-            {getTrackerIcon(status)}
+            {getTrackerIcon(status, habitColor)}
         </Button>
     );
 };
@@ -198,6 +200,7 @@ export const HabitListElement = ({
                 >
                     <TrackerCheckbox
                         status={getStatus(date)}
+                        habitColor={habit.color}
                         onClick={() => handleCheckboxClick(date)}
                     />
                 </td>
