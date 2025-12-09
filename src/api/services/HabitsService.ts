@@ -24,6 +24,8 @@ export class HabitsService {
      * - **range**: The number of days within which the frequency should be met
      * - **reminder**: Whether to enable reminders for this habit
      * - **notes**: Optional additional notes about the habit
+     * - **archived**: Whether the habit is archived
+     * - **sort_order**: The order in which the habit appears in lists (descending)
      * @param requestBody
      * @returns HabitRead Successful Response
      * @throws ApiError
@@ -114,6 +116,8 @@ export class HabitsService {
      * - **range**: The number of days within which the frequency should be met
      * - **reminder**: Whether to enable reminders for this habit
      * - **notes**: Optional additional notes about the habit
+     * - **archived**: Whether the habit is archived
+     * - **sort_order**: The order in which the habit appears in lists (descending)
      * @param habitId
      * @param requestBody
      * @returns HabitRead Successful Response

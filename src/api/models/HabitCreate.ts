@@ -10,5 +10,7 @@ export type HabitCreate = {
     range: number;
     reminder?: boolean;
     notes?: (string | null);
+    archived?: boolean;
+    sort_order?: number;
 };
 

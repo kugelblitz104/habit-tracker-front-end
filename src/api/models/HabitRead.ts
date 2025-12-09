@@ -10,8 +10,12 @@ export type HabitRead = {
     range: number;
     reminder?: boolean;
     notes?: (string | null);
+    archived?: boolean;
+    sort_order?: number;
     id: number;
     created_date: string;
     updated_date?: (string | null);
+    completed_today?: boolean;
+    skipped_today?: boolean;
 };
 

@@ -10,6 +10,8 @@ export type HabitUpdate = {
     range?: (number | null);
     reminder?: (boolean | null);
     notes?: (string | null);
+    archived?: (boolean | null);
+    sort_order?: (number | null);
     updated_date?: string;
 };
 
