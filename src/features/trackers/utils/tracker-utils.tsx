@@ -1,14 +1,46 @@
 import type { TrackerCreate, TrackerRead, TrackerUpdate } from '@/api';
 import { Status } from '@/types/types';
-import { Check, ChevronsRight, Square } from 'lucide-react';
+import { Check, ChevronsRight, CircleCheck, Square } from 'lucide-react';
 
 /**
- * Get the status of a tracker
+ * Helper to convert a Date to YYYY-MM-DD string in local timezone
  */
-export const getTrackerStatus = (tracker: TrackerRead | undefined): Status => {
-    if (!tracker) return Status.NOT_COMPLETED;
-    if (tracker.completed) return Status.COMPLETED;
-    if (tracker.skipped) return Status.SKIPPED;
+const toLocalDateString = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+/**
+ * Get the status of a tracker, optionally considering auto-skip eligibility.
+ *
+ * When autoSkipParams are provided, checks if the date qualifies for auto-skip
+ * based on the habit's frequency/range settings (using the same logic as the backend).
+ */
+export const getTrackerStatus = (
+    tracker: TrackerRead | undefined,
+    autoSkipParams?: {
+        date: Date;
+        trackers: TrackerRead[];
+        frequency: number;
+        range: number;
+    }
+): Status => {
+    // If tracker exists with explicit state, use that
+    if (tracker) {
+        if (tracker.completed) return Status.COMPLETED;
+        if (tracker.skipped) return Status.SKIPPED;
+    }
+
+    // Check if this date qualifies for auto-skip
+    if (autoSkipParams) {
+        const { date, trackers, frequency, range } = autoSkipParams;
+        if (isAutoSkipped(date, trackers, frequency, range)) {
+            return Status.AUTO_SKIPPED;
+        }
+    }
+
     return Status.NOT_COMPLETED;
 };
 
@@ -29,6 +61,14 @@ export const getTrackerIcon = (status: Status, className?: string) => {
                     className={iconClass}
                     color='lightblue'
                     strokeWidth={3}
+                />
+            );
+        case Status.AUTO_SKIPPED:
+            return (
+                <CircleCheck
+                    className={iconClass}
+                    color='gray'
+                    strokeWidth={2}
                 />
             );
         case Status.NOT_COMPLETED:
@@ -65,7 +105,7 @@ export const createNewTracker = (
 ): TrackerCreate => {
     return {
         habit_id: habitId,
-        dated: date.toISOString().split('T')[0],
+        dated: toLocalDateString(date),
         completed,
         skipped: false,
         note: ''
@@ -79,7 +119,55 @@ export const findTrackerByDate = (
     trackers: TrackerRead[],
     date: Date
 ): TrackerRead | undefined => {
-    return trackers.find(
-        (tracker) => tracker.dated === date.toISOString().split('T')[0]
-    );
+    const dateStr = toLocalDateString(date);
+    return trackers.find((tracker) => tracker.dated === dateStr);
+};
+
+/**
+ * Check if a date qualifies for auto-skip based on the habit's frequency/range settings.
+ * Auto-skip means the user has already met their frequency goal within the range window,
+ * so they don't need to complete the habit on this date to maintain their streak.
+ *
+ * Uses the same logic as the backend streak calculation:
+ * - For each date, check the window from (date - range + 1) to date (inclusive)
+ * - Count completions in that window (excluding the current date)
+ * - If completions >= frequency, the streak continues (auto-skip eligible)
+ *
+ * Example: frequency=1, range=7, completed on Wed Dec 3rd
+ * - On Dec 4th: window is Nov 28 - Dec 4, contains Dec 3rd completion → auto-skip
+ * - On Dec 9th: window is Dec 3 - Dec 9, contains Dec 3rd completion → auto-skip
+ * - On Dec 10th: window is Dec 4 - Dec 10, no completions → not auto-skip
+ */
+export const isAutoSkipped = (
+    date: Date,
+    trackers: TrackerRead[],
+    frequency: number,
+    range: number
+): boolean => {
+    // Normalize current date to YYYY-MM-DD string (local timezone)
+    const dateStr = toLocalDateString(date);
+
+    // Calculate window start date string
+    const windowStart = new Date(date);
+    windowStart.setDate(date.getDate() - range + 1);
+    const windowStartStr = toLocalDateString(windowStart);
+
+    // Count completions in the window (excluding the current date)
+    let completions = 0;
+    for (const tracker of trackers) {
+        if (!tracker.dated || !tracker.completed) continue;
+
+        // Compare using string dates to avoid timezone issues
+        // tracker.dated is already in YYYY-MM-DD format
+        if (
+            tracker.dated >= windowStartStr &&
+            tracker.dated < dateStr &&
+            tracker.completed
+        ) {
+            completions++;
+        }
+    }
+
+    // If completions already meet or exceed frequency, the day is auto-skipped
+    return completions >= frequency;
 };

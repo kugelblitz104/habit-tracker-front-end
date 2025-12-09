@@ -39,6 +39,9 @@ import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 type TrackerCellProps = {
     date: Date;
     tracker: TrackerRead | undefined;
+    trackers: TrackerRead[];
+    frequency: number;
+    range: number;
     onStatusClick: (date: Date) => void;
     onNoteClick: (date: Date, tracker: TrackerRead | undefined) => void;
     isToday: boolean;
@@ -48,12 +51,20 @@ type TrackerCellProps = {
 const TrackerCell = ({
     date,
     tracker,
+    trackers,
+    frequency,
+    range,
     onStatusClick,
     onNoteClick,
     isToday,
     isLastRow = false
 }: TrackerCellProps) => {
-    const status = getTrackerStatus(tracker);
+    const status = getTrackerStatus(tracker, {
+        date,
+        trackers,
+        frequency,
+        range
+    });
     const hasNote = tracker?.note && tracker.note.trim().length > 0;
 
     return (
@@ -393,81 +404,89 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
     const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     return (
-        <div
-            className='overflow-x-auto select-none mx-4 rounded-lg border border-slate-700'
-            ref={scrollRef}
-        >
-            <table className='w-full border-collapse table-fixed min-w-max'>
-                <colgroup>
-                    <col className='w-20' />
-                    {weeks.map((_, idx) => (
-                        <col key={idx} className='min-w-30' />
-                    ))}
-                </colgroup>
-                <thead>
-                    <tr>
-                        <th className='p-2 text-left text-sm text-slate-400 font-normal border-b border-r border-slate-700 sticky left-0 bg-gray-950 z-10'>
-                            Day
-                        </th>
-                        {weekHeaders}
-                    </tr>
-                </thead>
-                <tbody>
-                    {[...Array(DAYS_PER_WEEK).keys()].map((dayIndex) => (
-                        <tr key={dayIndex}>
-                            <td
-                                className={`p-2 text-sm text-slate-400 border-r bg-slate-800 sticky left-0 z-10 ${
-                                    dayIndex < DAYS_PER_WEEK - 1
-                                        ? 'border-b'
-                                        : ''
-                                } border-slate-700`}
-                            >
-                                {dayLabels[dayIndex]}
-                            </td>
-                            {weeks.map((week, weekIndex) => {
-                                const date = week[dayIndex];
-                                const isLastRow =
-                                    dayIndex === DAYS_PER_WEEK - 1;
-                                const borderClasses = isLastRow
-                                    ? ''
-                                    : 'border-b';
+        <>
+            <div
+                className='overflow-x-auto select-none mx-4 rounded-lg border border-slate-700'
+                ref={scrollRef}
+            >
+                <table className='w-full border-collapse table-fixed min-w-max'>
+                    <colgroup>
+                        <col className='w-20' />
+                        {weeks.map((_, idx) => (
+                            <col key={idx} className='min-w-30' />
+                        ))}
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th className='p-2 text-left text-sm text-slate-400 font-normal border-b border-r border-slate-700 sticky left-0 bg-gray-950 z-10'>
+                                Day
+                            </th>
+                            {weekHeaders}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {[...Array(DAYS_PER_WEEK).keys()].map((dayIndex) => (
+                            <tr key={dayIndex}>
+                                <td
+                                    className={`p-2 text-sm text-slate-400 border-r bg-slate-800 sticky left-0 z-10 ${
+                                        dayIndex < DAYS_PER_WEEK - 1
+                                            ? 'border-b'
+                                            : ''
+                                    } border-slate-700`}
+                                >
+                                    {dayLabels[dayIndex]}
+                                </td>
+                                {weeks.map((week, weekIndex) => {
+                                    const date = week[dayIndex];
+                                    const isLastRow =
+                                        dayIndex === DAYS_PER_WEEK - 1;
+                                    const borderClasses = isLastRow
+                                        ? ''
+                                        : 'border-b';
 
-                                if (!date) {
-                                    // Empty cell for future days
+                                    if (!date) {
+                                        // Empty cell for future days
+                                        return (
+                                            <td
+                                                key={`${weekIndex}-${dayIndex}`}
+                                                className={`p-2 ${borderClasses} border-slate-700 bg-slate-900/50`}
+                                            />
+                                        );
+                                    }
+                                    const tracker = findTrackerByDate(
+                                        trackers,
+                                        date
+                                    );
                                     return (
-                                        <td
+                                        <TrackerCell
                                             key={`${weekIndex}-${dayIndex}`}
-                                            className={`p-2 ${borderClasses} border-slate-700 bg-slate-900/50`}
+                                            date={date}
+                                            tracker={tracker}
+                                            trackers={trackers}
+                                            frequency={habit.frequency}
+                                            range={habit.range}
+                                            onStatusClick={handleStatusClick}
+                                            onNoteClick={handleNoteClick}
+                                            isToday={isToday(date)}
+                                            isLastRow={isLastRow}
                                         />
                                     );
-                                }
-                                const tracker = findTrackerByDate(
-                                    trackers,
-                                    date
-                                );
-                                return (
-                                    <TrackerCell
-                                        key={`${weekIndex}-${dayIndex}`}
-                                        date={date}
-                                        tracker={tracker}
-                                        onStatusClick={handleStatusClick}
-                                        onNoteClick={handleNoteClick}
-                                        isToday={isToday(date)}
-                                        isLastRow={isLastRow}
-                                    />
-                                );
-                            })}
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-            <NoteDialog
-                isOpen={isNoteDialogOpen}
-                date={selectedDate || new Date()}
-                note={selectedTracker?.note || ''}
-                onClose={() => setIsNoteDialogOpen(false)}
-                onSave={handleNoteSave}
-            />
-        </div>
+                                })}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                <NoteDialog
+                    isOpen={isNoteDialogOpen}
+                    date={selectedDate || new Date()}
+                    note={selectedTracker?.note || ''}
+                    onClose={() => setIsNoteDialogOpen(false)}
+                    onSave={handleNoteSave}
+                />
+            </div>
+            <div className='mx-4 mt-1 text-slate-500'>
+                Right click to add or edit notes
+            </div>
+        </>
     );
 };

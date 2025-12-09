@@ -146,13 +146,7 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
                 return primarySort;
             })
             .filter((habit) => {
-                // Apply filters
-                if (
-                    selectedFilters.includes('incomplete') &&
-                    habit.completed_today
-                ) {
-                    return false;
-                }
+                // Apply filters (incomplete filter is handled by HabitListElement)
                 if (!selectedFilters.includes('archived') && habit.archived) {
                     return false;
                 }
@@ -245,6 +239,9 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
                                 key={habit.id}
                                 habit={habit}
                                 days={days}
+                                filterIncomplete={selectedFilters.includes(
+                                    'incomplete'
+                                )}
                             />
                         ))}
                     </tbody>

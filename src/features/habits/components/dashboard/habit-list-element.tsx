@@ -41,10 +41,14 @@ const TrackerCheckbox = ({
 export type HabitListElementProps = {
     habit: HabitRead;
     days: number;
-    // onHabitUpdate: (habit: HabitRead) => void;
+    filterIncomplete?: boolean;
 };
 
-export const HabitListElement = ({ habit, days }: HabitListElementProps) => {
+export const HabitListElement = ({
+    habit,
+    days,
+    filterIncomplete = false
+}: HabitListElementProps) => {
     // useMemo to prevent hydration mismatch
     const today = useMemo(() => {
         const now = new Date();
@@ -95,7 +99,12 @@ export const HabitListElement = ({ habit, days }: HabitListElementProps) => {
     // functions
     const getStatus = (date: Date): Status => {
         const tracker = findTrackerByDate(trackers, date);
-        return getTrackerStatus(tracker);
+        return getTrackerStatus(tracker, {
+            date,
+            trackers,
+            frequency: habit.frequency,
+            range: habit.range
+        });
     };
 
     const handleCheckboxClick = (date: Date) => {
@@ -132,6 +141,18 @@ export const HabitListElement = ({ habit, days }: HabitListElementProps) => {
             setTrackers(trackersQuery.data.trackers);
         }
     }, [trackersQuery.data]);
+
+    // Get today's status for filtering
+    const todayStatus = getStatus(today);
+
+    // If filtering for incomplete and today is completed, skipped, or auto-skipped, hide this habit
+    if (
+        filterIncomplete &&
+        (todayStatus === Status.COMPLETED ||
+            todayStatus === Status.AUTO_SKIPPED)
+    ) {
+        return null;
+    }
 
     // render
     return (

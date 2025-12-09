@@ -7,7 +7,8 @@ export type Meta = {
 export enum Status {
     NOT_COMPLETED = 'not_completed',
     COMPLETED = 'completed',
-    SKIPPED = 'skipped'
+    SKIPPED = 'skipped',
+    AUTO_SKIPPED = 'auto_skipped'
 }
 
 export enum LoadingStatus {

@@ -16,7 +16,7 @@ export const ToggleButton = ({
             onClick={onClick}
             className={`px-4 py-2 rounded-md transition-colors text-sm font-medium ${
                 isActive
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-sky-600 text-white hover:bg-sky-700'
                     : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
             }`}
         >
