@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { CheckCheck, ChevronLeft, LogOut } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router';
 
-type ActionConfig = {
+export type ActionConfig = {
     onClick: () => void;
     label: string;
     icon: React.ReactNode;

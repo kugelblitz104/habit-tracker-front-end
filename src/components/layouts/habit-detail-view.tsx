@@ -11,15 +11,23 @@ import { KpiBoard } from '@/features/habits/components/details/kpi-board';
 import { AddHabitModal } from '@/features/habits/components/modals/add-habit-modal';
 import { DeleteHabitModal } from '@/features/habits/components/modals/delete-habit-modal';
 import { getFrequencyString } from '@/lib/date-utils';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { Bell, Calendar, CalendarPlus, Pencil, Trash } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+    Archive,
+    ArchiveRestore,
+    Bell,
+    Calendar,
+    CalendarPlus,
+    Pencil,
+    Trash
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ButtonVariant } from '../ui/buttons/action-button';
-import { TitleBar } from '../ui/title-bar';
+import { SubtitleBar } from '../ui/subtitle-bar';
+import { TitleBar, type ActionConfig } from '../ui/title-bar';
 import { ErrorScreen } from './error-screen';
 import { LoadingScreen } from './loading-screen';
-import { SubtitleBar } from '../ui/subtitle-bar';
 
 type HabitDetailViewProps = {
     habitId?: number;
@@ -30,6 +38,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const habitQuery = useQuery({
         queryKey: ['habit', { habitId }],
         queryFn: () => getHabit(habitId),
@@ -51,6 +60,52 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
             updateHabit(id, update),
         onSuccess: (data) => {
             setHabit(data);
+            // Update the individual habit cache
+            queryClient.setQueryData(['habit', { habitId }], data);
+            // Optimistically update the habits list cache
+            queryClient.setQueriesData<{ habits: HabitRead[] }>(
+                { queryKey: ['habits'] },
+                (oldData) => {
+                    if (!oldData?.habits) return oldData;
+                    return {
+                        ...oldData,
+                        habits: oldData.habits.map((h) =>
+                            h.id === data.id ? data : h
+                        )
+                    };
+                }
+            );
+            // Background refresh to ensure consistency
+            queryClient.invalidateQueries({ queryKey: ['habits'] });
+        }
+    });
+
+    const habitsDelete = useMutation({
+        mutationFn: (id: number) => deleteHabit(id),
+        onSuccess: (_, deletedHabitId) => {
+            // Remove habit from cache before navigating
+            queryClient.setQueriesData<{ habits: HabitRead[] }>(
+                { queryKey: ['habits'] },
+                (oldData) => {
+                    if (!oldData?.habits) return oldData;
+                    return {
+                        ...oldData,
+                        habits: oldData.habits.filter(
+                            (h) => h.id !== deletedHabitId
+                        )
+                    };
+                }
+            );
+            // Remove individual habit query from cache
+            queryClient.removeQueries({
+                queryKey: ['habit', { habitId: deletedHabitId }]
+            });
+            // Remove related tracker queries from cache
+            queryClient.removeQueries({
+                queryKey: ['trackers', { habitId: deletedHabitId }]
+            });
+            setIsDeleteModalOpen(false);
+            navigate('/', { replace: true });
         }
     });
 
@@ -74,25 +129,34 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
         : '';
     const reminderStatus = habit ? (habit.reminder ? 'on' : 'off') : '';
 
+    const titleBarActions = [
+        {
+            label: 'Delete',
+            onClick: () => setIsDeleteModalOpen(true),
+            icon: <Trash />,
+            variant: ButtonVariant.Danger
+        },
+        {
+            label: 'Edit',
+            onClick: () => setIsEditModalOpen(true),
+            icon: <Pencil />,
+            variant: ButtonVariant.Secondary
+        },
+        habit && {
+            label: habit.archived ? 'Unarchive' : 'Archive',
+            onClick: () =>
+                habitsEdit.mutate({
+                    id: habit.id,
+                    update: { archived: !habit.archived }
+                }),
+            icon: habit.archived ? <ArchiveRestore /> : <Archive />,
+            variant: ButtonVariant.Secondary
+        }
+    ].filter(Boolean) as ActionConfig[];
+
     return (
         <>
-            <TitleBar
-                title={`${habit?.name}`}
-                actions={[
-                    {
-                        label: 'Delete',
-                        onClick: () => setIsDeleteModalOpen(true),
-                        icon: <Trash />,
-                        variant: ButtonVariant.Danger
-                    },
-                    {
-                        label: 'Edit',
-                        onClick: () => setIsEditModalOpen(true),
-                        icon: <Pencil />,
-                        variant: ButtonVariant.Secondary
-                    }
-                ]}
-            />
+            <TitleBar title={`${habit?.name}`} actions={titleBarActions} />
             <SubtitleBar
                 subtitles={[
                     {
@@ -134,12 +198,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                     isOpen={isDeleteModalOpen}
                     habit={habit}
                     onClose={() => setIsDeleteModalOpen(false)}
-                    handleDeleteHabit={() => {
-                        deleteHabit(habit.id).then(() => {
-                            setIsDeleteModalOpen(false);
-                            navigate('/', { replace: true });
-                        });
-                    }}
+                    handleDeleteHabit={() => habitsDelete.mutate(habit.id)}
                 />
             )}
             {habit && (

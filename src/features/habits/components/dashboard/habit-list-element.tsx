@@ -76,10 +76,21 @@ export const HabitListElement = ({
 
     const trackerCreate = useMutation({
         mutationFn: (tracker: TrackerCreate) => createTracker(tracker),
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({
-                queryKey: ['trackers', { habitId: habit.id }, days]
-            });
+        onSuccess: async (data) => {
+            // Optimistically update ALL tracker caches for this habit (any days value)
+            queryClient.setQueriesData<{ trackers: TrackerRead[] }>(
+                { queryKey: ['trackers', { habitId: habit.id }] },
+                (oldData) => {
+                    if (!oldData?.trackers) return oldData;
+                    // Only add if not already present
+                    if (oldData.trackers.some((t) => t.id === data.id))
+                        return oldData;
+                    return {
+                        ...oldData,
+                        trackers: [...oldData.trackers, data]
+                    };
+                }
+            );
         },
         onError: (error) => {
             console.error('Error adding tracker:', error);
@@ -88,10 +99,20 @@ export const HabitListElement = ({
     const trackerUpdate = useMutation({
         mutationFn: ({ id, update }: { id: number; update: TrackerUpdate }) =>
             updateTracker(id, update),
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({
-                queryKey: ['trackers', { habitId: habit.id }, days]
-            });
+        onSuccess: async (data) => {
+            // Optimistically update ALL tracker caches for this habit (any days value)
+            queryClient.setQueriesData<{ trackers: TrackerRead[] }>(
+                { queryKey: ['trackers', { habitId: habit.id }] },
+                (oldData) => {
+                    if (!oldData?.trackers) return oldData;
+                    return {
+                        ...oldData,
+                        trackers: oldData.trackers.map((t) =>
+                            t.id === data.id ? data : t
+                        )
+                    };
+                }
+            );
         },
         onError: (error) => {
             console.error('Error updating tracker:', error);
