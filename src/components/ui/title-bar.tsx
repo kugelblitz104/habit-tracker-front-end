@@ -2,8 +2,10 @@ import {
     ActionButton,
     ButtonVariant
 } from '@/components/ui/buttons/action-button';
+import { LogoutModal } from '@/features/auth/components/modals/logout-modal';
 import { useAuth } from '@/lib/auth-context';
 import { CheckCheck, ChevronLeft, LogOut } from 'lucide-react';
+import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 
 export type ActionConfig = {
@@ -27,6 +29,11 @@ export const TitleBar = ({
     const location = useLocation();
     const showBackButton = !['/', '/login'].includes(location.pathname);
     const navigate = useNavigate();
+    const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+    const handleLogout = () => {
+        logout();
+        navigate('/login', { replace: true });
+    };
 
     return (
         <div className='p-4 bg-slate-700 relative'>
@@ -42,10 +49,7 @@ export const TitleBar = ({
                     {isAuthenticated && !showBackButton && (
                         <ActionButton
                             className='flex-row-reverse'
-                            onClick={() => {
-                                logout();
-                                navigate('/login', { replace: true });
-                            }}
+                            onClick={() => setLogoutModalOpen(true)}
                             variant={ButtonVariant.Danger}
                             label='Logout'
                             icon={<LogOut />}
@@ -65,6 +69,13 @@ export const TitleBar = ({
                     ))}
                 </div>
             </div>
+            {logoutModalOpen && (
+                <LogoutModal
+                    isOpen={logoutModalOpen}
+                    onClose={() => setLogoutModalOpen(false)}
+                    handleLogout={handleLogout}
+                />
+            )}
         </div>
     );
 };
