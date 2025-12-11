@@ -1,16 +1,22 @@
-import type { HabitRead, HabitUpdate } from '@/api';
+import type {
+    HabitRead,
+    HabitUpdate,
+    TrackerCreate,
+    TrackerRead,
+    TrackerUpdate
+} from '@/api';
 import { deleteHabit } from '@/features/habits/api/delete-habits';
-import {
-    getHabit,
-    getHabitKPIs,
-    getHabitStreaks
-} from '@/features/habits/api/get-habits';
+import { getHabit } from '@/features/habits/api/get-habits';
 import { updateHabit } from '@/features/habits/api/update-habits';
 import { CalendarBoard } from '@/features/habits/components/details/calendar-board';
 import { KpiBoard } from '@/features/habits/components/details/kpi-board';
 import { AddHabitModal } from '@/features/habits/components/modals/add-habit-modal';
 import { DeleteHabitModal } from '@/features/habits/components/modals/delete-habit-modal';
-import { getFrequencyString } from '@/lib/date-utils';
+import { createTracker } from '@/features/trackers/api/create-trackers';
+import { getTrackers } from '@/features/trackers/api/get-trackers';
+import { updateTracker } from '@/features/trackers/api/update-trackers';
+import { calculateKPIsFromTrackers } from '@/features/trackers/utils/kpi-utils';
+import { getFrequencyString, getWeeksDifference } from '@/lib/date-utils';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
     Archive,
@@ -21,7 +27,7 @@ import {
     Pencil,
     Trash
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ButtonVariant } from '../ui/buttons/action-button';
 import { SubtitleBar } from '../ui/subtitle-bar';
@@ -34,27 +40,43 @@ type HabitDetailViewProps = {
 };
 
 export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
+    // hooks
     const [habit, setHabit] = useState<HabitRead>();
+    const [trackers, setTrackers] = useState<TrackerRead[]>([]);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+
+    // constants
+    const weeksSinceCreated = habit?.created_date
+        ? getWeeksDifference(habit.created_date)
+        : 10;
+    const WEEKS = Math.max(10, weeksSinceCreated);
+    const DAYS_PER_WEEK = 7;
+    const TOTAL_DAYS = Math.min(1000, WEEKS * DAYS_PER_WEEK);
+
+    // queries
     const habitQuery = useQuery({
         queryKey: ['habit', { habitId }],
         queryFn: () => getHabit(habitId),
         staleTime: 1000 * 60 // 1 minute
     });
-    const habitKPIQuery = useQuery({
-        queryKey: ['habit-kpis', { habitId }],
-        queryFn: () => getHabitKPIs(habitId),
-        enabled: !!habitId
-    });
-    const streakQuery = useQuery({
-        queryKey: ['habit-streaks', { habitId }],
-        queryFn: () => getHabitStreaks(habitId),
-        enabled: !!habitId
+
+    const trackersQuery = useQuery({
+        queryKey: ['trackers', { habitId: habit?.id }, TOTAL_DAYS],
+        queryFn: () => getTrackers(habit!.id, TOTAL_DAYS),
+        enabled: !!habit,
+        staleTime: 1000 * 60
     });
 
+    // Calculate KPIs from trackers on the frontend
+    const habitKPIs = useMemo(() => {
+        if (!habit || trackers.length === 0) return undefined;
+        return calculateKPIsFromTrackers(habit, trackers);
+    }, [habit, trackers]);
+
+    // mutations
     const habitsEdit = useMutation({
         mutationFn: ({ id, update }: { id: number; update: HabitUpdate }) =>
             updateHabit(id, update),
@@ -109,12 +131,99 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
         }
     });
 
+    const trackerCreate = useMutation({
+        mutationFn: (tracker: TrackerCreate) => createTracker(tracker),
+        onSuccess: async (data) => {
+            // Optimistically update ALL tracker caches for this habit (any days value)
+            queryClient.setQueriesData<{ trackers: TrackerRead[] }>(
+                { queryKey: ['trackers', { habitId: habit?.id }] },
+                (oldData) => {
+                    if (!oldData?.trackers) return oldData;
+                    // Only add if not already present
+                    if (oldData.trackers.some((t) => t.id === data.id))
+                        return oldData;
+                    return {
+                        ...oldData,
+                        trackers: [...oldData.trackers, data]
+                    };
+                }
+            );
+        },
+        onError: (error) => {
+            console.error('Error adding tracker:', error);
+        }
+    });
+
+    const trackerUpdate = useMutation({
+        mutationFn: ({ id, update }: { id: number; update: TrackerUpdate }) =>
+            updateTracker(id, update),
+        onSuccess: async (data) => {
+            // Optimistically update ALL tracker caches for this habit (any days value)
+            queryClient.setQueriesData<{ trackers: TrackerRead[] }>(
+                { queryKey: ['trackers', { habitId: habit?.id }] },
+                (oldData) => {
+                    if (!oldData?.trackers) return oldData;
+                    return {
+                        ...oldData,
+                        trackers: oldData.trackers.map((t) =>
+                            t.id === data.id ? data : t
+                        )
+                    };
+                }
+            );
+        },
+        onError: (error) => {
+            console.error('Error updating tracker:', error);
+        }
+    });
+
+    const handleTrackerCreate = async (
+        tracker: TrackerCreate
+    ): Promise<TrackerRead> => {
+        return new Promise((resolve, reject) => {
+            trackerCreate.mutate(tracker, {
+                onSuccess: (data) => {
+                    setTrackers((prev) => [...prev, data]);
+                    resolve(data);
+                },
+                onError: (error) => reject(error)
+            });
+        });
+    };
+
+    const handleTrackerUpdate = async (
+        id: number,
+        update: TrackerUpdate
+    ): Promise<TrackerRead> => {
+        return new Promise((resolve, reject) => {
+            trackerUpdate.mutate(
+                { id, update },
+                {
+                    onSuccess: (data) => {
+                        setTrackers((prev) =>
+                            prev.map((t) => (t.id === data.id ? data : t))
+                        );
+                        resolve(data);
+                    },
+                    onError: (error) => reject(error)
+                }
+            );
+        });
+    };
+
     // Effect to set habits from query data
     useEffect(() => {
         if (habitQuery.data !== undefined) {
             setHabit(habitQuery.data);
         }
     }, [habitQuery.data]);
+
+    // Effect to set trackers from query data
+    useEffect(() => {
+        if (trackersQuery.data?.trackers) {
+            setTrackers(trackersQuery.data.trackers);
+        }
+    }, [trackersQuery.data]);
 
     if (habitQuery.isLoading) {
         return <LoadingScreen />;
@@ -191,8 +300,14 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                     }
                 ]}
             />
-            <KpiBoard habitKPIS={habitKPIQuery.data} />
-            <CalendarBoard habit={habit} />
+            <KpiBoard habitKPIS={habitKPIs} />
+            <CalendarBoard
+                habit={habit}
+                trackers={trackers}
+                totalDays={TOTAL_DAYS}
+                onTrackerCreate={handleTrackerCreate}
+                onTrackerUpdate={handleTrackerUpdate}
+            />
             {habit && (
                 <DeleteHabitModal
                     isOpen={isDeleteModalOpen}

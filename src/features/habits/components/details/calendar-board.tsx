@@ -8,9 +8,6 @@ import {
     ActionButton,
     ButtonVariant
 } from '@/components/ui/buttons/action-button';
-import { createTracker } from '@/features/trackers/api/create-trackers';
-import { getTrackers } from '@/features/trackers/api/get-trackers';
-import { updateTracker } from '@/features/trackers/api/update-trackers';
 import {
     createNewTracker,
     findTrackerByDate,
@@ -18,7 +15,6 @@ import {
     getTrackerIcon,
     getTrackerStatus
 } from '@/features/trackers/utils/tracker-utils';
-import { getWeeksDifference } from '@/lib/date-utils';
 import {
     sanitizeMultilineText,
     validationPatterns
@@ -31,7 +27,6 @@ import {
     Label,
     Textarea
 } from '@headlessui/react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MessageSquare, Save, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
@@ -194,20 +189,24 @@ const NoteDialog = ({
 
 type CalendarBoardProps = {
     habit?: HabitRead;
+    trackers: TrackerRead[];
+    totalDays: number;
+    onTrackerCreate: (tracker: TrackerCreate) => Promise<TrackerRead>;
+    onTrackerUpdate: (
+        id: number,
+        update: TrackerUpdate
+    ) => Promise<TrackerRead>;
 };
 
-export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
-    // Calculate weeks since habit was created for fetching data
-    const weeksSinceCreated = habit?.created_date
-        ? getWeeksDifference(habit.created_date)
-        : 10;
-
-    const WEEKS = Math.max(10, weeksSinceCreated); // show min of 10 weeks
+export const CalendarBoard = ({
+    habit,
+    trackers,
+    totalDays,
+    onTrackerCreate,
+    onTrackerUpdate
+}: CalendarBoardProps) => {
     const DAYS_PER_WEEK = 7;
-    const TOTAL_DAYS = Math.min(1000, WEEKS * DAYS_PER_WEEK); // 1000 is api limit
-
-    const queryClient = useQueryClient();
-    const [trackers, setTrackers] = useState<TrackerRead[]>([]);
+    const WEEKS = Math.ceil(totalDays / DAYS_PER_WEEK);
     const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [selectedTracker, setSelectedTracker] = useState<
@@ -231,7 +230,7 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
         const daysAfterToday = 6 - today.getDay(); // Days until Saturday
 
         // Generate past dates (oldest first)
-        const dates = [...Array(TOTAL_DAYS - daysAfterToday).keys()]
+        const dates = [...Array(totalDays - daysAfterToday).keys()]
             .map((day) => {
                 const date = new Date(today);
                 date.setDate(today.getDate() - day);
@@ -259,70 +258,7 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
         weeksArray.push(currentWeek);
 
         return weeksArray;
-    }, [today, WEEKS, DAYS_PER_WEEK, TOTAL_DAYS]);
-
-    const trackersQuery = useQuery({
-        queryKey: ['trackers', { habitId: habit?.id }, TOTAL_DAYS],
-        queryFn: () => getTrackers(habit!.id, TOTAL_DAYS),
-        enabled: !!habit,
-        staleTime: 1000 * 60
-    });
-
-    const trackerCreate = useMutation({
-        mutationFn: (tracker: TrackerCreate) => createTracker(tracker),
-        onSuccess: async (data) => {
-            // Optimistically update ALL tracker caches for this habit (any days value)
-            queryClient.setQueriesData<{ trackers: TrackerRead[] }>(
-                { queryKey: ['trackers', { habitId: habit?.id }] },
-                (oldData) => {
-                    if (!oldData?.trackers) return oldData;
-                    // Only add if not already present
-                    if (oldData.trackers.some((t) => t.id === data.id))
-                        return oldData;
-                    return {
-                        ...oldData,
-                        trackers: [...oldData.trackers, data]
-                    };
-                }
-            );
-        },
-        onError: (error) => {
-            console.error('Error adding tracker:', error);
-        }
-    });
-
-    const trackerUpdate = useMutation({
-        mutationFn: ({ id, update }: { id: number; update: TrackerUpdate }) =>
-            updateTracker(id, update),
-        onSuccess: async (data) => {
-            // Optimistically update ALL tracker caches for this habit (any days value)
-            queryClient.setQueriesData<{ trackers: TrackerRead[] }>(
-                { queryKey: ['trackers', { habitId: habit?.id }] },
-                (oldData) => {
-                    if (!oldData?.trackers) return oldData;
-                    return {
-                        ...oldData,
-                        trackers: oldData.trackers.map((t) =>
-                            t.id === data.id ? data : t
-                        )
-                    };
-                }
-            );
-            // Background refresh KPIs for consistency
-            queryClient.invalidateQueries({
-                queryKey: ['habitKpi', { habitId: habit?.id }]
-            });
-        },
-        onError: (error) => {
-            console.error('Error updating tracker:', error);
-        }
-    });
-
-    useEffect(() => {
-        if (trackersQuery.data?.trackers) {
-            setTrackers(trackersQuery.data.trackers);
-        }
-    }, [trackersQuery.data]);
+    }, [today, WEEKS, DAYS_PER_WEEK, totalDays]);
 
     const isToday = (date: Date): boolean => {
         return date.toDateString() === today.toDateString();
@@ -336,27 +272,13 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
         if (!tracker) {
             // Create tracker if it doesn't exist
             const newTracker = createNewTracker(habit.id, date);
-            trackerCreate.mutate(newTracker, {
-                onSuccess: (data) => {
-                    setTrackers([...trackers, data]);
-                }
-            });
+            onTrackerCreate(newTracker);
             return;
         }
 
         // Cycle through states: not completed → completed → skipped → not completed
         const update = getNextTrackerState(tracker);
-
-        trackerUpdate.mutate(
-            { id: tracker.id, update },
-            {
-                onSuccess: (data) => {
-                    setTrackers(
-                        trackers.map((t) => (t.id === tracker.id ? data : t))
-                    );
-                }
-            }
-        );
+        onTrackerUpdate(tracker.id, update);
     };
 
     const handleNoteClick = (date: Date, tracker: TrackerRead | undefined) => {
@@ -372,26 +294,11 @@ export const CalendarBoard = ({ habit }: CalendarBoardProps) => {
             // Create tracker with note
             const newTracker = createNewTracker(habit.id, selectedDate, false);
             newTracker.note = note;
-            trackerCreate.mutate(newTracker, {
-                onSuccess: (data) => {
-                    setTrackers([...trackers, data]);
-                }
-            });
+            onTrackerCreate(newTracker);
         } else {
             // Update existing tracker's note
             const update: TrackerUpdate = { note: note };
-            trackerUpdate.mutate(
-                { id: selectedTracker.id, update },
-                {
-                    onSuccess: (data) => {
-                        setTrackers(
-                            trackers.map((t) =>
-                                t.id === selectedTracker.id ? data : t
-                            )
-                        );
-                    }
-                }
-            );
+            onTrackerUpdate(selectedTracker.id, update);
         }
     };
 
