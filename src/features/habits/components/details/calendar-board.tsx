@@ -27,7 +27,7 @@ import {
     Label,
     Textarea
 } from '@headlessui/react';
-import { MessageSquare, Save, X } from 'lucide-react';
+import { CalendarPlus, MessageSquare, Save, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 
@@ -41,6 +41,7 @@ type TrackerCellProps = {
     onStatusClick: (date: Date) => void;
     onNoteClick: (date: Date, tracker: TrackerRead | undefined) => void;
     isToday: boolean;
+    isCreatedDate: boolean;
     isLastRow?: boolean;
 };
 
@@ -54,6 +55,7 @@ const TrackerCell = ({
     onStatusClick,
     onNoteClick,
     isToday,
+    isCreatedDate,
     isLastRow = false
 }: TrackerCellProps) => {
     const status = getTrackerStatus(tracker, {
@@ -83,8 +85,13 @@ const TrackerCell = ({
             <div className='flex items-center justify-center gap-1'>
                 <div className='relative'>
                     {getTrackerIcon(status, habitColor)}
+                    {isCreatedDate && (
+                        <div className='absolute bottom-1 -left-5 pointer-events-none'>
+                            <CalendarPlus size={12} color='lightgreen' />
+                        </div>
+                    )}
                     {hasNote && (
-                        <div className='absolute -top-0 -right-3.5 pointer-events-none'>
+                        <div className='absolute -top-0 -right-4.5 pointer-events-none'>
                             <MessageSquare
                                 size={12}
                                 color='orange'
@@ -264,6 +271,12 @@ export const CalendarBoard = ({
         return date.toDateString() === today.toDateString();
     };
 
+    const isCreatedDate = (date: Date): boolean => {
+        if (!habit || !habit.created_date) return false;
+        const createdDate = new Date(habit.created_date);
+        return date.toDateString() === createdDate.toDateString();
+    };
+
     const handleStatusClick = (date: Date) => {
         if (!habit) return;
 
@@ -403,6 +416,7 @@ export const CalendarBoard = ({
                                             onStatusClick={handleStatusClick}
                                             onNoteClick={handleNoteClick}
                                             isToday={isToday(date)}
+                                            isCreatedDate={isCreatedDate(date)}
                                             isLastRow={isLastRow}
                                         />
                                     );

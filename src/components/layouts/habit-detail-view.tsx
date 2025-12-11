@@ -280,13 +280,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                         )
                     },
                     {
-                        text: `Created: ${
-                            habit
-                                ? new Date(
-                                      habit.created_date
-                                  ).toLocaleDateString()
-                                : ''
-                        }`,
+                        text: `Created: ${habit ? habit.created_date : ''}`,
                         icon: (
                             <CalendarPlus
                                 size={16}

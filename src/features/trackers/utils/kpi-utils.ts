@@ -1,10 +1,41 @@
 import type { HabitKPIs, HabitRead, TrackerRead } from '@/api';
 import { isAutoSkipped, toLocalDateString } from './tracker-utils';
 
+/**
+ * Parse a YYYY-MM-DD date string as local time (not UTC).
+ */
+const parseLocalDate = (dateStr: string): Date => {
+    const [year, month, day] = dateStr.split('-').map(Number) as [
+        number,
+        number,
+        number
+    ];
+    return new Date(year, month - 1, day);
+};
+
 type Streak = {
     startDate: string;
     endDate: string;
     length: number;
+};
+
+/**
+ * Get the effective start date for KPI calculations.
+ * Returns the earlier of the habit's created date or the first tracker date.
+ */
+const getEffectiveStartDate = (
+    trackers: TrackerRead[],
+    createdDate: string
+): string => {
+    const trackerDates = trackers
+        .filter((t) => t.dated && (t.completed || t.skipped))
+        .map((t) => t.dated as string)
+        .sort((a, b) => a.localeCompare(b));
+    const firstTrackerDate = trackerDates[0];
+
+    return firstTrackerDate && firstTrackerDate < createdDate
+        ? firstTrackerDate
+        : createdDate;
 };
 
 /**
@@ -19,7 +50,8 @@ const calculateStreaks = (
     createdDate: string
 ): Streak[] => {
     const todayStr = toLocalDateString(new Date());
-    const createdDateObj = new Date(createdDate);
+    const startDateStr = getEffectiveStartDate(trackers, createdDate);
+    const startDate = parseLocalDate(startDateStr);
 
     const completedDates = new Set(
         trackers
@@ -34,7 +66,7 @@ const calculateStreaks = (
 
     const streaks: Streak[] = [];
     let currentStreak: Streak | null = null;
-    let currentDate = new Date(createdDateObj);
+    let currentDate = new Date(startDate);
 
     while (toLocalDateString(currentDate) <= todayStr) {
         const dateStr = toLocalDateString(currentDate);
@@ -119,34 +151,25 @@ const getLongestStreakLength = (streaks: Streak[]): number => {
  */
 const calculateCompletionRate = (
     trackers: TrackerRead[],
-    createdDate: string,
     frequency: number,
     range: number,
+    createdDate: string,
     days?: number
 ): number => {
     const today = new Date();
     const todayStr = toLocalDateString(today);
-    const createdDateObj = new Date(createdDate);
+    const habitStartStr = getEffectiveStartDate(trackers, createdDate);
+    const habitStartDate = parseLocalDate(habitStartStr);
 
     let startDate: Date;
     if (days !== undefined) {
         const daysAgo = new Date(today);
         daysAgo.setDate(today.getDate() - days);
-        // Use the later of created date or days ago
-        startDate = daysAgo > createdDateObj ? daysAgo : createdDateObj;
+        // Use the later of habit start date or days ago
+        startDate = daysAgo ? daysAgo : habitStartDate;
     } else {
-        startDate = createdDateObj;
+        startDate = habitStartDate;
     }
-
-    const startDateStr = toLocalDateString(startDate);
-
-    // Calculate total days in the period
-    const totalDays =
-        Math.ceil(
-            (today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
-        ) + 1;
-
-    if (totalDays <= 0) return 0;
 
     // Build a set of completed dates for quick lookup
     const completedDates = new Set(
@@ -161,12 +184,14 @@ const calculateCompletionRate = (
             .map((t) => t.dated as string)
     );
 
-    // Count completions (explicit or auto-skipped) in the period
+    // Count completions and total days by iterating through dates
     let completions = 0;
+    let totalDays = 0;
     let currentDate = new Date(startDate);
 
     while (toLocalDateString(currentDate) <= todayStr) {
         const dateStr = toLocalDateString(currentDate);
+        totalDays++;
 
         if (completedDates.has(dateStr) || skippedDates.has(dateStr)) {
             completions++;
@@ -176,6 +201,8 @@ const calculateCompletionRate = (
 
         currentDate.setDate(currentDate.getDate() + 1);
     }
+
+    if (totalDays <= 0) return 0;
 
     return (completions / totalDays) * 100;
 };
@@ -214,16 +241,16 @@ export const calculateKPIsFromTrackers = (
         total_completions: totalCompletions,
         thirty_day_completion_rate: calculateCompletionRate(
             trackers,
-            habit.created_date,
             habit.frequency,
             habit.range,
+            habit.created_date,
             30
         ),
         overall_completion_rate: calculateCompletionRate(
             trackers,
-            habit.created_date,
             habit.frequency,
-            habit.range
+            habit.range,
+            habit.created_date
         ),
         last_completed_date: getLastCompletedDate(trackers)
     };
