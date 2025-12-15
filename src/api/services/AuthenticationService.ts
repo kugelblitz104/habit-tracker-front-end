@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Body_login_auth_login_post } from '../models/Body_login_auth_login_post';
+import type { RefreshTokenRequest } from '../models/RefreshTokenRequest';
 import type { Token } from '../models/Token';
 import type { UserCreate } from '../models/UserCreate';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -53,19 +54,18 @@ export class AuthenticationService {
     }
     /**
      * Refresh Token
-     * @param refreshToken
+     * @param requestBody
      * @returns Token Successful Response
      * @throws ApiError
      */
     public static refreshTokenAuthRefreshPost(
-        refreshToken: string,
+        requestBody: RefreshTokenRequest,
     ): CancelablePromise<Token> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/auth/refresh',
-            query: {
-                'refresh_token': refreshToken,
-            },
+            body: requestBody,
+            mediaType: 'application/json',
             errors: {
                 422: `Validation Error`,
             },

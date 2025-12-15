@@ -69,7 +69,6 @@ export const LoginForm = () => {
                                     label='Username'
                                     name='username'
                                     isValid={!errors.username}
-                                    validation={validationPatterns.username}
                                 />
                                 <TextField
                                     isRequired
@@ -77,7 +76,6 @@ export const LoginForm = () => {
                                     name='password'
                                     type='password'
                                     isValid={!errors.password}
-                                    validation={validationPatterns.password}
                                 />
                             </Fieldset>
                             <div className='flex items-center gap-3'>

@@ -79,7 +79,7 @@ export class UsersService {
      * - **first_name**: User's first name
      * - **last_name**: User's last name
      * - **email**: User's email address
-     * - **password_hash**: Hashed password for authentication
+     * - **plaintext_password**: New password for the user
      * @param userId
      * @param requestBody
      * @returns UserRead Successful Response

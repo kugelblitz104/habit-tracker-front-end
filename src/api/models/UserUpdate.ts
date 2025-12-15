@@ -7,7 +7,7 @@ export type UserUpdate = {
     first_name?: (string | null);
     last_name?: (string | null);
     email?: (string | null);
-    password_hash?: (string | null);
+    plaintext_password?: (string | null);
     updated_date?: string;
 };
 
