@@ -1,9 +1,4 @@
-import {
-    Dialog,
-    DialogBackdrop,
-    DialogPanel,
-    DialogTitle
-} from '@headlessui/react';
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import type { ReactNode } from 'react';
 
 type BaseModalProps = {

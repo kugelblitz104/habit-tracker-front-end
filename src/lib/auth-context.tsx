@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
 import { OpenAPI } from '@/api';
-import { getUserIdFromToken, isTokenExpired } from './token-utils';
 import { getUser } from '@/features/users/api/get-users';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { getUserIdFromToken, isTokenExpired } from './token-utils';
 
 interface User {
     id: number;
@@ -18,15 +18,13 @@ interface AuthContextType {
     token: string | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (accessToken: string, refreshToken: string) => Promise<void>;
+    authorize: (accessToken: string, refreshToken: string) => Promise<void>;
     logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
-    children
-}) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -68,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         initAuth();
     }, []);
 
-    const login = async (accessToken: string, refreshToken: string) => {
+    const authorize = async (accessToken: string, refreshToken: string) => {
         // Store tokens
         localStorage.setItem('access_token', accessToken);
         localStorage.setItem('refresh_token', refreshToken);
@@ -122,7 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         token,
         isAuthenticated: !!token && !!user,
         isLoading,
-        login,
+        authorize,
         logout
     };
 

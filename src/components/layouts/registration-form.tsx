@@ -1,6 +1,12 @@
-import { Login } from '@/features/auth/api/login';
+import type { UserCreate } from '@/api';
+import { Register } from '@/features/auth/api/register';
 import { useAuth } from '@/lib/auth-context';
-import { sanitizeFormData, sanitizeUsername, validationPatterns } from '@/lib/input-sanitization';
+import {
+    sanitizeEmail,
+    sanitizeFormData,
+    sanitizeUsername,
+    validationPatterns
+} from '@/lib/input-sanitization';
 import { Button, Fieldset } from '@headlessui/react';
 import classNames from 'classnames';
 import { useEffect, useState } from 'react';
@@ -9,39 +15,48 @@ import { Link, useNavigate } from 'react-router';
 import { TextField } from '../ui/forms/text-field';
 import { TitleBar } from '../ui/title-bar';
 
-interface ILoginFormInput {
+interface IRegistrationFormInput {
     username: string;
-    password: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    plaintext_password: string;
 }
 
-export const LoginForm = () => {
+export const RegistrationForm = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [loginError, setLoginError] = useState<string | null>(null);
+    const [registrationError, setRegistrationError] = useState<string | null>(null);
     const { authorize, isAuthenticated } = useAuth();
     const navigate = useNavigate();
-    const methods = useForm<ILoginFormInput>();
+    const methods = useForm<IRegistrationFormInput>();
     const errors = methods.formState.errors;
-    const onSubmit: SubmitHandler<ILoginFormInput> = async (data) => {
+    const onSubmit: SubmitHandler<IRegistrationFormInput> = async (data) => {
         setIsSubmitting(true);
-        setLoginError(null);
+        setRegistrationError(null);
 
         // Sanitize form inputs
-        const sanitizedData = sanitizeFormData(data, {
+        const registrationRequest: UserCreate = sanitizeFormData(data, {
             username: sanitizeUsername,
-            password: (pwd: string) => pwd.trim() // Don't modify password too much
+            first_name: (fname: string) => fname.trim(),
+            last_name: (lname: string) => lname.trim(),
+            email: sanitizeEmail,
+            plaintext_password: (pwd: string) => pwd.trim() // Don't modify password too much
         });
 
         try {
-            const response = await Login(sanitizedData.username, sanitizedData.password);
+            const response = await Register(registrationRequest);
 
-            // Store tokens using auth context
             authorize(response.access_token, response.refresh_token);
-
-            // Redirect to home page
-            navigate('/', { replace: true });
         } catch (error) {
-            console.error('Login error:', error);
-            setLoginError('Login failed. Please check your credentials and try again.');
+            console.error('Registration Error:', error);
+
+            // Extract error message from API error
+            if (error && typeof error === 'object' && 'body' in error) {
+                const apiError = error as { body?: { detail?: string } };
+                setRegistrationError(apiError.body?.detail || 'Registration failed');
+            } else {
+                setRegistrationError('Registration failed');
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -55,9 +70,9 @@ export const LoginForm = () => {
 
     return (
         <>
-            <TitleBar title='Login' />
+            <TitleBar title='Create Account' />
             <div className='flex items-center justify-center mt-8'>
-                <div className='w-full max-w-md '>
+                <div className='w-full max-w-md'>
                     <FormProvider {...methods}>
                         <form
                             className='bg-slate-800 rounded-md p-4'
@@ -73,10 +88,28 @@ export const LoginForm = () => {
                                 />
                                 <TextField
                                     isRequired
+                                    label='First Name'
+                                    name='first_name'
+                                    isValid={!errors.first_name}
+                                />
+                                <TextField
+                                    isRequired
+                                    label='Last Name'
+                                    name='last_name'
+                                    isValid={!errors.last_name}
+                                />
+                                <TextField
+                                    isRequired
+                                    label='Email'
+                                    name='email'
+                                    isValid={!errors.email}
+                                    validation={validationPatterns.email}
+                                />
+                                <TextField
+                                    isRequired
                                     label='Password'
-                                    name='password'
-                                    type='password'
-                                    isValid={!errors.password}
+                                    name='plaintext_password'
+                                    isValid={!errors.plaintext_password}
                                     validation={validationPatterns.password}
                                 />
                             </Fieldset>
@@ -88,7 +121,7 @@ export const LoginForm = () => {
                                         'bg-sky-950': isSubmitting
                                     })}
                                 >
-                                    Login
+                                    Create Account
                                 </Button>
                                 {isSubmitting && (
                                     <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500'></div>
@@ -96,11 +129,13 @@ export const LoginForm = () => {
                             </div>
                         </form>
                     </FormProvider>
-                    {loginError && <div className='text-red-500 mt-2'>{loginError}</div>}
+                    {registrationError && (
+                        <div className='text-red-500 mt-2'>{registrationError}</div>
+                    )}
                     <div className='mt-4 text-center'>
-                        Don't have an account?{' '}
-                        <Link to='/register' className='text-sky-400 underline'>
-                            Register
+                        Already have an account?{' '}
+                        <Link to='/login' className='text-sky-400 underline'>
+                            Login
                         </Link>
                     </div>
                 </div>

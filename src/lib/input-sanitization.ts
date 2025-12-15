@@ -85,9 +85,11 @@ export const validationPatterns = {
         }
     },
     password: {
-        minLength: {
-            value: 8,
-            message: 'Password must be at least 8 characters'
+        validate: {
+            hasCapital: (value: string) =>
+                /[A-Z]/.test(value) || 'Password must have at least one capital letter',
+            validChars: (value: string) =>
+                /^[a-zA-Z0-9_-]{8,20}$/.test(value) || 'Password must be 8-20 characters'
         }
     }
 };

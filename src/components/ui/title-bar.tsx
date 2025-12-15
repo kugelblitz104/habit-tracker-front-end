@@ -1,7 +1,4 @@
-import {
-    ActionButton,
-    ButtonVariant
-} from '@/components/ui/buttons/action-button';
+import { ActionButton, ButtonVariant } from '@/components/ui/buttons/action-button';
 import { LogoutModal } from '@/features/auth/components/modals/logout-modal';
 import { useAuth } from '@/lib/auth-context';
 import { CheckCheck, ChevronLeft, LogOut } from 'lucide-react';
@@ -21,14 +18,11 @@ type TitleBarProps = {
     actions?: ActionConfig[];
 };
 
-export const TitleBar = ({
-    title = 'Habit Tracker',
-    actions = []
-}: TitleBarProps) => {
+export const TitleBar = ({ title = 'Habit Tracker', actions = [] }: TitleBarProps) => {
     const { isAuthenticated, logout } = useAuth();
     const location = useLocation();
-    const showBackButton = !['/', '/login'].includes(location.pathname);
     const navigate = useNavigate();
+    const showBackButton = !['/', '/login', '/register'].includes(location.pathname);
     const [logoutModalOpen, setLogoutModalOpen] = useState(false);
     const handleLogout = () => {
         logout();
@@ -58,9 +52,7 @@ export const TitleBar = ({
                     {actions.map((action, index) => (
                         <ActionButton
                             key={index}
-                            className={
-                                action.reversed ? 'flex-row-reverse' : ''
-                            }
+                            className={action.reversed ? 'flex-row-reverse' : ''}
                             onClick={action.onClick}
                             variant={action.variant}
                             label={action.label}
