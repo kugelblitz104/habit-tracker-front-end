@@ -14,10 +14,17 @@ export const getWeeksDifference = (
     startDate: Date | string,
     endDate: Date | string = new Date()
 ): number => {
-    const start =
-        typeof startDate === 'string' ? new Date(startDate) : startDate;
+    const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
     const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
     const diffTime = end.getTime() - start.getTime();
     const diffWeeks = Math.floor(diffTime / (7 * 24 * 60 * 60 * 1000));
     return diffWeeks;
+};
+
+/**
+ * Parse a YYYY-MM-DD date string as local time (not UTC).
+ */
+export const parseLocalDate = (dateStr: string): Date => {
+    const [year, month, day] = dateStr.split('-').map(Number) as [number, number, number];
+    return new Date(year, month - 1, day);
 };

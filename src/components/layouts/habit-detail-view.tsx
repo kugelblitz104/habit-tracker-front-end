@@ -1,32 +1,19 @@
-import type {
-    HabitRead,
-    HabitUpdate,
-    TrackerCreate,
-    TrackerRead,
-    TrackerUpdate
-} from '@/api';
+import type { HabitRead, HabitUpdate, TrackerCreate, TrackerRead, TrackerUpdate } from '@/api';
 import { deleteHabit } from '@/features/habits/api/delete-habits';
 import { getHabit } from '@/features/habits/api/get-habits';
 import { updateHabit } from '@/features/habits/api/update-habits';
 import { CalendarBoard } from '@/features/habits/components/details/calendar-board';
 import { KpiBoard } from '@/features/habits/components/details/kpi-board';
+import { StreakChart } from '@/features/habits/components/details/streak-chart';
 import { AddHabitModal } from '@/features/habits/components/modals/add-habit-modal';
 import { DeleteHabitModal } from '@/features/habits/components/modals/delete-habit-modal';
 import { createTracker } from '@/features/trackers/api/create-trackers';
 import { getTrackers } from '@/features/trackers/api/get-trackers';
 import { updateTracker } from '@/features/trackers/api/update-trackers';
-import { calculateKPIsFromTrackers } from '@/features/trackers/utils/kpi-utils';
+import { calculateKPIsFromTrackers, calculateStreaks } from '@/features/trackers/utils/kpi-utils';
 import { getFrequencyString, getWeeksDifference } from '@/lib/date-utils';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-    Archive,
-    ArchiveRestore,
-    Bell,
-    Calendar,
-    CalendarPlus,
-    Pencil,
-    Trash
-} from 'lucide-react';
+import { Archive, ArchiveRestore, Bell, Calendar, CalendarPlus, Pencil, Trash } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ButtonVariant } from '../ui/buttons/action-button';
@@ -49,9 +36,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
     const queryClient = useQueryClient();
 
     // constants
-    const weeksSinceCreated = habit?.created_date
-        ? getWeeksDifference(habit.created_date)
-        : 10;
+    const weeksSinceCreated = habit?.created_date ? getWeeksDifference(habit.created_date) : 10;
     const WEEKS = Math.max(10, weeksSinceCreated);
     const DAYS_PER_WEEK = 7;
     const TOTAL_DAYS = Math.min(1000, WEEKS * DAYS_PER_WEEK);
@@ -76,6 +61,11 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
         return calculateKPIsFromTrackers(habit, trackers);
     }, [habit, trackers]);
 
+    const habitStreaks = useMemo(() => {
+        if (!habit || trackers.length === 0) return undefined;
+        return calculateStreaks(trackers, habit.frequency, habit.range, habit.created_date);
+    }, [habit, trackers]);
+
     // mutations
     const habitsEdit = useMutation({
         mutationFn: ({ id, update }: { id: number; update: HabitUpdate }) =>
@@ -91,9 +81,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                     if (!oldData?.habits) return oldData;
                     return {
                         ...oldData,
-                        habits: oldData.habits.map((h) =>
-                            h.id === data.id ? data : h
-                        )
+                        habits: oldData.habits.map((h) => (h.id === data.id ? data : h))
                     };
                 }
             );
@@ -112,9 +100,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                     if (!oldData?.habits) return oldData;
                     return {
                         ...oldData,
-                        habits: oldData.habits.filter(
-                            (h) => h.id !== deletedHabitId
-                        )
+                        habits: oldData.habits.filter((h) => h.id !== deletedHabitId)
                     };
                 }
             );
@@ -140,8 +126,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                 (oldData) => {
                     if (!oldData?.trackers) return oldData;
                     // Only add if not already present
-                    if (oldData.trackers.some((t) => t.id === data.id))
-                        return oldData;
+                    if (oldData.trackers.some((t) => t.id === data.id)) return oldData;
                     return {
                         ...oldData,
                         trackers: [...oldData.trackers, data]
@@ -165,9 +150,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                     if (!oldData?.trackers) return oldData;
                     return {
                         ...oldData,
-                        trackers: oldData.trackers.map((t) =>
-                            t.id === data.id ? data : t
-                        )
+                        trackers: oldData.trackers.map((t) => (t.id === data.id ? data : t))
                     };
                 }
             );
@@ -177,9 +160,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
         }
     });
 
-    const handleTrackerCreate = async (
-        tracker: TrackerCreate
-    ): Promise<TrackerRead> => {
+    const handleTrackerCreate = async (tracker: TrackerCreate): Promise<TrackerRead> => {
         return new Promise((resolve, reject) => {
             trackerCreate.mutate(tracker, {
                 onSuccess: (data) => {
@@ -191,18 +172,13 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
         });
     };
 
-    const handleTrackerUpdate = async (
-        id: number,
-        update: TrackerUpdate
-    ): Promise<TrackerRead> => {
+    const handleTrackerUpdate = async (id: number, update: TrackerUpdate): Promise<TrackerRead> => {
         return new Promise((resolve, reject) => {
             trackerUpdate.mutate(
                 { id, update },
                 {
                     onSuccess: (data) => {
-                        setTrackers((prev) =>
-                            prev.map((t) => (t.id === data.id ? data : t))
-                        );
+                        setTrackers((prev) => prev.map((t) => (t.id === data.id ? data : t)));
                         resolve(data);
                     },
                     onError: (error) => reject(error)
@@ -233,9 +209,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
         return <ErrorScreen message='Error Loading habit query data' />;
     }
 
-    const freqStr = habit
-        ? getFrequencyString(habit.frequency, habit.range)
-        : '';
+    const freqStr = habit ? getFrequencyString(habit.frequency, habit.range) : '';
     const reminderStatus = habit ? (habit.reminder ? 'on' : 'off') : '';
 
     const titleBarActions = [
@@ -275,18 +249,11 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                     },
                     {
                         text: freqStr,
-                        icon: (
-                            <Calendar size={16} className='inline-flex mr-1' />
-                        )
+                        icon: <Calendar size={16} className='inline-flex mr-1' />
                     },
                     {
                         text: `Created: ${habit ? habit.created_date : ''}`,
-                        icon: (
-                            <CalendarPlus
-                                size={16}
-                                className='inline-flex mr-1'
-                            />
-                        )
+                        icon: <CalendarPlus size={16} className='inline-flex mr-1' />
                     },
                     {
                         text: reminderStatus,
@@ -302,6 +269,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                 onTrackerCreate={handleTrackerCreate}
                 onTrackerUpdate={handleTrackerUpdate}
             />
+            <StreakChart streaks={habitStreaks || []} color={habit?.color} />
             {habit && (
                 <DeleteHabitModal
                     isOpen={isDeleteModalOpen}

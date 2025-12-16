@@ -1,13 +1,5 @@
-import type {
-    HabitRead,
-    TrackerCreate,
-    TrackerRead,
-    TrackerUpdate
-} from '@/api';
-import {
-    ActionButton,
-    ButtonVariant
-} from '@/components/ui/buttons/action-button';
+import type { HabitRead, TrackerCreate, TrackerRead, TrackerUpdate } from '@/api';
+import { ActionButton, ButtonVariant } from '@/components/ui/buttons/action-button';
 import {
     createNewTracker,
     findTrackerByDate,
@@ -15,18 +7,8 @@ import {
     getTrackerIcon,
     getTrackerStatus
 } from '@/features/trackers/utils/tracker-utils';
-import {
-    sanitizeMultilineText,
-    validationPatterns
-} from '@/lib/input-sanitization';
-import {
-    Dialog,
-    DialogPanel,
-    DialogTitle,
-    Field,
-    Label,
-    Textarea
-} from '@headlessui/react';
+import { sanitizeMultilineText, validationPatterns } from '@/lib/input-sanitization';
+import { Dialog, DialogPanel, DialogTitle, Field, Label, Textarea } from '@headlessui/react';
 import { CalendarPlus, MessageSquare, Save, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
@@ -92,11 +74,7 @@ const TrackerCell = ({
                     )}
                     {hasNote && (
                         <div className='absolute -top-0 -right-4.5 pointer-events-none'>
-                            <MessageSquare
-                                size={12}
-                                color='orange'
-                                fill='orange'
-                            />
+                            <MessageSquare size={12} color='orange' fill='orange' />
                         </div>
                     )}
                 </div>
@@ -117,13 +95,7 @@ interface INoteFormInput {
     note: string;
 }
 
-const NoteDialog = ({
-    isOpen,
-    date,
-    note,
-    onClose,
-    onSave
-}: NoteDialogProps) => {
+const NoteDialog = ({ isOpen, date, note, onClose, onSave }: NoteDialogProps) => {
     const methods = useForm<INoteFormInput>({
         values: {
             note: note
@@ -155,14 +127,9 @@ const NoteDialog = ({
                             <Field className='mb-2'>
                                 <Label className='sr-only'>Note</Label>
                                 <Textarea
-                                    {...methods.register(
-                                        'note',
-                                        validationPatterns.notes
-                                    )}
+                                    {...methods.register('note', validationPatterns.notes)}
                                     className={`w-full h-32 p-2 bg-slate-700 border rounded-md resize-none ${
-                                        errors.note
-                                            ? 'border-red-500'
-                                            : 'border-slate-600'
+                                        errors.note ? 'border-red-500' : 'border-slate-600'
                                     }`}
                                     placeholder='Enter your note here...'
                                 />
@@ -199,10 +166,7 @@ type CalendarBoardProps = {
     trackers: TrackerRead[];
     totalDays: number;
     onTrackerCreate: (tracker: TrackerCreate) => Promise<TrackerRead>;
-    onTrackerUpdate: (
-        id: number,
-        update: TrackerUpdate
-    ) => Promise<TrackerRead>;
+    onTrackerUpdate: (id: number, update: TrackerUpdate) => Promise<TrackerRead>;
 };
 
 export const CalendarBoard = ({
@@ -216,9 +180,7 @@ export const CalendarBoard = ({
     const WEEKS = Math.ceil(totalDays / DAYS_PER_WEEK);
     const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-    const [selectedTracker, setSelectedTracker] = useState<
-        TrackerRead | undefined
-    >(undefined);
+    const [selectedTracker, setSelectedTracker] = useState<TrackerRead | undefined>(undefined);
 
     // auto scroll to the right on initial load
     const scrollRef = (node: HTMLDivElement) => {
@@ -249,9 +211,7 @@ export const CalendarBoard = ({
 
         // Fill complete past weeks
         for (let i = 0; i < WEEKS - 1; i++) {
-            weeksArray.push(
-                dates.slice(i * DAYS_PER_WEEK, (i + 1) * DAYS_PER_WEEK)
-            );
+            weeksArray.push(dates.slice(i * DAYS_PER_WEEK, (i + 1) * DAYS_PER_WEEK));
         }
 
         // Handle the current week (last week) with null for future days
@@ -365,7 +325,12 @@ export const CalendarBoard = ({
                     </colgroup>
                     <thead>
                         <tr>
-                            <th className='p-2 text-left text-sm text-slate-400 font-normal border-b border-r border-slate-700 sticky left-0 bg-gray-950 z-10'>
+                            <th
+                                className='p-2 
+                                text-left text-sm text-slate-400 font-normal 
+                                border-b border-r border-slate-700 
+                                sticky left-0 bg-gray-950 z-10'
+                            >
                                 Day
                             </th>
                             {weekHeaders}
@@ -376,20 +341,15 @@ export const CalendarBoard = ({
                             <tr key={dayIndex}>
                                 <td
                                     className={`p-2 text-sm text-slate-400 border-r bg-slate-800 sticky left-0 z-10 ${
-                                        dayIndex < DAYS_PER_WEEK - 1
-                                            ? 'border-b'
-                                            : ''
+                                        dayIndex < DAYS_PER_WEEK - 1 ? 'border-b' : ''
                                     } border-slate-700`}
                                 >
                                     {dayLabels[dayIndex]}
                                 </td>
                                 {weeks.map((week, weekIndex) => {
                                     const date = week[dayIndex];
-                                    const isLastRow =
-                                        dayIndex === DAYS_PER_WEEK - 1;
-                                    const borderClasses = isLastRow
-                                        ? ''
-                                        : 'border-b';
+                                    const isLastRow = dayIndex === DAYS_PER_WEEK - 1;
+                                    const borderClasses = isLastRow ? '' : 'border-b';
 
                                     if (!date) {
                                         // Empty cell for future days
@@ -400,10 +360,7 @@ export const CalendarBoard = ({
                                             />
                                         );
                                     }
-                                    const tracker = findTrackerByDate(
-                                        trackers,
-                                        date
-                                    );
+                                    const tracker = findTrackerByDate(trackers, date);
                                     return (
                                         <TrackerCell
                                             key={`${weekIndex}-${dayIndex}`}
@@ -433,9 +390,7 @@ export const CalendarBoard = ({
                     onSave={handleNoteSave}
                 />
             </div>
-            <div className='mx-4 mt-1 text-slate-500'>
-                Right click to add or edit notes
-            </div>
+            <div className='mx-4 mt-1 text-slate-500'>Right click to add or edit notes</div>
         </>
     );
 };

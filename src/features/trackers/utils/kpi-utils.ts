@@ -1,41 +1,25 @@
 import type { HabitKPIs, HabitRead, TrackerRead } from '@/api';
+import { parseLocalDate } from '@/lib/date-utils';
+import type { Streak } from '@/types/types';
 import { isAutoSkipped, toLocalDateString } from './tracker-utils';
-
-/**
- * Parse a YYYY-MM-DD date string as local time (not UTC).
- */
-const parseLocalDate = (dateStr: string): Date => {
-    const [year, month, day] = dateStr.split('-').map(Number) as [
-        number,
-        number,
-        number
-    ];
-    return new Date(year, month - 1, day);
-};
-
-type Streak = {
-    startDate: string;
-    endDate: string;
-    length: number;
-};
 
 /**
  * Get the effective start date for KPI calculations.
  * Returns the earlier of the habit's created date or the first tracker date.
  */
-const getEffectiveStartDate = (
-    trackers: TrackerRead[],
-    createdDate: string
-): string => {
+const getEffectiveStartDate = (trackers: TrackerRead[], createdDate: string): string => {
     const trackerDates = trackers
         .filter((t) => t.dated && (t.completed || t.skipped))
         .map((t) => t.dated as string)
         .sort((a, b) => a.localeCompare(b));
     const firstTrackerDate = trackerDates[0];
 
-    return firstTrackerDate && firstTrackerDate < createdDate
+    // Extract just the date part from createdDate (YYYY-MM-DD)
+    const createdDateOnly = createdDate.split('T')[0] ?? createdDate;
+
+    return firstTrackerDate && firstTrackerDate < createdDateOnly
         ? firstTrackerDate
-        : createdDate;
+        : createdDateOnly;
 };
 
 /**
@@ -43,7 +27,7 @@ const getEffectiveStartDate = (
  * A streak continues if the user meets their frequency goal within each range window.
  * Returns an array of streak objects sorted by start date (oldest first).
  */
-const calculateStreaks = (
+export const calculateStreaks = (
     trackers: TrackerRead[],
     frequency: number,
     range: number,
@@ -54,14 +38,10 @@ const calculateStreaks = (
     const startDate = parseLocalDate(startDateStr);
 
     const completedDates = new Set(
-        trackers
-            .filter((t) => t.completed && t.dated)
-            .map((t) => t.dated as string)
+        trackers.filter((t) => t.completed && t.dated).map((t) => t.dated as string)
     );
     const skippedDates = new Set(
-        trackers
-            .filter((t) => t.skipped && t.dated)
-            .map((t) => t.dated as string)
+        trackers.filter((t) => t.skipped && t.dated).map((t) => t.dated as string)
     );
 
     const streaks: Streak[] = [];
@@ -77,12 +57,7 @@ const calculateStreaks = (
             continuesStreak = true;
         } else {
             // Check if auto-skip applies (met frequency goal in the range window)
-            continuesStreak = isAutoSkipped(
-                currentDate,
-                trackers,
-                frequency,
-                range
-            );
+            continuesStreak = isAutoSkipped(currentDate, trackers, frequency, range);
         }
 
         if (continuesStreak) {
@@ -173,15 +148,11 @@ const calculateCompletionRate = (
 
     // Build a set of completed dates for quick lookup
     const completedDates = new Set(
-        trackers
-            .filter((t) => t.completed && t.dated)
-            .map((t) => t.dated as string)
+        trackers.filter((t) => t.completed && t.dated).map((t) => t.dated as string)
     );
 
     const skippedDates = new Set(
-        trackers
-            .filter((t) => t.skipped && t.dated)
-            .map((t) => t.dated as string)
+        trackers.filter((t) => t.skipped && t.dated).map((t) => t.dated as string)
     );
 
     // Count completions and total days by iterating through dates
@@ -222,17 +193,9 @@ const getLastCompletedDate = (trackers: TrackerRead[]): string | null => {
 /**
  * Calculate all KPIs from trackers data
  */
-export const calculateKPIsFromTrackers = (
-    habit: HabitRead,
-    trackers: TrackerRead[]
-): HabitKPIs => {
+export const calculateKPIsFromTrackers = (habit: HabitRead, trackers: TrackerRead[]): HabitKPIs => {
     const totalCompletions = trackers.filter((t) => t.completed).length;
-    const streaks = calculateStreaks(
-        trackers,
-        habit.frequency,
-        habit.range,
-        habit.created_date
-    );
+    const streaks = calculateStreaks(trackers, habit.frequency, habit.range, habit.created_date);
 
     return {
         id: habit.id,

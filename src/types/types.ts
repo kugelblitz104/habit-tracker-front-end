@@ -22,3 +22,9 @@ export type Frequency = {
     frequency: number;
     range: number;
 };
+
+export type Streak = {
+    startDate: string;
+    endDate: string;
+    length: number;
+};

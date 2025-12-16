@@ -55,13 +55,7 @@ export const getTrackerIcon = (status: Status, habitColor?: string) => {
 
     switch (status) {
         case Status.COMPLETED:
-            return (
-                <Check
-                    className={iconClass}
-                    color={habitColor || 'green'}
-                    strokeWidth={3}
-                />
-            );
+            return <Check className={iconClass} color={habitColor || 'green'} strokeWidth={3} />;
         case Status.SKIPPED:
             return (
                 <ChevronsRight
@@ -74,9 +68,7 @@ export const getTrackerIcon = (status: Status, habitColor?: string) => {
             return <Check className={iconClass} color='gray' strokeWidth={2} />;
         case Status.NOT_COMPLETED:
         default:
-            return (
-                <Square className={iconClass} color='white' strokeWidth={1} />
-            );
+            return <Square className={iconClass} color='white' strokeWidth={1} />;
     }
 };
 
@@ -84,9 +76,7 @@ export const getTrackerIcon = (status: Status, habitColor?: string) => {
  * Get the next state in the tracker status cycle
  * Cycles: not completed → completed → skipped → not completed
  */
-export const getNextTrackerState = (
-    tracker: TrackerRead | undefined
-): TrackerUpdate => {
+export const getNextTrackerState = (tracker: TrackerRead | undefined): TrackerUpdate => {
     if (!tracker || (!tracker.completed && !tracker.skipped)) {
         return { completed: true, skipped: false };
     } else if (tracker.completed) {
@@ -116,10 +106,7 @@ export const createNewTracker = (
 /**
  * Find a tracker for a specific date from a list of trackers
  */
-export const findTrackerByDate = (
-    trackers: TrackerRead[],
-    date: Date
-): TrackerRead | undefined => {
+export const findTrackerByDate = (trackers: TrackerRead[], date: Date): TrackerRead | undefined => {
     const dateStr = toLocalDateString(date);
     return trackers.find((tracker) => tracker.dated === dateStr);
 };
@@ -138,6 +125,9 @@ export const findTrackerByDate = (
  * - On Dec 4th: window is Nov 28 - Dec 4, contains Dec 3rd completion → auto-skip
  * - On Dec 9th: window is Dec 3 - Dec 9, contains Dec 3rd completion → auto-skip
  * - On Dec 10th: window is Dec 4 - Dec 10, no completions → not auto-skip
+ *
+ * Note: For daily habits (frequency >= range), auto-skip never applies since you must
+ * complete every day to meet the goal.
  */
 export const isAutoSkipped = (
     date: Date,
@@ -145,6 +135,11 @@ export const isAutoSkipped = (
     frequency: number,
     range: number
 ): boolean => {
+    // For daily habits (frequency >= range), you must complete every occurrence
+    if (frequency >= range) {
+        return false;
+    }
+
     // Normalize current date to YYYY-MM-DD string (local timezone)
     const dateStr = toLocalDateString(date);
 
@@ -160,11 +155,7 @@ export const isAutoSkipped = (
 
         // Compare using string dates to avoid timezone issues
         // tracker.dated is already in YYYY-MM-DD format
-        if (
-            tracker.dated >= windowStartStr &&
-            tracker.dated < dateStr &&
-            tracker.completed
-        ) {
+        if (tracker.dated >= windowStartStr && tracker.dated < dateStr && tracker.completed) {
             completions++;
         }
     }
