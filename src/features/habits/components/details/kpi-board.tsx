@@ -1,5 +1,5 @@
 import type { HabitKPIs } from '@/api';
-import { CalendarCheck2, ChartPie, CheckCircle2, Flame, TrendingUp, Trophy } from 'lucide-react';
+import { CalendarCheck2, ChartPie, CheckCircle2, Crown, Flame, TrendingUp } from 'lucide-react';
 
 type KpiBoardProps = {
     habitKPIS?: HabitKPIs;
@@ -54,7 +54,7 @@ export const KpiBoard = ({ habitKPIS }: KpiBoardProps) => {
                 />
 
                 <KPICard
-                    icon={<Trophy size={32} className='stroke-yellow-400' />}
+                    icon={<Crown size={32} className='stroke-yellow-400 fill-yellow-400' />}
                     label='Longest Streak'
                     value={habitKPIS.longest_streak ?? 0}
                     subtitle={habitKPIS.longest_streak === 1 ? 'day' : 'days'}
