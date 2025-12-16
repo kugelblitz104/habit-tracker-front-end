@@ -13,11 +13,6 @@ import {
     type TooltipContentProps
 } from 'recharts';
 
-type StreakChartProps = {
-    streaks: Streak[];
-    color?: string;
-};
-
 const BarLabel = ({ x, y, width, height, value }: LabelProps) => {
     if (
         x === undefined ||
@@ -76,7 +71,13 @@ const CustomTooltip = ({ active, payload }: TooltipContentProps<string, number |
     return null;
 };
 
-export const StreakChart = ({ streaks, color }: StreakChartProps) => {
+type StreakChartProps = {
+    streaks: Streak[];
+    color?: string;
+    subtitle?: string;
+};
+
+export const StreakChart = ({ streaks, color, subtitle = 'Streaks' }: StreakChartProps) => {
     const colorFill = color || '#FFFFFF';
     const data = streaks
         .map((streak) => ({
@@ -97,6 +98,11 @@ export const StreakChart = ({ streaks, color }: StreakChartProps) => {
 
     return (
         <>
+            {subtitle && (
+                <h2 className='mx-4 mt-4 mb-2 text-lg font-semibold' style={{ color: color }}>
+                    {subtitle}
+                </h2>
+            )}
             <div className='mx-4 bg-slate-800 p-4 rounded-lg'>
                 <ResponsiveContainer width='100%' height={data.length * 40 + 10}>
                     <BarChart data={data} layout='vertical'>

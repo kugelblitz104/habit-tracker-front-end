@@ -165,6 +165,7 @@ type CalendarBoardProps = {
     habit?: HabitRead;
     trackers: TrackerRead[];
     totalDays: number;
+    subtitle?: string;
     onTrackerCreate: (tracker: TrackerCreate) => Promise<TrackerRead>;
     onTrackerUpdate: (id: number, update: TrackerUpdate) => Promise<TrackerRead>;
 };
@@ -173,6 +174,7 @@ export const CalendarBoard = ({
     habit,
     trackers,
     totalDays,
+    subtitle = 'Calendar',
     onTrackerCreate,
     onTrackerUpdate
 }: CalendarBoardProps) => {
@@ -312,6 +314,11 @@ export const CalendarBoard = ({
 
     return (
         <>
+            {subtitle && (
+                <h2 className='mx-4 mt-4 mb-2 text-lg font-semibold' style={{ color: habit.color }}>
+                    {subtitle}
+                </h2>
+            )}
             <div
                 className='overflow-x-auto select-none mx-4 rounded-lg border border-slate-700'
                 ref={scrollRef}
