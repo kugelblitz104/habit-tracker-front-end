@@ -12,20 +12,8 @@ import {
     validationPatterns
 } from '@/lib/input-sanitization';
 import type { Frequency } from '@/types/types';
-import {
-    Button,
-    CloseButton,
-    Field,
-    Fieldset,
-    Label,
-    Textarea
-} from '@headlessui/react';
-import {
-    Controller,
-    FormProvider,
-    useForm,
-    type SubmitHandler
-} from 'react-hook-form';
+import { Button, CloseButton, Field, Fieldset, Label, Textarea } from '@headlessui/react';
+import { Controller, FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 
 type AddHabitModalProps = {
     isOpen: boolean;
@@ -111,10 +99,7 @@ export const AddHabitModal = ({
                             control={methods.control}
                             defaultValue='#aabbcc'
                             render={({ field }) => (
-                                <ColorPicker
-                                    color={field.value}
-                                    onColorChange={field.onChange}
-                                />
+                                <ColorPicker color={field.value} onColorChange={field.onChange} />
                             )}
                         />
                         <Controller
@@ -147,22 +132,13 @@ export const AddHabitModal = ({
                         <Field className='mb-2'>
                             <Label className='block'>Notes</Label>
                             <Textarea
-                                {...methods.register(
-                                    'notes',
-                                    validationPatterns.notes
-                                )}
+                                {...methods.register('notes', validationPatterns.notes)}
                                 className={`block bg-black border-slate rounded-md py-1 px-2 w-full
-                                ${
-                                    methods.formState.errors.notes &&
-                                    'border-red-500'
-                                }`}
+                                ${methods.formState.errors.notes && 'border-red-500'}`}
                             />
                             {methods.formState.errors.notes && (
                                 <span className='text-red-400 text-sm mt-1 block'>
-                                    {
-                                        methods.formState.errors.notes
-                                            .message as string
-                                    }
+                                    {methods.formState.errors.notes.message as string}
                                 </span>
                             )}
                         </Field>
@@ -170,11 +146,11 @@ export const AddHabitModal = ({
                     <div className='flex space-x-2'>
                         <Button
                             type='submit'
-                            className='flex-auto bg-sky-500 rounded-md px-2 py-1'
+                            className='flex-auto bg-sky-500 hover:bg-sky-700 rounded-md px-2 py-1'
                         >
                             Submit
                         </Button>
-                        <CloseButton className='flex-auto bg-red-500 rounded-md px-2 py-1'>
+                        <CloseButton className='flex-auto bg-red-500 hover:bg-red-700 rounded-md px-2 py-1'>
                             Close
                         </CloseButton>
                     </div>

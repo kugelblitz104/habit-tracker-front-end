@@ -6,23 +6,9 @@ type BaseModalProps = {
     onClose: () => void;
     title: string;
     children: ReactNode;
-    maxWidth?: 'sm' | 'md' | 'lg' | 'xl';
 };
 
-const maxWidthClasses = {
-    sm: 'max-w-sm',
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl'
-};
-
-export const BaseModal = ({
-    isOpen,
-    onClose,
-    title,
-    children,
-    maxWidth = 'lg'
-}: BaseModalProps) => {
+export const BaseModal = ({ isOpen, onClose, title, children }: BaseModalProps) => {
     return (
         <Dialog
             open={isOpen}
@@ -38,9 +24,7 @@ export const BaseModal = ({
         >
             <DialogBackdrop className='fixed inset-0 bg-black/50' />
             <div className='fixed inset-0 flex items-center justify-center p-4'>
-                <DialogPanel
-                    className={`${maxWidthClasses[maxWidth]} space-y-4 rounded-lg bg-slate-800 p-8`}
-                >
+                <DialogPanel className={`space-y-4 rounded-lg bg-slate-800 p-8 overflow-y-auto`}>
                     <DialogTitle as='h2' className='text-2xl font-bold'>
                         {title}
                     </DialogTitle>

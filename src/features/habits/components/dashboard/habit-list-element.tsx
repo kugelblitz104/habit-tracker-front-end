@@ -194,15 +194,11 @@ export const HabitListElement = ({
             <td className={`relative w-80 ${rowIsActive ? 'bg-slate-800' : 'bg-slate-800/50'}`}>
                 <Link
                     to={`details/${habit.id}`}
-                    className='absolute inset-0 flex items-center cursor-pointer'
+                    className='absolute inset-0 flex items-center cursor-pointer px-2'
                 >
                     <Label
                         mainText={habit.name}
-                        subText={
-                            habit.frequency && habit.range
-                                ? getFrequencyString(habit.frequency, habit.range)
-                                : undefined
-                        }
+                        subText={getFrequencyString(habit.frequency, habit.range)}
                         textColor={habit.color}
                         className='cursor-pointer'
                     />
