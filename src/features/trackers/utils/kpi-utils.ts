@@ -96,7 +96,7 @@ export const calculateStreaks = (
  * Get current streak length from streaks array.
  * Current streak is the last streak if it includes today.
  */
-const getCurrentStreakLength = (streaks: Streak[]): number => {
+export const getCurrentStreakLength = (streaks: Streak[]): number => {
     const lastStreak = streaks.at(-1);
     if (!lastStreak) return 0;
 

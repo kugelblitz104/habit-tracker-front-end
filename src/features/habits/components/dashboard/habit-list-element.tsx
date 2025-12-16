@@ -3,6 +3,7 @@ import { Label } from '@/components/ui/label';
 import { createTracker } from '@/features/trackers/api/create-trackers';
 import { getTrackers } from '@/features/trackers/api/get-trackers';
 import { updateTracker } from '@/features/trackers/api/update-trackers';
+import { calculateStreaks, getCurrentStreakLength } from '@/features/trackers/utils/kpi-utils';
 import {
     createNewTracker,
     findTrackerByDate,
@@ -14,6 +15,7 @@ import { getFrequencyString } from '@/lib/date-utils';
 import { Status } from '@/types/types';
 import { Button } from '@headlessui/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Flame } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 
@@ -69,6 +71,17 @@ export const HabitListElement = ({
         staleTime: 1000 * 60 // 1 minute
     });
 
+    const currentStreak = useMemo(() => {
+        if (!habit || trackers.length === 0) return 0;
+        const habitStreaks = calculateStreaks(
+            trackers,
+            habit.frequency,
+            habit.range,
+            habit.created_date
+        );
+        return getCurrentStreakLength(habitStreaks);
+    }, [habit, trackers]);
+
     const trackerCreate = useMutation({
         mutationFn: (tracker: TrackerCreate) => createTracker(tracker),
         onSuccess: async (data) => {
@@ -90,6 +103,7 @@ export const HabitListElement = ({
             console.error('Error adding tracker:', error);
         }
     });
+
     const trackerUpdate = useMutation({
         mutationFn: ({ id, update }: { id: number; update: TrackerUpdate }) =>
             updateTracker(id, update),
@@ -177,7 +191,7 @@ export const HabitListElement = ({
             align-middle
             '
         >
-            <td className={`relative w-60 ${rowIsActive ? 'bg-slate-800' : 'bg-slate-800/50'}`}>
+            <td className={`relative w-80 ${rowIsActive ? 'bg-slate-800' : 'bg-slate-800/50'}`}>
                 <Link
                     to={`details/${habit.id}`}
                     className='absolute inset-0 flex items-center cursor-pointer'
@@ -193,6 +207,18 @@ export const HabitListElement = ({
                         className='cursor-pointer'
                     />
                 </Link>
+            </td>
+            <td className={`text-center ${rowIsActive ? 'bg-slate-800' : 'bg-slate-800/50'}`}>
+                <div className='flex items-center justify-center gap-0.5'>
+                    {currentStreak > 0 ? (
+                        <Flame size={16} className='stroke-orange-500 fill-orange-400' />
+                    ) : (
+                        '-'
+                    )}
+                    <span className='text-orange-400'>
+                        {currentStreak > 0 ? currentStreak : ''}
+                    </span>
+                </div>
             </td>
             {dates.map((date) => (
                 <td

@@ -156,6 +156,7 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
                     <thead>
                         <tr>
                             <th className='px-4 py-2 text-left'>Habit</th>
+                            <th className='px-4 py-2 text-left'>Streak</th>
                             {Array.from({ length: days }, (_, i) => (
                                 <th key={i} className='px-4 py-2 text-center'>
                                     {date_formatter.format(
