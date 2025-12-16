@@ -1,7 +1,9 @@
-import { ActionButton, ButtonVariant } from '@/components/ui/buttons/action-button';
+import { ButtonVariant } from '@/components/ui/buttons/action-button';
+import { DropdownMenuItem } from '@/components/ui/buttons/dropdown-menu-item';
 import { LogoutModal } from '@/features/auth/components/modals/logout-modal';
 import { useAuth } from '@/lib/auth-context';
-import { CheckCheck, ChevronLeft, LogOut } from 'lucide-react';
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
+import { CheckCheck, ChevronLeft, Ellipsis, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 
@@ -40,25 +42,42 @@ export const TitleBar = ({ title = 'Habit Tracker', actions = [] }: TitleBarProp
                 {location.pathname === '/' && <CheckCheck className='mr-2' />}
                 <h1 className='text-xl truncate'>{title}</h1>
                 <div className='flex flex-row-reverse items-center gap-2 ml-auto'>
-                    {isAuthenticated && !showBackButton && (
-                        <ActionButton
-                            className='flex-row-reverse'
-                            onClick={() => setLogoutModalOpen(true)}
-                            variant={ButtonVariant.Danger}
-                            label='Logout'
-                            icon={<LogOut />}
-                        />
-                    )}
-                    {actions.map((action, index) => (
-                        <ActionButton
-                            key={index}
-                            className={action.reversed ? 'flex-row-reverse' : ''}
-                            onClick={action.onClick}
-                            variant={action.variant}
-                            label={action.label}
-                            icon={action.icon}
-                        />
-                    ))}
+                    <Menu>
+                        <MenuButton className='p-2 hover:bg-slate-600 rounded-md'>
+                            <Ellipsis />
+                        </MenuButton>
+                        <MenuItems
+                            anchor='bottom'
+                            className='bg-slate-700 border border-slate-600 rounded-md shadow-lg min-w-48'
+                        >
+                            {actions.map((action, index) => (
+                                <MenuItem key={index}>
+                                    {({ focus }) => (
+                                        <DropdownMenuItem
+                                            label={action.label}
+                                            onClick={action.onClick}
+                                            icon={action.icon}
+                                            variant={action.variant}
+                                            focus={focus}
+                                        />
+                                    )}
+                                </MenuItem>
+                            ))}
+                            {isAuthenticated && !showBackButton && (
+                                <MenuItem key='logout'>
+                                    {({ focus }) => (
+                                        <DropdownMenuItem
+                                            label='Logout'
+                                            onClick={() => setLogoutModalOpen(true)}
+                                            icon={<LogOut size={20} />}
+                                            variant={ButtonVariant.Danger}
+                                            focus={focus}
+                                        />
+                                    )}
+                                </MenuItem>
+                            )}
+                        </MenuItems>
+                    </Menu>
                 </div>
             </div>
             {logoutModalOpen && (

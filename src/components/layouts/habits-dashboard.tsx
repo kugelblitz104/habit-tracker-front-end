@@ -73,7 +73,7 @@ export const HabitsDashboard = () => {
                     {
                         label: 'Add Habit',
                         onClick: () => setAddHabitModalOpen(true),
-                        icon: <Plus />,
+                        icon: <Plus size={24} />,
                         variant: ButtonVariant.Primary
                     }
                 ]}
@@ -82,9 +82,7 @@ export const HabitsDashboard = () => {
             <AddHabitModal
                 isOpen={addHabitModalOpen}
                 onClose={() => setAddHabitModalOpen(false)}
-                handleAddHabit={(newHabit: HabitCreate) =>
-                    habitsAdd.mutate(newHabit)
-                }
+                handleAddHabit={(newHabit: HabitCreate) => habitsAdd.mutate(newHabit)}
             />
         </div>
     );

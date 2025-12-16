@@ -214,15 +214,9 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
 
     const titleBarActions = [
         {
-            label: 'Delete',
-            onClick: () => setIsDeleteModalOpen(true),
-            icon: <Trash />,
-            variant: ButtonVariant.Danger
-        },
-        {
             label: 'Edit',
             onClick: () => setIsEditModalOpen(true),
-            icon: <Pencil />,
+            icon: <Pencil size={20} />,
             variant: ButtonVariant.Secondary
         },
         habit && {
@@ -232,8 +226,14 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                     id: habit.id,
                     update: { archived: !habit.archived }
                 }),
-            icon: habit.archived ? <ArchiveRestore /> : <Archive />,
+            icon: habit.archived ? <ArchiveRestore size={20} /> : <Archive size={20} />,
             variant: ButtonVariant.Secondary
+        },
+        {
+            label: 'Delete',
+            onClick: () => setIsDeleteModalOpen(true),
+            icon: <Trash size={20} />,
+            variant: ButtonVariant.Danger
         }
     ].filter(Boolean) as ActionConfig[];
 
