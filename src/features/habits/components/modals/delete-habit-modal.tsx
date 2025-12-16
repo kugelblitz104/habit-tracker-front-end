@@ -32,8 +32,14 @@ export const DeleteHabitModal = ({
             </div>
             <div>
                 <p>
-                    This action is <strong>irreversible</strong>. All habit data
-                    including tracking history will be permanently deleted.
+                    This action is <strong>irreversible</strong>. All habit data including tracking
+                    history will be permanently deleted.
+                </p>
+                <br />
+                <p>
+                    If you simply want to stop tracking this habit, consider{' '}
+                    <strong>archiving</strong> it instead. This will preserve your habit data for
+                    future reference, while removing it from your active habits list.
                 </p>
             </div>
             <div className='flex space-x-2'>

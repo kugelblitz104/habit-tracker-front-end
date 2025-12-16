@@ -252,7 +252,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                         icon: <Calendar size={16} className='inline-flex mr-1' />
                     },
                     {
-                        text: `Created: ${habit ? habit.created_date : ''}`,
+                        text: `Created: ${habit ? habit.created_date.split('T')[0] : ''}`,
                         icon: <CalendarPlus size={16} className='inline-flex mr-1' />
                     },
                     {

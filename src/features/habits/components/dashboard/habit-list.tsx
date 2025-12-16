@@ -1,21 +1,9 @@
 import type { HabitRead } from '@/api';
-import {
-    Listbox,
-    ListboxButton,
-    ListboxOption,
-    ListboxOptions
-} from '@headlessui/react';
-import { ArrowDownRight, ArrowUpRight, ChevronDown } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { HabitListElement } from './habit-list-element';
-import { ToggleButton } from '@/components/ui/buttons/toggle-button';
-
-type SortDirection = 'asc' | 'desc';
-
-type DropdownOption = {
-    field: string;
-    label: string;
-};
+import { FilterList } from '@/components/ui/filter-list';
+import { SortList } from '@/components/ui/sort-list';
+import type { DropdownOption, SortDirection } from '@/types/types';
 
 const sortOptions: DropdownOption[] = [
     { field: 'name', label: 'Name' },
@@ -45,9 +33,7 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
         day: '2-digit'
     });
 
-    const [selectedSort, setSelectedSort] = useState<DropdownOption>(
-        sortOptions[0]!
-    );
+    const [selectedSort, setSelectedSort] = useState<DropdownOption>(sortOptions[0]!);
     const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
     const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
@@ -90,16 +76,8 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
                         bValue = b.color.toLowerCase();
                         break;
                     case 'status':
-                        aValue = a.completed_today
-                            ? 2
-                            : a.skipped_today
-                            ? 1
-                            : 0;
-                        bValue = b.completed_today
-                            ? 2
-                            : b.skipped_today
-                            ? 1
-                            : 0;
+                        aValue = a.completed_today ? 2 : a.skipped_today ? 1 : 0;
+                        bValue = b.completed_today ? 2 : b.skipped_today ? 1 : 0;
                         break;
                     case 'created':
                         aValue = new Date(a.created_date).getTime();
@@ -161,59 +139,17 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
     return (
         <div className='m-4'>
             <div className='mb-4 flex items-center gap-4 justify-between'>
-                <div className='flex items-center gap-2'>
-                    {filterOptions.map((option) => (
-                        <ToggleButton
-                            key={option.field}
-                            isActive={selectedFilters.includes(option.field)}
-                            onClick={() => handleFilterChange(option)}
-                        >
-                            {option.label}
-                        </ToggleButton>
-                    ))}
-                </div>
-                <div className='flex items-center gap-2'>
-                    Sort by:
-                    <Listbox value={selectedSort} onChange={handleSortChange}>
-                        <div className='relative w-64'>
-                            <ListboxButton className='relative w-full p-2 rounded-md bg-slate-800 flex justify-start'>
-                                {selectedSort.label}
-                                <span className='pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2'>
-                                    <ChevronDown
-                                        className='text-gray-400'
-                                        aria-hidden='true'
-                                    />
-                                </span>
-                            </ListboxButton>
-                            <ListboxOptions className='absolute z-10 w-full overflow-auto rounded-b-md bg-slate-800 py-1'>
-                                {sortOptions.map((option) => (
-                                    <ListboxOption
-                                        key={option.field}
-                                        value={option}
-                                        className='cursor-pointer select-none py-2 px-4'
-                                    >
-                                        <span className='flex items-center justify-between gap-2'>
-                                            {option.label}
-                                            {selectedSort.field ===
-                                                option.field && (
-                                                <span className='text-gray-400'>
-                                                    {sortDirection ===
-                                                        'asc' && (
-                                                        <ArrowUpRight />
-                                                    )}
-                                                    {sortDirection ===
-                                                        'desc' && (
-                                                        <ArrowDownRight />
-                                                    )}
-                                                </span>
-                                            )}
-                                        </span>
-                                    </ListboxOption>
-                                ))}
-                            </ListboxOptions>
-                        </div>
-                    </Listbox>
-                </div>
+                <FilterList
+                    filterOptions={filterOptions}
+                    selectedFilters={selectedFilters}
+                    onFilterChange={handleFilterChange}
+                />
+                <SortList
+                    sortOptions={sortOptions}
+                    selectedSort={selectedSort}
+                    sortDirection={sortDirection}
+                    onSortChange={handleSortChange}
+                />
             </div>
             <div className='overflow-x-auto'>
                 <table className='min-w-full table-auto'>
@@ -239,9 +175,7 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
                                 key={habit.id}
                                 habit={habit}
                                 days={days}
-                                filterIncomplete={selectedFilters.includes(
-                                    'incomplete'
-                                )}
+                                filterIncomplete={selectedFilters.includes('incomplete')}
                             />
                         ))}
                     </tbody>

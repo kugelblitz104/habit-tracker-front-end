@@ -1,9 +1,4 @@
-import type {
-    HabitRead,
-    TrackerCreate,
-    TrackerRead,
-    TrackerUpdate
-} from '@/api';
+import type { HabitRead, TrackerCreate, TrackerRead, TrackerUpdate } from '@/api';
 import { Label } from '@/components/ui/label';
 import { createTracker } from '@/features/trackers/api/create-trackers';
 import { getTrackers } from '@/features/trackers/api/get-trackers';
@@ -83,8 +78,7 @@ export const HabitListElement = ({
                 (oldData) => {
                     if (!oldData?.trackers) return oldData;
                     // Only add if not already present
-                    if (oldData.trackers.some((t) => t.id === data.id))
-                        return oldData;
+                    if (oldData.trackers.some((t) => t.id === data.id)) return oldData;
                     return {
                         ...oldData,
                         trackers: [...oldData.trackers, data]
@@ -107,9 +101,7 @@ export const HabitListElement = ({
                     if (!oldData?.trackers) return oldData;
                     return {
                         ...oldData,
-                        trackers: oldData.trackers.map((t) =>
-                            t.id === data.id ? data : t
-                        )
+                        trackers: oldData.trackers.map((t) => (t.id === data.id ? data : t))
                     };
                 }
             );
@@ -151,9 +143,7 @@ export const HabitListElement = ({
             { id: tracker.id, update },
             {
                 onSuccess: (data) => {
-                    setTrackers(
-                        trackers.map((t) => (t.id === tracker.id ? data : t))
-                    );
+                    setTrackers(trackers.map((t) => (t.id === tracker.id ? data : t)));
                 }
             }
         );
@@ -171,8 +161,7 @@ export const HabitListElement = ({
     // If filtering for incomplete and today is completed, skipped, or auto-skipped, hide this habit
     if (
         filterIncomplete &&
-        (todayStatus === Status.COMPLETED ||
-            todayStatus === Status.AUTO_SKIPPED)
+        (todayStatus === Status.COMPLETED || todayStatus === Status.AUTO_SKIPPED)
     ) {
         return null;
     }
@@ -188,11 +177,7 @@ export const HabitListElement = ({
             align-middle
             '
         >
-            <td
-                className={`relative w-60 ${
-                    rowIsActive ? 'bg-slate-800' : 'bg-slate-800/50'
-                }`}
-            >
+            <td className={`relative w-60 ${rowIsActive ? 'bg-slate-800' : 'bg-slate-800/50'}`}>
                 <Link
                     to={`details/${habit.id}`}
                     className='absolute inset-0 flex items-center cursor-pointer'
@@ -201,10 +186,7 @@ export const HabitListElement = ({
                         mainText={habit.name}
                         subText={
                             habit.frequency && habit.range
-                                ? getFrequencyString(
-                                      habit.frequency,
-                                      habit.range
-                                  )
+                                ? getFrequencyString(habit.frequency, habit.range)
                                 : undefined
                         }
                         textColor={habit.color}
@@ -214,9 +196,7 @@ export const HabitListElement = ({
             </td>
             {dates.map((date) => (
                 <td
-                    className={`text-center ${
-                        rowIsActive ? 'bg-slate-800' : 'bg-slate-800/50'
-                    }`}
+                    className={`text-center ${rowIsActive ? 'bg-slate-800' : 'bg-slate-800/50'}`}
                     key={date.toISOString()}
                 >
                     <TrackerCheckbox

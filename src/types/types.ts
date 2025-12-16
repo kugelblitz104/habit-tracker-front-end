@@ -28,3 +28,10 @@ export type Streak = {
     endDate: string;
     length: number;
 };
+
+export type DropdownOption = {
+    field: string;
+    label: string;
+};
+
+export type SortDirection = 'asc' | 'desc';
