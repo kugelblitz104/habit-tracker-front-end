@@ -1,14 +1,16 @@
 import type { HabitRead } from '@/api';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { HabitListElement } from './habit-list-element';
 import { FilterList } from '@/components/ui/filter-list';
 import { SortList } from '@/components/ui/sort-list';
 import type { DropdownOption, SortDirection } from '@/types/types';
 
 const sortOptions: DropdownOption[] = [
+    { field: 'sort_order', label: 'Custom Order' },
     { field: 'name', label: 'Name' },
     { field: 'color', label: 'Color' },
     { field: 'status', label: "Today's Status" },
+    { field: 'streak', label: 'Streak' },
     { field: 'created', label: 'Created Date' },
     { field: 'updated', label: 'Updated Date' },
     { field: 'frequency', label: 'Frequency' },
@@ -34,8 +36,22 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
     });
 
     const [selectedSort, setSelectedSort] = useState<DropdownOption>(sortOptions[0]!);
-    const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+    const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
     const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+
+    // Track streaks reported by child HabitListElement components
+    const [habitStreaks, setHabitStreaks] = useState<Map<number, number>>(new Map());
+
+    // Callback for child components to report their streak values
+    const handleStreakChange = useCallback((habitId: number, streak: number) => {
+        setHabitStreaks((prev) => {
+            // Only update if value actually changed to prevent unnecessary re-renders
+            if (prev.get(habitId) === streak) return prev;
+            const next = new Map(prev);
+            next.set(habitId, streak);
+            return next;
+        });
+    }, []);
 
     const handleSortChange = (option: DropdownOption) => {
         if (selectedSort.field === option.field) {
@@ -67,6 +83,10 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
                 let bValue: string | number;
 
                 switch (selectedSort.field) {
+                    case 'sort_order':
+                        aValue = a.sort_order || 0;
+                        bValue = b.sort_order || 0;
+                        break;
                     case 'name':
                         aValue = a.name.toLowerCase();
                         bValue = b.name.toLowerCase();
@@ -78,6 +98,10 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
                     case 'status':
                         aValue = a.completed_today ? 2 : a.skipped_today ? 1 : 0;
                         bValue = b.completed_today ? 2 : b.skipped_today ? 1 : 0;
+                        break;
+                    case 'streak':
+                        aValue = habitStreaks.get(a.id) || 0;
+                        bValue = habitStreaks.get(b.id) || 0;
                         break;
                     case 'created':
                         aValue = new Date(a.created_date).getTime();
@@ -130,7 +154,7 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
                 }
                 return true;
             });
-    }, [habits, selectedSort, sortDirection, selectedFilters]);
+    }, [habits, selectedSort, sortDirection, selectedFilters, habitStreaks]);
 
     if (!habits || habits.length === 0) {
         return <div className='m-4'>No habits found.</div>;
@@ -177,6 +201,7 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
                                 habit={habit}
                                 days={days}
                                 filterIncomplete={selectedFilters.includes('incomplete')}
+                                onStreakChange={handleStreakChange}
                             />
                         ))}
                     </tbody>

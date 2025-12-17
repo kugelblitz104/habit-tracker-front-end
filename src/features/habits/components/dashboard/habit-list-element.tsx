@@ -41,12 +41,14 @@ export type HabitListElementProps = {
     habit: HabitRead;
     days: number;
     filterIncomplete?: boolean;
+    onStreakChange?: (habitId: number, streak: number) => void;
 };
 
 export const HabitListElement = ({
     habit,
     days,
-    filterIncomplete = false
+    filterIncomplete = false,
+    onStreakChange
 }: HabitListElementProps) => {
     // useMemo to prevent hydration mismatch
     const today = useMemo(() => {
@@ -81,6 +83,11 @@ export const HabitListElement = ({
         );
         return getCurrentStreakLength(habitStreaks);
     }, [habit, trackers]);
+
+    // Report streak changes to parent for sorting purposes
+    useEffect(() => {
+        onStreakChange?.(habit.id, currentStreak);
+    }, [habit.id, currentStreak, onStreakChange]);
 
     const trackerCreate = useMutation({
         mutationFn: (tracker: TrackerCreate) => createTracker(tracker),
