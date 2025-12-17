@@ -35,7 +35,8 @@ const useResponsiveDays = () => {
 export const HabitsDashboard = () => {
     const days = useResponsiveDays();
     const { user } = useAuth();
-    const userId = user?.id || 1; // Fallback to 1 if no user (shouldn't happen in protected routes)
+    const userId = user?.id || 0; // Fallback to non-existent user ID
+
     // hooks
     const [habits, setHabits] = useState<HabitRead[]>([]);
     const [addHabitModalOpen, setAddHabitModalOpen] = useState(false);
@@ -67,6 +68,10 @@ export const HabitsDashboard = () => {
             setHabits(habitsQuery.data.habits);
         }
     }, [habitsQuery.data]);
+
+    if (!user) {
+        return <ErrorScreen message='User not authenticated' />;
+    }
 
     if (habitsQuery.isLoading) {
         return <LoadingScreen />;
