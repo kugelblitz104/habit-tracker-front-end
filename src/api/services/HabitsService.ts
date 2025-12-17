@@ -45,6 +45,32 @@ export class HabitsService {
         });
     }
     /**
+     * Reorder habits
+     * Reorder habits by providing their IDs in the desired display order.
+     *
+     * - **habit_ids**: List of habit IDs in the order you want them displayed
+     *
+     * The first ID gets the highest sort_order, last ID gets the lowest.
+     * Habits are displayed in descending sort_order.
+     * @param requestBody
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static sortHabitsHabitsSortPut(
+        requestBody: Array<number>,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'PUT',
+            url: '/habits/sort',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Get a habit by ID
      * Retrieve a specific habit by its ID.
      *
