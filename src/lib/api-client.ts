@@ -37,6 +37,7 @@ axios.interceptors.response.use(
                         })
                         .catch((err) => {
                             console.error('Token refresh failed:', err);
+                            OpenAPI.TOKEN = undefined;
                             localStorage.removeItem('access_token');
                             localStorage.removeItem('refresh_token');
                             localStorage.removeItem('user');
