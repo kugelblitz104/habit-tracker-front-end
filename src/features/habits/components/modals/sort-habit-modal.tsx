@@ -144,12 +144,12 @@ export const SortHabitModal = ({
                     </ul>
                 </SortableContext>
                 <DragOverlay>
-                    {activeId ? (
+                    {activeId && (
                         <Item
                             habit={habitsState.find((habit) => habit.id === activeId)!}
                             opacity={1}
                         />
-                    ) : null}
+                    )}
                 </DragOverlay>
             </DndContext>
             <div className='flex w-full mt-4 gap-2'>
