@@ -1,4 +1,11 @@
-export const decodeToken = (token: string): any => {
+interface JWTPayload {
+    sub: string;
+    exp: number;
+    iat: number;
+    [key: string]: unknown;
+}
+
+export const decodeToken = (token: string): JWTPayload | null => {
     try {
         const parts = token.split('.');
         if (parts.length !== 3 || !parts[1]) {
@@ -10,9 +17,7 @@ export const decodeToken = (token: string): any => {
         const jsonPayload = decodeURIComponent(
             atob(base64)
                 .split('')
-                .map(
-                    (c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-                )
+                .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
                 .join('')
         );
         return JSON.parse(jsonPayload);
