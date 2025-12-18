@@ -1,5 +1,6 @@
 import type { HabitRead, TrackerCreate, TrackerRead, TrackerUpdate } from '@/api';
 import { ActionButton, ButtonVariant } from '@/components/ui/buttons/action-button';
+import { BaseModal } from '@/components/ui/modals/base-modal';
 import {
     createNewTracker,
     findTrackerByDate,
@@ -8,7 +9,7 @@ import {
     getTrackerStatus
 } from '@/features/trackers/utils/tracker-utils';
 import { sanitizeMultilineText, validationPatterns } from '@/lib/input-sanitization';
-import { Dialog, DialogPanel, DialogTitle, Field, Label, Textarea } from '@headlessui/react';
+import { Field, Label, Textarea } from '@headlessui/react';
 import { CalendarPlus, MessageSquare, Save, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
@@ -106,58 +107,58 @@ const NoteDialog = ({ isOpen, date, note, onClose, onSave }: NoteDialogProps) =>
 
     useEffect(() => {
         methods.reset({ note });
-    }, [methods, note]);
+    }, [methods.reset, note]);
 
     const onSubmit: SubmitHandler<INoteFormInput> = (data) => {
         const sanitizedNote = sanitizeMultilineText(data.note);
         onSave(sanitizedNote);
+        methods.reset({ note });
         onClose();
     };
 
     return (
-        <Dialog open={isOpen} onClose={onClose} className='relative z-50'>
-            <div className='fixed inset-0 bg-black/30' aria-hidden='true' />
-            <div className='fixed inset-0 flex items-center justify-center p-4'>
-                <DialogPanel className='bg-slate-800 rounded-lg p-6 max-w-md w-full'>
-                    <DialogTitle className='text-1xl font-bold mb-4'>
-                        Add Note for {date.toLocaleDateString()}
-                    </DialogTitle>
-                    <FormProvider {...methods}>
-                        <form onSubmit={methods.handleSubmit(onSubmit)}>
-                            <Field className='mb-2'>
-                                <Label className='sr-only'>Note</Label>
-                                <Textarea
-                                    {...methods.register('note', validationPatterns.notes)}
-                                    className={`w-full h-32 p-2 bg-slate-700 border rounded-md resize-none ${
-                                        errors.note ? 'border-red-500' : 'border-slate-600'
-                                    }`}
-                                    placeholder='Enter your note here...'
-                                />
-                                {errors.note && (
-                                    <span className='text-red-400 text-sm mt-1 block'>
-                                        {errors.note.message as string}
-                                    </span>
-                                )}
-                            </Field>
-                            <div className='flex gap-2 justify-end'>
-                                <ActionButton
-                                    label='Cancel'
-                                    onClick={onClose}
-                                    icon={<X />}
-                                    variant={ButtonVariant.Primary}
-                                />
-                                <ActionButton
-                                    label='Save'
-                                    onClick={methods.handleSubmit(onSubmit)}
-                                    icon={<Save />}
-                                    variant={ButtonVariant.Submit}
-                                />
-                            </div>
-                        </form>
-                    </FormProvider>
-                </DialogPanel>
-            </div>
-        </Dialog>
+        <BaseModal
+            isOpen={isOpen}
+            onClose={() => {
+                methods.reset({ note });
+                onClose();
+            }}
+            title={`Add Note for ${date.toLocaleDateString()}`}
+        >
+            <FormProvider {...methods}>
+                <form onSubmit={methods.handleSubmit(onSubmit)}>
+                    <Field className='mb-2'>
+                        <Label className='sr-only'>Note</Label>
+                        <Textarea
+                            {...methods.register('note', validationPatterns.notes)}
+                            className={`w-full h-32 p-2 bg-slate-700 border rounded-md resize-none ${
+                                errors.note ? 'border-red-500' : 'border-slate-600'
+                            }`}
+                            placeholder='Enter your note here...'
+                        />
+                        {errors.note && (
+                            <span className='text-red-400 text-sm mt-1 block'>
+                                {errors.note.message as string}
+                            </span>
+                        )}
+                    </Field>
+                    <div className='flex gap-2 justify-end'>
+                        <ActionButton
+                            label='Cancel'
+                            onClick={onClose}
+                            icon={<X />}
+                            variant={ButtonVariant.Primary}
+                        />
+                        <ActionButton
+                            label='Save'
+                            onClick={methods.handleSubmit(onSubmit)}
+                            icon={<Save />}
+                            variant={ButtonVariant.Submit}
+                        />
+                    </div>
+                </form>
+            </FormProvider>
+        </BaseModal>
     );
 };
 

@@ -73,7 +73,10 @@ export const AddHabitModal = ({
     return (
         <BaseModal
             isOpen={isOpen}
-            onClose={onClose}
+            onClose={() => {
+                methods.reset();
+                onClose();
+            }}
             title={habit ? 'Edit Habit' : 'Add a new Habit'}
         >
             <FormProvider {...methods}>
