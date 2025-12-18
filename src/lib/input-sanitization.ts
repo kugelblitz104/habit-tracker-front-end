@@ -86,10 +86,10 @@ export const validationPatterns = {
     },
     password: {
         validate: {
-            hasCapital: (value: string) =>
-                /[A-Z]/.test(value) || 'Password must have at least one capital letter',
-            validChars: (value: string) =>
-                /^[a-zA-Z0-9_-]{8,20}$/.test(value) || 'Password must be 8-20 characters'
+            hasCapital: (value: string) => /[A-Z]/.test(value) || 'Must have uppercase',
+            hasLower: (value: string) => /[a-z]/.test(value) || 'Must have lowercase',
+            hasNumber: (value: string) => /\d/.test(value) || 'Must have a number',
+            minLength: (value: string) => value.length >= 8 || 'Must be at least 8 characters'
         }
     }
 };
