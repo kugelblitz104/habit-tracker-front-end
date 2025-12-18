@@ -109,6 +109,7 @@ export const RegistrationForm = () => {
                                     isRequired
                                     label='Password'
                                     name='plaintext_password'
+                                    type='password'
                                     isValid={!errors.plaintext_password}
                                     validation={validationPatterns.password}
                                 />
