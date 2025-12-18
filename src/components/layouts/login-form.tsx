@@ -1,6 +1,6 @@
 import { Login } from '@/features/auth/api/login';
 import { useAuth } from '@/lib/auth-context';
-import { sanitizeFormData, sanitizeUsername, validationPatterns } from '@/lib/input-sanitization';
+import { sanitizeFormData, sanitizeUsername } from '@/lib/input-sanitization';
 import { Button, Fieldset } from '@headlessui/react';
 import classNames from 'classnames';
 import { useEffect, useState } from 'react';

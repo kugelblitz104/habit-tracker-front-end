@@ -36,7 +36,7 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
     });
 
     const [selectedSort, setSelectedSort] = useState<DropdownOption>(sortOptions[0]!);
-    const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+    const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
     const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
     // Track streaks reported by child HabitListElement components
