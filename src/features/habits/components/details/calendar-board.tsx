@@ -106,7 +106,7 @@ const NoteDialog = ({ isOpen, date, note, onClose, onSave }: NoteDialogProps) =>
 
     useEffect(() => {
         methods.reset({ note });
-    }, [note]);
+    }, [methods, note]);
 
     const onSubmit: SubmitHandler<INoteFormInput> = (data) => {
         const sanitizedNote = sanitizeMultilineText(data.note);
