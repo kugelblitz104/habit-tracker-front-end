@@ -1,4 +1,5 @@
 import type { HabitRead, TrackerCreate, TrackerRead, TrackerUpdate } from '@/api';
+import { NoteDialog } from '@/features/habits/components/modals/note-dialog';
 import {
     createNewTracker,
     findTrackerByDate,
@@ -7,9 +8,8 @@ import {
     getTrackerStatus,
     NotePip
 } from '@/features/trackers/utils/tracker-utils';
-import { CalendarPlus, CircleSmall, MessageCircle, MessageSquare, Save, X } from 'lucide-react';
+import { CalendarPlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { NoteDialog } from '@/features/habits/components/modals/note-dialog';
 
 type TrackerCellProps = {
     date: Date;
@@ -61,6 +61,9 @@ const TrackerCell = ({
                 e.preventDefault();
                 onNoteClick(date, tracker);
             }}
+            aria-label={`Mark habit as ${getNextTrackerState(
+                tracker
+            )} for ${date.toLocaleDateString()}`}
         >
             <div className='flex items-center justify-center gap-1'>
                 <div className='relative'>

@@ -1,13 +1,13 @@
 import type { HabitRead, TrackerRead, TrackerUpdate } from '@/api';
-import { updateTracker } from '@/features/trackers/api/update-trackers';
-import { createTracker } from '@/features/trackers/api/create-trackers';
-import { createNewTracker } from '@/features/trackers/utils/tracker-utils';
-import { useCallback, useMemo, useState } from 'react';
-import { HabitListElement } from './habit-list-element';
-import { NoteDialog } from '@/features/habits/components/modals/note-dialog';
 import { FilterList } from '@/components/ui/filter-list';
 import { SortList } from '@/components/ui/sort-list';
+import { NoteDialog } from '@/features/habits/components/modals/note-dialog';
+import { createTracker } from '@/features/trackers/api/create-trackers';
+import { updateTracker } from '@/features/trackers/api/update-trackers';
+import { createNewTracker } from '@/features/trackers/utils/tracker-utils';
 import type { DropdownOption, SortDirection } from '@/types/types';
+import { useCallback, useMemo, useState } from 'react';
+import { HabitListElement } from './habit-list-element';
 
 const sortOptions: DropdownOption[] = [
     { field: 'sort_order', label: 'Custom Order' },
@@ -221,10 +221,14 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
                 <table className='min-w-full table-auto'>
                     <thead>
                         <tr>
-                            <th className='px-4 py-2 w-1/5 text-left'>Habit</th>
-                            <th className='w-12 text-center'>Streak</th>
+                            <th scope='col' className='px-4 py-2 w-1/5 text-left'>
+                                Habit
+                            </th>
+                            <th scope='col' className='w-12 text-center'>
+                                Streak
+                            </th>
                             {Array.from({ length: days }, (_, i) => (
-                                <th key={i} className='w-8 text-center text-sm'>
+                                <th key={i} scope='col' className='w-8 text-center text-sm'>
                                     {date_formatter.format(
                                         new Date(
                                             today.getFullYear(),

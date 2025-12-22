@@ -222,6 +222,9 @@ export const HabitListElement = ({
                 >
                     <Button
                         className='w-full h-12 flex items-center justify-center select-none'
+                        aria-label={`Mark habit ${habit.name} as ${getNextTrackerState(
+                            findTrackerByDate(trackers, date)
+                        )} for ${date.toLocaleDateString()}`}
                         onClick={() => handleCheckboxClick(date)}
                         onContextMenu={(e) => {
                             e.preventDefault();

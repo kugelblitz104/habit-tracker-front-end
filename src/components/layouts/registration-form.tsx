@@ -122,7 +122,7 @@ export const RegistrationForm = () => {
                                         'bg-sky-950': isSubmitting
                                     })}
                                 >
-                                    Create Account
+                                    {isSubmitting ? 'Registering...' : 'Create Account'}
                                 </Button>
                                 {isSubmitting && (
                                     <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500'></div>

@@ -59,7 +59,10 @@ export const TitleBar = ({ title = 'Habit Tracker', actions = [] }: TitleBarProp
                 {menuActions.length > 0 && (
                     <div className='flex flex-row-reverse items-center gap-2 ml-auto'>
                         <Menu>
-                            <MenuButton className='p-2 hover:bg-slate-600 rounded-md'>
+                            <MenuButton
+                                className='p-2 hover:bg-slate-600 rounded-md'
+                                aria-label='Open actions menu'
+                            >
                                 <Ellipsis />
                             </MenuButton>
                             <MenuItems

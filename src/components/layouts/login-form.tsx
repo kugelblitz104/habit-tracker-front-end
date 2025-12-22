@@ -86,7 +86,7 @@ export const LoginForm = () => {
                                         'bg-sky-950': isSubmitting
                                     })}
                                 >
-                                    Login
+                                    {isSubmitting ? 'Logging in...' : 'Login'}
                                 </Button>
                                 {isSubmitting && (
                                     <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500'></div>

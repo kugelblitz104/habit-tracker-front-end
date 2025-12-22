@@ -43,9 +43,11 @@ export const TextField = ({
                 })}
                 type={type}
                 placeholder={placeholder}
+                aria-invalid={!isValid}
+                aria-describedby={`${name}-error`}
             />
             {fieldError && (
-                <span className='text-red-400 text-sm'>
+                <span id={`${name}-error`} className='text-red-400 text-sm'>
                     {(fieldError.message as string) || errorMessage}
                 </span>
             )}
