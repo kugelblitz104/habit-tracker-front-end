@@ -138,6 +138,7 @@ export const AddHabitModal = ({
                                 {...methods.register('notes', validationPatterns.notes)}
                                 className={`block bg-black border-slate rounded-md py-1 px-2 w-full
                                 ${methods.formState.errors.notes && 'border-red-500'}`}
+                                wrap='soft'
                             />
                             {methods.formState.errors.notes && (
                                 <span className='text-red-400 text-sm mt-1 block'>

@@ -89,7 +89,7 @@ export const getTrackerIcon = (status: Status, habitColor?: string) => {
                 />
             );
         case Status.AUTO_SKIPPED:
-            return <HollowCheckmark className={iconClass} color='gray' />;
+            return <HollowCheckmark className={iconClass} />;
         case Status.NOT_COMPLETED:
         default:
             return <Square className={iconClass} color='white' strokeWidth={1} />;

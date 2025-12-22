@@ -179,10 +179,10 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
                 <table className='min-w-full table-auto'>
                     <thead>
                         <tr>
-                            <th className='px-4 py-2 text-left'>Habit</th>
-                            <th className='px-4 py-2 text-left'>Streak</th>
+                            <th className='px-4 py-2 w-1/5 text-left'>Habit</th>
+                            <th className='w-12 text-center'>Streak</th>
                             {Array.from({ length: days }, (_, i) => (
-                                <th key={i} className='px-4 py-2 text-center'>
+                                <th key={i} className='w-12 text-center text-sm'>
                                     {date_formatter.format(
                                         new Date(
                                             today.getFullYear(),

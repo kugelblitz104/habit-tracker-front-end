@@ -1,6 +1,4 @@
 import type { HabitRead, TrackerCreate, TrackerRead, TrackerUpdate } from '@/api';
-import { ActionButton, ButtonVariant } from '@/components/ui/buttons/action-button';
-import { BaseModal } from '@/components/ui/modals/base-modal';
 import {
     createNewTracker,
     findTrackerByDate,
@@ -8,11 +6,9 @@ import {
     getTrackerIcon,
     getTrackerStatus
 } from '@/features/trackers/utils/tracker-utils';
-import { sanitizeMultilineText, validationPatterns } from '@/lib/input-sanitization';
-import { Field, Label, Textarea } from '@headlessui/react';
 import { CalendarPlus, MessageSquare, Save, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
+import { useMemo, useState } from 'react';
+import { NoteDialog } from '@/features/habits/components/modals/note-dialog';
 
 type TrackerCellProps = {
     date: Date;
@@ -81,84 +77,6 @@ const TrackerCell = ({
                 </div>
             </div>
         </td>
-    );
-};
-
-type NoteDialogProps = {
-    isOpen: boolean;
-    date: Date;
-    note: string;
-    onClose: () => void;
-    onSave: (note: string) => void;
-};
-
-interface INoteFormInput {
-    note: string;
-}
-
-const NoteDialog = ({ isOpen, date, note, onClose, onSave }: NoteDialogProps) => {
-    const methods = useForm<INoteFormInput>({
-        values: {
-            note: note
-        }
-    });
-
-    const errors = methods.formState.errors;
-
-    useEffect(() => {
-        methods.reset({ note });
-    }, [methods.reset, note]);
-
-    const onSubmit: SubmitHandler<INoteFormInput> = (data) => {
-        const sanitizedNote = sanitizeMultilineText(data.note);
-        onSave(sanitizedNote);
-        methods.reset({ note });
-        onClose();
-    };
-
-    return (
-        <BaseModal
-            isOpen={isOpen}
-            onClose={() => {
-                methods.reset({ note });
-                onClose();
-            }}
-            title={`Add Note for ${date.toLocaleDateString()}`}
-        >
-            <FormProvider {...methods}>
-                <form onSubmit={methods.handleSubmit(onSubmit)}>
-                    <Field className='mb-2'>
-                        <Label className='sr-only'>Note</Label>
-                        <Textarea
-                            {...methods.register('note', validationPatterns.notes)}
-                            className={`w-full h-32 p-2 bg-slate-700 border rounded-md resize-none ${
-                                errors.note ? 'border-red-500' : 'border-slate-600'
-                            }`}
-                            placeholder='Enter your note here...'
-                        />
-                        {errors.note && (
-                            <span className='text-red-400 text-sm mt-1 block'>
-                                {errors.note.message as string}
-                            </span>
-                        )}
-                    </Field>
-                    <div className='flex gap-2 justify-end'>
-                        <ActionButton
-                            label='Cancel'
-                            onClick={onClose}
-                            icon={<X />}
-                            variant={ButtonVariant.Primary}
-                        />
-                        <ActionButton
-                            label='Save'
-                            onClick={methods.handleSubmit(onSubmit)}
-                            icon={<Save />}
-                            variant={ButtonVariant.Submit}
-                        />
-                    </div>
-                </form>
-            </FormProvider>
-        </BaseModal>
     );
 };
 
@@ -390,15 +308,15 @@ export const CalendarBoard = ({
                         ))}
                     </tbody>
                 </table>
-                <NoteDialog
-                    isOpen={isNoteDialogOpen}
-                    date={selectedDate || new Date()}
-                    note={selectedTracker?.note || ''}
-                    onClose={() => setIsNoteDialogOpen(false)}
-                    onSave={handleNoteSave}
-                />
             </div>
             <div className='mx-4 mt-1 text-slate-500'>Right click to add or edit notes</div>
+            <NoteDialog
+                isOpen={isNoteDialogOpen}
+                date={selectedDate || new Date()}
+                note={selectedTracker?.note || ''}
+                onClose={() => setIsNoteDialogOpen(false)}
+                onSave={handleNoteSave}
+            />
         </>
     );
 };

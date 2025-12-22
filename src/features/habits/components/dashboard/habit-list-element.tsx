@@ -1,5 +1,6 @@
 import type { HabitRead, TrackerCreate, TrackerRead, TrackerUpdate } from '@/api';
 import { Label } from '@/components/ui/label';
+import { NoteDialog } from '@/features/habits/components/modals/note-dialog';
 import { createTracker } from '@/features/trackers/api/create-trackers';
 import { getTrackers } from '@/features/trackers/api/get-trackers';
 import { updateTracker } from '@/features/trackers/api/update-trackers';
@@ -28,10 +29,16 @@ export type TrackerCheckboxProps = {
 const TrackerCheckbox = ({
     status = Status.NOT_COMPLETED,
     habitColor,
-    onClick
-}: TrackerCheckboxProps) => {
+    onClick,
+    onContextMenu
+}: TrackerCheckboxProps & { onContextMenu?: (e: React.MouseEvent) => void }) => {
     return (
-        <Button type='button' className='align-middle' onClick={onClick}>
+        <Button
+            type='button'
+            className='align-middle'
+            onClick={onClick}
+            onContextMenu={onContextMenu}
+        >
             {getTrackerIcon(status, habitColor)}
         </Button>
     );
@@ -66,6 +73,9 @@ export const HabitListElement = ({
 
     const [rowIsActive, setRowIsActive] = useState<boolean>(false);
     const [trackers, setTrackers] = useState<TrackerRead[]>([]);
+    const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+    const [selectedTracker, setSelectedTracker] = useState<TrackerRead | undefined>(undefined);
     const queryClient = useQueryClient();
     const trackersQuery = useQuery({
         queryKey: ['trackers', { habitId: habit.id }, days],
@@ -170,6 +180,39 @@ export const HabitListElement = ({
         );
     };
 
+    const handleNoteClick = (date: Date) => {
+        const tracker = findTrackerByDate(trackers, date);
+        setSelectedDate(date);
+        setSelectedTracker(tracker);
+        setIsNoteDialogOpen(true);
+    };
+
+    const handleNoteSave = (note: string) => {
+        if (!selectedDate) return;
+
+        if (!selectedTracker) {
+            // Create tracker with note
+            const newTracker = createNewTracker(habit.id, selectedDate, false);
+            newTracker.note = note;
+            trackerCreate.mutate(newTracker, {
+                onSuccess: (data) => {
+                    setTrackers([...trackers, data]);
+                }
+            });
+        } else {
+            // Update existing tracker's note
+            const update: TrackerUpdate = { note: note };
+            trackerUpdate.mutate(
+                { id: selectedTracker.id, update },
+                {
+                    onSuccess: (data) => {
+                        setTrackers(trackers.map((t) => (t.id === selectedTracker.id ? data : t)));
+                    }
+                }
+            );
+        }
+    };
+
     useEffect(() => {
         if (trackersQuery.data?.trackers) {
             setTrackers(trackersQuery.data.trackers);
@@ -198,7 +241,7 @@ export const HabitListElement = ({
             align-middle
             '
         >
-            <td className={`relative w-80 ${rowIsActive ? 'bg-slate-800' : 'bg-slate-800/50'}`}>
+            <td className={`relative ${rowIsActive ? 'bg-slate-800' : 'bg-slate-800/50'}`}>
                 <Link
                     to={`details/${habit.id}`}
                     className='absolute inset-0 flex items-center cursor-pointer px-2'
@@ -232,9 +275,20 @@ export const HabitListElement = ({
                         status={getStatus(date)}
                         habitColor={habit.color}
                         onClick={() => handleCheckboxClick(date)}
+                        onContextMenu={(e) => {
+                            e.preventDefault();
+                            handleNoteClick(date);
+                        }}
                     />
                 </td>
             ))}
+            <NoteDialog
+                isOpen={isNoteDialogOpen}
+                date={selectedDate || new Date()}
+                note={selectedTracker?.note || ''}
+                onClose={() => setIsNoteDialogOpen(false)}
+                onSave={handleNoteSave}
+            />
         </tr>
     );
 };
