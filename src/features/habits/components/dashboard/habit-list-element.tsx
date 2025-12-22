@@ -1,6 +1,5 @@
 import type { HabitRead, TrackerCreate, TrackerRead, TrackerUpdate } from '@/api';
 import { Label } from '@/components/ui/label';
-import { NoteDialog } from '@/features/habits/components/modals/note-dialog';
 import { createTracker } from '@/features/trackers/api/create-trackers';
 import { getTrackers } from '@/features/trackers/api/get-trackers';
 import { updateTracker } from '@/features/trackers/api/update-trackers';
@@ -20,42 +19,20 @@ import { Flame } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 
-export type TrackerCheckboxProps = {
-    status: Status;
-    habitColor?: string;
-    onClick?: () => void;
-};
-
-const TrackerCheckbox = ({
-    status = Status.NOT_COMPLETED,
-    habitColor,
-    onClick,
-    onContextMenu
-}: TrackerCheckboxProps & { onContextMenu?: (e: React.MouseEvent) => void }) => {
-    return (
-        <Button
-            type='button'
-            className='align-middle'
-            onClick={onClick}
-            onContextMenu={onContextMenu}
-        >
-            {getTrackerIcon(status, habitColor)}
-        </Button>
-    );
-};
-
 export type HabitListElementProps = {
     habit: HabitRead;
     days: number;
     filterIncomplete?: boolean;
     onStreakChange?: (habitId: number, streak: number) => void;
+    onNoteOpen?: (habitId: number, date: Date, tracker: TrackerRead | undefined) => void;
 };
 
 export const HabitListElement = ({
     habit,
     days,
     filterIncomplete = false,
-    onStreakChange
+    onStreakChange,
+    onNoteOpen
 }: HabitListElementProps) => {
     // useMemo to prevent hydration mismatch
     const today = useMemo(() => {
@@ -73,9 +50,6 @@ export const HabitListElement = ({
 
     const [rowIsActive, setRowIsActive] = useState<boolean>(false);
     const [trackers, setTrackers] = useState<TrackerRead[]>([]);
-    const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
-    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-    const [selectedTracker, setSelectedTracker] = useState<TrackerRead | undefined>(undefined);
     const queryClient = useQueryClient();
     const trackersQuery = useQuery({
         queryKey: ['trackers', { habitId: habit.id }, days],
@@ -182,35 +156,7 @@ export const HabitListElement = ({
 
     const handleNoteClick = (date: Date) => {
         const tracker = findTrackerByDate(trackers, date);
-        setSelectedDate(date);
-        setSelectedTracker(tracker);
-        setIsNoteDialogOpen(true);
-    };
-
-    const handleNoteSave = (note: string) => {
-        if (!selectedDate) return;
-
-        if (!selectedTracker) {
-            // Create tracker with note
-            const newTracker = createNewTracker(habit.id, selectedDate, false);
-            newTracker.note = note;
-            trackerCreate.mutate(newTracker, {
-                onSuccess: (data) => {
-                    setTrackers([...trackers, data]);
-                }
-            });
-        } else {
-            // Update existing tracker's note
-            const update: TrackerUpdate = { note: note };
-            trackerUpdate.mutate(
-                { id: selectedTracker.id, update },
-                {
-                    onSuccess: (data) => {
-                        setTrackers(trackers.map((t) => (t.id === selectedTracker.id ? data : t)));
-                    }
-                }
-            );
-        }
+        onNoteOpen?.(habit.id, date, tracker);
     };
 
     useEffect(() => {
@@ -268,27 +214,23 @@ export const HabitListElement = ({
             </td>
             {dates.map((date) => (
                 <td
-                    className={`text-center ${rowIsActive ? 'bg-slate-800' : 'bg-slate-800/50'}`}
+                    className={`text-center hover:bg-slate-600 ${
+                        rowIsActive ? 'bg-slate-800' : 'bg-slate-800/50'
+                    }`}
                     key={date.toISOString()}
                 >
-                    <TrackerCheckbox
-                        status={getStatus(date)}
-                        habitColor={habit.color}
+                    <Button
+                        className='w-full h-12 flex items-center justify-center select-none'
                         onClick={() => handleCheckboxClick(date)}
                         onContextMenu={(e) => {
                             e.preventDefault();
                             handleNoteClick(date);
                         }}
-                    />
+                    >
+                        {getTrackerIcon(getStatus(date), habit.color)}
+                    </Button>
                 </td>
             ))}
-            <NoteDialog
-                isOpen={isNoteDialogOpen}
-                date={selectedDate || new Date()}
-                note={selectedTracker?.note || ''}
-                onClose={() => setIsNoteDialogOpen(false)}
-                onSave={handleNoteSave}
-            />
         </tr>
     );
 };

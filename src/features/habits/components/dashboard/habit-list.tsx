@@ -1,6 +1,10 @@
-import type { HabitRead } from '@/api';
+import type { HabitRead, TrackerRead, TrackerUpdate } from '@/api';
+import { updateTracker } from '@/features/trackers/api/update-trackers';
+import { createTracker } from '@/features/trackers/api/create-trackers';
+import { createNewTracker } from '@/features/trackers/utils/tracker-utils';
 import { useCallback, useMemo, useState } from 'react';
 import { HabitListElement } from './habit-list-element';
+import { NoteDialog } from '@/features/habits/components/modals/note-dialog';
 import { FilterList } from '@/components/ui/filter-list';
 import { SortList } from '@/components/ui/sort-list';
 import type { DropdownOption, SortDirection } from '@/types/types';
@@ -38,6 +42,11 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
     const [selectedSort, setSelectedSort] = useState<DropdownOption>(sortOptions[0]!);
     const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
     const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+    const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
+    const [selectedHabitId, setSelectedHabitId] = useState<number | null>(null); // needed in case tracker doesn't exist yet
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null); // needed in case tracker doesn't exist yet
+    const [selectedNote, setSelectedNote] = useState('');
+    const [selectedTracker, setSelectedTracker] = useState<TrackerRead | undefined>(undefined);
 
     // Track streaks reported by child HabitListElement components
     const [habitStreaks, setHabitStreaks] = useState<Map<number, number>>(new Map());
@@ -52,6 +61,39 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
             return next;
         });
     }, []);
+
+    const handleNoteOpen = useCallback(
+        (habitId: number, date: Date, tracker: TrackerRead | undefined) => {
+            setSelectedHabitId(habitId);
+            setSelectedDate(date);
+            setSelectedTracker(tracker);
+            setSelectedNote(tracker?.note || '');
+            setIsNoteDialogOpen(true);
+        },
+        []
+    );
+
+    const handleNoteSave = useCallback(
+        (note: string) => {
+            if (!selectedHabitId || !selectedDate) return;
+            const habit = habits.find((h) => h.id === selectedHabitId);
+            if (!habit) return;
+
+            if (!selectedTracker) {
+                // Create tracker with note
+                const newTracker = createNewTracker(habit.id, selectedDate, false);
+                newTracker.note = note;
+                createTracker(newTracker);
+            } else {
+                // Update existing tracker's note
+                const update: TrackerUpdate = { note: note };
+                updateTracker(selectedTracker.id, update);
+            }
+
+            setIsNoteDialogOpen(false);
+        },
+        [selectedHabitId, selectedDate, selectedTracker, habits]
+    );
 
     const handleSortChange = (option: DropdownOption) => {
         if (selectedSort.field === option.field) {
@@ -182,7 +224,7 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
                             <th className='px-4 py-2 w-1/5 text-left'>Habit</th>
                             <th className='w-12 text-center'>Streak</th>
                             {Array.from({ length: days }, (_, i) => (
-                                <th key={i} className='w-12 text-center text-sm'>
+                                <th key={i} className='w-8 text-center text-sm'>
                                     {date_formatter.format(
                                         new Date(
                                             today.getFullYear(),
@@ -202,11 +244,19 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
                                 days={days}
                                 filterIncomplete={selectedFilters.includes('incomplete')}
                                 onStreakChange={handleStreakChange}
+                                onNoteOpen={handleNoteOpen}
                             />
                         ))}
                     </tbody>
                 </table>
             </div>
+            <NoteDialog
+                isOpen={isNoteDialogOpen}
+                date={selectedDate || new Date()}
+                note={selectedNote}
+                onClose={() => setIsNoteDialogOpen(false)}
+                onSave={handleNoteSave}
+            />
         </div>
     );
 };
