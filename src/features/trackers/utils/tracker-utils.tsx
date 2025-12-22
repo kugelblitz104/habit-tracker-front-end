@@ -1,6 +1,30 @@
 import type { TrackerCreate, TrackerRead, TrackerUpdate } from '@/api';
 import { Status } from '@/types/types';
-import { Check, ChevronsRight, CircleCheck, Square } from 'lucide-react';
+import { Check, ChevronsRight, Square } from 'lucide-react';
+
+/**
+ * Hollow checkmark SVG component
+ */
+const HollowCheckmark = ({ className }: { className: string }) => (
+    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' className={className}>
+        {/* Larger gray checkmark on bottom */}
+        <path
+            d='M20 6 9 17l-5-5'
+            stroke='gray'
+            strokeWidth='6'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        {/* Smaller background checkmark on top for hollow effect */}
+        <path
+            d='M20 6 9 17l-5-5'
+            stroke='#1d293d'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+);
 
 /**
  * Helper to convert a Date to YYYY-MM-DD string in local timezone
@@ -65,7 +89,7 @@ export const getTrackerIcon = (status: Status, habitColor?: string) => {
                 />
             );
         case Status.AUTO_SKIPPED:
-            return <Check className={iconClass} color='gray' strokeWidth={2} />;
+            return <HollowCheckmark className={iconClass} color='gray' />;
         case Status.NOT_COMPLETED:
         default:
             return <Square className={iconClass} color='white' strokeWidth={1} />;
