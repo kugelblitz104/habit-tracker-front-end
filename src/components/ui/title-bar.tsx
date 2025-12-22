@@ -4,7 +4,7 @@ import { LogoutModal } from '@/features/auth/components/modals/logout-modal';
 import { useAuth } from '@/lib/auth-context';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { CheckCheck, ChevronLeft, Ellipsis, LogOut } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 
 export type ActionConfig = {
@@ -31,6 +31,21 @@ export const TitleBar = ({ title = 'Habit Tracker', actions = [] }: TitleBarProp
         navigate('/login', { replace: true });
     };
 
+    const menuActions = useMemo(() => {
+        const allActions = [...actions];
+
+        if (isAuthenticated && !showBackButton) {
+            allActions.push({
+                label: 'Logout',
+                onClick: () => setLogoutModalOpen(true),
+                icon: <LogOut size={20} />,
+                variant: ButtonVariant.Danger
+            });
+        }
+
+        return allActions;
+    }, [actions, isAuthenticated, showBackButton]);
+
     return (
         <div className='p-4 bg-slate-700 relative'>
             <div className='flex items-center min-h-10'>
@@ -41,44 +56,33 @@ export const TitleBar = ({ title = 'Habit Tracker', actions = [] }: TitleBarProp
                 )}
                 {location.pathname === '/' && <CheckCheck className='mr-2' />}
                 <h1 className='text-xl truncate'>{title}</h1>
-                <div className='flex flex-row-reverse items-center gap-2 ml-auto'>
-                    <Menu>
-                        <MenuButton className='p-2 hover:bg-slate-600 rounded-md'>
-                            <Ellipsis />
-                        </MenuButton>
-                        <MenuItems
-                            anchor='bottom'
-                            className='bg-slate-700 border border-slate-600 rounded-md shadow-lg min-w-48'
-                        >
-                            {actions.map((action, index) => (
-                                <MenuItem key={index}>
-                                    {({ focus }) => (
-                                        <DropdownMenuItem
-                                            label={action.label}
-                                            onClick={action.onClick}
-                                            icon={action.icon}
-                                            variant={action.variant}
-                                            focus={focus}
-                                        />
-                                    )}
-                                </MenuItem>
-                            ))}
-                            {isAuthenticated && !showBackButton && (
-                                <MenuItem key='logout'>
-                                    {({ focus }) => (
-                                        <DropdownMenuItem
-                                            label='Logout'
-                                            onClick={() => setLogoutModalOpen(true)}
-                                            icon={<LogOut size={20} />}
-                                            variant={ButtonVariant.Danger}
-                                            focus={focus}
-                                        />
-                                    )}
-                                </MenuItem>
-                            )}
-                        </MenuItems>
-                    </Menu>
-                </div>
+                {menuActions.length > 0 && (
+                    <div className='flex flex-row-reverse items-center gap-2 ml-auto'>
+                        <Menu>
+                            <MenuButton className='p-2 hover:bg-slate-600 rounded-md'>
+                                <Ellipsis />
+                            </MenuButton>
+                            <MenuItems
+                                anchor='bottom'
+                                className='bg-slate-700 border border-slate-600 rounded-md shadow-lg min-w-48'
+                            >
+                                {menuActions.map((action, index) => (
+                                    <MenuItem key={index}>
+                                        {({ focus }) => (
+                                            <DropdownMenuItem
+                                                label={action.label}
+                                                onClick={action.onClick}
+                                                icon={action.icon}
+                                                variant={action.variant}
+                                                focus={focus}
+                                            />
+                                        )}
+                                    </MenuItem>
+                                ))}
+                            </MenuItems>
+                        </Menu>
+                    </div>
+                )}
             </div>
             {logoutModalOpen && (
                 <LogoutModal
