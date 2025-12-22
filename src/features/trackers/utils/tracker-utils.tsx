@@ -1,6 +1,6 @@
 import type { TrackerCreate, TrackerRead, TrackerUpdate } from '@/api';
 import { Status } from '@/types/types';
-import { Check, ChevronsRight, Square } from 'lucide-react';
+import { Check, ChevronsRight, CircleSmall, MessageSquare, Square } from 'lucide-react';
 
 /**
  * Hollow checkmark SVG component
@@ -24,6 +24,12 @@ const HollowCheckmark = ({ className }: { className: string }) => (
             strokeLinejoin='round'
         />
     </svg>
+);
+
+export const NotePip = ({ className, color }: { className: string; color?: string }) => (
+    <div className={`${className} pointer-events-none`}>
+        <MessageSquare size={8} color={color || 'orange'} fill={color || 'orange'} />
+    </div>
 );
 
 /**

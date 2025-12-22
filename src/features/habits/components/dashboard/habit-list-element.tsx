@@ -9,7 +9,8 @@ import {
     findTrackerByDate,
     getNextTrackerState,
     getTrackerIcon,
-    getTrackerStatus
+    getTrackerStatus,
+    NotePip
 } from '@/features/trackers/utils/tracker-utils';
 import { getFrequencyString } from '@/lib/date-utils';
 import { Status } from '@/types/types';
@@ -214,7 +215,7 @@ export const HabitListElement = ({
             </td>
             {dates.map((date) => (
                 <td
-                    className={`text-center hover:bg-slate-600 ${
+                    className={`text-center hover:bg-slate-600 relative ${
                         rowIsActive ? 'bg-slate-800' : 'bg-slate-800/50'
                     }`}
                     key={date.toISOString()}
@@ -229,6 +230,9 @@ export const HabitListElement = ({
                     >
                         {getTrackerIcon(getStatus(date), habit.color)}
                     </Button>
+                    {findTrackerByDate(trackers, date)?.note && (
+                        <NotePip className='absolute top-2 right-4.25' color={habit.color} />
+                    )}
                 </td>
             ))}
         </tr>

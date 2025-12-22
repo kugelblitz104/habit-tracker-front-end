@@ -4,9 +4,10 @@ import {
     findTrackerByDate,
     getNextTrackerState,
     getTrackerIcon,
-    getTrackerStatus
+    getTrackerStatus,
+    NotePip
 } from '@/features/trackers/utils/tracker-utils';
-import { CalendarPlus, MessageSquare, Save, X } from 'lucide-react';
+import { CalendarPlus, CircleSmall, MessageCircle, MessageSquare, Save, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { NoteDialog } from '@/features/habits/components/modals/note-dialog';
 
@@ -69,11 +70,7 @@ const TrackerCell = ({
                             <CalendarPlus size={12} color='lightgreen' />
                         </div>
                     )}
-                    {hasNote && (
-                        <div className='absolute -top-0 -right-4.5 pointer-events-none'>
-                            <MessageSquare size={12} color='orange' fill='orange' />
-                        </div>
-                    )}
+                    {hasNote && <NotePip className='absolute -top-1 -right-2' color={habitColor} />}
                 </div>
             </div>
         </td>
