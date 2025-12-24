@@ -16,10 +16,10 @@ export const SortList = ({
     onSortChange
 }: SortListProps) => {
     return (
-        <div className='flex items-center gap-2'>
-            Sort by:
+        <div className='flex flex-wrap items-center md:justify-end gap-2 w-full md:w-auto'>
+            <span className='hidden md:flex'>Sort by:</span>
             <Listbox value={selectedSort} onChange={onSortChange}>
-                <div className='relative w-64'>
+                <div className='relative w-full md:w-64'>
                     <ListboxButton className='relative w-full p-2 rounded-md bg-slate-800 flex justify-start'>
                         {selectedSort.label}
                         <span className='pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2'>

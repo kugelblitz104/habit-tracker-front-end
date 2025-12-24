@@ -9,7 +9,7 @@ type FilterListProps = {
 
 export const FilterList = ({ filterOptions, selectedFilters, onFilterChange }: FilterListProps) => {
     return (
-        <div className='flex items-center gap-2'>
+        <div className='flex items-center gap-2 w-full md:w-auto'>
             {filterOptions.map((option) => (
                 <ToggleButton
                     key={option.field}

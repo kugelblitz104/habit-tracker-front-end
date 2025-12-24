@@ -13,17 +13,19 @@ import {
     NotePip
 } from '@/features/trackers/utils/tracker-utils';
 import { getFrequencyString } from '@/lib/date-utils';
+import { useLongPress } from '@/lib/use-long-press';
 import { Status } from '@/types/types';
 import { Button } from '@headlessui/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Flame } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 
 export type HabitListElementProps = {
     habit: HabitRead;
     days: number;
     filterIncomplete?: boolean;
+    isSmall?: boolean;
     onStreakChange?: (habitId: number, streak: number) => void;
     onNoteOpen?: (habitId: number, date: Date, tracker: TrackerRead | undefined) => void;
 };
@@ -32,6 +34,7 @@ export const HabitListElement = ({
     habit,
     days,
     filterIncomplete = false,
+    isSmall = false,
     onStreakChange,
     onNoteOpen
 }: HabitListElementProps) => {
@@ -52,6 +55,19 @@ export const HabitListElement = ({
     const [rowIsActive, setRowIsActive] = useState<boolean>(false);
     const [trackers, setTrackers] = useState<TrackerRead[]>([]);
     const queryClient = useQueryClient();
+    const currentDateRef = useRef<Date | null>(null);
+
+    const handleNoteClick = (date: Date) => {
+        const tracker = findTrackerByDate(trackers, date);
+        onNoteOpen?.(habit.id, date, tracker);
+    };
+
+    const longPressHandlers = useLongPress(() => {
+        if (currentDateRef.current) {
+            handleNoteClick(currentDateRef.current);
+        }
+    });
+
     const trackersQuery = useQuery({
         queryKey: ['trackers', { habitId: habit.id }, days],
         queryFn: () => getTrackers(habit.id, days),
@@ -155,11 +171,6 @@ export const HabitListElement = ({
         );
     };
 
-    const handleNoteClick = (date: Date) => {
-        const tracker = findTrackerByDate(trackers, date);
-        onNoteOpen?.(habit.id, date, tracker);
-    };
-
     useEffect(() => {
         if (trackersQuery.data?.trackers) {
             setTrackers(trackersQuery.data.trackers);
@@ -195,24 +206,28 @@ export const HabitListElement = ({
                 >
                     <Label
                         mainText={habit.name}
-                        subText={getFrequencyString(habit.frequency, habit.range)}
+                        subText={
+                            !isSmall ? getFrequencyString(habit.frequency, habit.range) : undefined
+                        }
                         textColor={habit.color}
                         className='cursor-pointer'
                     />
                 </Link>
             </td>
-            <td className={`text-center ${rowIsActive ? 'bg-slate-800' : 'bg-slate-800/50'}`}>
-                <div className='flex items-center justify-center gap-0.5'>
-                    {currentStreak > 0 ? (
-                        <Flame size={16} className='stroke-orange-500 fill-orange-400' />
-                    ) : (
-                        '-'
-                    )}
-                    <span className='text-orange-400'>
-                        {currentStreak > 0 ? currentStreak : ''}
-                    </span>
-                </div>
-            </td>
+            {!isSmall && (
+                <td className={`text-center ${rowIsActive ? 'bg-slate-800' : 'bg-slate-800/50'}`}>
+                    <div className='flex items-center justify-center gap-0.5'>
+                        {currentStreak > 0 ? (
+                            <Flame size={16} className='stroke-orange-500 fill-orange-400' />
+                        ) : (
+                            '-'
+                        )}
+                        <span className='text-orange-400'>
+                            {currentStreak > 0 ? currentStreak : ''}
+                        </span>
+                    </div>
+                </td>
+            )}
             {dates.map((date) => (
                 <td
                     className={`text-center hover:bg-slate-600 relative ${
@@ -230,11 +245,20 @@ export const HabitListElement = ({
                             e.preventDefault();
                             handleNoteClick(date);
                         }}
+                        onTouchStart={(e) => {
+                            currentDateRef.current = date;
+                            longPressHandlers.onTouchStart(e);
+                        }}
+                        onTouchMove={longPressHandlers.onTouchMove}
+                        onTouchEnd={longPressHandlers.onTouchEnd}
                     >
                         {getTrackerIcon(getStatus(date), habit.color)}
                     </Button>
                     {findTrackerByDate(trackers, date)?.note && (
-                        <NotePip className='absolute top-2 right-4.25' color={habit.color} />
+                        <NotePip
+                            className='absolute top-1/2 left-1/2 -translate-y-4 translate-x-2.5'
+                            color={habit.color}
+                        />
                     )}
                 </td>
             ))}

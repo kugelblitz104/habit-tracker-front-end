@@ -24,7 +24,7 @@ export const BaseModal = ({ isOpen, onClose, title, children }: BaseModalProps) 
         >
             <DialogBackdrop className='fixed inset-0 bg-black/50' />
             <div className='fixed inset-0 flex items-center justify-center p-4'>
-                <DialogPanel className={`space-y-4 rounded-lg bg-slate-800 p-8 overflow-y-auto`}>
+                <DialogPanel className={`space-y-4 rounded-lg bg-slate-800 p-6 overflow-y-auto`}>
                     <DialogTitle as='h2' className='text-2xl font-bold'>
                         {title}
                     </DialogTitle>

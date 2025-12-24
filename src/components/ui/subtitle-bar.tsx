@@ -11,7 +11,7 @@ type SubtitleBarProps = {
 
 export const SubtitleBar = ({ subtitles }: SubtitleBarProps) => {
     return (
-        <div className='flex bg-slate-800 p-4 gap-3 text-sm items-center'>
+        <div className='flex flex-wrap bg-slate-800 p-4 gap-3 text-sm items-center'>
             {subtitles.map((subtitle, index) => (
                 <span
                     key={index}

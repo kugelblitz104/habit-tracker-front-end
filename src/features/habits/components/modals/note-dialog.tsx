@@ -48,7 +48,7 @@ export const NoteDialog = ({ isOpen, date, note, onClose, onSave }: NoteDialogPr
             title={`Note for ${date.toLocaleDateString()}`}
         >
             <FormProvider {...methods}>
-                <form onSubmit={methods.handleSubmit(onSubmit)} className='min-w-sm'>
+                <form onSubmit={methods.handleSubmit(onSubmit)} className='md:min-w-sm'>
                     <Field className='mb-2'>
                         <Label className='sr-only'>Note</Label>
                         <Textarea

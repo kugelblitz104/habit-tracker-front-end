@@ -56,7 +56,7 @@ export const LoginForm = () => {
     return (
         <>
             <TitleBar title='Login' />
-            <div className='flex items-center justify-center mt-8'>
+            <div className='flex items-center justify-center mt-8 mx-4'>
                 <div className='w-full max-w-md '>
                     <FormProvider {...methods}>
                         <form

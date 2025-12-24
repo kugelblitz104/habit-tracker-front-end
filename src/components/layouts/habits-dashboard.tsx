@@ -15,25 +15,31 @@ import { ErrorScreen } from './error-screen';
 import { LoadingScreen } from './loading-screen';
 import { sortHabits } from '@/features/habits/api/update-habits';
 
-const useResponsiveDays = () => {
+const useResponsiveLayout = () => {
     const isXl = useMediaQuery({ minWidth: 1280 });
     const isLg = useMediaQuery({ minWidth: 1024 });
     const isMd = useMediaQuery({ minWidth: 768 });
 
+    let days: number;
     switch (true) {
         case isXl:
-            return 14;
+            days = 14;
+            break;
         case isLg:
-            return 11;
+            days = 11;
+            break;
         case isMd:
-            return 8;
+            days = 8;
+            break;
         default:
-            return 4;
+            days = 4;
     }
+
+    return { days, isSmall: !isMd };
 };
 
 export const HabitsDashboard = () => {
-    const days = useResponsiveDays();
+    const { days, isSmall } = useResponsiveLayout();
     const { user } = useAuth();
     const userId = user?.id || 0; // Fallback to non-existent user ID
 
@@ -99,7 +105,7 @@ export const HabitsDashboard = () => {
                     }
                 ]}
             />
-            <HabitList habits={habits} days={days} />
+            <HabitList habits={habits} days={days} isSmall={isSmall} />
             <AddHabitModal
                 isOpen={addHabitModalOpen}
                 onClose={() => setAddHabitModalOpen(false)}

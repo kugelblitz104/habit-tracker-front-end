@@ -11,7 +11,7 @@ export const ToggleButton = ({ children, isActive, onClick }: ToggleButtonProps)
     return (
         <Button
             onClick={onClick}
-            className={`px-4 py-2 rounded-md transition-colors text-sm font-medium ${
+            className={`px-4 py-2 rounded-md transition-colors text-sm font-medium flex-1 ${
                 isActive
                     ? 'bg-sky-600 text-white hover:bg-sky-700'
                     : 'bg-slate-700 text-gray-300 hover:bg-slate-600'

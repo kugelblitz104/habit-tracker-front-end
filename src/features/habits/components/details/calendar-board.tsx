@@ -1,5 +1,6 @@
 import type { HabitRead, TrackerCreate, TrackerRead, TrackerUpdate } from '@/api';
 import { NoteDialog } from '@/features/habits/components/modals/note-dialog';
+import { useLongPress } from '@/lib/use-long-press';
 import {
     createNewTracker,
     findTrackerByDate,
@@ -9,7 +10,7 @@ import {
     NotePip
 } from '@/features/trackers/utils/tracker-utils';
 import { CalendarPlus } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 type TrackerCellProps = {
     date: Date;
@@ -46,6 +47,8 @@ const TrackerCell = ({
     });
     const hasNote = tracker?.note && tracker.note.trim().length > 0;
 
+    const longPressHandlers = useLongPress(() => onNoteClick(date, tracker));
+
     return (
         <td
             className={`
@@ -61,6 +64,7 @@ const TrackerCell = ({
                 e.preventDefault();
                 onNoteClick(date, tracker);
             }}
+            {...longPressHandlers}
             aria-label={`Mark habit as ${getNextTrackerState(
                 tracker
             )} for ${date.toLocaleDateString()}`}
@@ -309,7 +313,7 @@ export const CalendarBoard = ({
                     </tbody>
                 </table>
             </div>
-            <div className='mx-4 mt-1 text-slate-500'>Right click to add or edit notes</div>
+            <div className='mx-4 mt-2 text-slate-500'>Right click to add or edit notes</div>
             <NoteDialog
                 isOpen={isNoteDialogOpen}
                 date={selectedDate || new Date()}

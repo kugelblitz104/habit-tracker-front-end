@@ -29,9 +29,10 @@ const filterOptions: DropdownOption[] = [
 export type HabitListProps = {
     habits: HabitRead[];
     days?: number;
+    isSmall?: boolean;
 };
 
-export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
+export const HabitList = ({ habits, days = 0, isSmall = false }: HabitListProps) => {
     // hooks - use useMemo to prevent hydration mismatch
     const today = useMemo(() => new Date(), []);
     const date_formatter = new Intl.DateTimeFormat('en-US', {
@@ -95,18 +96,21 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
         [selectedHabitId, selectedDate, selectedTracker, habits]
     );
 
-    const handleSortChange = (option: DropdownOption) => {
-        if (selectedSort.field === option.field) {
-            // Toggle direction if same field
-            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-        } else {
-            // New field, reset to ascending
-            setSelectedSort(option);
-            setSortDirection('asc');
-        }
-    };
+    const handleSortChange = useCallback(
+        (option: DropdownOption) => {
+            if (selectedSort.field === option.field) {
+                // Toggle direction if same field
+                setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+            } else {
+                // New field, reset to ascending
+                setSelectedSort(option);
+                setSortDirection('asc');
+            }
+        },
+        [selectedSort, sortDirection]
+    );
 
-    const handleFilterChange = (option: DropdownOption) => {
+    const handleFilterChange = useCallback((option: DropdownOption) => {
         setSelectedFilters((prev) => {
             if (prev.includes(option.field)) {
                 return prev.filter((field) => field !== option.field);
@@ -114,7 +118,7 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
                 return [...prev, option.field];
             }
         });
-    };
+    }, []);
 
     const sortedHabits = useMemo(() => {
         if (!habits) return [];
@@ -204,7 +208,16 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
 
     return (
         <div className='m-4'>
-            <div className='mb-4 flex items-center gap-4 justify-between'>
+            <div
+                className='
+                    mb-4 
+                    flex
+                    flex-wrap-reverse md:flex-row
+                    items-start sm:items-center 
+                    gap-4 sm:justify-between
+                    
+                '
+            >
                 <FilterList
                     filterOptions={filterOptions}
                     selectedFilters={selectedFilters}
@@ -221,14 +234,20 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
                 <table className='min-w-full table-auto'>
                     <thead>
                         <tr>
-                            <th scope='col' className='px-4 py-2 w-1/5 text-left'>
+                            <th scope='col' className='px-4 py-2 w-1/3 md:w-1/5 text-left'>
                                 Habit
                             </th>
-                            <th scope='col' className='w-12 text-center'>
-                                Streak
-                            </th>
+                            {!isSmall && (
+                                <th scope='col' className='w-12 text-center'>
+                                    Streak
+                                </th>
+                            )}
                             {Array.from({ length: days }, (_, i) => (
-                                <th key={i} scope='col' className='w-8 text-center text-sm'>
+                                <th
+                                    key={i}
+                                    scope='col'
+                                    className='w-8 text-center text-xs md:text-sm'
+                                >
                                     {date_formatter.format(
                                         new Date(
                                             today.getFullYear(),
@@ -246,6 +265,7 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
                                 key={habit.id}
                                 habit={habit}
                                 days={days}
+                                isSmall={isSmall}
                                 filterIncomplete={selectedFilters.includes('incomplete')}
                                 onStreakChange={handleStreakChange}
                                 onNoteOpen={handleNoteOpen}
@@ -254,6 +274,7 @@ export const HabitList = ({ habits, days = 0 }: HabitListProps) => {
                     </tbody>
                 </table>
             </div>
+            <div className='mx-4 mt-2 text-slate-500'>Right click to add or edit notes</div>
             <NoteDialog
                 isOpen={isNoteDialogOpen}
                 date={selectedDate || new Date()}
