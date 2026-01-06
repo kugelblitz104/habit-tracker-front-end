@@ -49,6 +49,13 @@ const TrackerCell = ({
 
     const longPressHandlers = useLongPress(() => onNoteClick(date, tracker));
 
+    const nextTrackerState = getNextTrackerState(tracker);
+    const ariaLabelState = nextTrackerState.completed
+        ? 'completed'
+        : nextTrackerState.skipped
+        ? 'skipped'
+        : 'not completed';
+
     return (
         <td
             className={`
@@ -65,9 +72,7 @@ const TrackerCell = ({
                 onNoteClick(date, tracker);
             }}
             {...longPressHandlers}
-            aria-label={`Mark habit as ${getNextTrackerState(
-                tracker
-            )} for ${date.toLocaleDateString()}`}
+            aria-label={`Mark habit as ${ariaLabelState} for ${date.toLocaleDateString()}`}
         >
             <div className='flex items-center justify-center gap-1'>
                 <div className='relative'>
@@ -246,7 +251,7 @@ export const CalendarBoard = ({
                 className='overflow-x-auto select-none mx-4 rounded-lg border border-slate-700'
                 ref={scrollRef}
             >
-                <table className='w-full border-collapse table-fixed min-w-max'>
+                <table className='w-full border-collapse table-fixed'>
                     <colgroup>
                         <col className='w-20' />
                         {weeks.map((_, idx) => (

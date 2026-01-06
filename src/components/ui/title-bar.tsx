@@ -87,13 +87,11 @@ export const TitleBar = ({ title = 'Habit Tracker', actions = [] }: TitleBarProp
                     </div>
                 )}
             </div>
-            {logoutModalOpen && (
-                <LogoutModal
-                    isOpen={logoutModalOpen}
-                    onClose={() => setLogoutModalOpen(false)}
-                    handleLogout={handleLogout}
-                />
-            )}
+            <LogoutModal
+                isOpen={logoutModalOpen}
+                onClose={() => setLogoutModalOpen(false)}
+                handleLogout={handleLogout}
+            />
         </div>
     );
 };
