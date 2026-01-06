@@ -216,7 +216,7 @@ export const CalendarBoard = ({
         return (
             <th
                 key={idx}
-                className='p-2 text-sm text-slate-400 font-normal border-b border-slate-700'
+                className='p-2 text-sm text-slate-400 font-normal border-b border-slate-700 min-w-30'
             >
                 <div className='text-xs text-slate-500'>
                     {firstDate &&
@@ -251,7 +251,7 @@ export const CalendarBoard = ({
                 className='overflow-x-auto select-none mx-4 rounded-lg border border-slate-700'
                 ref={scrollRef}
             >
-                <table className='w-full border-collapse table-fixed'>
+                <table className='w-full border-collapse'>
                     <colgroup>
                         <col className='w-20' />
                         {weeks.map((_, idx) => (
