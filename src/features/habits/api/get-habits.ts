@@ -1,10 +1,7 @@
 import type { HabitKPIs, HabitList, HabitRead, Streak } from '@/api';
 import { HabitsService, UsersService } from '@/api';
 
-export const getHabits = async (
-    userId = 1,
-    limit: number
-): Promise<HabitList> => {
+export const getHabits = async (userId = 1, limit = 100): Promise<HabitList> => {
     return await UsersService.listUserHabitsUsersUserIdHabitsGet(userId, limit);
 };
 

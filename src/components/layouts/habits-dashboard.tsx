@@ -49,7 +49,7 @@ export const HabitsDashboard = () => {
     const [sortModalOpen, setSortModalOpen] = useState(false);
     const habitsQuery = useQuery({
         queryKey: ['habits', { userId }],
-        queryFn: () => getHabits(userId, days),
+        queryFn: () => getHabits(userId),
         staleTime: 1000 * 60 // 1 minute
     });
 
