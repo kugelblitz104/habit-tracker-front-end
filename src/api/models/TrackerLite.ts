@@ -2,10 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type TrackerCreate = {
-    habit_id: number;
-    dated?: string;
+/**
+ * Lightweight tracker schema for efficient data fetching.
+ */
+export type TrackerLite = {
+    id: number;
+    dated: string;
     status: number;
-    note?: (string | null);
+    has_note: boolean;
 };
 

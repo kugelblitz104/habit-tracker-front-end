@@ -4,7 +4,19 @@ export type Meta = {
     total_pages: number;
 };
 
-export enum Status {
+/**
+ * Tracker status constants
+ * 0 = not completed
+ * 1 = skipped
+ * 2 = completed
+ */
+export enum TrackerStatus {
+    NOT_COMPLETED = 0,
+    SKIPPED = 1,
+    COMPLETED = 2
+}
+
+export enum DisplayStatus {
     NOT_COMPLETED = 'not_completed',
     COMPLETED = 'completed',
     SKIPPED = 'skipped',
@@ -35,3 +47,13 @@ export type DropdownOption = {
 };
 
 export type SortDirection = 'asc' | 'desc';
+
+export type HabitKPIs = {
+    id: number;
+    current_streak: number | null;
+    longest_streak: number | null;
+    total_completions: number;
+    thirty_day_completion_rate: number;
+    overall_completion_rate: number;
+    last_completed_date?: string | null;
+};

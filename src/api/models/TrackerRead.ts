@@ -5,8 +5,7 @@
 export type TrackerRead = {
     habit_id: number;
     dated?: string;
-    completed?: boolean;
-    skipped?: boolean;
+    status: number;
     note?: (string | null);
     id: number;
     created_date: string;

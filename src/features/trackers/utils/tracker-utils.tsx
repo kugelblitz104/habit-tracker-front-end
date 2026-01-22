@@ -1,6 +1,6 @@
-import type { TrackerCreate, TrackerRead, TrackerUpdate } from '@/api';
-import { Status } from '@/types/types';
-import { Check, ChevronsRight, CircleSmall, MessageSquare, Square } from 'lucide-react';
+import type { TrackerCreate, TrackerLite, TrackerRead, TrackerUpdate } from '@/api';
+import { DisplayStatus, TrackerStatus } from '@/types/types';
+import { Check, ChevronsRight, MessageSquare, Square } from 'lucide-react';
 
 /**
  * Hollow checkmark SVG component
@@ -48,30 +48,30 @@ export const toLocalDateString = (date: Date): string => {
  * When autoSkipParams are provided, checks if the date qualifies for auto-skip
  * based on the habit's frequency/range settings (using the same logic as the backend).
  */
-export const getTrackerStatus = (
-    tracker: TrackerRead | undefined,
+export const getTrackerDisplayStatus = (
+    tracker: TrackerRead | TrackerLite | undefined,
     autoSkipParams?: {
         date: Date;
-        trackers: TrackerRead[];
+        trackers: (TrackerRead | TrackerLite)[];
         frequency: number;
         range: number;
     }
-): Status => {
+): DisplayStatus => {
     // If tracker exists with explicit state, use that
     if (tracker) {
-        if (tracker.completed) return Status.COMPLETED;
-        if (tracker.skipped) return Status.SKIPPED;
+        if (tracker.status === TrackerStatus.COMPLETED) return DisplayStatus.COMPLETED;
+        if (tracker.status === TrackerStatus.SKIPPED) return DisplayStatus.SKIPPED;
     }
 
     // Check if this date qualifies for auto-skip
     if (autoSkipParams) {
         const { date, trackers, frequency, range } = autoSkipParams;
         if (isAutoSkipped(date, trackers, frequency, range)) {
-            return Status.AUTO_SKIPPED;
+            return DisplayStatus.AUTO_SKIPPED;
         }
     }
 
-    return Status.NOT_COMPLETED;
+    return DisplayStatus.NOT_COMPLETED;
 };
 
 /**
@@ -80,13 +80,13 @@ export const getTrackerStatus = (
  * @param className - Optional CSS class for the icon
  * @param habitColor - Optional habit color to use for completed/auto-skipped states
  */
-export const getTrackerIcon = (status: Status, habitColor?: string) => {
+export const getTrackerIcon = (status: DisplayStatus, habitColor?: string) => {
     const iconClass = 'w-5 h-5';
 
     switch (status) {
-        case Status.COMPLETED:
+        case DisplayStatus.COMPLETED:
             return <Check className={iconClass} color={habitColor || 'green'} strokeWidth={3} />;
-        case Status.SKIPPED:
+        case DisplayStatus.SKIPPED:
             return (
                 <ChevronsRight
                     className={iconClass}
@@ -94,9 +94,9 @@ export const getTrackerIcon = (status: Status, habitColor?: string) => {
                     strokeWidth={3}
                 />
             );
-        case Status.AUTO_SKIPPED:
+        case DisplayStatus.AUTO_SKIPPED:
             return <HollowCheckmark className={iconClass} />;
-        case Status.NOT_COMPLETED:
+        case DisplayStatus.NOT_COMPLETED:
         default:
             return <Square className={iconClass} color='white' strokeWidth={1} />;
     }
@@ -106,13 +106,15 @@ export const getTrackerIcon = (status: Status, habitColor?: string) => {
  * Get the next state in the tracker status cycle
  * Cycles: not completed → completed → skipped → not completed
  */
-export const getNextTrackerState = (tracker: TrackerRead | undefined): TrackerUpdate => {
-    if (!tracker || (!tracker.completed && !tracker.skipped)) {
-        return { completed: true, skipped: false };
-    } else if (tracker.completed) {
-        return { completed: false, skipped: true };
+export const getNextTrackerState = (
+    tracker: TrackerRead | TrackerLite | undefined
+): TrackerUpdate => {
+    if (!tracker || tracker.status === TrackerStatus.NOT_COMPLETED) {
+        return { status: TrackerStatus.COMPLETED };
+    } else if (tracker.status === TrackerStatus.COMPLETED) {
+        return { status: TrackerStatus.SKIPPED };
     } else {
-        return { completed: false, skipped: false };
+        return { status: TrackerStatus.NOT_COMPLETED };
     }
 };
 
@@ -122,13 +124,12 @@ export const getNextTrackerState = (tracker: TrackerRead | undefined): TrackerUp
 export const createNewTracker = (
     habitId: number,
     date: Date,
-    completed: boolean = true
+    status: TrackerStatus = TrackerStatus.COMPLETED
 ): TrackerCreate => {
     return {
         habit_id: habitId,
         dated: toLocalDateString(date),
-        completed,
-        skipped: false,
+        status: status,
         note: ''
     };
 };
@@ -136,7 +137,7 @@ export const createNewTracker = (
 /**
  * Find a tracker for a specific date from a list of trackers
  */
-export const findTrackerByDate = (trackers: TrackerRead[], date: Date): TrackerRead | undefined => {
+export const findTrackerByDate = (trackers: TrackerLite[], date: Date): TrackerLite | undefined => {
     const dateStr = toLocalDateString(date);
     return trackers.find((tracker) => tracker.dated === dateStr);
 };
@@ -161,7 +162,7 @@ export const findTrackerByDate = (trackers: TrackerRead[], date: Date): TrackerR
  */
 export const isAutoSkipped = (
     date: Date,
-    trackers: TrackerRead[],
+    trackers: (TrackerRead | TrackerLite)[],
     frequency: number,
     range: number
 ): boolean => {
@@ -181,11 +182,15 @@ export const isAutoSkipped = (
     // Count completions in the window (excluding the current date)
     let completions = 0;
     for (const tracker of trackers) {
-        if (!tracker.dated || !tracker.completed) continue;
+        if (!tracker.dated || tracker.status !== TrackerStatus.COMPLETED) continue;
 
         // Compare using string dates to avoid timezone issues
         // tracker.dated is already in YYYY-MM-DD format
-        if (tracker.dated >= windowStartStr && tracker.dated < dateStr && tracker.completed) {
+        if (
+            tracker.dated >= windowStartStr &&
+            tracker.dated < dateStr &&
+            tracker.status === TrackerStatus.COMPLETED
+        ) {
             completions++;
         }
     }

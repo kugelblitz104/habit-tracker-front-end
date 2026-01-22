@@ -1,15 +1,23 @@
-import type { HabitKPIs, HabitRead, TrackerRead } from '@/api';
+import type { HabitRead, TrackerLite, TrackerRead } from '@/api';
+import type { HabitKPIs } from '@/types/types';
 import { parseLocalDate } from '@/lib/date-utils';
-import type { Streak } from '@/types/types';
+import { type Streak, TrackerStatus } from '@/types/types';
 import { isAutoSkipped, toLocalDateString } from './tracker-utils';
 
 /**
  * Get the effective start date for KPI calculations.
  * Returns the earlier of the habit's created date or the first tracker date.
  */
-const getEffectiveStartDate = (trackers: TrackerRead[], createdDate: string): string => {
+export const getEffectiveStartDate = (
+    trackers: (TrackerRead | TrackerLite)[],
+    createdDate: string
+): string => {
     const trackerDates = trackers
-        .filter((t) => t.dated && (t.completed || t.skipped))
+        .filter(
+            (t) =>
+                t.dated &&
+                (t.status === TrackerStatus.COMPLETED || t.status === TrackerStatus.SKIPPED)
+        )
         .map((t) => t.dated as string)
         .sort((a, b) => a.localeCompare(b));
     const firstTrackerDate = trackerDates[0];
@@ -28,7 +36,7 @@ const getEffectiveStartDate = (trackers: TrackerRead[], createdDate: string): st
  * Returns an array of streak objects sorted by start date (oldest first).
  */
 export const calculateStreaks = (
-    trackers: TrackerRead[],
+    trackers: (TrackerRead | TrackerLite)[],
     frequency: number,
     range: number,
     createdDate: string
@@ -38,10 +46,14 @@ export const calculateStreaks = (
     const startDate = parseLocalDate(startDateStr);
 
     const completedDates = new Set(
-        trackers.filter((t) => t.completed && t.dated).map((t) => t.dated as string)
+        trackers
+            .filter((t) => t.status === TrackerStatus.COMPLETED && t.dated)
+            .map((t) => t.dated as string)
     );
     const skippedDates = new Set(
-        trackers.filter((t) => t.skipped && t.dated).map((t) => t.dated as string)
+        trackers
+            .filter((t) => t.status === TrackerStatus.SKIPPED && t.dated)
+            .map((t) => t.dated as string)
     );
 
     const streaks: Streak[] = [];
@@ -125,7 +137,7 @@ const getLongestStreakLength = (streaks: Streak[]): number => {
  * Auto-skipped dates count as completions.
  */
 const calculateCompletionRate = (
-    trackers: TrackerRead[],
+    trackers: (TrackerRead | TrackerLite)[],
     frequency: number,
     range: number,
     createdDate: string,
@@ -148,11 +160,15 @@ const calculateCompletionRate = (
 
     // Build a set of completed dates for quick lookup
     const completedDates = new Set(
-        trackers.filter((t) => t.completed && t.dated).map((t) => t.dated as string)
+        trackers
+            .filter((t) => t.status === TrackerStatus.COMPLETED && t.dated)
+            .map((t) => t.dated as string)
     );
 
     const skippedDates = new Set(
-        trackers.filter((t) => t.skipped && t.dated).map((t) => t.dated as string)
+        trackers
+            .filter((t) => t.status === TrackerStatus.SKIPPED && t.dated)
+            .map((t) => t.dated as string)
     );
 
     // Count completions and total days by iterating through dates
@@ -181,9 +197,9 @@ const calculateCompletionRate = (
 /**
  * Get the last completed date from trackers
  */
-const getLastCompletedDate = (trackers: TrackerRead[]): string | null => {
+const getLastCompletedDate = (trackers: (TrackerRead | TrackerLite)[]): string | null => {
     const completedDates = trackers
-        .filter((t) => t.completed === true && typeof t.dated === 'string')
+        .filter((t) => t.status === TrackerStatus.COMPLETED && typeof t.dated === 'string')
         .map((t) => t.dated as string)
         .sort((a, b) => b.localeCompare(a));
 
@@ -193,8 +209,11 @@ const getLastCompletedDate = (trackers: TrackerRead[]): string | null => {
 /**
  * Calculate all KPIs from trackers data
  */
-export const calculateKPIsFromTrackers = (habit: HabitRead, trackers: TrackerRead[]): HabitKPIs => {
-    const totalCompletions = trackers.filter((t) => t.completed).length;
+export const calculateKPIsFromTrackers = (
+    habit: HabitRead,
+    trackers: (TrackerRead | TrackerLite)[]
+): HabitKPIs => {
+    const totalCompletions = trackers.filter((t) => t.status === TrackerStatus.COMPLETED).length;
     const streaks = calculateStreaks(trackers, habit.frequency, habit.range, habit.created_date);
 
     return {

@@ -4,8 +4,7 @@
 /* eslint-disable */
 export type TrackerUpdate = {
     dated?: (string | null);
-    completed?: (boolean | null);
-    skipped?: (boolean | null);
+    status?: (number | null);
     note?: (string | null);
     updated_date?: string;
 };

@@ -10,9 +10,11 @@ import {
 // import type { Route } from './+types/root';
 
 import './app.css';
+import 'react-toastify/dist/ReactToastify.css';
 import type { Route } from './+types/root';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
+import { ToastContainer } from 'react-toastify';
 
 // Configure OpenAPI client base URL
 import '@/lib/api-client';
@@ -37,10 +39,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <html lang='en'>
             <head>
                 <meta charSet='utf-8' />
-                <meta
-                    name='viewport'
-                    content='width=device-width, initial-scale=1'
-                />
+                <meta name='viewport' content='width=device-width, initial-scale=1' />
                 <Meta />
                 <Links />
             </head>
@@ -64,6 +63,18 @@ export default function App() {
         <AuthProvider>
             <QueryClientProvider client={queryClient}>
                 <Outlet />
+                <ToastContainer
+                    position='bottom-right'
+                    autoClose={5000}
+                    hideProgressBar={false}
+                    newestOnTop
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                    theme='dark'
+                />
             </QueryClientProvider>
         </AuthProvider>
     );

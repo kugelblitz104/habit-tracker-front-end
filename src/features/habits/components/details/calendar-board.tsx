@@ -1,26 +1,29 @@
-import type { HabitRead, TrackerCreate, TrackerRead, TrackerUpdate } from '@/api';
+import type { HabitRead, TrackerCreate, TrackerLite, TrackerRead, TrackerUpdate } from '@/api';
 import { NoteDialog } from '@/features/habits/components/modals/note-dialog';
-import { useLongPress } from '@/lib/use-long-press';
+import { getTracker } from '@/features/trackers/api/get-trackers';
 import {
     createNewTracker,
     findTrackerByDate,
     getNextTrackerState,
+    getTrackerDisplayStatus,
     getTrackerIcon,
-    getTrackerStatus,
     NotePip
 } from '@/features/trackers/utils/tracker-utils';
+import { useLongPress } from '@/lib/use-long-press';
+import { TrackerStatus } from '@/types/types';
+import { useQuery } from '@tanstack/react-query';
 import { CalendarPlus } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 type TrackerCellProps = {
     date: Date;
-    tracker: TrackerRead | undefined;
-    trackers: TrackerRead[];
+    tracker: TrackerLite | undefined;
+    trackers: TrackerLite[];
     frequency: number;
     range: number;
     habitColor: string;
     onStatusClick: (date: Date) => void;
-    onNoteClick: (date: Date, tracker: TrackerRead | undefined) => void;
+    onNoteClick: (date: Date, tracker: TrackerLite | undefined) => void;
     isToday: boolean;
     isCreatedDate: boolean;
     isLastRow?: boolean;
@@ -39,22 +42,15 @@ const TrackerCell = ({
     isCreatedDate,
     isLastRow = false
 }: TrackerCellProps) => {
-    const status = getTrackerStatus(tracker, {
+    const displayStatus = getTrackerDisplayStatus(tracker, {
         date,
         trackers,
         frequency,
         range
     });
-    const hasNote = tracker?.note && tracker.note.trim().length > 0;
-
+    const hasNote = tracker?.has_note || false;
     const longPressHandlers = useLongPress(() => onNoteClick(date, tracker));
-
-    const nextTrackerState = getNextTrackerState(tracker);
-    const ariaLabelState = nextTrackerState.completed
-        ? 'completed'
-        : nextTrackerState.skipped
-        ? 'skipped'
-        : 'not completed';
+    const ariaLabelState = displayStatus.replace('_', ' ');
 
     return (
         <td
@@ -76,7 +72,7 @@ const TrackerCell = ({
         >
             <div className='flex items-center justify-center gap-1'>
                 <div className='relative'>
-                    {getTrackerIcon(status, habitColor)}
+                    {getTrackerIcon(displayStatus, habitColor)}
                     {isCreatedDate && (
                         <div className='absolute bottom-1 -left-5 pointer-events-none'>
                             <CalendarPlus size={12} color='lightgreen' />
@@ -91,7 +87,7 @@ const TrackerCell = ({
 
 type CalendarBoardProps = {
     habit?: HabitRead;
-    trackers: TrackerRead[];
+    trackers: TrackerLite[];
     totalDays: number;
     subtitle?: string;
     onTrackerCreate: (tracker: TrackerCreate) => Promise<TrackerRead>;
@@ -110,7 +106,15 @@ export const CalendarBoard = ({
     const WEEKS = Math.ceil(totalDays / DAYS_PER_WEEK);
     const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-    const [selectedTracker, setSelectedTracker] = useState<TrackerRead | undefined>(undefined);
+    const [selectedTrackerId, setSelectedTrackerId] = useState<number | null>(null);
+
+    // Fetch full tracker details when note dialog is opened
+    const { data: selectedTrackerFull } = useQuery({
+        queryKey: ['tracker', selectedTrackerId],
+        queryFn: () => getTracker(selectedTrackerId!),
+        enabled: !!selectedTrackerId && isNoteDialogOpen,
+        staleTime: 0 // Always fetch fresh data for editing
+    });
 
     // auto scroll to the right on initial load
     const scrollRef = (node: HTMLDivElement) => {
@@ -184,24 +188,28 @@ export const CalendarBoard = ({
         onTrackerUpdate(tracker.id, update);
     };
 
-    const handleNoteClick = (date: Date, tracker: TrackerRead | undefined) => {
+    const handleNoteClick = (date: Date, tracker: TrackerLite | undefined) => {
         setSelectedDate(date);
-        setSelectedTracker(tracker);
+        setSelectedTrackerId(tracker?.id || null);
         setIsNoteDialogOpen(true);
     };
 
     const handleNoteSave = (note: string) => {
         if (!habit || !selectedDate) return;
 
-        if (!selectedTracker) {
+        if (!selectedTrackerFull) {
             // Create tracker with note
-            const newTracker = createNewTracker(habit.id, selectedDate, false);
+            const newTracker = createNewTracker(
+                habit.id,
+                selectedDate,
+                TrackerStatus.NOT_COMPLETED
+            );
             newTracker.note = note;
             onTrackerCreate(newTracker);
         } else {
             // Update existing tracker's note
             const update: TrackerUpdate = { note: note };
-            onTrackerUpdate(selectedTracker.id, update);
+            onTrackerUpdate(selectedTrackerFull.id, update);
         }
     };
 
@@ -322,7 +330,7 @@ export const CalendarBoard = ({
             <NoteDialog
                 isOpen={isNoteDialogOpen}
                 date={selectedDate || new Date()}
-                note={selectedTracker?.note || ''}
+                note={selectedTrackerFull?.note || ''}
                 onClose={() => setIsNoteDialogOpen(false)}
                 onSave={handleNoteSave}
             />

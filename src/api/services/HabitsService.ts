@@ -3,11 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { HabitCreate } from '../models/HabitCreate';
-import type { HabitKPIs } from '../models/HabitKPIs';
 import type { HabitRead } from '../models/HabitRead';
 import type { HabitUpdate } from '../models/HabitUpdate';
-import type { Streak } from '../models/Streak';
 import type { TrackerList } from '../models/TrackerList';
+import type { TrackerLiteList } from '../models/TrackerLiteList';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
@@ -25,7 +24,7 @@ export class HabitsService {
      * - **reminder**: Whether to enable reminders for this habit
      * - **notes**: Optional additional notes about the habit
      * - **archived**: Whether the habit is archived
-     * - **sort_order**: The order in which the habit appears in lists (descending)
+     * - **sort_order**: The order in which the habit appears in lists (ascending)
      * @param requestBody
      * @returns HabitRead Successful Response
      * @throws ApiError
@@ -50,8 +49,8 @@ export class HabitsService {
      *
      * - **habit_ids**: List of habit IDs in the order you want them displayed
      *
-     * The first ID gets the highest sort_order, last ID gets the lowest.
-     * Habits are displayed in descending sort_order.
+     * The first ID gets the lowest sort_order, last ID gets the highest.
+     * Habits are displayed in ascending sort_order.
      * @param requestBody
      * @returns any Successful Response
      * @throws ApiError
@@ -143,7 +142,7 @@ export class HabitsService {
      * - **reminder**: Whether to enable reminders for this habit
      * - **notes**: Optional additional notes about the habit
      * - **archived**: Whether the habit is archived
-     * - **sort_order**: The order in which the habit appears in lists (descending)
+     * - **sort_order**: The order in which the habit appears in lists (ascending)
      * @param habitId
      * @param requestBody
      * @returns HabitRead Successful Response
@@ -226,57 +225,37 @@ export class HabitsService {
         });
     }
     /**
-     * Get habit KPIs and statistics
-     * Get Key Performance Indicators (KPIs) for a specific habit.
+     * List trackers in lightweight format
+     * Get tracker entries in a lightweight format for efficient data fetching.
+     *
+     * This endpoint returns only the essential fields:
+     * - id: Tracker ID (for fetching full details if needed)
+     * - dated: The date of the tracker entry
+     * - status: 0=not completed, 1=skipped, 2=completed
+     * - has_note: Whether this tracker has a note attached
+     *
+     * Use this for calendar views and streak calculations. Use the full trackers
+     * endpoint or fetch individual trackers when you need notes or timestamps.
      *
      * - **habit_id**: The unique identifier of the habit
-     *
-     * Returns comprehensive statistics including:
-     * - Current streak length
-     * - Longest streak achieved
-     * - Total completions
-     * - 30-day completion rate
-     * - Overall completion rate since creation
-     * - Last completed date
+     * - **limit**: Maximum number of trackers to return (default: 70, max: 10000)
      * @param habitId
-     * @returns HabitKPIs Successful Response
+     * @param limit Maximum number of trackers to return (1-10000)
+     * @returns TrackerLiteList Successful Response
      * @throws ApiError
      */
-    public static getHabitKpisHabitsHabitIdKpisGet(
+    public static listHabitTrackersLiteHabitsHabitIdTrackersLiteGet(
         habitId: number,
-    ): CancelablePromise<HabitKPIs> {
+        limit: number = 70,
+    ): CancelablePromise<TrackerLiteList> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/habits/{habit_id}/kpis',
+            url: '/habits/{habit_id}/trackers/lite',
             path: {
                 'habit_id': habitId,
             },
-            errors: {
-                404: `Not found`,
-                422: `Validation Error`,
-            },
-        });
-    }
-    /**
-     * Get habit streaks
-     * Get all streak periods for a specific habit.
-     *
-     * - **habit_id**: The unique identifier of the habit
-     *
-     * Returns a list of all streak periods with start and end dates.
-     * Streaks are calculated based on the habit's frequency and range settings.
-     * @param habitId
-     * @returns Streak Successful Response
-     * @throws ApiError
-     */
-    public static getHabitStreaksHabitsHabitIdStreaksGet(
-        habitId: number,
-    ): CancelablePromise<Array<Streak>> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/habits/{habit_id}/streaks',
-            path: {
-                'habit_id': habitId,
+            query: {
+                'limit': limit,
             },
             errors: {
                 404: `Not found`,

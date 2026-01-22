@@ -1,20 +1,20 @@
-import type { HabitRead, TrackerCreate, TrackerRead, TrackerUpdate } from '@/api';
+import type { HabitRead, TrackerCreate, TrackerLite, TrackerRead, TrackerUpdate } from '@/api';
 import { Label } from '@/components/ui/label';
 import { createTracker } from '@/features/trackers/api/create-trackers';
-import { getTrackers } from '@/features/trackers/api/get-trackers';
+import { getTrackersLite } from '@/features/trackers/api/get-trackers';
 import { updateTracker } from '@/features/trackers/api/update-trackers';
 import { calculateStreaks, getCurrentStreakLength } from '@/features/trackers/utils/kpi-utils';
 import {
     createNewTracker,
     findTrackerByDate,
     getNextTrackerState,
+    getTrackerDisplayStatus,
     getTrackerIcon,
-    getTrackerStatus,
     NotePip
 } from '@/features/trackers/utils/tracker-utils';
 import { getFrequencyString } from '@/lib/date-utils';
 import { useLongPress } from '@/lib/use-long-press';
-import { Status } from '@/types/types';
+import { DisplayStatus } from '@/types/types';
 import { Button } from '@headlessui/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Flame } from 'lucide-react';
@@ -27,7 +27,7 @@ export type HabitListElementProps = {
     filterIncomplete?: boolean;
     isSmall?: boolean;
     onStreakChange?: (habitId: number, streak: number) => void;
-    onNoteOpen?: (habitId: number, date: Date, tracker: TrackerRead | undefined) => void;
+    onNoteOpen?: (habitId: number, date: Date, tracker: TrackerLite | undefined) => void;
 };
 
 export const HabitListElement = ({
@@ -53,7 +53,7 @@ export const HabitListElement = ({
     }, [days, today]);
 
     const [rowIsActive, setRowIsActive] = useState<boolean>(false);
-    const [trackers, setTrackers] = useState<TrackerRead[]>([]);
+    const [trackers, setTrackers] = useState<TrackerLite[]>([]);
     const queryClient = useQueryClient();
     const currentDateRef = useRef<Date | null>(null);
 
@@ -69,8 +69,8 @@ export const HabitListElement = ({
     });
 
     const trackersQuery = useQuery({
-        queryKey: ['trackers', { habitId: habit.id }, days],
-        queryFn: () => getTrackers(habit.id, days),
+        queryKey: ['trackers-lite', { habitId: habit.id }, days],
+        queryFn: () => getTrackersLite(habit.id, days),
         staleTime: 1000 * 60 // 1 minute
     });
 
@@ -134,11 +134,11 @@ export const HabitListElement = ({
     });
 
     // functions
-    const getStatus = (date: Date): Status => {
+    const getStatus = (date: Date): DisplayStatus => {
         const tracker = findTrackerByDate(trackers, date);
-        return getTrackerStatus(tracker, {
+        return getTrackerDisplayStatus(tracker, {
             date,
-            trackers,
+            trackers: trackers as any, // TrackerLite[] is compatible for auto-skip checking
             frequency: habit.frequency,
             range: habit.range
         });
@@ -152,7 +152,13 @@ export const HabitListElement = ({
             const newTracker = createNewTracker(habit.id, date);
             trackerCreate.mutate(newTracker, {
                 onSuccess: (data) => {
-                    setTrackers([...trackers, data]);
+                    const trackerLite: TrackerLite = {
+                        id: data.id,
+                        dated: data.dated ?? '',
+                        status: data.status ?? 2,
+                        has_note: !!data.note
+                    };
+                    setTrackers([...trackers, trackerLite]);
                 }
             });
             return;
@@ -165,7 +171,13 @@ export const HabitListElement = ({
             { id: tracker.id, update },
             {
                 onSuccess: (data) => {
-                    setTrackers(trackers.map((t) => (t.id === tracker.id ? data : t)));
+                    const trackerLite: TrackerLite = {
+                        id: data.id,
+                        dated: data.dated ?? '',
+                        status: data.status ?? 2,
+                        has_note: !!data.note
+                    };
+                    setTrackers(trackers.map((t) => (t.id === tracker.id ? trackerLite : t)));
                 }
             }
         );
@@ -183,7 +195,7 @@ export const HabitListElement = ({
     // If filtering for incomplete and today is completed, skipped, or auto-skipped, hide this habit
     if (
         filterIncomplete &&
-        (todayStatus === Status.COMPLETED || todayStatus === Status.AUTO_SKIPPED)
+        (todayStatus === DisplayStatus.COMPLETED || todayStatus === DisplayStatus.AUTO_SKIPPED)
     ) {
         return null;
     }
@@ -254,7 +266,7 @@ export const HabitListElement = ({
                     >
                         {getTrackerIcon(getStatus(date), habit.color)}
                     </Button>
-                    {findTrackerByDate(trackers, date)?.note && (
+                    {findTrackerByDate(trackers, date)?.has_note && (
                         <NotePip
                             className='absolute top-1/2 left-1/2 -translate-y-4 translate-x-2.5'
                             color={habit.color}

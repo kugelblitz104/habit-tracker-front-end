@@ -1,13 +1,15 @@
-import type { HabitRead, TrackerRead, TrackerUpdate } from '@/api';
+import type { HabitRead, TrackerLite, TrackerRead, TrackerUpdate } from '@/api';
 import { FilterList } from '@/components/ui/filter-list';
 import { SortList } from '@/components/ui/sort-list';
 import { NoteDialog } from '@/features/habits/components/modals/note-dialog';
 import { createTracker } from '@/features/trackers/api/create-trackers';
 import { updateTracker } from '@/features/trackers/api/update-trackers';
 import { createNewTracker } from '@/features/trackers/utils/tracker-utils';
-import type { DropdownOption, SortDirection } from '@/types/types';
+import { TrackerStatus, type DropdownOption, type SortDirection } from '@/types/types';
 import { useCallback, useMemo, useState } from 'react';
 import { HabitListElement } from './habit-list-element';
+import { useQuery } from '@tanstack/react-query';
+import { getTracker } from '@/features/trackers/api/get-trackers';
 
 const sortOptions: DropdownOption[] = [
     { field: 'sort_order', label: 'Custom Order' },
@@ -47,10 +49,15 @@ export const HabitList = ({ habits, days = 0, isSmall = false }: HabitListProps)
     const [selectedHabitId, setSelectedHabitId] = useState<number | null>(null); // needed in case tracker doesn't exist yet
     const [selectedDate, setSelectedDate] = useState<Date | null>(null); // needed in case tracker doesn't exist yet
     const [selectedNote, setSelectedNote] = useState('');
-    const [selectedTracker, setSelectedTracker] = useState<TrackerRead | undefined>(undefined);
-
-    // Track streaks reported by child HabitListElement components
+    const [selectedTrackerID, setSelectedTrackerID] = useState<number | null>(null);
     const [habitStreaks, setHabitStreaks] = useState<Map<number, number>>(new Map());
+
+    const selectedTrackerQuery = useQuery({
+        queryKey: ['tracker', selectedTrackerID],
+        queryFn: () => getTracker(selectedTrackerID!),
+        enabled: !!selectedTrackerID && isNoteDialogOpen,
+        staleTime: 0
+    });
 
     // Callback for child components to report their streak values
     const handleStreakChange = useCallback((habitId: number, streak: number) => {
@@ -64,11 +71,11 @@ export const HabitList = ({ habits, days = 0, isSmall = false }: HabitListProps)
     }, []);
 
     const handleNoteOpen = useCallback(
-        (habitId: number, date: Date, tracker: TrackerRead | undefined) => {
+        (habitId: number, date: Date, tracker: TrackerLite | undefined) => {
             setSelectedHabitId(habitId);
             setSelectedDate(date);
-            setSelectedTracker(tracker);
-            setSelectedNote(tracker?.note || '');
+            setSelectedTrackerID(tracker?.id || null);
+            setSelectedNote(selectedTrackerQuery.data?.note || '');
             setIsNoteDialogOpen(true);
         },
         []
@@ -80,20 +87,24 @@ export const HabitList = ({ habits, days = 0, isSmall = false }: HabitListProps)
             const habit = habits.find((h) => h.id === selectedHabitId);
             if (!habit) return;
 
-            if (!selectedTracker) {
+            if (!selectedTrackerQuery.data && selectedTrackerQuery.isFetched) {
                 // Create tracker with note
-                const newTracker = createNewTracker(habit.id, selectedDate, false);
+                const newTracker = createNewTracker(
+                    habit.id,
+                    selectedDate,
+                    TrackerStatus.NOT_COMPLETED
+                );
                 newTracker.note = note;
                 createTracker(newTracker);
             } else {
                 // Update existing tracker's note
                 const update: TrackerUpdate = { note: note };
-                updateTracker(selectedTracker.id, update);
+                updateTracker(selectedTrackerQuery.data!.id, update);
             }
 
             setIsNoteDialogOpen(false);
         },
-        [selectedHabitId, selectedDate, selectedTracker, habits]
+        [selectedHabitId, selectedDate, selectedTrackerQuery, habits]
     );
 
     const handleSortChange = useCallback(
