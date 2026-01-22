@@ -63,7 +63,9 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
 
     const habitStreaks = useMemo(() => {
         if (!habit || trackers.length === 0) return undefined;
-        return calculateStreaks(trackers, habit.frequency, habit.range, habit.created_date);
+        return calculateStreaks(trackers, habit.frequency, habit.range, habit.created_date).filter(
+            (s) => s.length > 1
+        );
     }, [habit, trackers]);
 
     // mutations
