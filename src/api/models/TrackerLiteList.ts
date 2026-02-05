@@ -4,12 +4,13 @@
 /* eslint-disable */
 import type { TrackerLite } from './TrackerLite';
 /**
- * Lightweight tracker list for efficient data fetching.
+ * Lightweight tracker list for efficient data fetching with date-based pagination.
  */
 export type TrackerLiteList = {
     trackers?: Array<TrackerLite>;
     total: number;
-    limit: number;
-    offset: number;
+    end_date: string;
+    days: number;
+    has_previous?: boolean;
 };
 

@@ -9,11 +9,12 @@ import {
     getTrackerIcon,
     NotePip
 } from '@/features/trackers/utils/tracker-utils';
+import { parseLocalDate, toLocalDateString } from '@/lib/date-utils';
 import { useLongPress } from '@/lib/use-long-press';
 import { TrackerStatus } from '@/types/types';
 import { useQuery } from '@tanstack/react-query';
-import { CalendarPlus } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { CalendarPlus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
 
 type TrackerCellProps = {
     date: Date;
@@ -88,8 +89,12 @@ const TrackerCell = ({
 type CalendarBoardProps = {
     habit?: HabitRead;
     trackers: TrackerLite[];
-    totalDays: number;
+    weeks: number;
+    endDate: string; // ISO date string (YYYY-MM-DD)
+    hasPrevious: boolean;
+    isLoading?: boolean;
     subtitle?: string;
+    onPageChange: (newEndDate: string) => void;
     onTrackerCreate: (tracker: TrackerCreate) => Promise<TrackerRead>;
     onTrackerUpdate: (id: number, update: TrackerUpdate) => Promise<TrackerRead>;
 };
@@ -97,13 +102,16 @@ type CalendarBoardProps = {
 export const CalendarBoard = ({
     habit,
     trackers,
-    totalDays,
+    weeks: weeksCount,
+    endDate,
+    hasPrevious,
+    isLoading = false,
     subtitle = 'Calendar',
+    onPageChange,
     onTrackerCreate,
     onTrackerUpdate
 }: CalendarBoardProps) => {
     const DAYS_PER_WEEK = 7;
-    const WEEKS = Math.ceil(totalDays / DAYS_PER_WEEK);
     const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [selectedTrackerId, setSelectedTrackerId] = useState<number | null>(null);
@@ -116,27 +124,32 @@ export const CalendarBoard = ({
         staleTime: 0 // Always fetch fresh data for editing
     });
 
-    // auto scroll to the right on initial load
-    const scrollRef = (node: HTMLDivElement) => {
-        if (node) {
-            node.scrollLeft = node.scrollWidth;
-        }
-    };
+    // Parse endDate from string
+    const endDateObj = useMemo(() => parseLocalDate(endDate), [endDate]);
 
     const today = useMemo(() => {
         const now = new Date();
         return new Date(now.getFullYear(), now.getMonth(), now.getDate());
     }, []);
 
-    // Generate calendar weeks with dates
+    // Check if we're on the current page (endDate is today or in the future)
+    const isCurrentPage = useMemo(() => {
+        return endDateObj >= today;
+    }, [endDateObj, today]);
+
+    // Generate calendar weeks with dates based on endDate
     const weeks = useMemo(() => {
-        const daysAfterToday = 6 - today.getDay(); // Days until Saturday
+        const totalDays = weeksCount * DAYS_PER_WEEK;
+
+        // If on current page, end with today and show future days of current week as null
+        const effectiveEndDate = isCurrentPage ? today : endDateObj;
+        const daysAfterEffectiveEnd = isCurrentPage ? 6 - today.getDay() : 0;
 
         // Generate past dates (oldest first)
-        const dates = [...Array(totalDays - daysAfterToday).keys()]
+        const dates = [...Array(totalDays - daysAfterEffectiveEnd).keys()]
             .map((day) => {
-                const date = new Date(today);
-                date.setDate(today.getDate() - day);
+                const date = new Date(effectiveEndDate);
+                date.setDate(effectiveEndDate.getDate() - day);
                 return date;
             })
             .reverse();
@@ -144,22 +157,60 @@ export const CalendarBoard = ({
         const weeksArray: (Date | null)[][] = [];
 
         // Fill complete past weeks
-        for (let i = 0; i < WEEKS - 1; i++) {
+        for (let i = 0; i < weeksCount - 1; i++) {
             weeksArray.push(dates.slice(i * DAYS_PER_WEEK, (i + 1) * DAYS_PER_WEEK));
         }
 
-        // Handle the current week (last week) with null for future days
-        const currentWeekDates = dates.slice((WEEKS - 1) * DAYS_PER_WEEK);
-        const currentWeek: (Date | null)[] = [...currentWeekDates];
+        // Handle the last week with null for future days (only if on current page)
+        const lastWeekDates = dates.slice((weeksCount - 1) * DAYS_PER_WEEK);
+        const lastWeek: (Date | null)[] = [...lastWeekDates];
 
-        for (let i = 0; i < daysAfterToday; i++) {
-            currentWeek.push(null);
+        if (isCurrentPage) {
+            for (let i = 0; i < daysAfterEffectiveEnd; i++) {
+                lastWeek.push(null);
+            }
         }
 
-        weeksArray.push(currentWeek);
+        weeksArray.push(lastWeek);
 
         return weeksArray;
-    }, [today, WEEKS, DAYS_PER_WEEK, totalDays]);
+    }, [endDateObj, weeksCount, DAYS_PER_WEEK, isCurrentPage, today]);
+
+    // Calculate date range for display
+    const dateRangeLabel = useMemo(() => {
+        const firstWeek = weeks[0];
+        const lastWeek = weeks[weeks.length - 1];
+        const firstDate = firstWeek?.find((d) => d !== null);
+        const lastDate = [...(lastWeek || [])].reverse().find((d) => d !== null);
+
+        if (!firstDate || !lastDate) return '';
+
+        const formatDate = (date: Date) =>
+            date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+        return `${formatDate(firstDate)} - ${formatDate(lastDate)}`;
+    }, [weeks]);
+
+    // Navigation handlers
+    const handlePreviousPage = useCallback(() => {
+        const totalDays = weeksCount * DAYS_PER_WEEK;
+        const newEndDate = new Date(endDateObj);
+        newEndDate.setDate(newEndDate.getDate() - totalDays);
+        onPageChange(toLocalDateString(newEndDate));
+    }, [endDateObj, weeksCount, DAYS_PER_WEEK, onPageChange]);
+
+    const handleNextPage = useCallback(() => {
+        const totalDays = weeksCount * DAYS_PER_WEEK;
+        const newEndDate = new Date(endDateObj);
+        newEndDate.setDate(newEndDate.getDate() + totalDays);
+
+        // Don't go past today
+        if (newEndDate > today) {
+            onPageChange(toLocalDateString(today));
+        } else {
+            onPageChange(toLocalDateString(newEndDate));
+        }
+    }, [endDateObj, weeksCount, DAYS_PER_WEEK, today, onPageChange]);
 
     const isToday = (date: Date): boolean => {
         return date.toDateString() === today.toDateString();
@@ -250,15 +301,38 @@ export const CalendarBoard = ({
 
     return (
         <>
-            {subtitle && (
-                <h2 className='mx-4 mt-4 mb-2 text-lg font-semibold' style={{ color: habit.color }}>
-                    {subtitle}
-                </h2>
-            )}
-            <div
-                className='overflow-x-auto select-none mx-4 rounded-lg border border-slate-700'
-                ref={scrollRef}
-            >
+            <div className='mx-4 mt-4 mb-2 flex items-center justify-between'>
+                {subtitle && (
+                    <h2 className='text-lg font-semibold' style={{ color: habit.color }}>
+                        {subtitle}
+                    </h2>
+                )}
+                <div className='flex items-center gap-1'>
+                    <button
+                        onClick={handlePreviousPage}
+                        className='p-1 rounded hover:bg-slate-700 transition-colors text-slate-400 hover:text-slate-200'
+                        aria-label='Previous page'
+                    >
+                        <ChevronLeft size={24} />
+                    </button>
+                    <span className='text-sm text-slate-400 min-w-[140px] text-center'>
+                        {isLoading ? 'Loading...' : dateRangeLabel}
+                    </span>
+                    <button
+                        onClick={handleNextPage}
+                        disabled={isCurrentPage}
+                        className={`p-1 rounded transition-colors ${
+                            isCurrentPage
+                                ? 'text-slate-600 cursor-not-allowed'
+                                : 'hover:bg-slate-700 text-slate-400 hover:text-slate-200'
+                        }`}
+                        aria-label='Next page'
+                    >
+                        <ChevronRight size={24} />
+                    </button>
+                </div>
+            </div>
+            <div className='overflow-x-auto select-none mx-4 rounded-lg border border-slate-700'>
                 <table className='w-full border-collapse'>
                     <colgroup>
                         <col className='w-20' />

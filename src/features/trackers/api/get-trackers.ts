@@ -11,9 +11,20 @@ export const getTrackers = async (habitId: number, limit: number): Promise<Track
     return await HabitsService.listHabitTrackersHabitsHabitIdTrackersGet(habitId, limit);
 };
 
+/**
+ * Fetch trackers in a lightweight format with date-based pagination.
+ * @param habitId - The habit ID to fetch trackers for
+ * @param endDate - End date for the range (defaults to today if undefined)
+ * @param days - Number of days to fetch (default: 42 = 6 weeks)
+ */
 export const getTrackersLite = async (
     habitId: number,
-    limit: number = 70
+    endDate?: string,
+    days: number = 42
 ): Promise<TrackerLiteList> => {
-    return await HabitsService.listHabitTrackersLiteHabitsHabitIdTrackersLiteGet(habitId, limit);
+    return await HabitsService.listHabitTrackersLiteHabitsHabitIdTrackersLiteGet(
+        habitId,
+        endDate,
+        days
+    );
 };

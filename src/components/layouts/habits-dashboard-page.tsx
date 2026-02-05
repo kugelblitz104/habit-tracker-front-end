@@ -5,10 +5,14 @@ import { HabitList } from '@/features/habits/components/dashboard/habit-list';
 import { AddHabitModal } from '@/features/habits/components/modals/add-habit-modal';
 import { SortHabitModal } from '@/features/habits/components/modals/sort-habit-modal';
 import { useAuth } from '@/lib/auth-context';
+import {
+    getDashboardDaysForSize,
+    isSmallLayout,
+    useResponsiveLayout
+} from '@/lib/use-responsive-layout';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowDownUp, Plus, Settings } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useMediaQuery } from 'react-responsive';
 import { ButtonVariant } from '../ui/buttons/action-button';
 import { ErrorPage } from './error-page';
 import { LoadingPage } from './loading-page';
@@ -17,31 +21,10 @@ import { PageShell } from '../ui/page-shell';
 import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 
-const useResponsiveLayout = () => {
-    const isXl = useMediaQuery({ minWidth: 1280 });
-    const isLg = useMediaQuery({ minWidth: 1024 });
-    const isMd = useMediaQuery({ minWidth: 768 });
-
-    let days: number;
-    switch (true) {
-        case isXl:
-            days = 14;
-            break;
-        case isLg:
-            days = 11;
-            break;
-        case isMd:
-            days = 8;
-            break;
-        default:
-            days = 4;
-    }
-
-    return { days, isSmall: !isMd };
-};
-
 export const HabitsDashboard = () => {
-    const { days, isSmall } = useResponsiveLayout();
+    const layoutSize = useResponsiveLayout();
+    const days = getDashboardDaysForSize(layoutSize);
+    const isSmall = isSmallLayout(layoutSize);
     const navigate = useNavigate();
     const { user } = useAuth();
     const userId = user?.id || 0; // Fallback to non-existent user ID

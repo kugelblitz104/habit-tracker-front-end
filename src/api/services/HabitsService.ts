@@ -226,7 +226,7 @@ export class HabitsService {
     }
     /**
      * List trackers in lightweight format
-     * Get tracker entries in a lightweight format for efficient data fetching.
+     * Get tracker entries in a lightweight format with date-based pagination.
      *
      * This endpoint returns only the essential fields:
      * - id: Tracker ID (for fetching full details if needed)
@@ -238,15 +238,18 @@ export class HabitsService {
      * endpoint or fetch individual trackers when you need notes or timestamps.
      *
      * - **habit_id**: The unique identifier of the habit
-     * - **limit**: Maximum number of trackers to return (default: 70, max: 10000)
+     * - **end_date**: End date for the range (defaults to today)
+     * - **days**: Number of days to fetch (default: 42 = 6 weeks)
      * @param habitId
-     * @param limit Maximum number of trackers to return (1-10000)
+     * @param endDate End date for the date range (defaults to today). Format: YYYY-MM-DD
+     * @param days Number of days to fetch (1-365, default: 42 = 6 weeks)
      * @returns TrackerLiteList Successful Response
      * @throws ApiError
      */
     public static listHabitTrackersLiteHabitsHabitIdTrackersLiteGet(
         habitId: number,
-        limit: number = 70,
+        endDate?: (string | null),
+        days: number = 42,
     ): CancelablePromise<TrackerLiteList> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -255,7 +258,8 @@ export class HabitsService {
                 'habit_id': habitId,
             },
             query: {
-                'limit': limit,
+                'end_date': endDate,
+                'days': days,
             },
             errors: {
                 404: `Not found`,

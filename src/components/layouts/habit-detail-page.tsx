@@ -17,16 +17,13 @@ import { DeleteHabitModal } from '@/features/habits/components/modals/delete-hab
 import { createTracker } from '@/features/trackers/api/create-trackers';
 import { getTrackersLite } from '@/features/trackers/api/get-trackers';
 import { updateTracker } from '@/features/trackers/api/update-trackers';
-import {
-    calculateKPIsFromTrackers,
-    calculateStreaks,
-    getEffectiveStartDate
-} from '@/features/trackers/utils/kpi-utils';
-import { getFrequencyString, getWeeksDifference } from '@/lib/date-utils';
+import { calculateKPIsFromTrackers, calculateStreaks } from '@/features/trackers/utils/kpi-utils';
+import { getFrequencyString, toLocalDateString } from '@/lib/date-utils';
+import { getWeeksForSize, useResponsiveLayout } from '@/lib/use-responsive-layout';
 import { TrackerStatus } from '@/types/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Archive, ArchiveRestore, Bell, Calendar, CalendarPlus, Pencil, Trash } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { ButtonVariant } from '../ui/buttons/action-button';
@@ -46,23 +43,22 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
     const [trackers, setTrackers] = useState<TrackerLite[]>([]);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [hasPrevious, setHasPrevious] = useState(false);
     const navigate = useNavigate();
     const queryClient = useQueryClient();
 
-    // constants
-    const DAYS_PER_WEEK = 7;
-    const MAX_DAYS = 1000; // Maximum days to fetch/display
+    // Responsive layout for calendar weeks
+    const layoutSize = useResponsiveLayout();
+    const weeks = getWeeksForSize(layoutSize);
+    const days = weeks * 7;
 
-    // Calculate total days based on effective start date (accounts for imported trackers)
-    const totalDays = useMemo(() => {
-        if (!habit) return 10 * DAYS_PER_WEEK; // Default to 10 weeks
+    // Pagination state - endDate defaults to today
+    const [endDate, setEndDate] = useState<string>(() => toLocalDateString(new Date()));
 
-        const effectiveStartDate = getEffectiveStartDate(trackers, habit.created_date);
-        const weeksSinceStart = getWeeksDifference(effectiveStartDate);
-        const weeks = Math.max(10, weeksSinceStart + 1); // +1 to include current week
-
-        return Math.min(MAX_DAYS, weeks * DAYS_PER_WEEK);
-    }, [habit, trackers]);
+    // Handler for page changes from CalendarBoard
+    const handlePageChange = useCallback((newEndDate: string) => {
+        setEndDate(newEndDate);
+    }, []);
 
     // queries
     const habitQuery = useQuery({
@@ -71,10 +67,10 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
         staleTime: 1000 * 60 // 1 minute
     });
 
-    // Fetch all trackers (up to MAX_DAYS) - effective start date will limit display
+    // Fetch trackers with date-based pagination
     const trackersQuery = useQuery({
-        queryKey: ['trackers-lite', { habitId: habit?.id }],
-        queryFn: () => getTrackersLite(habit!.id, MAX_DAYS),
+        queryKey: ['trackers-lite', { habitId: habit?.id, endDate, days }],
+        queryFn: () => getTrackersLite(habit!.id, endDate, days),
         enabled: !!habit,
         staleTime: 1000 * 60
     });
@@ -293,6 +289,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
     useEffect(() => {
         if (trackersQuery.data?.trackers) {
             setTrackers(trackersQuery.data.trackers);
+            setHasPrevious(trackersQuery.data.has_previous ?? false);
         }
     }, [trackersQuery.data]);
 
@@ -359,7 +356,11 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
             <CalendarBoard
                 habit={habit}
                 trackers={trackers}
-                totalDays={totalDays}
+                weeks={weeks}
+                endDate={endDate}
+                hasPrevious={hasPrevious}
+                isLoading={trackersQuery.isLoading}
+                onPageChange={handlePageChange}
                 onTrackerCreate={handleTrackerCreate}
                 onTrackerUpdate={handleTrackerUpdate}
             />
