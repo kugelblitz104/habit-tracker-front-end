@@ -15,6 +15,7 @@ import { LoadingPage } from './loading-page';
 import { sortHabits } from '@/features/habits/api/update-habits';
 import { PageShell } from '../ui/page-shell';
 import { useNavigate } from 'react-router';
+import { toast } from 'react-toastify';
 
 const useResponsiveLayout = () => {
     const isXl = useMediaQuery({ minWidth: 1280 });
@@ -60,6 +61,7 @@ export const HabitsDashboard = () => {
         onSuccess: (data) => {
             setHabits((prev) => [...prev, data]);
             habitsQuery.refetch();
+            toast.success('Habit added successfully!');
         }
     });
 

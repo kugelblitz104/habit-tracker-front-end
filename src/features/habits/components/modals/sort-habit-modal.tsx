@@ -29,7 +29,7 @@ const Item = ({ habit, style, ref, attributes, listeners, opacity }: ItemProps) 
     return (
         <li
             className='flex items-center justify-between gap-4 bg-slate-700 p-2 rounded-md mb-2'
-            style={{ ...style, opacity }}
+            style={{ ...style, opacity, touchAction: 'none' }}
             ref={ref}
             {...attributes}
             {...listeners}
@@ -86,7 +86,13 @@ export const SortHabitModal = ({
             .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
     );
     const [activeId, setActiveId] = useState<number | null>(null);
-    const sensors = useSensors(useSensor(PointerSensor));
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 5
+            }
+        })
+    );
 
     const handleDragStart = (event: { active: any }) => {
         const { active } = event;

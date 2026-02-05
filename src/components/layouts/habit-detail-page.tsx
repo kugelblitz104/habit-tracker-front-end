@@ -109,6 +109,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                     };
                 }
             );
+            toast.success('Habit updated successfully!');
         },
         onError: (error) => {
             toast.error(
