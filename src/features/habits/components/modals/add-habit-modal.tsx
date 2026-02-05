@@ -11,6 +11,7 @@ import {
     sanitizeText,
     validationPatterns
 } from '@/lib/input-sanitization';
+import { useRecentColors } from '@/lib/use-recent-colors';
 import type { Frequency } from '@/types/types';
 import { Button, CloseButton, Field, Fieldset, Label, Textarea } from '@headlessui/react';
 import { Controller, FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
@@ -37,6 +38,7 @@ export const AddHabitModal = ({
     handleAddHabit,
     habit
 }: AddHabitModalProps) => {
+    const { addRecentColor } = useRecentColors();
     const methods = useForm<IAddModalFormInput>({
         values: habit
             ? {
@@ -61,6 +63,9 @@ export const AddHabitModal = ({
             question: sanitizeText,
             notes: sanitizeMultilineText
         });
+
+        if (!habit || data.color.toLowerCase() !== habit.color.toLowerCase())
+            addRecentColor(data.color);
 
         handleAddHabit({
             ...sanitizedData,
