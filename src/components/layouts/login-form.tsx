@@ -8,6 +8,7 @@ import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router';
 import { TextField } from '../ui/forms/text-field';
 import { TitleBar } from '../ui/title-bar';
+import { PageShell } from '../ui/page-shell';
 
 interface ILoginFormInput {
     username: string;
@@ -54,8 +55,7 @@ export const LoginForm = () => {
     }, [isAuthenticated, navigate]);
 
     return (
-        <>
-            <TitleBar title='Login' />
+        <PageShell title='Login'>
             <div className='flex items-center justify-center mt-8 mx-4'>
                 <div className='w-full max-w-md '>
                     <FormProvider {...methods}>
@@ -103,6 +103,6 @@ export const LoginForm = () => {
                     </div>
                 </div>
             </div>
-        </>
+        </PageShell>
     );
 };

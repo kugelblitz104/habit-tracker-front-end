@@ -34,6 +34,7 @@ import { SubtitleBar } from '../ui/subtitle-bar';
 import { TitleBar, type ActionConfig } from '../ui/title-bar';
 import { ErrorScreen } from './error-screen';
 import { LoadingScreen } from './loading-screen';
+import { PageShell } from '../ui/page-shell';
 
 type HabitDetailViewProps = {
     habitId?: number;
@@ -331,8 +332,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
     ].filter(Boolean) as ActionConfig[];
 
     return (
-        <>
-            <TitleBar title={`${habit?.name}`} actions={titleBarActions} />
+        <PageShell title={`${habit?.name}`} actions={titleBarActions}>
             <SubtitleBar
                 subtitles={[
                     {
@@ -386,6 +386,6 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                     }}
                 />
             )}
-        </>
+        </PageShell>
     );
 };

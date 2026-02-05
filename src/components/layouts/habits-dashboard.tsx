@@ -14,6 +14,7 @@ import { ButtonVariant } from '../ui/buttons/action-button';
 import { ErrorScreen } from './error-screen';
 import { LoadingScreen } from './loading-screen';
 import { sortHabits } from '@/features/habits/api/update-habits';
+import { PageShell } from '../ui/page-shell';
 
 const useResponsiveLayout = () => {
     const isXl = useMediaQuery({ minWidth: 1280 });
@@ -88,38 +89,39 @@ export const HabitsDashboard = () => {
     }
 
     return (
-        <div className='static'>
-            <TitleBar
-                actions={[
-                    {
-                        label: 'Add Habit',
-                        onClick: () => setAddHabitModalOpen(true),
-                        icon: <Plus size={24} />,
-                        variant: ButtonVariant.Primary
-                    },
-                    {
-                        label: 'Set Habit Order',
-                        onClick: () => setSortModalOpen(true),
-                        icon: <ArrowDownUp size={24} />,
-                        variant: ButtonVariant.Secondary
-                    }
-                ]}
-            />
-            <HabitList habits={habits} days={days} isSmall={isSmall} />
-            <AddHabitModal
-                isOpen={addHabitModalOpen}
-                onClose={() => setAddHabitModalOpen(false)}
-                handleAddHabit={(newHabit: HabitCreate) => habitsAdd.mutate(newHabit)}
-            />
-            <SortHabitModal
-                key={sortModalOpen ? 'open' : 'closed'} // Force remount to reset state
-                isOpen={sortModalOpen}
-                onClose={() => setSortModalOpen(false)}
-                handleSortHabits={(reorderedHabits: HabitRead[]) =>
-                    habitsSort.mutate(reorderedHabits.map((h) => h.id))
+        <PageShell
+            actions={[
+                {
+                    label: 'Add Habit',
+                    onClick: () => setAddHabitModalOpen(true),
+                    icon: <Plus size={24} />,
+                    variant: ButtonVariant.Primary
+                },
+                {
+                    label: 'Set Habit Order',
+                    onClick: () => setSortModalOpen(true),
+                    icon: <ArrowDownUp size={24} />,
+                    variant: ButtonVariant.Secondary
                 }
-                habits={habits}
-            />
-        </div>
+            ]}
+        >
+            <div className='static'>
+                <HabitList habits={habits} days={days} isSmall={isSmall} />
+                <AddHabitModal
+                    isOpen={addHabitModalOpen}
+                    onClose={() => setAddHabitModalOpen(false)}
+                    handleAddHabit={(newHabit: HabitCreate) => habitsAdd.mutate(newHabit)}
+                />
+                <SortHabitModal
+                    key={sortModalOpen ? 'open' : 'closed'} // Force remount to reset state
+                    isOpen={sortModalOpen}
+                    onClose={() => setSortModalOpen(false)}
+                    handleSortHabits={(reorderedHabits: HabitRead[]) =>
+                        habitsSort.mutate(reorderedHabits.map((h) => h.id))
+                    }
+                    habits={habits}
+                />
+            </div>
+        </PageShell>
     );
 };

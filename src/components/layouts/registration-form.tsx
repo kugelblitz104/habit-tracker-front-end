@@ -14,6 +14,7 @@ import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router';
 import { TextField } from '../ui/forms/text-field';
 import { TitleBar } from '../ui/title-bar';
+import { PageShell } from '../ui/page-shell';
 
 interface IRegistrationFormInput {
     username: string;
@@ -69,8 +70,7 @@ export const RegistrationForm = () => {
     }, [isAuthenticated, navigate]);
 
     return (
-        <>
-            <TitleBar title='Create Account' />
+        <PageShell title='Create Account'>
             <div className='flex items-center justify-center mt-8 mx-4'>
                 <div className='w-full max-w-md'>
                     <FormProvider {...methods}>
@@ -141,6 +141,6 @@ export const RegistrationForm = () => {
                     </div>
                 </div>
             </div>
-        </>
+        </PageShell>
     );
 };
