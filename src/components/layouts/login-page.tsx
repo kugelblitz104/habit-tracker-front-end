@@ -7,7 +7,6 @@ import { useEffect, useState } from 'react';
 import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router';
 import { TextField } from '../ui/forms/text-field';
-import { TitleBar } from '../ui/title-bar';
 import { PageShell } from '../ui/page-shell';
 
 interface ILoginFormInput {
@@ -15,7 +14,7 @@ interface ILoginFormInput {
     password: string;
 }
 
-export const LoginForm = () => {
+export const LoginPage = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [loginError, setLoginError] = useState<string | null>(null);
     const { authorize, isAuthenticated } = useAuth();

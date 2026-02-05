@@ -13,7 +13,6 @@ import { useEffect, useState } from 'react';
 import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router';
 import { TextField } from '../ui/forms/text-field';
-import { TitleBar } from '../ui/title-bar';
 import { PageShell } from '../ui/page-shell';
 
 interface IRegistrationFormInput {
@@ -24,7 +23,7 @@ interface IRegistrationFormInput {
     plaintext_password: string;
 }
 
-export const RegistrationForm = () => {
+export const RegistrationPage = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [registrationError, setRegistrationError] = useState<string | null>(null);
     const { authorize, isAuthenticated } = useAuth();

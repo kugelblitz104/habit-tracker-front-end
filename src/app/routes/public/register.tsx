@@ -1,4 +1,4 @@
-import { RegistrationForm } from '@/components/layouts/registration-form';
+import { RegistrationPage } from '@/components/layouts/registration-page';
 import type { Route } from './+types/register';
 
 export function meta({}: Route.MetaArgs) {
@@ -12,5 +12,5 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Register() {
-    return <RegistrationForm />;
+    return <RegistrationPage />;
 }

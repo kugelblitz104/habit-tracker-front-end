@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '@/lib/auth-context';
-import { LoadingScreen } from '@/components/layouts/loading-screen';
-
+import { LoadingPage } from '@/components/layouts/loading-page';
 interface ProtectedRouteProps {
     children: React.ReactNode;
 }
@@ -20,12 +19,12 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
     // Show loading state while checking authentication
     if (isLoading) {
-        return <LoadingScreen />;
+        return <LoadingPage />;
     }
 
     // Don't render children if not authenticated
     if (!isAuthenticated) {
-        return <LoadingScreen />;
+        return <LoadingPage />;
     }
 
     return <>{children}</>;

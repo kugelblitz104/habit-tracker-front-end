@@ -1,6 +1,6 @@
 import { PageShell } from '../ui/page-shell';
 
-export const LoadingScreen = () => {
+export const LoadingPage = () => {
     return (
         <PageShell title='Loading...'>
             <div className='flex items-center justify-center min-h-screen'>

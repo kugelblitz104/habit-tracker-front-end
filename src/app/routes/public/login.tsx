@@ -1,4 +1,4 @@
-import { LoginForm } from '@/components/layouts/login-form';
+import { LoginPage } from '@/components/layouts/login-page';
 import type { Route } from './+types/login';
 
 export function meta({}: Route.MetaArgs) {
@@ -12,5 +12,5 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Login() {
-    return <LoginForm />;
+    return <LoginPage />;
 }

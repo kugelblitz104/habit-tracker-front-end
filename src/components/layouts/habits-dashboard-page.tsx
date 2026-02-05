@@ -1,5 +1,4 @@
 import type { HabitCreate, HabitRead } from '@/api';
-import { TitleBar } from '@/components/ui/title-bar';
 import { createHabit } from '@/features/habits/api/create-habits';
 import { getHabits } from '@/features/habits/api/get-habits';
 import { HabitList } from '@/features/habits/components/dashboard/habit-list';
@@ -11,8 +10,8 @@ import { ArrowDownUp, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useMediaQuery } from 'react-responsive';
 import { ButtonVariant } from '../ui/buttons/action-button';
-import { ErrorScreen } from './error-screen';
-import { LoadingScreen } from './loading-screen';
+import { ErrorPage } from './error-page';
+import { LoadingPage } from './loading-page';
 import { sortHabits } from '@/features/habits/api/update-habits';
 import { PageShell } from '../ui/page-shell';
 
@@ -77,15 +76,15 @@ export const HabitsDashboard = () => {
     }, [habitsQuery.data]);
 
     if (!user) {
-        return <ErrorScreen message='User not authenticated' />;
+        return <ErrorPage message='User not authenticated' />;
     }
 
     if (habitsQuery.isLoading) {
-        return <LoadingScreen />;
+        return <LoadingPage />;
     }
 
     if (habitsQuery.isError) {
-        return <ErrorScreen message='Error loading habits' />;
+        return <ErrorPage message='Error loading habits' />;
     }
 
     return (

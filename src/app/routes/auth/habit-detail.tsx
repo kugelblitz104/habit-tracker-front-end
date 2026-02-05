@@ -1,7 +1,7 @@
-import { HabitDetailView } from '@/components/layouts/habit-detail-view';
+import { HabitDetailView } from '@/components/layouts/habit-detail-page';
 import { ProtectedRoute } from '@/features/auth/components/protected-route';
 import type { Route } from './+types/home';
-import { ErrorScreen } from '@/components/layouts/error-screen';
+import { ErrorPage } from '@/components/layouts/error-page';
 
 export function meta({}: Route.MetaArgs) {
     return [
@@ -16,7 +16,7 @@ export default function HabitDetail({
     const habitId = parseInt(params.habitId, 10);
 
     if (isNaN(habitId)) {
-        return <ErrorScreen message='Invalid habit ID' />;
+        return <ErrorPage message='Invalid habit ID' />;
     }
 
     return (

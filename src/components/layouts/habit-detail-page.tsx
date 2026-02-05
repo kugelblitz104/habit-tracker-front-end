@@ -30,11 +30,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { ButtonVariant } from '../ui/buttons/action-button';
-import { SubtitleBar } from '../ui/subtitle-bar';
-import { TitleBar, type ActionConfig } from '../ui/title-bar';
-import { ErrorScreen } from './error-screen';
-import { LoadingScreen } from './loading-screen';
 import { PageShell } from '../ui/page-shell';
+import { SubtitleBar } from '../ui/subtitle-bar';
+import { type ActionConfig } from '../ui/title-bar';
+import { ErrorPage } from './error-page';
+import { LoadingPage } from './loading-page';
 
 type HabitDetailViewProps = {
     habitId?: number;
@@ -296,11 +296,11 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
     }, [trackersQuery.data]);
 
     if (habitQuery.isLoading) {
-        return <LoadingScreen />;
+        return <LoadingPage />;
     }
 
     if (habitQuery.isError) {
-        return <ErrorScreen message='Error Loading habit query data' />;
+        return <ErrorPage message='Error Loading habit query data' />;
     }
 
     const freqStr = habit ? getFrequencyString(habit.frequency, habit.range) : '';

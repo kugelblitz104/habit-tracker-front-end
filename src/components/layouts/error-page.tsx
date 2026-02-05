@@ -1,10 +1,10 @@
 import { PageShell } from '../ui/page-shell';
 
-type ErrorScreenProps = {
+type ErrorPageProps = {
     message?: string;
 };
 
-export const ErrorScreen = ({ message }: ErrorScreenProps) => {
+export const ErrorPage = ({ message }: ErrorPageProps) => {
     return (
         <PageShell title='Unexpected Error'>
             <div className='flex items-center justify-center min-h-screen'>
