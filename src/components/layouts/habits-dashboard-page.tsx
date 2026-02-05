@@ -5,11 +5,7 @@ import { HabitList } from '@/features/habits/components/dashboard/habit-list';
 import { AddHabitModal } from '@/features/habits/components/modals/add-habit-modal';
 import { SortHabitModal } from '@/features/habits/components/modals/sort-habit-modal';
 import { useAuth } from '@/lib/auth-context';
-import {
-    getDashboardDaysForSize,
-    isSmallLayout,
-    useResponsiveLayout
-} from '@/lib/use-responsive-layout';
+import { useResponsiveLayout, DASHBOARD_DAYS_BY_SIZE } from '@/lib/use-responsive-layout';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowDownUp, Plus, Settings } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -23,8 +19,8 @@ import { toast } from 'react-toastify';
 
 export const HabitsDashboard = () => {
     const layoutSize = useResponsiveLayout();
-    const days = getDashboardDaysForSize(layoutSize);
-    const isSmall = isSmallLayout(layoutSize);
+    const days = DASHBOARD_DAYS_BY_SIZE[layoutSize];
+    const isSmall = layoutSize === 'sm';
     const navigate = useNavigate();
     const { user } = useAuth();
     const userId = user?.id || 0; // Fallback to non-existent user ID

@@ -19,7 +19,7 @@ import { getTrackersLite } from '@/features/trackers/api/get-trackers';
 import { updateTracker } from '@/features/trackers/api/update-trackers';
 import { calculateKPIsFromTrackers, calculateStreaks } from '@/features/trackers/utils/kpi-utils';
 import { getFrequencyString, toLocalDateString } from '@/lib/date-utils';
-import { getWeeksForSize, useResponsiveLayout } from '@/lib/use-responsive-layout';
+import { WEEKS_BY_SIZE, useResponsiveLayout } from '@/lib/use-responsive-layout';
 import { TrackerStatus } from '@/types/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Archive, ArchiveRestore, Bell, Calendar, CalendarPlus, Pencil, Trash } from 'lucide-react';
@@ -49,7 +49,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
 
     // Responsive layout for calendar weeks
     const layoutSize = useResponsiveLayout();
-    const weeks = getWeeksForSize(layoutSize);
+    const weeks = WEEKS_BY_SIZE[layoutSize];
     const days = weeks * 7;
 
     // Pagination state - endDate defaults to today
