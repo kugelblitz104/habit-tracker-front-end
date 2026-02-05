@@ -28,6 +28,14 @@ const filterOptions: DropdownOption[] = [
     { field: 'archived', label: 'Archived' }
 ];
 
+type NoteDialogState = {
+    isOpen: boolean;
+    habitId: number | null;
+    date: Date | null;
+    note: string;
+    trackerId: number | null;
+};
+
 export type HabitListProps = {
     habits: HabitRead[];
     days?: number;
@@ -45,17 +53,19 @@ export const HabitList = ({ habits, days = 0, isSmall = false }: HabitListProps)
     const [selectedSort, setSelectedSort] = useState<DropdownOption>(sortOptions[0]!);
     const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
     const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-    const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
-    const [selectedHabitId, setSelectedHabitId] = useState<number | null>(null); // needed in case tracker doesn't exist yet
-    const [selectedDate, setSelectedDate] = useState<Date | null>(null); // needed in case tracker doesn't exist yet
-    const [selectedNote, setSelectedNote] = useState('');
-    const [selectedTrackerID, setSelectedTrackerID] = useState<number | null>(null);
+    const [noteDialogState, setNoteDialogState] = useState<NoteDialogState>({
+        isOpen: false,
+        habitId: null,
+        date: null,
+        note: '',
+        trackerId: null
+    });
     const [habitStreaks, setHabitStreaks] = useState<Map<number, number>>(new Map());
 
     const selectedTrackerQuery = useQuery({
-        queryKey: ['tracker', selectedTrackerID],
-        queryFn: () => getTracker(selectedTrackerID!),
-        enabled: !!selectedTrackerID && isNoteDialogOpen,
+        queryKey: ['tracker', noteDialogState.trackerId],
+        queryFn: () => getTracker(noteDialogState.trackerId!),
+        enabled: !!noteDialogState.trackerId && noteDialogState.isOpen,
         staleTime: 0
     });
 
@@ -72,26 +82,28 @@ export const HabitList = ({ habits, days = 0, isSmall = false }: HabitListProps)
 
     const handleNoteOpen = useCallback(
         (habitId: number, date: Date, tracker: TrackerLite | undefined) => {
-            setSelectedHabitId(habitId);
-            setSelectedDate(date);
-            setSelectedTrackerID(tracker?.id || null);
-            setSelectedNote(selectedTrackerQuery.data?.note || '');
-            setIsNoteDialogOpen(true);
+            setNoteDialogState({
+                isOpen: true,
+                habitId,
+                date,
+                note: selectedTrackerQuery.data?.note || '',
+                trackerId: tracker?.id || null
+            });
         },
         []
     );
 
     const handleNoteSave = useCallback(
         (note: string) => {
-            if (!selectedHabitId || !selectedDate) return;
-            const habit = habits.find((h) => h.id === selectedHabitId);
+            if (!noteDialogState.habitId || !noteDialogState.date) return;
+            const habit = habits.find((h) => h.id === noteDialogState.habitId);
             if (!habit) return;
 
             if (!selectedTrackerQuery.data && selectedTrackerQuery.isFetched) {
                 // Create tracker with note
                 const newTracker = createNewTracker(
                     habit.id,
-                    selectedDate,
+                    noteDialogState.date,
                     TrackerStatus.NOT_COMPLETED
                 );
                 newTracker.note = note;
@@ -102,9 +114,9 @@ export const HabitList = ({ habits, days = 0, isSmall = false }: HabitListProps)
                 updateTracker(selectedTrackerQuery.data!.id, update);
             }
 
-            setIsNoteDialogOpen(false);
+            setNoteDialogState((prev) => ({ ...prev, isOpen: false }));
         },
-        [selectedHabitId, selectedDate, selectedTrackerQuery, habits]
+        [noteDialogState, selectedTrackerQuery, habits]
     );
 
     const handleSortChange = useCallback(
@@ -287,10 +299,10 @@ export const HabitList = ({ habits, days = 0, isSmall = false }: HabitListProps)
             </div>
             <div className='mx-4 mt-2 text-slate-500'>Right click to add or edit notes</div>
             <NoteDialog
-                isOpen={isNoteDialogOpen}
-                date={selectedDate || new Date()}
-                note={selectedNote}
-                onClose={() => setIsNoteDialogOpen(false)}
+                isOpen={noteDialogState.isOpen}
+                date={noteDialogState.date || new Date()}
+                note={noteDialogState.note}
+                onClose={() => setNoteDialogState((prev) => ({ ...prev, isOpen: false }))}
                 onSave={handleNoteSave}
             />
         </div>
