@@ -12,6 +12,7 @@ import classNames from 'classnames';
 import { useEffect, useState } from 'react';
 import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router';
+import { Card } from '../ui/card';
 import { TextField } from '../ui/forms/text-field';
 import { PageShell } from '../ui/page-shell';
 
@@ -70,14 +71,11 @@ export const RegistrationPage = () => {
 
     return (
         <PageShell title='Create Account'>
-            <div className='flex items-center justify-center mt-8 mx-4'>
-                <div className='w-full max-w-md'>
+            <div className='flex justify-center m-4'>
+                <Card title='Create Account'>
                     <FormProvider {...methods}>
-                        <form
-                            className='bg-slate-800 rounded-md p-4'
-                            onSubmit={methods.handleSubmit(onSubmit)}
-                        >
-                            <Fieldset className='space-y-1'>
+                        <form onSubmit={methods.handleSubmit(onSubmit)} className='space-y-4'>
+                            <Fieldset className='space-y-4'>
                                 <TextField
                                     isRequired
                                     label='Username'
@@ -113,32 +111,37 @@ export const RegistrationPage = () => {
                                     validation={validationPatterns.password}
                                 />
                             </Fieldset>
-                            <div className='flex items-center gap-3'>
-                                <Button
-                                    disabled={isSubmitting}
-                                    type='submit'
-                                    className={classNames('bg-sky-500 rounded-md px-4 py-2', {
-                                        'bg-sky-950': isSubmitting
-                                    })}
-                                >
-                                    {isSubmitting ? 'Registering...' : 'Create Account'}
-                                </Button>
-                                {isSubmitting && (
-                                    <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500'></div>
+                            <div className='flex flex-col gap-3'>
+                                <div className='flex items-center gap-3 w-full'>
+                                    <Button
+                                        disabled={isSubmitting}
+                                        type='submit'
+                                        className={classNames(
+                                            'flex-auto bg-sky-500 rounded-md px-4 py-2',
+                                            {
+                                                'bg-sky-950': isSubmitting
+                                            }
+                                        )}
+                                    >
+                                        {isSubmitting ? 'Registering...' : 'Create Account'}
+                                    </Button>
+                                    {isSubmitting && (
+                                        <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500'></div>
+                                    )}
+                                </div>
+                                {registrationError && (
+                                    <div className='text-red-500'>{registrationError}</div>
                                 )}
+                                <div className='text-center'>
+                                    Already have an account?{' '}
+                                    <Link to='/login' className='text-sky-400 underline'>
+                                        Login
+                                    </Link>
+                                </div>
                             </div>
                         </form>
                     </FormProvider>
-                    {registrationError && (
-                        <div className='text-red-500 mt-2'>{registrationError}</div>
-                    )}
-                    <div className='mt-4 text-center'>
-                        Already have an account?{' '}
-                        <Link to='/login' className='text-sky-400 underline'>
-                            Login
-                        </Link>
-                    </div>
-                </div>
+                </Card>
             </div>
         </PageShell>
     );

@@ -14,11 +14,7 @@ type FrequencyPickerProps = {
     frequencies?: Frequency[];
 };
 
-const InlineNumberField = ({
-    name,
-    placeholder,
-    onChange
-}: InlineNumberFieldProps) => {
+const InlineNumberField = ({ name, placeholder, onChange }: InlineNumberFieldProps) => {
     return (
         <Field className='mx-1 inline-block border-color-white'>
             <Input
@@ -48,20 +44,16 @@ export const FrequencyPicker = ({
     return (
         <Field className='my-2 space-y-1'>
             <Label className='block'>Frequency</Label>
-            <RadioGroup
-                value={selected}
-                onChange={onSelectedChange}
-                className='flex'
-            >
+            <RadioGroup value={selected} onChange={onSelectedChange} className='flex gap-2'>
                 {frequencies.map((freq) => (
                     <Radio
                         key={freq.name}
                         value={freq}
                         className={`
-                            flex-auto
+                            flex-1
                             rounded-md
                             text-center
-                            px-1.5 py-0.5 mx-1
+                            px-3 py-1
                             ${selected.name === freq.name ? 'bg-slate-600' : ''}
                         `}
                     >

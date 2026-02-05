@@ -56,6 +56,12 @@ export const validationPatterns = {
             message: 'Username must be 3-20 characters (letters, numbers, _, -)'
         }
     },
+    name: {
+        pattern: {
+            value: /^[a-zA-Z\s'-]{1,50}$/,
+            message: "Name must be 1-50 characters (letters, spaces, ', -)"
+        }
+    },
     email: {
         pattern: {
             value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,

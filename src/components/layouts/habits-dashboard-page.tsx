@@ -6,7 +6,7 @@ import { AddHabitModal } from '@/features/habits/components/modals/add-habit-mod
 import { SortHabitModal } from '@/features/habits/components/modals/sort-habit-modal';
 import { useAuth } from '@/lib/auth-context';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { ArrowDownUp, Plus } from 'lucide-react';
+import { ArrowDownUp, Plus, Settings } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useMediaQuery } from 'react-responsive';
 import { ButtonVariant } from '../ui/buttons/action-button';
@@ -14,6 +14,7 @@ import { ErrorPage } from './error-page';
 import { LoadingPage } from './loading-page';
 import { sortHabits } from '@/features/habits/api/update-habits';
 import { PageShell } from '../ui/page-shell';
+import { useNavigate } from 'react-router';
 
 const useResponsiveLayout = () => {
     const isXl = useMediaQuery({ minWidth: 1280 });
@@ -40,6 +41,7 @@ const useResponsiveLayout = () => {
 
 export const HabitsDashboard = () => {
     const { days, isSmall } = useResponsiveLayout();
+    const navigate = useNavigate();
     const { user } = useAuth();
     const userId = user?.id || 0; // Fallback to non-existent user ID
 
@@ -100,6 +102,14 @@ export const HabitsDashboard = () => {
                     label: 'Set Habit Order',
                     onClick: () => setSortModalOpen(true),
                     icon: <ArrowDownUp size={24} />,
+                    variant: ButtonVariant.Secondary
+                },
+                {
+                    label: 'Settings',
+                    onClick: () => {
+                        navigate('/settings');
+                    },
+                    icon: <Settings size={24} />,
                     variant: ButtonVariant.Secondary
                 }
             ]}

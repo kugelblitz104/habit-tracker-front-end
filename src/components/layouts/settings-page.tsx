@@ -1,11 +1,14 @@
+import { useAuth } from '@/lib/auth-context';
 import { PageShell } from '../ui/page-shell';
+import { UpdateUserForm } from '@/features/auth/components/update-user-form';
 
 export const SettingsPage = () => {
+    const { user } = useAuth();
+
     return (
         <PageShell title='Settings'>
-            <div className='p-4'>
-                <h1 className='text-2xl font-bold mb-4'>Settings</h1>
-                <p className='text-gray-600'>Manage your account settings and preferences here.</p>
+            <div className='m-4'>
+                <UpdateUserForm user={user!} />
             </div>
         </PageShell>
     );
