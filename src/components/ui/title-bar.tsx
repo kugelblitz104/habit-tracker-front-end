@@ -51,11 +51,11 @@ export const TitleBar = ({ title = 'Habit Tracker', actions = [] }: TitleBarProp
             <div className='flex items-center min-h-10'>
                 {showBackButton && (
                     <Link to='/'>
-                        <ChevronLeft size={24} className='mr-2' />
+                        <ChevronLeft size={24} className='mr-2 select-none' />
                     </Link>
                 )}
-                {location.pathname === '/' && <CheckCheck className='mr-2' />}
-                <h1 className='text-xl truncate'>{title}</h1>
+                {location.pathname === '/' && <CheckCheck className='mr-2 select-none' />}
+                <h1 className='text-xl truncate select-none'>{title}</h1>
                 {menuActions.length > 0 && (
                     <div className='flex flex-row-reverse items-center gap-2 ml-auto'>
                         <Menu>
