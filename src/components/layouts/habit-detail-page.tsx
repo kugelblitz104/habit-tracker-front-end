@@ -43,7 +43,6 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
     const [trackers, setTrackers] = useState<TrackerLite[]>([]);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [hasPrevious, setHasPrevious] = useState(false);
     const navigate = useNavigate();
     const queryClient = useQueryClient();
 
@@ -51,6 +50,15 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
     const layoutSize = useResponsiveLayout();
     const weeks = WEEKS_BY_SIZE[layoutSize];
     const days = weeks * 7;
+
+    // Days from habit creation to today – used to fetch full tracker history for KPIs
+    const allTrackersDays = useMemo(() => {
+        if (!habit?.created_date) return 365;
+        const created = new Date(habit.created_date);
+        const today = new Date();
+        const diff = Math.ceil((today.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        return Math.max(diff, days);
+    }, [habit?.created_date, days]);
 
     // Pagination state - endDate defaults to today
     const [endDate, setEndDate] = useState<string>(() => toLocalDateString(new Date()));
@@ -67,15 +75,34 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
         staleTime: 1000 * 60 // 1 minute
     });
 
-    // Fetch trackers with date-based pagination
+    // Fetch the full tracker history once (habit creation → today).
+    // The calendar window is derived from this data via useMemo below.
     const trackersQuery = useQuery({
-        queryKey: ['trackers-lite', { habitId: habit?.id, endDate, days }],
-        queryFn: () => getTrackersLite(habit!.id, endDate, days),
+        queryKey: ['trackers-lite', { habitId: habit?.id, allTrackersDays }],
+        queryFn: () => getTrackersLite(habit!.id, toLocalDateString(new Date()), allTrackersDays),
         enabled: !!habit,
         staleTime: 1000 * 60
     });
 
-    // Calculate KPIs from trackers on the frontend
+    // Derive the calendar window by filtering the full history to [endDate - days, endDate]
+    const windowTrackers = useMemo(() => {
+        if (!trackers.length) return [];
+        const windowEnd = endDate;
+        const windowStartDate = new Date(endDate + 'T00:00:00');
+        windowStartDate.setDate(windowStartDate.getDate() - days + 1);
+        const windowStart = toLocalDateString(windowStartDate);
+        return trackers.filter((t) => t.dated >= windowStart && t.dated <= windowEnd);
+    }, [trackers, endDate, days]);
+
+    // The calendar can page back as long as the habit existed before the current window
+    const hasPrevious = useMemo(() => {
+        if (!habit?.created_date) return false;
+        const windowStart = new Date(endDate + 'T00:00:00');
+        windowStart.setDate(windowStart.getDate() - days + 1);
+        return new Date(habit.created_date) < windowStart;
+    }, [habit?.created_date, endDate, days]);
+
+    // Calculate KPIs from the full tracker history so KPIs always reflect all data
     const habitKPIs = useMemo(() => {
         if (!habit || trackers.length === 0) return undefined;
         return calculateKPIsFromTrackers(habit, trackers);
@@ -200,13 +227,17 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
             has_note: !!tracker.note
         };
 
-        // Optimistically update UI immediately
-        setTrackers((prev) => [...prev, optimisticTracker]);
+        // Optimistically add to the full history; the calendar window derives automatically
+        setTrackers((prev) =>
+            prev.some((t) => t.dated === optimisticTracker.dated)
+                ? prev
+                : [...prev, optimisticTracker]
+        );
 
         return new Promise((resolve, reject) => {
             trackerCreate.mutate(tracker, {
                 onSuccess: (data) => {
-                    // Replace optimistic tracker with real data
+                    // Replace the optimistic entry with real server data
                     const trackerLite: TrackerLite = {
                         id: data.id,
                         dated: data.dated ?? '',
@@ -217,7 +248,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                     resolve(data);
                 },
                 onError: (error) => {
-                    // Rollback optimistic update
+                    // Rollback
                     setTrackers((prev) => prev.filter((t) => t.id !== tempId));
                     toast.error(
                         `Failed to create tracker: ${
@@ -234,24 +265,24 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
         // Snapshot for rollback
         const previousTrackers = trackers;
 
-        // Optimistically update UI immediately
-        setTrackers((prev) =>
-            prev.map((t) => {
-                if (t.id !== id) return t;
-                return {
-                    ...t,
-                    status: update.status ?? t.status,
-                    has_note: update.note !== undefined ? !!update.note : t.has_note
-                };
-            })
-        );
+        const applyUpdate = (t: TrackerLite): TrackerLite => {
+            if (t.id !== id) return t;
+            return {
+                ...t,
+                status: update.status ?? t.status,
+                has_note: update.note !== undefined ? !!update.note : t.has_note
+            };
+        };
+
+        // Optimistically update the full history; the calendar window derives automatically
+        setTrackers((prev) => prev.map(applyUpdate));
 
         return new Promise((resolve, reject) => {
             trackerUpdate.mutate(
                 { id, update },
                 {
                     onSuccess: (data) => {
-                        // Update with actual server data
+                        // Reconcile with real server data
                         const trackerLite: TrackerLite = {
                             id: data.id,
                             dated: data.dated ?? '',
@@ -264,7 +295,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                         resolve(data);
                     },
                     onError: (error) => {
-                        // Rollback to previous state
+                        // Rollback
                         setTrackers(previousTrackers);
                         toast.error(
                             `Failed to update tracker: ${
@@ -285,11 +316,10 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
         }
     }, [habitQuery.data]);
 
-    // Effect to set trackers from query data
+    // Populate full tracker history when query resolves
     useEffect(() => {
         if (trackersQuery.data?.trackers) {
             setTrackers(trackersQuery.data.trackers);
-            setHasPrevious(trackersQuery.data.has_previous ?? false);
         }
     }, [trackersQuery.data]);
 
@@ -355,7 +385,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
             <KpiBoard habitKPIS={habitKPIs} />
             <CalendarBoard
                 habit={habit}
-                trackers={trackers}
+                trackers={windowTrackers}
                 weeks={weeks}
                 endDate={endDate}
                 hasPrevious={hasPrevious}
