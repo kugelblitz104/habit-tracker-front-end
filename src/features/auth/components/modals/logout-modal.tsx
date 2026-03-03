@@ -7,11 +7,7 @@ type LogoutModalProps = {
     handleLogout?: () => void;
 };
 
-export const LogoutModal = ({
-    isOpen,
-    onClose,
-    handleLogout
-}: LogoutModalProps) => {
+export const LogoutModal = ({ isOpen, onClose, handleLogout }: LogoutModalProps) => {
     const onSubmit = () => {
         if (handleLogout) {
             handleLogout();
@@ -20,22 +16,18 @@ export const LogoutModal = ({
     };
 
     return (
-        <BaseModal
-            isOpen={isOpen}
-            onClose={onClose}
-            title='Are you sure that you want to log out?'
-        >
-            <div className='flex space-x-2'>
+        <BaseModal isOpen={isOpen} onClose={onClose} title='Are you sure that you want to log out?'>
+            <div className='mt-4 flex justify-end'>
+                <CloseButton type='button' className='rounded-md px-2 py-1' onClick={onClose}>
+                    Cancel
+                </CloseButton>
                 <Button
                     type='submit'
-                    className='flex-auto bg-red-500 rounded-md px-2 py-1'
+                    className='bg-red-500 rounded-md px-2 py-1'
                     onClick={onSubmit}
                 >
                     Log Out
                 </Button>
-                <CloseButton className='flex-auto bg-sky-500 rounded-md px-2 py-1'>
-                    Cancel
-                </CloseButton>
             </div>
         </BaseModal>
     );

@@ -203,4 +203,56 @@ export class UsersService {
             },
         });
     }
+    /**
+     * Delete all trackers for a user
+     * Delete all tracker entries for a specific user.
+     *
+     * - **user_id**: The unique identifier of the user whose trackers should be deleted
+     *
+     * This action cannot be undone and will remove all tracking data for the user.
+     * @param userId
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static deleteAllTrackersForUserUsersTrackersDelete(
+        userId: number,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/users/trackers',
+            query: {
+                'user_id': userId,
+            },
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Delete all habits for a user
+     * Delete all habits (and their associated trackers) for a specific user.
+     *
+     * - **user_id**: The unique identifier of the user whose habits should be deleted
+     *
+     * This action cannot be undone and will remove all habit and tracking data for the user.
+     * @param userId
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static deleteAllHabitsForUserUsersHabitsDelete(
+        userId: number,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/users/habits',
+            query: {
+                'user_id': userId,
+            },
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
 }
