@@ -9,6 +9,7 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { Body_import_from_loop_habit_tracker_import_loop_habit_tracker_post } from './models/Body_import_from_loop_habit_tracker_import_loop_habit_tracker_post';
 export type { Body_login_auth_login_post } from './models/Body_login_auth_login_post';
+export type { ExportResult } from './models/ExportResult';
 export type { HabitCreate } from './models/HabitCreate';
 export type { HabitList } from './models/HabitList';
 export type { HabitRead } from './models/HabitRead';

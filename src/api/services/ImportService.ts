@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Body_import_from_loop_habit_tracker_import_loop_habit_tracker_post } from '../models/Body_import_from_loop_habit_tracker_import_loop_habit_tracker_post';
+import type { ExportResult } from '../models/ExportResult';
 import type { ImportResult } from '../models/ImportResult';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -65,12 +66,12 @@ export class ImportService {
      * - Tracker with `skipped=True` → Repetition with `value=1`
      * - Tracker `note` → Repetition `notes`
      * @param includeArchived
-     * @returns any Successful Response
+     * @returns ExportResult Successful Response
      * @throws ApiError
      */
     public static exportToLoopHabitTrackerImportLoopHabitTrackerGet(
         includeArchived: boolean = false,
-    ): CancelablePromise<any> {
+    ): CancelablePromise<ExportResult> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/import/loop-habit-tracker',
