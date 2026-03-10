@@ -70,7 +70,7 @@ export const HabitListElement = ({
 
     const trackersQuery = useQuery({
         queryKey: ['trackers-lite', { habitId: habit.id }, days],
-        queryFn: () => getTrackersLite(habit.id, days),
+        queryFn: () => getTrackersLite(habit.id, undefined, days),
         staleTime: 1000 * 60 // 1 minute
     });
 
