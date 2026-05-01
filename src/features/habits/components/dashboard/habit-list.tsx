@@ -1,15 +1,11 @@
-import type { HabitRead, TrackerLite, TrackerRead, TrackerUpdate } from '@/api';
+import type { HabitRead } from '@/api';
 import { FilterList } from '@/components/ui/filter-list';
 import { SortList } from '@/components/ui/sort-list';
 import { NoteDialog } from '@/features/habits/components/modals/note-dialog';
-import { createTracker } from '@/features/trackers/api/create-trackers';
-import { updateTracker } from '@/features/trackers/api/update-trackers';
-import { createNewTracker } from '@/features/trackers/utils/tracker-utils';
-import { TrackerStatus, type DropdownOption, type SortDirection } from '@/types/types';
+import { useNoteDialog } from '@/features/habits/hooks/use-note-dialog';
+import { type DropdownOption, type SortDirection } from '@/types/types';
 import { useCallback, useMemo, useState } from 'react';
 import { HabitListElement } from './habit-list-element';
-import { useQuery } from '@tanstack/react-query';
-import { getTracker } from '@/features/trackers/api/get-trackers';
 
 const sortOptions: DropdownOption[] = [
     { field: 'sort_order', label: 'Custom Order' },
@@ -28,14 +24,6 @@ const filterOptions: DropdownOption[] = [
     { field: 'archived', label: 'Archived' }
 ];
 
-type NoteDialogState = {
-    isOpen: boolean;
-    habitId: number | null;
-    date: Date | null;
-    note: string;
-    trackerId: number | null;
-};
-
 export type HabitListProps = {
     habits: HabitRead[];
     days?: number;
@@ -50,24 +38,12 @@ export const HabitList = ({ habits, days = 0, isSmall = false }: HabitListProps)
         day: '2-digit'
     });
 
+    const { noteDialogProps, handleNoteOpen } = useNoteDialog();
+
     const [selectedSort, setSelectedSort] = useState<DropdownOption>(sortOptions[0]!);
     const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
     const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-    const [noteDialogState, setNoteDialogState] = useState<NoteDialogState>({
-        isOpen: false,
-        habitId: null,
-        date: null,
-        note: '',
-        trackerId: null
-    });
     const [habitStreaks, setHabitStreaks] = useState<Map<number, number>>(new Map());
-
-    const selectedTrackerQuery = useQuery({
-        queryKey: ['tracker', noteDialogState.trackerId],
-        queryFn: () => getTracker(noteDialogState.trackerId!),
-        enabled: !!noteDialogState.trackerId && noteDialogState.isOpen,
-        staleTime: 0
-    });
 
     // Callback for child components to report their streak values
     const handleStreakChange = useCallback((habitId: number, streak: number) => {
@@ -79,45 +55,6 @@ export const HabitList = ({ habits, days = 0, isSmall = false }: HabitListProps)
             return next;
         });
     }, []);
-
-    const handleNoteOpen = useCallback(
-        (habitId: number, date: Date, tracker: TrackerLite | undefined) => {
-            setNoteDialogState({
-                isOpen: true,
-                habitId,
-                date,
-                note: selectedTrackerQuery.data?.note || '',
-                trackerId: tracker?.id || null
-            });
-        },
-        []
-    );
-
-    const handleNoteSave = useCallback(
-        (note: string) => {
-            if (!noteDialogState.habitId || !noteDialogState.date) return;
-            const habit = habits.find((h) => h.id === noteDialogState.habitId);
-            if (!habit) return;
-
-            if (!selectedTrackerQuery.data && selectedTrackerQuery.isFetched) {
-                // Create tracker with note
-                const newTracker = createNewTracker(
-                    habit.id,
-                    noteDialogState.date,
-                    TrackerStatus.NOT_COMPLETED
-                );
-                newTracker.note = note;
-                createTracker(newTracker);
-            } else {
-                // Update existing tracker's note
-                const update: TrackerUpdate = { note: note };
-                updateTracker(selectedTrackerQuery.data!.id, update);
-            }
-
-            setNoteDialogState((prev) => ({ ...prev, isOpen: false }));
-        },
-        [noteDialogState, selectedTrackerQuery, habits]
-    );
 
     const handleSortChange = useCallback(
         (option: DropdownOption) => {
@@ -233,12 +170,12 @@ export const HabitList = ({ habits, days = 0, isSmall = false }: HabitListProps)
         <div className='m-4'>
             <div
                 className='
-                    mb-4 
+                    mb-4
                     flex
                     flex-wrap-reverse md:flex-row
-                    items-start sm:items-center 
+                    items-start sm:items-center
                     gap-4 sm:justify-between
-                    
+
                 '
             >
                 <FilterList
@@ -298,13 +235,7 @@ export const HabitList = ({ habits, days = 0, isSmall = false }: HabitListProps)
                 </table>
             </div>
             <div className='mx-4 mt-2 text-slate-500'>Right click to add or edit notes</div>
-            <NoteDialog
-                isOpen={noteDialogState.isOpen}
-                date={noteDialogState.date || new Date()}
-                note={noteDialogState.note}
-                onClose={() => setNoteDialogState((prev) => ({ ...prev, isOpen: false }))}
-                onSave={handleNoteSave}
-            />
+            <NoteDialog {...noteDialogProps} />
         </div>
     );
 };

@@ -7,17 +7,17 @@ type DeleteHabitModalProps = {
     isOpen: boolean;
     habit: HabitRead;
     onClose: () => void;
-    handleDeleteHabit: (habit: HabitRead) => void;
+    onHabitDelete: (habitId: number) => void;
 };
 
 export const DeleteHabitModal = ({
     isOpen = false,
     habit,
     onClose,
-    handleDeleteHabit
+    onHabitDelete
 }: DeleteHabitModalProps) => {
     const onSubmit = (data: HabitRead) => {
-        handleDeleteHabit(data);
+        onHabitDelete(data.id);
         onClose();
     };
 

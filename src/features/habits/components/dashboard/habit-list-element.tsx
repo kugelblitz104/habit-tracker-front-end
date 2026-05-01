@@ -1,11 +1,7 @@
-import type { HabitRead, TrackerCreate, TrackerLite, TrackerRead, TrackerUpdate } from '@/api';
+import type { HabitRead, TrackerLite } from '@/api';
 import { Label } from '@/components/ui/label';
-import { createTracker } from '@/features/trackers/api/create-trackers';
-import { getTrackersLite } from '@/features/trackers/api/get-trackers';
-import { updateTracker } from '@/features/trackers/api/update-trackers';
-import { calculateStreaks, getCurrentStreakLength } from '@/features/trackers/utils/kpi-utils';
+import { useHabitListItem } from '@/features/habits/hooks/use-habit-list-item';
 import {
-    createNewTracker,
     findTrackerByDate,
     getNextTrackerState,
     getTrackerDisplayStatus,
@@ -16,7 +12,6 @@ import { getFrequencyString } from '@/lib/date-utils';
 import { useLongPress } from '@/lib/use-long-press';
 import { DisplayStatus } from '@/types/types';
 import { Button } from '@headlessui/react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Flame } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
@@ -38,6 +33,11 @@ export const HabitListElement = ({
     onStreakChange,
     onNoteOpen
 }: HabitListElementProps) => {
+    const { trackers, currentStreak, handleCheckboxClick, isLoading } = useHabitListItem(
+        habit,
+        days
+    );
+
     // useMemo to prevent hydration mismatch
     const today = useMemo(() => {
         const now = new Date();
@@ -53,8 +53,6 @@ export const HabitListElement = ({
     }, [days, today]);
 
     const [rowIsActive, setRowIsActive] = useState<boolean>(false);
-    const [trackers, setTrackers] = useState<TrackerLite[]>([]);
-    const queryClient = useQueryClient();
     const currentDateRef = useRef<Date | null>(null);
 
     const handleNoteClick = (date: Date) => {
@@ -68,70 +66,10 @@ export const HabitListElement = ({
         }
     });
 
-    const trackersQuery = useQuery({
-        queryKey: ['trackers-lite', { habitId: habit.id }, days],
-        queryFn: () => getTrackersLite(habit.id, undefined, days),
-        staleTime: 1000 * 60 // 1 minute
-    });
-
-    const currentStreak = useMemo(() => {
-        if (!habit || trackers.length === 0) return 0;
-        const habitStreaks = calculateStreaks(
-            trackers,
-            habit.frequency,
-            habit.range,
-            habit.created_date
-        );
-        return getCurrentStreakLength(habitStreaks);
-    }, [habit, trackers]);
-
     // Report streak changes to parent for sorting purposes
     useEffect(() => {
         onStreakChange?.(habit.id, currentStreak);
     }, [habit.id, currentStreak, onStreakChange]);
-
-    const trackerCreate = useMutation({
-        mutationFn: (tracker: TrackerCreate) => createTracker(tracker),
-        onSuccess: async (data) => {
-            // Optimistically update ALL tracker caches for this habit (any days value)
-            queryClient.setQueriesData<{ trackers: TrackerRead[] }>(
-                { queryKey: ['trackers', { habitId: habit.id }] },
-                (oldData) => {
-                    if (!oldData?.trackers) return oldData;
-                    // Only add if not already present
-                    if (oldData.trackers.some((t) => t.id === data.id)) return oldData;
-                    return {
-                        ...oldData,
-                        trackers: [...oldData.trackers, data]
-                    };
-                }
-            );
-        },
-        onError: (error) => {
-            console.error('Error adding tracker:', error);
-        }
-    });
-
-    const trackerUpdate = useMutation({
-        mutationFn: ({ id, update }: { id: number; update: TrackerUpdate }) =>
-            updateTracker(id, update),
-        onSuccess: async (data) => {
-            // Optimistically update ALL tracker caches for this habit (any days value)
-            queryClient.setQueriesData<{ trackers: TrackerRead[] }>(
-                { queryKey: ['trackers', { habitId: habit.id }] },
-                (oldData) => {
-                    if (!oldData?.trackers) return oldData;
-                    return {
-                        ...oldData,
-                        trackers: oldData.trackers.map((t) => (t.id === data.id ? data : t))
-                    };
-                }
-            );
-        },
-        onError: (error) => {
-            console.error('Error updating tracker:', error);
-        }
-    });
 
     // functions
     const getStatus = (date: Date): DisplayStatus => {
@@ -143,51 +81,6 @@ export const HabitListElement = ({
             range: habit.range
         });
     };
-
-    const handleCheckboxClick = (date: Date) => {
-        const tracker = findTrackerByDate(trackers, date);
-
-        if (!tracker) {
-            // create tracker if it doesn't exist
-            const newTracker = createNewTracker(habit.id, date);
-            trackerCreate.mutate(newTracker, {
-                onSuccess: (data) => {
-                    const trackerLite: TrackerLite = {
-                        id: data.id,
-                        dated: data.dated ?? '',
-                        status: data.status ?? 2,
-                        has_note: !!data.note
-                    };
-                    setTrackers([...trackers, trackerLite]);
-                }
-            });
-            return;
-        }
-
-        // Cycle through states: not completed → completed → skipped → not completed
-        const update = getNextTrackerState(tracker);
-
-        trackerUpdate.mutate(
-            { id: tracker.id, update },
-            {
-                onSuccess: (data) => {
-                    const trackerLite: TrackerLite = {
-                        id: data.id,
-                        dated: data.dated ?? '',
-                        status: data.status ?? 2,
-                        has_note: !!data.note
-                    };
-                    setTrackers(trackers.map((t) => (t.id === tracker.id ? trackerLite : t)));
-                }
-            }
-        );
-    };
-
-    useEffect(() => {
-        if (trackersQuery.data?.trackers) {
-            setTrackers(trackersQuery.data.trackers);
-        }
-    }, [trackersQuery.data]);
 
     // Get today's status for filtering
     const todayStatus = getStatus(today);

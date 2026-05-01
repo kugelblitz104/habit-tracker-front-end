@@ -118,13 +118,14 @@ export const getNextTrackerState = (
 export const createNewTracker = (
     habitId: number,
     date: Date,
-    status: TrackerStatus = TrackerStatus.COMPLETED
+    status: TrackerStatus = TrackerStatus.COMPLETED,
+    note?: string
 ): TrackerCreate => {
     return {
         habit_id: habitId,
         dated: toLocalDateString(date),
         status: status,
-        note: ''
+        note: note ?? ''
     };
 };
 

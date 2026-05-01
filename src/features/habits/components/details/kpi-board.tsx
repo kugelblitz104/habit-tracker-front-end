@@ -1,4 +1,4 @@
-import type { HabitKPIs } from '@/api';
+import type { HabitKPIs } from '@/types/types';
 import { CalendarCheck2, ChartPie, CheckCircle2, Crown, Flame, TrendingUp } from 'lucide-react';
 
 type KpiBoardProps = {

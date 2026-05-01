@@ -1,6 +1,5 @@
 import type { HabitRead, TrackerCreate, TrackerLite, TrackerRead, TrackerUpdate } from '@/api';
 import { NoteDialog } from '@/features/habits/components/modals/note-dialog';
-import { getTracker } from '@/features/trackers/api/get-trackers';
 import {
     createNewTracker,
     findTrackerByDate,
@@ -11,10 +10,9 @@ import {
 } from '@/features/trackers/utils/tracker-utils';
 import { parseLocalDate, toLocalDateString } from '@/lib/date-utils';
 import { useLongPress } from '@/lib/use-long-press';
-import { TrackerStatus } from '@/types/types';
-import { useQuery } from '@tanstack/react-query';
 import { CalendarPlus, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useNoteDialog } from '../../hooks/use-note-dialog';
 
 type TrackerCellProps = {
     date: Date;
@@ -112,17 +110,8 @@ export const CalendarBoard = ({
     onTrackerUpdate
 }: CalendarBoardProps) => {
     const DAYS_PER_WEEK = 7;
-    const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
-    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-    const [selectedTrackerId, setSelectedTrackerId] = useState<number | null>(null);
 
-    // Fetch full tracker details when note dialog is opened
-    const { data: selectedTrackerFull } = useQuery({
-        queryKey: ['tracker', selectedTrackerId],
-        queryFn: () => getTracker(selectedTrackerId!),
-        enabled: !!selectedTrackerId && isNoteDialogOpen,
-        staleTime: 0 // Always fetch fresh data for editing
-    });
+    const { noteDialogProps, handleNoteOpen } = useNoteDialog();
 
     // Parse endDate from string
     const endDateObj = useMemo(() => parseLocalDate(endDate), [endDate]);
@@ -239,31 +228,6 @@ export const CalendarBoard = ({
         onTrackerUpdate(tracker.id, update);
     };
 
-    const handleNoteClick = (date: Date, tracker: TrackerLite | undefined) => {
-        setSelectedDate(date);
-        setSelectedTrackerId(tracker?.id || null);
-        setIsNoteDialogOpen(true);
-    };
-
-    const handleNoteSave = (note: string) => {
-        if (!habit || !selectedDate) return;
-
-        if (!selectedTrackerFull) {
-            // Create tracker with note
-            const newTracker = createNewTracker(
-                habit.id,
-                selectedDate,
-                TrackerStatus.NOT_COMPLETED
-            );
-            newTracker.note = note;
-            onTrackerCreate(newTracker);
-        } else {
-            // Update existing tracker's note
-            const update: TrackerUpdate = { note: note };
-            onTrackerUpdate(selectedTrackerFull.id, update);
-        }
-    };
-
     if (!habit) {
         return <div className='text-slate-400'>No habit selected</div>;
     }
@@ -343,9 +307,9 @@ export const CalendarBoard = ({
                     <thead>
                         <tr>
                             <th
-                                className='p-2 
-                                text-left text-sm text-slate-400 font-normal 
-                                border-b border-r border-slate-700 
+                                className='p-2
+                                text-left text-sm text-slate-400 font-normal
+                                border-b border-r border-slate-700
                                 sticky left-0 bg-gray-950 z-10'
                             >
                                 Day
@@ -388,7 +352,9 @@ export const CalendarBoard = ({
                                             range={habit.range}
                                             habitColor={habit.color}
                                             onStatusClick={handleStatusClick}
-                                            onNoteClick={handleNoteClick}
+                                            onNoteClick={(date, tracker) =>
+                                                handleNoteOpen(habit.id, date, tracker)
+                                            }
                                             isToday={isToday(date)}
                                             isCreatedDate={isCreatedDate(date)}
                                             isLastRow={isLastRow}
@@ -401,13 +367,7 @@ export const CalendarBoard = ({
                 </table>
             </div>
             <div className='mx-4 mt-2 text-slate-500'>Right click to add or edit notes</div>
-            <NoteDialog
-                isOpen={isNoteDialogOpen}
-                date={selectedDate || new Date()}
-                note={selectedTrackerFull?.note || ''}
-                onClose={() => setIsNoteDialogOpen(false)}
-                onSave={handleNoteSave}
-            />
+            <NoteDialog {...noteDialogProps} />
         </>
     );
 };

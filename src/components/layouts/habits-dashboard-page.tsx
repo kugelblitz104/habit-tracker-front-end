@@ -100,7 +100,7 @@ export const HabitsDashboard = () => {
                 <AddHabitModal
                     isOpen={addHabitModalOpen}
                     onClose={() => setAddHabitModalOpen(false)}
-                    handleAddHabit={(newHabit: HabitCreate) => habitsAdd.mutate(newHabit)}
+                    onAddHabit={(newHabit: HabitCreate) => habitsAdd.mutate(newHabit)}
                 />
                 <SortHabitModal
                     key={sortModalOpen ? 'open' : 'closed'} // Force remount to reset state

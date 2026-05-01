@@ -19,7 +19,7 @@ import { Controller, FormProvider, useForm, type SubmitHandler } from 'react-hoo
 type AddHabitModalProps = {
     isOpen: boolean;
     onClose: () => void;
-    handleAddHabit: (habit: HabitCreate) => void;
+    onAddHabit: (habit: HabitCreate) => void;
     habit?: HabitRead;
 };
 
@@ -35,7 +35,7 @@ interface IAddModalFormInput {
 export const AddHabitModal = ({
     isOpen = false,
     onClose,
-    handleAddHabit,
+    onAddHabit,
     habit
 }: AddHabitModalProps) => {
     const { addRecentColor } = useRecentColors();
@@ -67,7 +67,7 @@ export const AddHabitModal = ({
         if (!habit || data.color.toLowerCase() !== habit.color.toLowerCase())
             addRecentColor(data.color);
 
-        handleAddHabit({
+        onAddHabit({
             ...sanitizedData,
             range: sanitizedData.frequency.range,
             frequency: sanitizedData.frequency.frequency
