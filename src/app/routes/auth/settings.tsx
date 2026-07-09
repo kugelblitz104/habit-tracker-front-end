@@ -1,5 +1,5 @@
 import { ProtectedRoute } from '@/features/auth/components/protected-route';
-import type { Route } from './+types/home';
+import type { Route } from './+types/settings';
 import { SettingsPage } from '@/components/layouts/settings-page';
 
 export function meta({}: Route.MetaArgs) {

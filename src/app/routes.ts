@@ -6,7 +6,9 @@ export default [
     route('register', 'routes/public/register.tsx'),
 
     // Protected routes
-    index('routes/auth/home.tsx'),
+    index('routes/auth/today.tsx'),
+    route('habits', 'routes/auth/habits.tsx'),
+    route('projects/:projectId', 'routes/auth/project.tsx'),
     route('details/:habitId', 'routes/auth/habit-detail.tsx'),
     route('settings', 'routes/auth/settings.tsx')
 ] satisfies RouteConfig;

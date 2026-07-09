@@ -231,14 +231,18 @@ export class UsersService {
      *
      * - **user_id**: The unique identifier of the user
      * - **limit**: Maximum number of habits to return (default: 5, max: 100)
+     * - **profile_id**: Optional. Only habits belonging to this profile (must
+     * belong to the user)
      * @param userId
      * @param limit Maximum number of habits to return (1-100)
+     * @param profileId Only habits belonging to this profile
      * @returns HabitList Successful Response
      * @throws ApiError
      */
     public static listUserHabitsUsersUserIdHabitsGet(
         userId: number,
         limit: number = 5,
+        profileId?: (number | null),
     ): CancelablePromise<HabitList> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -248,6 +252,7 @@ export class UsersService {
             },
             query: {
                 'limit': limit,
+                'profile_id': profileId,
             },
             errors: {
                 404: `Not found`,

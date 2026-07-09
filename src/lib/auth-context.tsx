@@ -1,7 +1,16 @@
-import { OpenAPI } from '@/api';
+import { OpenAPI, type ProfileRead } from '@/api';
+import { useProfiles } from '@/features/profiles/api/get-profiles';
 import { getUser } from '@/features/users/api/get-users';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, {
+    createContext,
+    useContext,
+    useEffect,
+    useMemo,
+    useState
+} from 'react';
 import { getUserIdFromToken, isTokenExpired } from './token-utils';
+
+const ACTIVE_PROFILE_STORAGE_KEY = 'active_profile';
 
 interface User {
     id: number;
@@ -20,6 +29,16 @@ interface AuthContextType {
     isLoading: boolean;
     authorize: (accessToken: string, refreshToken: string) => Promise<void>;
     logout: () => void;
+    /** The full active profile record, or null until profiles have loaded. */
+    activeProfile: ProfileRead | null;
+    /** The active profile's id, or null when unauthenticated / not yet resolved. */
+    activeProfileId: number | null;
+    /** All of the current user's profiles (empty until loaded). */
+    profiles: ProfileRead[];
+    /** Switch the active profile (persisted to localStorage). */
+    setActiveProfileId: (profileId: number) => void;
+    /** True while the profile list is loading (named to avoid clashing with auth's own isLoading). */
+    profilesLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,6 +47,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+
+    const isAuthenticated = !!token && !!user;
+
+    // ---- Active profile (folded in from the former ActiveProfileProvider) ----
+    const profilesQuery = useProfiles({
+        queryConfig: { enabled: isAuthenticated }
+    });
+    const profiles = useMemo(
+        () => profilesQuery.data?.profiles ?? [],
+        [profilesQuery.data]
+    );
+
+    const [activeProfileId, setActiveProfileIdState] = useState<number | null>(null);
+    const [profileHydrated, setProfileHydrated] = useState(false);
+
+    // Read the persisted selection once, on the client, after mount.
+    useEffect(() => {
+        const stored = localStorage.getItem(ACTIVE_PROFILE_STORAGE_KEY);
+        if (stored) {
+            const parsed = Number(stored);
+            if (!Number.isNaN(parsed)) {
+                setActiveProfileIdState(parsed);
+            }
+        }
+        setProfileHydrated(true);
+    }, []);
+
+    // Default to the user's first profile when nothing valid is selected
+    // (also guards against deleted / foreign ids).
+    useEffect(() => {
+        if (!profileHydrated || profiles.length === 0) return;
+        setActiveProfileIdState((current) => {
+            if (current != null && profiles.some((p) => p.id === current)) {
+                return current;
+            }
+            return profiles[0]!.id;
+        });
+    }, [profileHydrated, profiles]);
+
+    // Reset the selection whenever the user isn't authenticated.
+    useEffect(() => {
+        if (!isAuthenticated) {
+            setActiveProfileIdState(null);
+        }
+    }, [isAuthenticated]);
+
+    const setActiveProfileId = (profileId: number) => {
+        setActiveProfileIdState(profileId);
+        localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, String(profileId));
+    };
+
+    const activeProfile = useMemo(
+        () => profiles.find((p) => p.id === activeProfileId) ?? null,
+        [profiles, activeProfileId]
+    );
+
+    const profilesLoading =
+        isAuthenticated && (!profileHydrated || profilesQuery.isLoading);
 
     // Initialize auth state from localStorage
     useEffect(() => {
@@ -102,14 +179,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const logout = () => {
-        // Clear storage
+        // Clear storage (including the active-profile selection so it can't leak
+        // into the next user's session).
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
+        localStorage.removeItem(ACTIVE_PROFILE_STORAGE_KEY);
 
         // Clear state
         setToken(null);
         setUser(null);
+        setActiveProfileIdState(null);
 
         // Clear API client token
         OpenAPI.TOKEN = undefined;
@@ -118,10 +198,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const value: AuthContextType = {
         user,
         token,
-        isAuthenticated: !!token && !!user,
+        isAuthenticated,
         isLoading,
         authorize,
-        logout
+        logout,
+        activeProfile,
+        activeProfileId,
+        profiles,
+        setActiveProfileId,
+        profilesLoading
     };
 
     return <AuthContext value={value}>{children}</AuthContext>;

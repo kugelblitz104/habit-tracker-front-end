@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@dnd-kit/sortable": "^10.0.0",
+    "@fontsource/jetbrains-mono": "^5.2.8",
+    "@fontsource/space-grotesk": "^5.2.10",
     "@headlessui/react": "^2.2.6",
     "@react-router/node": "^7.5.3",
     "@react-router/serve": "^7.5.3",

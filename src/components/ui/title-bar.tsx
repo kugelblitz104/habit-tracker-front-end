@@ -18,9 +18,15 @@ export type ActionConfig = {
 type TitleBarProps = {
     title?: string;
     actions?: ActionConfig[];
+    /** Where the back chevron links to. Defaults to '/' (the Today surface). */
+    backTo?: string;
 };
 
-export const TitleBar = ({ title = 'Habit Tracker', actions = [] }: TitleBarProps) => {
+export const TitleBar = ({
+    title = 'Habit Tracker',
+    actions = [],
+    backTo = '/'
+}: TitleBarProps) => {
     const { isAuthenticated, logout } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
@@ -50,7 +56,7 @@ export const TitleBar = ({ title = 'Habit Tracker', actions = [] }: TitleBarProp
         <div className='p-4 bg-slate-700 relative'>
             <div className='flex items-center min-h-10'>
                 {showBackButton && (
-                    <Link to='/'>
+                    <Link to={backTo}>
                         <ChevronLeft size={24} className='mr-2 select-none' />
                     </Link>
                 )}

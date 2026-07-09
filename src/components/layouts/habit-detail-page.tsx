@@ -71,7 +71,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
     // queries
     const habitQuery = useQuery({
         queryKey: ['habit', { habitId }],
-        queryFn: () => getHabit(habitId),
+        queryFn: () => getHabit(habitId!),
         staleTime: 1000 * 60 // 1 minute
     });
 
@@ -170,7 +170,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
                 queryKey: ['trackers-lite', { habitId: deletedHabitId }]
             });
             setIsDeleteModalOpen(false);
-            navigate('/', { replace: true });
+            navigate('/habits', { replace: true });
         }
     });
 
@@ -360,7 +360,7 @@ export const HabitDetailView = ({ habitId }: HabitDetailViewProps) => {
     ].filter(Boolean) as ActionConfig[];
 
     return (
-        <PageShell title={`${habit?.name}`} actions={titleBarActions}>
+        <PageShell title={`${habit?.name}`} actions={titleBarActions} backTo='/habits'>
             <SubtitleBar
                 subtitles={[
                     {

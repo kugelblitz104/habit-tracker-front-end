@@ -1,16 +1,244 @@
 @import 'tailwindcss';
 
+/*
+ * ============================================================================
+ * Task System Overhaul — Design tokens (Phase 2a foundation)
+ * ----------------------------------------------------------------------------
+ * Source of truth: design_handoff_task_system_overhaul/README.md.
+ * Later waves (2b/2c) should consume the SEMANTIC tokens below, never raw
+ * hexes. Vocabulary map:
+ *
+ * FONTS
+ *   --font-display  -> Tailwind `font-display` (Space Grotesk; UI/titles)
+ *   --font-mono     -> Tailwind `font-mono`    (JetBrains Mono; meta/dates/chips)
+ *   --font-sans defaults to display so unstyled text uses Space Grotesk.
+ *
+ * DYNAMIC THEME (driven by data-attributes on <html>)
+ *   data-tone=ember|cool|espresso   -> --bg          (base surface color)
+ *   data-heat=calm|warm|blazing     -> --wash, --glow (ambient warm wash + Now glow alpha)
+ *   data-focus=true|false           -> --quiet       (opacity for quiet bands; .38 vs 1)
+ *   Defaults: tone=ember, heat=warm, focus=false.
+ *   Usage in 2b: Now-band glow alpha = var(--glow); dim quiet sections with
+ *   `opacity: var(--quiet)`; ambient wash overlay alpha = var(--wash).
+ *
+ * COLOR TOKENS (Tailwind utilities `bg-*` / `text-*` / `border-*`)
+ *   Surfaces: surface-ember, surface-cool, surface-espresso, titlebar
+ *   Text ramp: text-primary, text-now, text-secondary, text-secondary-soft,
+ *              text-muted, text-faint, text-faint-soft
+ *   Now band:  now-accent, now-dot, now-meter (borders/gradients/glow -> :root vars)
+ *   Soon band: soon-label, soon-dot, soon-surface, soon-meter
+ *   Whenever:  whenever-label, whenever-text, whenever-ring
+ *   Status:    status-inprogress, status-blocked, status-scheduled,
+ *              status-needsinfo, status-deferred, status-cancelled,
+ *              status-done, status-duetoday  (pill text/bg -> :root vars, see below)
+ *   Habits:    habit-accent, habit-label
+ *   Azure:     azure, azure-text
+ *   Controls:  danger, danger-solid
+ *
+ * RAW CSS VARS (:root — gradients, alphas, palettes not expressible as a single
+ * Tailwind color): input surfaces, band gradients/borders/glow, status pill
+ * text+bg pairs, habit container, toggle/primary-button gradients, radii,
+ * spacing, shadows. (Per-entity/per-user colors — project, calendar, profile —
+ * are NOT tokens here; they come from DB data via inline styles.)
+ *
+ * RADII:   --radius-card, --radius-row, --radius-chip, --radius-button, --radius-cell
+ *          (Tailwind `rounded-card`, `rounded-row`, `rounded-chip`, `rounded-button`, `rounded-cell`)
+ * SHADOWS: --shadow-frame, --shadow-now-glow, --shadow-popover
+ *          (Tailwind `shadow-frame`, `shadow-now-glow`, `shadow-popover`)
+ * SPACING: --space-frame, --space-card, --space-band-gap, --space-section
+ * ============================================================================
+ */
+
 @theme {
-    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif,
-        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-        'Noto Color Emoji';
+    /* Fonts */
+    --font-sans:
+        'Space Grotesk', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-display:
+        'Space Grotesk', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-mono:
+        'JetBrains Mono', ui-monospace, 'SFMono-Regular', 'Menlo', 'Monaco',
+        'Consolas', monospace;
+
+    /* Surfaces & titlebar */
+    --color-surface-ember: #17130c;
+    --color-surface-cool: #111319;
+    --color-surface-espresso: #1e150d;
+    --color-titlebar: #0f0c07;
+
+    /* Text ramp */
+    --color-text-primary: #f6ece1;
+    --color-text-now: #fbf1e6;
+    --color-text-secondary: #e7dccb;
+    --color-text-secondary-soft: #c8bcae;
+    --color-text-muted: #8a8177;
+    --color-text-faint: #6f685e;
+    --color-text-faint-soft: #57524a;
+
+    /* Now band */
+    --color-now-accent: #ff8a45;
+    --color-now-dot: #ff6a35;
+    --color-now-meter: #ff5a36;
+
+    /* Soon band */
+    --color-soon-label: #c99a5f;
+    --color-soon-dot: #d99a56;
+    --color-soon-surface: #1c1813;
+    --color-soon-meter: #c98f4e;
+
+    /* Whenever band */
+    --color-whenever-label: #6f685e;
+    --color-whenever-text: #89827a;
+    --color-whenever-ring: #4f4a42;
+
+    /* Task status accents */
+    --color-status-inprogress: #e6a552;
+    --color-status-blocked: #e0607a;
+    --color-status-scheduled: #6fa8e5;
+    --color-status-needsinfo: #b98fe6;
+    --color-status-deferred: #6a6357;
+    --color-status-cancelled: #57524a;
+    --color-status-done: #3f6b4a;
+    --color-status-done-check: #bfe6c9;
+    --color-status-duetoday: #ff9a72;
+
+    /* Habits (cool) */
+    --color-habit-accent: #7fa8c9;
+    --color-habit-label: #8ab0cd;
+
+    /* Azure DevOps link */
+    --color-azure: #4a90d9;
+    --color-azure-text: #7fb0e6;
+
+    /* Controls */
+    --color-danger: #d1889a;
+    --color-danger-solid: #c2566a;
+
+    /* Radii */
+    --radius-card: 14px;
+    --radius-row: 11px;
+    --radius-chip: 999px;
+    --radius-button: 9px;
+    --radius-cell: 8px;
+
+    /* Shadows */
+    --shadow-frame:
+        0 40px 80px -24px rgba(30, 18, 6, 0.55), 0 10px 26px rgba(0, 0, 0, 0.22);
+    --shadow-now-glow: 0 0 44px -12px rgba(255, 110, 40, 0.4);
+    --shadow-popover: 0 -18px 44px -14px rgba(0, 0, 0, 0.6);
 }
 
+:root {
+    /* ---- Dynamic theme defaults (tone=ember, heat=warm, focus=false) ---- */
+    --bg: #17130c;
+    --wash: 0.16;
+    --glow: 0.42;
+    --quiet: 1;
+
+    /* ---- Input / capture surfaces ---- */
+    --surface-input-bg: rgba(255, 255, 255, 0.045);
+    --surface-input-border: rgba(255, 255, 255, 0.09);
+
+    /* ---- Card (settings/generic) surfaces ---- */
+    --surface-card-bg: rgba(255, 255, 255, 0.03);
+    --surface-card-border: rgba(255, 255, 255, 0.08);
+
+    /* ---- Traffic-light window dots ---- */
+    --traffic-red: #ff5f57;
+    --traffic-yellow: #febc2e;
+    --traffic-green: #28c840;
+
+    /* ---- Now band decoration ---- */
+    --now-gradient-primary: linear-gradient(180deg, #2c1a0f, #1d1410);
+    --now-gradient-rest: linear-gradient(180deg, #2a190e, #1d1410);
+    --now-border: rgba(255, 140, 60, 0.24);
+    --now-glow: 0 0 44px -12px rgba(255, 110, 40, var(--glow));
+    --now-dot-glow: 0 0 10px 1px rgba(255, 106, 53, 0.7);
+    --priority-dim: #3a2a1e;
+    --priority-dim-soft: #3a332a;
+
+    /* ---- Soon band decoration ---- */
+    --soon-border: rgba(230, 180, 110, 0.12);
+
+    /* ---- Task status pill text + bg pairs ---- */
+    --status-inprogress-pill-text: #f0b45f;
+    --status-inprogress-pill-bg: rgba(230, 165, 82, 0.14);
+    --status-blocked-pill-text: #f0879e;
+    --status-blocked-pill-bg: rgba(224, 96, 122, 0.15);
+    --status-scheduled-pill-text: #8bbef0;
+    --status-scheduled-pill-bg: rgba(111, 168, 229, 0.14);
+    --status-needsinfo-pill-text: #c6a6ec;
+    --status-needsinfo-pill-bg: rgba(169, 127, 224, 0.14);
+    --status-deferred-pill-text: #8a8177;
+    --status-duetoday-bg: rgba(255, 90, 54, 0.14);
+
+    /* ---- Habits (cool) container ---- */
+    --habit-container-bg: rgba(120, 168, 205, 0.05);
+    --habit-container-border: rgba(120, 168, 205, 0.15);
+    --habit-complete: #7fa8c9;
+    --habit-incomplete-border: #5d7688;
+    --habit-skipped: #6f8494;
+    --habit-auto-fill: rgba(127, 168, 201, 0.16);
+    --habit-auto-border: rgba(127, 168, 201, 0.4);
+
+    /* ---- Azure DevOps link surface ---- */
+    --azure-bg: rgba(74, 144, 217, 0.1);
+    --azure-border: rgba(74, 144, 217, 0.22);
+
+    /* ---- Toggle / primary button / danger ---- */
+    --toggle-on-track: linear-gradient(90deg, #c9663f, #e0884a);
+    --toggle-off-track: rgba(255, 255, 255, 0.1);
+    --toggle-off-knob: #8a8177;
+    --button-primary-gradient: linear-gradient(90deg, #c9663f, #e0884a);
+    --button-primary-text: #1c0f07;
+    --danger-border: rgba(209, 136, 154, 0.3);
+
+    /* ---- Spacing scale ---- */
+    --space-frame: 28px;
+    --space-card: 20px;
+    --space-band-gap: 10px;
+    --space-section: 30px;
+}
+
+/* ---- Tone: base surface color ---- */
+[data-tone='ember'] {
+    --bg: var(--color-surface-ember);
+}
+[data-tone='cool'] {
+    --bg: var(--color-surface-cool);
+}
+[data-tone='espresso'] {
+    --bg: var(--color-surface-espresso);
+}
+
+/* ---- Heat: ambient warm wash + Now-band glow alpha ---- */
+[data-heat='calm'] {
+    --wash: 0.05;
+    --glow: 0.08;
+}
+[data-heat='warm'] {
+    --wash: 0.16;
+    --glow: 0.42;
+}
+[data-heat='blazing'] {
+    --wash: 0.34;
+    --glow: 0.7;
+}
+
+/* ---- Focus: dim the quiet bands (Whenever, habits, completed) ---- */
+[data-focus='false'] {
+    --quiet: 1;
+}
+[data-focus='true'] {
+    --quiet: 0.38;
+}
+
+/* Default the whole app to the warm dark theme. */
 html,
 body {
-    @apply bg-white dark:bg-gray-950;
-
-    @media (prefers-color-scheme: dark) {
-        color-scheme: dark;
-    }
+    background-color: var(--bg);
+    color: var(--color-text-primary);
+    font-family: var(--font-display);
+    color-scheme: dark;
 }

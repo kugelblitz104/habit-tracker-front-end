@@ -29,6 +29,40 @@ export enum LoadingStatus {
     ERROR = 'error'
 }
 
+/**
+ * Task status constants — mirrors backend `TaskStatus(int, Enum)` in constants.py.
+ * Stored on `task.status`; drives the round status control glyph, the meta pill,
+ * and whether a task appears in an active band or in "Completed & closed".
+ */
+export enum TaskStatus {
+    OPEN = 0,
+    IN_PROGRESS = 1,
+    SCHEDULED = 2,
+    BLOCKED = 3,
+    NEEDS_INFO = 4,
+    DEFERRED = 5,
+    DONE = 6,
+    CANCELLED = 7
+}
+
+/**
+ * Computed urgency band — mirrors backend `compute_band`. Delivered already
+ * resolved on `TaskRead.band`; the UI never sets or changes a band.
+ * `hidden` = done/cancelled (appears in "Completed & closed").
+ */
+export type TaskBand = 'now' | 'soon' | 'whenever' | 'hidden';
+
+/** Priority scale for tasks: 0 none / 1 low / 2 medium / 3 high. */
+export enum TaskPriority {
+    NONE = 0,
+    LOW = 1,
+    MEDIUM = 2,
+    HIGH = 3
+}
+
+/** Ordered active bands used for client-side grouping on the Today surface. */
+export const ACTIVE_TASK_BANDS: Exclude<TaskBand, 'hidden'>[] = ['now', 'soon', 'whenever'];
+
 export type Frequency = {
     name: string;
     frequency: number;

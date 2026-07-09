@@ -1,6 +1,6 @@
 import { HabitDetailView } from '@/components/layouts/habit-detail-page';
 import { ProtectedRoute } from '@/features/auth/components/protected-route';
-import type { Route } from './+types/home';
+import type { Route } from './+types/habit-detail';
 import { ErrorPage } from '@/components/layouts/error-page';
 
 export function meta({}: Route.MetaArgs) {

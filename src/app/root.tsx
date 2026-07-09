@@ -11,7 +11,15 @@ import {
 
 import './app.css';
 import 'react-toastify/dist/ReactToastify.css';
-import type { Route } from './+types/root';
+
+// Self-hosted fonts (Space Grotesk display + JetBrains Mono meta) via @fontsource.
+import '@fontsource/space-grotesk/400.css';
+import '@fontsource/space-grotesk/500.css';
+import '@fontsource/space-grotesk/600.css';
+import '@fontsource/space-grotesk/700.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/500.css';
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { ToastContainer } from 'react-toastify';
@@ -20,19 +28,7 @@ import { ToastContainer } from 'react-toastify';
 import '@/lib/api-client';
 import { queryConfig } from '@/lib/react-query';
 import { AuthProvider } from '@/lib/auth-context';
-
-export const links: Route.LinksFunction = () => [
-    { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-    {
-        rel: 'preconnect',
-        href: 'https://fonts.gstatic.com',
-        crossOrigin: 'anonymous'
-    },
-    {
-        rel: 'stylesheet',
-        href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap'
-    }
-];
+import type { Route } from './+types/root';
 
 export function Layout({ children }: { children: React.ReactNode }) {
     return (
@@ -60,9 +56,21 @@ export default function App() {
             })
     );
     return (
-        <AuthProvider>
-            <QueryClientProvider client={queryClient}>
-                <Outlet />
+        <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+                {/* App-root wrapper carries the dynamic theme (was on <html>) and
+                    the base themed background so the surface fills the viewport.
+                    Defaults are literal for now; Phase 4 (Settings) makes them
+                    dynamic from user prefs. */}
+                <div
+                    data-tone='ember'
+                    data-heat='warm'
+                    data-focus='false'
+                    className='min-h-screen'
+                    style={{ backgroundColor: 'var(--bg)' }}
+                >
+                    <Outlet />
+                </div>
                 <ToastContainer
                     position='bottom-right'
                     autoClose={5000}
@@ -75,8 +83,8 @@ export default function App() {
                     pauseOnHover
                     theme='dark'
                 />
-            </QueryClientProvider>
-        </AuthProvider>
+            </AuthProvider>
+        </QueryClientProvider>
     );
 }
 

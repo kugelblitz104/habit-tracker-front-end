@@ -22,16 +22,19 @@ export const HabitsDashboard = () => {
     const days = DASHBOARD_DAYS_BY_SIZE[layoutSize];
     const isSmall = layoutSize === 'sm';
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, activeProfileId } = useAuth();
     const userId = user?.id || 0; // Fallback to non-existent user ID
 
     // hooks
     const [habits, setHabits] = useState<HabitRead[]>([]);
     const [addHabitModalOpen, setAddHabitModalOpen] = useState(false);
     const [sortModalOpen, setSortModalOpen] = useState(false);
+    // Scope habits to the active profile (keyed per profile so it caches
+    // separately and matches the Today panel). Gate until a profile resolves.
     const habitsQuery = useQuery({
-        queryKey: ['habits', { userId }],
-        queryFn: () => getHabits(userId),
+        queryKey: ['habits', { userId, profileId: activeProfileId }],
+        queryFn: () => getHabits(userId, 100, activeProfileId),
+        enabled: !!activeProfileId,
         staleTime: 1000 * 60 // 1 minute
     });
 

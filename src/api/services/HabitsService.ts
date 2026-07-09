@@ -25,6 +25,9 @@ export class HabitsService {
      * - **notes**: Optional additional notes about the habit
      * - **archived**: Whether the habit is archived
      * - **sort_order**: The order in which the habit appears in lists (ascending)
+     * - **category**: Optional free-text group label (e.g. "Hygiene")
+     * - **profile_id**: Optional profile for this habit. Must belong to the
+     * current user; defaults to the user's oldest profile if omitted
      * @param requestBody
      * @returns HabitRead Successful Response
      * @throws ApiError
@@ -143,6 +146,9 @@ export class HabitsService {
      * - **notes**: Optional additional notes about the habit
      * - **archived**: Whether the habit is archived
      * - **sort_order**: The order in which the habit appears in lists (ascending)
+     * - **category**: Optional free-text group label (e.g. "Hygiene")
+     * - **profile_id**: Move the habit to another profile (must belong to the
+     * habit's owner)
      * @param habitId
      * @param requestBody
      * @returns HabitRead Successful Response

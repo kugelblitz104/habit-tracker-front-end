@@ -12,5 +12,7 @@ export type HabitCreate = {
     notes?: (string | null);
     archived?: boolean;
     sort_order?: number;
+    category?: (string | null);
+    profile_id?: (number | null);
 };
 

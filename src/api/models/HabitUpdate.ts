@@ -12,6 +12,8 @@ export type HabitUpdate = {
     notes?: (string | null);
     archived?: (boolean | null);
     sort_order?: (number | null);
+    category?: (string | null);
+    profile_id?: (number | null);
     updated_date?: string;
 };
 
