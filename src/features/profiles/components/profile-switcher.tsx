@@ -1,16 +1,16 @@
 import { LogoutModal } from '@/features/auth/components/modals/logout-modal';
 import { useAuth } from '@/lib/auth-context';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
-import { Check, ChevronDown, ListChecks, LogOut, Settings } from 'lucide-react';
+import { Check, ChevronDown, LogOut, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ProfileAvatar } from './profile-avatar';
 
 /**
  * Header profile pill: gradient avatar + name + ▾. Opens a Headless UI menu
- * listing every profile (switching sets the active profile), plus reachable
- * navigation (Habits, Settings) and Logout — the themed Today surface replaces
- * the old slate TitleBar, so those affordances live here.
+ * listing every profile (switching sets the active profile), plus Settings and
+ * Logout. Primary navigation (Today / Habits / Projects) lives in the top nav
+ * (AppHeader), so it is no longer duplicated here.
  */
 export const ProfileSwitcher = () => {
     const { activeProfile, profiles, setActiveProfileId, logout } = useAuth();
@@ -75,16 +75,6 @@ export const ProfileSwitcher = () => {
                         style={{ borderColor: 'var(--surface-card-border)' }}
                     />
 
-                    <MenuItem>
-                        <button
-                            type='button'
-                            onClick={() => navigate('/habits')}
-                            className='flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-left font-display text-[13px] text-text-secondary data-focus:bg-white/5'
-                        >
-                            <ListChecks size={16} className='text-text-muted' />
-                            Habits
-                        </button>
-                    </MenuItem>
                     <MenuItem>
                         <button
                             type='button'

@@ -3,7 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { HabitCreate } from '../models/HabitCreate';
+import type { HabitKPIs } from '../models/HabitKPIs';
 import type { HabitRead } from '../models/HabitRead';
+import type { HabitStreak } from '../models/HabitStreak';
 import type { HabitUpdate } from '../models/HabitUpdate';
 import type { TrackerList } from '../models/TrackerList';
 import type { TrackerLiteList } from '../models/TrackerLiteList';
@@ -266,6 +268,63 @@ export class HabitsService {
             query: {
                 'end_date': endDate,
                 'days': days,
+            },
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Get computed KPIs for a habit
+     * Retrieve computed statistics for a habit.
+     *
+     * KPIs (streaks, completion rates, last completion, etc.) are derived from
+     * the habit's trackers on the fly - nothing is persisted. The computation
+     * mirrors the frontend so client and server agree.
+     *
+     * - **habit_id**: The unique identifier of the habit
+     * @param habitId
+     * @returns HabitKPIs Successful Response
+     * @throws ApiError
+     */
+    public static readHabitKpisHabitsHabitIdKpisGet(
+        habitId: number,
+    ): CancelablePromise<HabitKPIs> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/habits/{habit_id}/kpis',
+            path: {
+                'habit_id': habitId,
+            },
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * List computed streaks for a habit
+     * Retrieve every streak for a habit, oldest first.
+     *
+     * A streak is an unbroken run of days that count toward the habit: days with
+     * an explicit completion or skip, or days that are auto-skipped (the
+     * frequency goal was already met within the range window). Derived from the
+     * habit's trackers on the fly - nothing is persisted.
+     *
+     * - **habit_id**: The unique identifier of the habit
+     * @param habitId
+     * @returns HabitStreak Successful Response
+     * @throws ApiError
+     */
+    public static readHabitStreaksHabitsHabitIdStreaksGet(
+        habitId: number,
+    ): CancelablePromise<Array<HabitStreak>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/habits/{habit_id}/streaks',
+            path: {
+                'habit_id': habitId,
             },
             errors: {
                 404: `Not found`,

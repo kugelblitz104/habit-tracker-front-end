@@ -8,7 +8,9 @@ export default [
     // Protected routes
     index('routes/auth/today.tsx'),
     route('habits', 'routes/auth/habits.tsx'),
+    route('projects', 'routes/auth/projects.tsx'),
     route('projects/:projectId', 'routes/auth/project.tsx'),
     route('details/:habitId', 'routes/auth/habit-detail.tsx'),
+    route('tasks/:taskId', 'routes/auth/task-detail.tsx'),
     route('settings', 'routes/auth/settings.tsx')
 ] satisfies RouteConfig;

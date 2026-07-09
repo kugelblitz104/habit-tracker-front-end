@@ -1,130 +1,71 @@
-import { parseLocalDate } from '@/lib/date-utils';
-import type { Streak } from '@/types/types';
-import {
-    Bar,
-    BarChart,
-    LabelList,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
-    type LabelProps,
-    type TooltipContentProps
-} from 'recharts';
-
-const BarLabel = ({ x, y, width, height, value }: LabelProps) => {
-    if (
-        x === undefined ||
-        y === undefined ||
-        width === undefined ||
-        height === undefined ||
-        value === undefined
-    ) {
-        return null;
-    }
-
-    return (
-        <g>
-            <rect
-                x={Number(x) + Number(width) / 2 - 15}
-                y={Number(y) + Number(height) / 2 - 10}
-                width={30}
-                height={20}
-                rx={10}
-                fill='#1d293d'
-                stroke='#4B5563'
-                strokeWidth={1}
-            />
-            <text
-                x={Number(x) + Number(width) / 2}
-                y={Number(y) + Number(height) / 2 + 4}
-                fill='#FFFFFF'
-                fontSize={12}
-                textAnchor='middle'
-            >
-                {value}
-            </text>
-        </g>
-    );
-};
-
-const CustomTooltip = ({ active, payload }: TooltipContentProps<string, number | string>) => {
-    if (active && payload && payload.length) {
-        const data = payload[0].payload;
-        return (
-            <div
-                className='
-                bg-slate-800 
-                border border-gray-600 
-                text-white 
-                p-2 rounded-md 
-                flex flex-col 
-                gap-1'
-            >
-                <p className='text-xl font-bold'>Days: {data.count}</p>
-                <p>Start: {data.startDate}</p>
-                <p>End: {data.endDate}</p>
-            </div>
-        );
-    }
-    return null;
-};
+import type { HabitStreak } from '@/api';
+import { parseLocalDate, toLocalDateString } from '@/lib/date-utils';
 
 type StreakChartProps = {
-    streaks: Streak[];
-    color?: string;
-    subtitle?: string;
+    /** Streaks from the server, oldest-first (the ongoing streak, if any, is last). */
+    streaks: HabitStreak[];
+    /** How many of the most-recent streaks to display. */
+    max?: number;
 };
 
-export const StreakChart = ({ streaks, color, subtitle = 'Streaks' }: StreakChartProps) => {
-    const colorFill = color || '#FFFFFF';
-    const data = streaks
-        .map((streak) => ({
-            key: parseLocalDate(streak.startDate).toLocaleDateString(),
-            count: streak.length,
-            startDate: parseLocalDate(streak.startDate).toLocaleDateString(),
-            endDate: parseLocalDate(streak.endDate).toLocaleDateString()
-        }))
-        .reverse();
+const PANEL =
+    'bg-[var(--habit-container-bg)] border border-[var(--habit-container-border)] rounded-card px-5 py-[18px]';
+const TITLE =
+    'm-0 font-display text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--color-habit-label)]';
 
-    if (data.length === 0) {
+const startLabel = (dateString: string): string =>
+    parseLocalDate(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+export const StreakChart = ({ streaks, max = 6 }: StreakChartProps) => {
+    const todayStr = toLocalDateString(new Date());
+
+    // Newest first, drop trivial one-day streaks, cap to `max` rows.
+    const rows = [...streaks]
+        .filter((s) => s.length > 1)
+        .reverse()
+        .slice(0, max);
+
+    if (rows.length === 0) {
         return (
-            <div className='m-4 bg-slate-800 p-4 rounded-lg text-center text-gray-400'>
-                No streaks to display.
+            <div className={PANEL}>
+                <h2 className={TITLE}>Recent streaks</h2>
+                <div className='mt-3 font-mono text-[10.5px] text-[#5f7688]'>No streaks yet</div>
             </div>
         );
     }
 
+    const longest = Math.max(...rows.map((s) => s.length));
+
     return (
-        <>
-            {subtitle && (
-                <h2 className='mx-4 mt-4 mb-2 text-lg font-semibold' style={{ color: color }}>
-                    {subtitle}
-                </h2>
-            )}
-            <div className='mx-4 bg-slate-800 p-4 rounded-lg'>
-                <ResponsiveContainer width='100%' height={data.length * 40 + 10}>
-                    <BarChart data={data} layout='vertical'>
-                        <XAxis
-                            type='number'
-                            dataKey='count'
-                            hide
-                            domain={[0, Math.max(...data.map((d) => d.count))]}
-                        />
-                        <YAxis type='category' dataKey='key' hide />
-                        <Tooltip content={CustomTooltip} cursor={false} />
-                        <Bar
-                            dataKey='count'
-                            fill={colorFill}
-                            isAnimationActive={true}
-                            radius={8}
-                            maxBarSize={30}
-                        >
-                            <LabelList dataKey='count' content={BarLabel} />
-                        </Bar>
-                    </BarChart>
-                </ResponsiveContainer>
+        <div className={PANEL}>
+            <h2 className={TITLE}>Recent streaks</h2>
+            <div className='mt-[14px] flex flex-col gap-2'>
+                {rows.map((streak, i) => {
+                    const isNow = streak.end_date === todayStr;
+                    const label = isNow ? 'now' : startLabel(streak.start_date);
+                    const widthPct = Math.max((streak.length / longest) * 100, 8);
+                    return (
+                        <div key={i} className='flex items-center gap-[10px]'>
+                            <span className='w-[52px] flex-none font-mono text-[10.5px] text-[#7f93a5]'>
+                                {label}
+                            </span>
+                            <div className='h-[22px] flex-1 overflow-hidden rounded-[6px] bg-[rgba(255,255,255,0.04)]'>
+                                <div
+                                    className='flex h-full items-center justify-end rounded-[6px] px-2'
+                                    style={{
+                                        width: `${widthPct}%`,
+                                        background: isNow ? '#8fc0e0' : '#6f9dc0'
+                                    }}
+                                >
+                                    <span className='font-mono text-[11px] font-semibold text-[#0f1418]'>
+                                        {streak.length}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
-        </>
+        </div>
     );
 };

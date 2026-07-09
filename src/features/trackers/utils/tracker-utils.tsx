@@ -1,7 +1,7 @@
 import type { TrackerCreate, TrackerLite, TrackerRead, TrackerUpdate } from '@/api';
 import { toLocalDateString } from '@/lib/date-utils';
 import { DisplayStatus, TrackerStatus } from '@/types/types';
-import { Check, ChevronsRight, MessageSquare, Square } from 'lucide-react';
+import { Check, ChevronsRight, Square } from 'lucide-react';
 
 // Re-export for backwards compatibility
 export { toLocalDateString };
@@ -30,10 +30,18 @@ const HollowCheckmark = ({ className }: { className: string }) => (
     </svg>
 );
 
-export const NotePip = ({ className, color }: { className: string; color?: string }) => (
-    <div className={`${className} pointer-events-none`}>
-        <MessageSquare size={8} color={color || 'orange'} fill={color || 'orange'} />
-    </div>
+/**
+ * Small corner indicator shown on a calendar/dashboard cell that carries a note.
+ * A simple ~6px filled dot tinted with the theme accent token so it reads
+ * consistently on both the dark cells (missed/skipped) and the light completed
+ * fill. The optional `color` prop is retained for call-site compatibility but the
+ * tint is intentionally theme-driven.
+ */
+export const NotePip = ({ className }: { className: string; color?: string }) => (
+    <span
+        aria-hidden='true'
+        className={`${className} pointer-events-none block h-1.5 w-1.5 rounded-full bg-[var(--color-habit-accent)]`}
+    />
 );
 
 /**
@@ -81,12 +89,17 @@ export const getTrackerIcon = (status: DisplayStatus, habitColor?: string) => {
         case DisplayStatus.COMPLETED:
             return <Check className={iconClass} color={habitColor || 'green'} strokeWidth={3} />;
         case DisplayStatus.SKIPPED:
+            // Dashed container establishes the shared "dashed = skipped" language
+            // used on the calendar, keeping it clearly distinct from the plain
+            // Square of an incomplete day.
             return (
-                <ChevronsRight
-                    className={iconClass}
-                    color={habitColor || 'lightblue'}
-                    strokeWidth={3}
-                />
+                <span className='flex h-5 w-5 items-center justify-center rounded-[5px] border border-dashed border-[var(--color-habit-label)]'>
+                    <ChevronsRight
+                        className='h-3.5 w-3.5'
+                        color='var(--color-habit-label)'
+                        strokeWidth={2.5}
+                    />
+                </span>
             );
         case DisplayStatus.AUTO_SKIPPED:
             return <HollowCheckmark className={iconClass} />;

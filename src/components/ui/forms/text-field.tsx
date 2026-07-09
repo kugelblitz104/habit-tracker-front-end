@@ -12,6 +12,15 @@ type TextFieldProps = {
     errorMessage?: string;
 };
 
+// Shared theme tokens so form fields read like the task editor surface
+// (mono uppercase micro-labels + themed input treatment) instead of the old
+// black-background inputs.
+const labelClass =
+    'mb-1 block font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-text-faint';
+
+const fieldClass =
+    'block w-full rounded-button border px-2.5 py-1.5 font-mono text-[12px] text-text-secondary outline-none transition-colors placeholder:text-text-faint focus-visible:ring-1 focus-visible:ring-now-accent';
+
 export const TextField = ({
     name,
     label,
@@ -30,13 +39,14 @@ export const TextField = ({
     const fieldError = errors[name];
 
     return (
-        <Field className='my-2'>
-            {label && <Label className='block'>{label}</Label>}
+        <Field className='mb-3'>
+            {label && <Label className={labelClass}>{label}</Label>}
             <Input
-                className={`block bg-black 
-                    ${!isValid && 'border-2 border-red-500'}
-                    ${isValid && 'border-slate'} 
-                    rounded-md py-1 px-2 w-full`}
+                className={fieldClass}
+                style={{
+                    backgroundColor: 'var(--surface-input-bg)',
+                    borderColor: isValid ? 'var(--surface-input-border)' : 'var(--color-danger)'
+                }}
                 {...register(name, {
                     required: isRequired ? 'This field is required' : false,
                     ...validation
@@ -47,7 +57,7 @@ export const TextField = ({
                 aria-describedby={`${name}-error`}
             />
             {fieldError && (
-                <span id={`${name}-error`} className='text-red-400 text-sm'>
+                <span id={`${name}-error`} className='mt-1 block text-[11px] text-red-400'>
                     {(fieldError.message as string) || errorMessage}
                 </span>
             )}

@@ -40,9 +40,20 @@ export type HabitListProps = {
     habits: HabitRead[];
     days?: number;
     isSmall?: boolean;
+    /** Wide (lg/xl) master-detail: name clicks open the pane instead of navigating. */
+    isWide?: boolean;
+    selectedHabitId?: number | null;
+    onSelectHabit?: (habitId: number) => void;
 };
 
-export const HabitList = ({ habits, days = 0, isSmall = false }: HabitListProps) => {
+export const HabitList = ({
+    habits,
+    days = 0,
+    isSmall = false,
+    isWide = false,
+    selectedHabitId = null,
+    onSelectHabit
+}: HabitListProps) => {
     // hooks - use useMemo to prevent hydration mismatch
     const today = useMemo(() => new Date(), []);
     const date_formatter = new Intl.DateTimeFormat('en-US', {
@@ -61,6 +72,7 @@ export const HabitList = ({ habits, days = 0, isSmall = false }: HabitListProps)
         trackerId: null
     });
     const [habitStreaks, setHabitStreaks] = useState<Map<number, number>>(new Map());
+    const [visibility, setVisibility] = useState<Map<number, boolean>>(new Map());
 
     const selectedTrackerQuery = useQuery({
         queryKey: ['tracker', noteDialogState.trackerId],
@@ -76,6 +88,18 @@ export const HabitList = ({ habits, days = 0, isSmall = false }: HabitListProps)
             if (prev.get(habitId) === streak) return prev;
             const next = new Map(prev);
             next.set(habitId, streak);
+            return next;
+        });
+    }, []);
+
+    // Callback for child components to report whether they are visible under the
+    // current filter. Deduped like handleStreakChange to avoid render loops.
+    const handleVisibilityChange = useCallback((habitId: number, visible: boolean) => {
+        setVisibility((prev) => {
+            // Only update if value actually changed to prevent unnecessary re-renders
+            if (prev.get(habitId) === visible) return prev;
+            const next = new Map(prev);
+            next.set(habitId, visible);
             return next;
         });
     }, []);
@@ -226,19 +250,29 @@ export const HabitList = ({ habits, days = 0, isSmall = false }: HabitListProps)
     }, [habits, selectedSort, sortDirection, selectedFilters, habitStreaks]);
 
     if (!habits || habits.length === 0) {
-        return <div className='m-4'>No habits found.</div>;
+        return (
+            <div className='rounded-card border border-dashed border-[var(--habit-container-border)] px-5 py-10 text-center font-mono text-[13px] text-[#8ba3b5]'>
+                No habits found.
+            </div>
+        );
     }
 
+    // When the incomplete filter is active, each element reports whether it is still
+    // visible. Treat not-yet-reported habits as visible so the empty state doesn't
+    // flash before children report.
+    const incompleteActive = selectedFilters.includes('incomplete');
+    const anyVisible = sortedHabits.some((h) => visibility.get(h.id) !== false);
+    const showAllDone = incompleteActive && sortedHabits.length > 0 && !anyVisible;
+
     return (
-        <div className='m-4'>
+        <div className='flex flex-col gap-4'>
             <div
                 className='
-                    mb-4 
                     flex
                     flex-wrap-reverse md:flex-row
-                    items-start sm:items-center 
+                    items-start sm:items-center
                     gap-4 sm:justify-between
-                    
+
                 '
             >
                 <FilterList
@@ -253,51 +287,77 @@ export const HabitList = ({ habits, days = 0, isSmall = false }: HabitListProps)
                     onSortChange={handleSortChange}
                 />
             </div>
-            <div className='overflow-x-auto'>
-                <table className='min-w-full table-auto'>
-                    <thead>
-                        <tr>
-                            <th scope='col' className='px-4 py-2 w-1/3 md:w-1/5 text-left'>
-                                Habit
-                            </th>
-                            {!isSmall && (
-                                <th scope='col' className='w-12 text-center'>
-                                    Streak
-                                </th>
-                            )}
-                            {Array.from({ length: days }, (_, i) => (
+            {showAllDone ? (
+                <div className='rounded-card border border-dashed border-[var(--habit-container-border)] px-5 py-10 text-center font-mono text-[13px] text-[#8ba3b5]'>
+                    Everything done for today! 🎉
+                </div>
+            ) : (
+            <div className='overflow-hidden rounded-card border border-[var(--habit-container-border)] bg-[var(--habit-container-bg)]'>
+                <div className='overflow-x-auto'>
+                    <table className='min-w-full table-auto'>
+                        <thead>
+                            <tr className='border-b border-[var(--habit-container-border)]'>
                                 <th
-                                    key={i}
                                     scope='col'
-                                    className='w-8 text-center text-xs md:text-sm'
+                                    className={`px-4 py-3 text-left font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--color-habit-label)] ${
+                                        isSmall ? 'w-[42%] max-w-[42%]' : 'w-1/4'
+                                    }`}
                                 >
-                                    {date_formatter.format(
-                                        new Date(
-                                            today.getFullYear(),
-                                            today.getMonth(),
-                                            today.getDate() - i
-                                        )
-                                    )}
+                                    Habit
                                 </th>
+                                {!isSmall && (
+                                    <th
+                                        scope='col'
+                                        className='w-12 py-3 text-center font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--color-habit-label)]'
+                                    >
+                                        Streak
+                                    </th>
+                                )}
+                                {Array.from({ length: days }, (_, i) => (
+                                    <th
+                                        key={i}
+                                        scope='col'
+                                        className={`w-9 py-3 text-center font-mono text-[10px] ${
+                                            i === 0
+                                                ? 'text-[var(--color-habit-accent)]'
+                                                : 'text-[#5f7688]'
+                                        }`}
+                                    >
+                                        {date_formatter.format(
+                                            new Date(
+                                                today.getFullYear(),
+                                                today.getMonth(),
+                                                today.getDate() - i
+                                            )
+                                        )}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {sortedHabits.map((habit) => (
+                                <HabitListElement
+                                    key={habit.id}
+                                    habit={habit}
+                                    days={days}
+                                    isSmall={isSmall}
+                                    isWide={isWide}
+                                    isSelected={selectedHabitId === habit.id}
+                                    onSelectHabit={onSelectHabit}
+                                    filterIncomplete={selectedFilters.includes('incomplete')}
+                                    onStreakChange={handleStreakChange}
+                                    onVisibilityChange={handleVisibilityChange}
+                                    onNoteOpen={handleNoteOpen}
+                                />
                             ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {sortedHabits.map((habit) => (
-                            <HabitListElement
-                                key={habit.id}
-                                habit={habit}
-                                days={days}
-                                isSmall={isSmall}
-                                filterIncomplete={selectedFilters.includes('incomplete')}
-                                onStreakChange={handleStreakChange}
-                                onNoteOpen={handleNoteOpen}
-                            />
-                        ))}
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div className='mx-4 mt-2 text-slate-500'>Right click to add or edit notes</div>
+            )}
+            <div className='font-mono text-[10.5px] text-[#5f7688]'>
+                Right click to add or edit notes
+            </div>
             <NoteDialog
                 isOpen={noteDialogState.isOpen}
                 date={noteDialogState.date || new Date()}

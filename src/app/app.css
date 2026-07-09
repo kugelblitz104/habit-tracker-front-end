@@ -242,3 +242,45 @@ body {
     font-family: var(--font-display);
     color-scheme: dark;
 }
+
+/*
+ * ---- react-toastify theming ----
+ * Override react-toastify's own CSS variables so its default/success/error
+ * toasts inherit the app's surfaces, fonts and accents. Setting the vars keeps
+ * every variant (default, success, error, info, warning) on-theme without
+ * per-toast className plumbing. Accent green for success, --color-danger for
+ * error, habit accent for info.
+ */
+:root {
+    --toastify-color-light: var(--surface-card-bg);
+    --toastify-color-dark: #1b1710;
+    --toastify-color-info: var(--color-habit-accent);
+    --toastify-color-success: #3f6b4a;
+    --toastify-color-warning: var(--color-soon-meter);
+    --toastify-color-error: var(--color-danger);
+    --toastify-text-color-dark: var(--color-text-primary);
+    --toastify-font-family: var(--font-display);
+    --toastify-toast-bd-radius: var(--radius-button);
+}
+
+.Toastify__toast {
+    background-color: var(--surface-card-bg, #1b1710);
+    /* Fallback layer so the translucent card surface reads on any backdrop. */
+    background-image: linear-gradient(#1b1710, #1b1710);
+    background-blend-mode: normal;
+    border: 1px solid var(--surface-card-border);
+    color: var(--text-primary, var(--color-text-primary));
+    font-family: var(--font-display);
+    border-radius: var(--radius-button);
+    box-shadow: var(--shadow-popover);
+}
+
+.Toastify__toast-body {
+    font-family: var(--font-display);
+    font-size: 13px;
+    color: var(--color-text-primary);
+}
+
+.Toastify__close-button {
+    color: var(--color-text-muted);
+}

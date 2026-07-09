@@ -83,6 +83,10 @@ export class TasksService {
      * - **external_ref**: Optional external reference (e.g. "ADO-2841")
      * - **external_url**: Optional external URL
      * - **project_id**: Optional project (must belong to the same profile)
+     *
+     * Scheduled data only lives on SCHEDULED tasks: if the created status is
+     * anything other than SCHEDULED, scheduled_date/scheduled_time are forced to
+     * null even when supplied (prevents orphaned scheduled data).
      * @param requestBody
      * @returns TaskRead Successful Response
      * @throws ApiError
@@ -147,6 +151,12 @@ export class TasksService {
      * - **external_ref**: Optional external reference (e.g. "ADO-2841")
      * - **external_url**: Optional external URL
      * - **project_id**: Optional project (must belong to the task's profile)
+     *
+     * Scheduled data only lives on SCHEDULED tasks: if the resulting status (the
+     * new status if provided, else the existing one) is anything other than
+     * SCHEDULED, scheduled_date/scheduled_time are forced to null - even when the
+     * scheduled fields themselves were not part of this update (prevents orphaned
+     * scheduled data).
      * @param taskId
      * @param requestBody
      * @returns TaskRead Successful Response

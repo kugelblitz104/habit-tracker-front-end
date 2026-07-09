@@ -11,11 +11,17 @@ export const ToggleButton = ({ children, isActive, onClick }: ToggleButtonProps)
     return (
         <Button
             onClick={onClick}
-            className={`px-4 py-2 rounded-md transition-colors text-sm font-medium flex-1 ${
+            className={`flex-1 rounded-chip border px-4 py-2 font-mono text-[10.5px] uppercase tracking-[0.12em] outline-none transition-colors focus-visible:opacity-80 ${
                 isActive
-                    ? 'bg-sky-600 text-white hover:bg-sky-700'
-                    : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+                    ? 'text-habit-label'
+                    : 'text-text-muted hover:text-text-secondary'
             }`}
+            style={{
+                backgroundColor: isActive ? 'rgba(120, 168, 205, 0.14)' : 'transparent',
+                borderColor: isActive
+                    ? 'rgba(120, 168, 205, 0.35)'
+                    : 'var(--surface-card-border)'
+            }}
             aria-pressed={isActive}
         >
             {children}

@@ -1,6 +1,5 @@
 import type { HabitRead } from '@/api';
 import { Label } from '@/components/ui/label';
-import { BaseModal } from '@/components/ui/modals/base-modal';
 import { getFrequencyString } from '@/lib/date-utils';
 import { GripVertical } from 'lucide-react';
 import { useState } from 'react';
@@ -14,7 +13,41 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Button } from '@headlessui/react';
+import { Button, Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
+
+/** Themed dialog shell shared by both the empty and populated states. */
+const SortDialogShell = ({
+    isOpen,
+    onClose,
+    children
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    children: React.ReactNode;
+}) => (
+    <Dialog
+        open={isOpen}
+        onClose={onClose}
+        transition
+        className='relative z-50 transition-opacity duration-300 ease-out data-closed:opacity-0'
+    >
+        <DialogBackdrop className='fixed inset-0 bg-black/60' />
+        <div className='fixed inset-0 flex items-center justify-center p-4'>
+            <DialogPanel
+                className='w-full max-w-md space-y-4 overflow-y-auto rounded-card border p-5 shadow-popover'
+                style={{
+                    backgroundColor: 'var(--bg)',
+                    borderColor: 'var(--surface-card-border)'
+                }}
+            >
+                <DialogTitle className='font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-habit-label'>
+                    Sort Habits
+                </DialogTitle>
+                {children}
+            </DialogPanel>
+        </div>
+    </Dialog>
+);
 
 type ItemProps = {
     habit: HabitRead;
@@ -28,8 +61,14 @@ type ItemProps = {
 const Item = ({ habit, style, ref, attributes, listeners, opacity }: ItemProps) => {
     return (
         <li
-            className='flex items-center justify-between gap-4 bg-slate-700 p-2 rounded-md mb-2'
-            style={{ ...style, opacity, touchAction: 'none' }}
+            className='mb-2 flex items-center justify-between gap-4 rounded-row border p-2.5'
+            style={{
+                ...style,
+                opacity,
+                touchAction: 'none',
+                backgroundColor: 'var(--surface-input-bg)',
+                borderColor: 'var(--surface-input-border)'
+            }}
             ref={ref}
             {...attributes}
             {...listeners}
@@ -40,7 +79,7 @@ const Item = ({ habit, style, ref, attributes, listeners, opacity }: ItemProps) 
                 textColor={habit.color}
                 className='mx-2'
             />
-            <GripVertical className='cursor-move' />
+            <GripVertical size={16} className='cursor-move text-text-muted' />
         </li>
     );
 };
@@ -120,14 +159,14 @@ export const SortHabitModal = ({
 
     if (habitsState.length === 0) {
         return (
-            <BaseModal isOpen={isOpen} onClose={onClose} title='Sort Habits'>
-                <p className='text-gray-500'>No habits to sort.</p>
-            </BaseModal>
+            <SortDialogShell isOpen={isOpen} onClose={onClose}>
+                <p className='font-mono text-[12px] text-text-muted'>No habits to sort.</p>
+            </SortDialogShell>
         );
     }
 
     return (
-        <BaseModal isOpen={isOpen} onClose={onClose} title='Sort Habits'>
+        <SortDialogShell isOpen={isOpen} onClose={onClose}>
             <DndContext
                 collisionDetection={closestCenter}
                 sensors={sensors}
@@ -157,9 +196,19 @@ export const SortHabitModal = ({
                     )}
                 </DragOverlay>
             </DndContext>
-            <div className='flex w-full mt-4 gap-2'>
+            <div className='mt-4 flex w-full justify-end gap-2'>
                 <Button
-                    className='bg-blue-600 hover:bg-blue-700 font-semibold py-2 px-4 rounded-md'
+                    className='rounded-button px-3.5 py-1.5 font-mono text-[11.5px] uppercase tracking-[0.12em] text-text-muted transition-colors hover:text-text-secondary'
+                    onClick={onClose}
+                >
+                    Cancel
+                </Button>
+                <Button
+                    className='rounded-button px-3.5 py-1.5 font-mono text-[11.5px] font-semibold uppercase tracking-[0.12em] transition-opacity hover:opacity-90'
+                    style={{
+                        backgroundColor: 'var(--color-habit-accent)',
+                        color: 'var(--bg)'
+                    }}
                     onClick={() => {
                         handleSortHabits(habitsState);
                         onClose();
@@ -167,13 +216,7 @@ export const SortHabitModal = ({
                 >
                     Save Order
                 </Button>
-                <Button
-                    className='bg-gray-600 hover:bg-gray-700 font-semibold py-2 px-4 rounded-md'
-                    onClick={onClose}
-                >
-                    Cancel
-                </Button>
             </div>
-        </BaseModal>
+        </SortDialogShell>
     );
 };

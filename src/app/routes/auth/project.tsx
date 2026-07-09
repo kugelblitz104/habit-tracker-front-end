@@ -7,7 +7,9 @@ import { useUpdateTask } from '@/features/tasks/api/update-tasks';
 import { BandSection } from '@/features/tasks/components/band-section';
 import { TaskDetailPane } from '@/features/tasks/components/task-detail-pane';
 import { useTaskDetailPane } from '@/features/tasks/hooks/use-task-detail-pane';
+import { AppHeader } from '@/components/layouts/app-header';
 import { sanitizeText } from '@/lib/input-sanitization';
+import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE } from '@/lib/layout';
 import { useAuth } from '@/lib/auth-context';
 import { ACTIVE_TASK_BANDS, type TaskStatus } from '@/types/types';
 import { useMemo } from 'react';
@@ -73,9 +75,10 @@ function ProjectContent({ projectId }: { projectId: number }) {
 
     return (
         <div className='min-h-screen' style={{ backgroundColor: 'var(--bg)' }}>
+            <AppHeader maxWidthClass={showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH} />
             <div
                 className={`mx-auto px-5 py-7 md:px-7 ${
-                    showPane ? 'max-w-[1200px]' : 'max-w-[760px]'
+                    showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH
                 }`}
             >
                 <div className={isWide ? 'flex items-start gap-6' : undefined}>

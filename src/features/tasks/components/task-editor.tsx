@@ -2,9 +2,10 @@ import type { TaskRead, TaskUpdate } from '@/api';
 import { useProjects } from '@/features/projects/api/get-projects';
 import { sanitizeMultilineText } from '@/lib/input-sanitization';
 import { TaskStatus } from '@/types/types';
-import { X } from 'lucide-react';
+import { Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useDeleteTask } from '../api/delete-tasks';
 import { useUpdateTask } from '../api/update-tasks';
 import { TimePicker } from './time-picker';
 
@@ -72,6 +73,7 @@ const fieldStyle: React.CSSProperties = {
  */
 export const TaskEditor = ({ task, onClose }: TaskEditorProps) => {
     const updateTask = useUpdateTask();
+    const deleteTask = useDeleteTask();
     const projectsQuery = useProjects({ profileId: task.profile_id });
     const projects = projectsQuery.data?.projects ?? [];
 
@@ -160,6 +162,21 @@ export const TaskEditor = ({ task, onClose }: TaskEditorProps) => {
                 onError: () => toast.error('Failed to save changes. Please try again.')
             }
         );
+    };
+
+    // Hard-delete: confirm first (deletion is irreversible), then remove the task.
+    // The delete mutation invalidates the ['tasks'] / project caches, so the task
+    // drops out of every band once the confirmation resolves.
+    const handleDelete = () => {
+        if (deleteTask.isPending) return;
+        if (!window.confirm('Delete this task? This cannot be undone.')) return;
+        deleteTask.mutate(task.id, {
+            onSuccess: () => {
+                toast.success('Task deleted');
+                onClose();
+            },
+            onError: () => toast.error('Failed to delete task. Please try again.')
+        });
     };
 
     return (
@@ -368,27 +385,43 @@ export const TaskEditor = ({ task, onClose }: TaskEditorProps) => {
                 </div>
             )}
 
-            {/* Save / Cancel */}
-            <div className='mt-1 flex items-center justify-end gap-2'>
+            {/* Footer: destructive Delete on the left (mirrors the habit detail
+                footer), Cancel / Save on the right. */}
+            <div className='mt-1 flex items-center justify-between gap-2'>
                 <button
                     type='button'
-                    onClick={onClose}
-                    className='rounded-button px-3 py-1.5 font-display text-[12px] text-text-muted transition-colors hover:text-text-secondary'
-                >
-                    Cancel
-                </button>
-                <button
-                    type='button'
-                    onClick={handleSave}
-                    disabled={!canSave}
-                    className='rounded-button px-3 py-1.5 font-display text-[12px] font-semibold transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50'
+                    onClick={handleDelete}
+                    disabled={deleteTask.isPending}
+                    className='inline-flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11.5px] transition-colors hover:brightness-125 disabled:cursor-not-allowed disabled:opacity-50'
                     style={{
-                        background: 'var(--button-primary-gradient)',
-                        color: 'var(--button-primary-text)'
+                        borderColor: 'var(--danger-border)',
+                        color: 'var(--color-danger)'
                     }}
                 >
-                    {updateTask.isPending ? 'Saving…' : 'Save'}
+                    <Trash2 size={13} />
+                    {deleteTask.isPending ? 'Deleting…' : 'Delete task'}
                 </button>
+                <div className='flex items-center gap-2'>
+                    <button
+                        type='button'
+                        onClick={onClose}
+                        className='rounded-button px-3 py-1.5 font-display text-[12px] text-text-muted transition-colors hover:text-text-secondary'
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type='button'
+                        onClick={handleSave}
+                        disabled={!canSave}
+                        className='rounded-button px-3 py-1.5 font-display text-[12px] font-semibold transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50'
+                        style={{
+                            background: 'var(--button-primary-gradient)',
+                            color: 'var(--button-primary-text)'
+                        }}
+                    >
+                        {updateTask.isPending ? 'Saving…' : 'Save'}
+                    </button>
+                </div>
             </div>
         </div>
     );

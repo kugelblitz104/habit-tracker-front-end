@@ -1,29 +1,35 @@
 import type { HabitCreate, HabitRead } from '@/api';
 import { createHabit } from '@/features/habits/api/create-habits';
 import { getHabits } from '@/features/habits/api/get-habits';
+import { HabitDetailPane } from '@/features/habits/components/details/habit-detail-pane';
 import { HabitList } from '@/features/habits/components/dashboard/habit-list';
 import { AddHabitModal } from '@/features/habits/components/modals/add-habit-modal';
 import { SortHabitModal } from '@/features/habits/components/modals/sort-habit-modal';
+import { useHabitDetailPane } from '@/features/habits/hooks/use-habit-detail-pane';
+import { CaptureBar } from '@/features/tasks/components/capture-bar';
+import { AppHeader } from '@/components/layouts/app-header';
+import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE } from '@/lib/layout';
 import { useAuth } from '@/lib/auth-context';
 import { useResponsiveLayout, DASHBOARD_DAYS_BY_SIZE } from '@/lib/use-responsive-layout';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { ArrowDownUp, Plus, Settings } from 'lucide-react';
+import { GripVertical } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { ButtonVariant } from '../ui/buttons/action-button';
 import { ErrorPage } from './error-page';
 import { LoadingPage } from './loading-page';
 import { sortHabits } from '@/features/habits/api/update-habits';
-import { PageShell } from '../ui/page-shell';
-import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
+
+const ghostButton =
+    'inline-flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11.5px] text-text-secondary transition-colors hover:text-text-primary';
 
 export const HabitsDashboard = () => {
     const layoutSize = useResponsiveLayout();
     const days = DASHBOARD_DAYS_BY_SIZE[layoutSize];
     const isSmall = layoutSize === 'sm';
-    const navigate = useNavigate();
     const { user, activeProfileId } = useAuth();
     const userId = user?.id || 0; // Fallback to non-existent user ID
+
+    const { isWide, selectedHabitId, selectHabit, closeHabit } = useHabitDetailPane();
 
     // hooks
     const [habits, setHabits] = useState<HabitRead[]>([]);
@@ -61,6 +67,26 @@ export const HabitsDashboard = () => {
         }
     }, [habitsQuery.data]);
 
+    // Quick-capture create path: a daily habit with a cool default color. Full
+    // options (question, frequency, category…) live behind the AddHabitModal.
+    const handleCaptureHabit = async (name: string) => {
+        if (!activeProfileId) return;
+        try {
+            await habitsAdd.mutateAsync({
+                name,
+                question: '',
+                color: '#7fa8c9',
+                frequency: 1,
+                range: 1,
+                profile_id: activeProfileId
+            });
+        } catch (error) {
+            toast.error('Failed to add habit. Please try again.');
+            // Re-throw so the capture bar keeps the typed text for a retry.
+            throw error;
+        }
+    };
+
     if (!user) {
         return <ErrorPage message='User not authenticated' />;
     }
@@ -73,33 +99,65 @@ export const HabitsDashboard = () => {
         return <ErrorPage message='Error loading habits' />;
     }
 
+    const showPane = isWide && selectedHabitId != null;
+    const subline = `${habits.length} ${habits.length === 1 ? 'habit' : 'habits'}`;
+
     return (
-        <PageShell
-            actions={[
-                {
-                    label: 'Add Habit',
-                    onClick: () => setAddHabitModalOpen(true),
-                    icon: <Plus size={24} />,
-                    variant: ButtonVariant.Primary
-                },
-                {
-                    label: 'Set Habit Order',
-                    onClick: () => setSortModalOpen(true),
-                    icon: <ArrowDownUp size={24} />,
-                    variant: ButtonVariant.Secondary
-                },
-                {
-                    label: 'Settings',
-                    onClick: () => {
-                        navigate('/settings');
-                    },
-                    icon: <Settings size={24} />,
-                    variant: ButtonVariant.Secondary
-                }
-            ]}
-        >
-            <div className='static'>
-                <HabitList habits={habits} days={days} isSmall={isSmall} />
+        <div className='min-h-screen' style={{ backgroundColor: 'var(--bg)' }}>
+            <AppHeader maxWidthClass={showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH} />
+            <div
+                className={`mx-auto px-5 py-7 md:px-7 ${
+                    showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH
+                }`}
+            >
+                <div className={isWide ? 'flex items-start gap-6' : undefined}>
+                    <div className='min-w-0 flex-1'>
+                        {/* Header */}
+                        <header className='mb-[30px] flex items-start justify-between gap-4'>
+                            <div>
+                                <h1 className='font-display text-[23px] font-bold tracking-[-0.01em] text-text-primary'>
+                                    Habits
+                                </h1>
+                                <p className='mt-0.5 font-mono text-[12px] text-text-muted'>
+                                    {subline}
+                                </p>
+                            </div>
+                            <button
+                                type='button'
+                                onClick={() => setSortModalOpen(true)}
+                                title='Change custom order'
+                                className={ghostButton}
+                                style={{ borderColor: 'var(--habit-container-border)' }}
+                            >
+                                <GripVertical size={13} />
+                                Reorder
+                            </button>
+                        </header>
+
+                        <CaptureBar
+                            onCapture={handleCaptureHabit}
+                            disabled={!activeProfileId}
+                            isPending={habitsAdd.isPending}
+                            placeholder='Add a habit — type a name and press enter'
+                        />
+
+                        <HabitList
+                            habits={habits}
+                            days={days}
+                            isSmall={isSmall}
+                            isWide={isWide}
+                            selectedHabitId={selectedHabitId}
+                            onSelectHabit={selectHabit}
+                        />
+                    </div>
+
+                    <HabitDetailPane
+                        habitId={selectedHabitId}
+                        isWide={isWide}
+                        onClose={closeHabit}
+                    />
+                </div>
+
                 <AddHabitModal
                     isOpen={addHabitModalOpen}
                     onClose={() => setAddHabitModalOpen(false)}
@@ -115,6 +173,6 @@ export const HabitsDashboard = () => {
                     habits={habits}
                 />
             </div>
-        </PageShell>
+        </div>
     );
 };

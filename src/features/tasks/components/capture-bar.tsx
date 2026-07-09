@@ -6,6 +6,8 @@ type CaptureBarProps = {
     onCapture: (title: string) => Promise<void>;
     disabled?: boolean;
     isPending?: boolean;
+    /** Override the input placeholder (defaults to the task capture copy). */
+    placeholder?: string;
 };
 
 /**
@@ -13,7 +15,12 @@ type CaptureBarProps = {
  * "return ↵" hint. Enter creates a task and clears the field only once the
  * create succeeds; on failure the typed text is preserved for a retry.
  */
-export const CaptureBar = ({ onCapture, disabled = false, isPending = false }: CaptureBarProps) => {
+export const CaptureBar = ({
+    onCapture,
+    disabled = false,
+    isPending = false,
+    placeholder = 'Add a task — type a title and press enter'
+}: CaptureBarProps) => {
     const [value, setValue] = useState('');
 
     const submit = async () => {
@@ -50,7 +57,7 @@ export const CaptureBar = ({ onCapture, disabled = false, isPending = false }: C
                 disabled={disabled || isPending}
                 onChange={(e) => setValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder='Add a task — type a title and press enter'
+                placeholder={placeholder}
                 aria-label='Add a task'
                 className='min-w-0 flex-1 bg-transparent font-display text-[14px] text-text-primary outline-none placeholder:text-text-faint'
             />

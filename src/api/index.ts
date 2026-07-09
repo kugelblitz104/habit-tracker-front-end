@@ -11,8 +11,10 @@ export type { Body_import_from_loop_habit_tracker_import_loop_habit_tracker_post
 export type { Body_login_auth_login_post } from './models/Body_login_auth_login_post';
 export type { ExportResult } from './models/ExportResult';
 export type { HabitCreate } from './models/HabitCreate';
+export type { HabitKPIs } from './models/HabitKPIs';
 export type { HabitList } from './models/HabitList';
 export type { HabitRead } from './models/HabitRead';
+export type { HabitStreak } from './models/HabitStreak';
 export type { HabitUpdate } from './models/HabitUpdate';
 export type { HTTPValidationError } from './models/HTTPValidationError';
 export type { ImportedHabitSummary } from './models/ImportedHabitSummary';

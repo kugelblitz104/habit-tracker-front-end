@@ -57,6 +57,10 @@ export const useTrackerToggle = (habit: HabitRead, date: Date): UseTrackerToggle
     const invalidateTrackerCaches = () => {
         queryClient.invalidateQueries({ queryKey: ['trackers', { habitId: habit.id }] });
         queryClient.invalidateQueries({ queryKey: ['trackers-lite', { habitId: habit.id }] });
+        // Server-computed KPIs/streaks depend on trackers; reconcile them too so any
+        // tracker change (Today panel, dashboard, detail) never leaves them stale.
+        queryClient.invalidateQueries({ queryKey: ['kpis', { habitId: habit.id }] });
+        queryClient.invalidateQueries({ queryKey: ['streaks', { habitId: habit.id }] });
     };
 
     const trackerCreate = useMutation({

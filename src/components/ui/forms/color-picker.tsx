@@ -7,28 +7,37 @@ type ColorPickerProps = {
     onColorChange: (newColor: string) => void;
 };
 
+const labelClass =
+    'mb-1 block font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-text-faint';
+
 export const ColorPicker = ({ color, onColorChange }: ColorPickerProps) => {
     const { recentColors } = useRecentColors();
 
     return (
-        <Field>
-            <Label className='block'>Color</Label>
-            <div className='flex space-x-2'>
+        <Field className='mb-3'>
+            <Label className={labelClass}>Color</Label>
+            <div className='flex space-x-3'>
                 <HexColorPicker color={color} onChange={onColorChange} className='w-10 h-10' />
                 <div className='flex flex-col'>
                     {/* using inline style definition because tailwind does not support dynamic values */}
                     <div
-                        style={{ backgroundColor: color }}
-                        className='w-27 h-27 rounded-md border-2 border-gray-300'
+                        style={{ backgroundColor: color, borderColor: 'var(--surface-input-border)' }}
+                        className='w-27 h-27 rounded-button border'
                     />
                     <Input
                         name='color'
                         value={color}
                         onChange={(e) => onColorChange(e.target.value)}
-                        className='block bg-black border-slate rounded-md py-1 px-2 w-27 my-2'
+                        className='my-2 block w-27 rounded-button border px-2.5 py-1.5 font-mono text-[12px] text-text-secondary outline-none transition-colors focus-visible:ring-1 focus-visible:ring-now-accent'
+                        style={{
+                            backgroundColor: 'var(--surface-input-bg)',
+                            borderColor: 'var(--surface-input-border)'
+                        }}
                     />
                     <div className='flex flex-col gap-1'>
-                        <span className='text-xs text-gray-400'>Recent</span>
+                        <span className='font-mono text-[10px] uppercase tracking-[0.12em] text-text-faint'>
+                            Recent
+                        </span>
                         <div className='grid grid-cols-6 gap-1'>
                             {Array.from({ length: 6 }).map((_, index) => {
                                 const recentColor = recentColors[index];
@@ -38,13 +47,18 @@ export const ColorPicker = ({ color, onColorChange }: ColorPickerProps) => {
                                         type='button'
                                         onClick={() => recentColor && onColorChange(recentColor)}
                                         disabled={!recentColor}
-                                        style={{ backgroundColor: recentColor || 'transparent' }}
+                                        style={{
+                                            backgroundColor: recentColor || 'transparent',
+                                            borderColor: recentColor
+                                                ? 'var(--surface-input-border)'
+                                                : undefined
+                                        }}
                                         className={`
                                             w-6 h-6 rounded-full border-2
                                             ${
                                                 recentColor
-                                                    ? 'border-gray-300 cursor-pointer hover:scale-110 transition-transform'
-                                                    : 'border-dashed border-gray-600'
+                                                    ? 'cursor-pointer hover:scale-110 transition-transform'
+                                                    : 'border-dashed border-[var(--surface-input-border)]'
                                             }
                                         `}
                                         title={recentColor || 'Empty slot'}
