@@ -23,6 +23,17 @@ export const formFieldStyle: React.CSSProperties = {
     borderColor: 'var(--surface-input-border)'
 };
 
+/**
+ * Explicit colors for native <option>s. Some platforms render the option popup
+ * with the system (white) background regardless of the select's color-scheme,
+ * which left our light option text invisible (white-on-white). Setting an
+ * opaque dark background + light text on each option fixes it everywhere.
+ */
+export const selectOptionStyle: React.CSSProperties = {
+    backgroundColor: '#1c1710',
+    color: 'var(--color-text-primary)'
+};
+
 type PriorityOption = {
     value: number;
     label: string;
@@ -216,6 +227,49 @@ export const DateTimeField = ({
     );
 };
 
+type EstimatedEffortFieldProps = {
+    /** Estimated effort in minutes, or null when unset. */
+    value: number | null;
+    onChange: (value: number | null) => void;
+    id?: string;
+};
+
+/**
+ * Estimated level of effort in minutes (feeds est-vs-actual against tracked
+ * time). Empty clears the estimate; negatives are coerced away.
+ */
+export const EstimatedEffortField = ({ value, onChange, id }: EstimatedEffortFieldProps) => {
+    const generatedId = useId();
+    const fieldId = id ?? `task-estimate-${generatedId}`;
+    return (
+        <div>
+            <label className={formLabelClass} htmlFor={fieldId}>
+                Estimated effort (min)
+            </label>
+            <input
+                id={fieldId}
+                type='number'
+                min={0}
+                step={5}
+                inputMode='numeric'
+                value={value ?? ''}
+                onChange={(e) => {
+                    const raw = e.target.value;
+                    if (raw === '') {
+                        onChange(null);
+                        return;
+                    }
+                    const parsed = Math.max(0, Math.floor(Number(raw)));
+                    onChange(Number.isNaN(parsed) ? null : parsed);
+                }}
+                placeholder='e.g. 30'
+                className={`${formFieldClass} placeholder:text-text-faint`}
+                style={{ ...formFieldStyle, width: '8rem' }}
+            />
+        </div>
+    );
+};
+
 type ProjectFieldProps = {
     /** Profile whose projects populate the dropdown (self-fetched). */
     profileId: number;
@@ -337,14 +391,18 @@ export const ProjectField = ({ profileId, value, onChange, id }: ProjectFieldPro
                     className={formFieldClass}
                     style={{ ...formFieldStyle, colorScheme: 'dark' }}
                 >
-                    <option value=''>No project</option>
+                    <option style={selectOptionStyle} value=''>
+                        No project
+                    </option>
                     {projects.map((project) => (
-                        <option key={project.id} value={project.id}>
+                        <option style={selectOptionStyle} key={project.id} value={project.id}>
                             {project.name}
                             {project.archived ? ' (archived)' : ''}
                         </option>
                     ))}
-                    <option value={CREATE_PROJECT_OPTION}>＋ New project…</option>
+                    <option style={selectOptionStyle} value={CREATE_PROJECT_OPTION}>
+                        ＋ New project…
+                    </option>
                 </select>
             )}
         </div>

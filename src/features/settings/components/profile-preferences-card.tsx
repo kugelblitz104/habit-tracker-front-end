@@ -2,6 +2,7 @@ import type { ProfileRead } from '@/api';
 import { useUpdateProfile } from '@/features/profiles/api/update-profiles';
 import { ProfileAvatar } from '@/features/profiles/components/profile-avatar';
 import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
+import { PomodoroSettingsGroup } from '@/features/time-entries/components/pomodoro-settings-group';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { Check, ChevronDown } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -56,7 +57,11 @@ const ProfileSelector = ({ profiles, selected, onSelect }: ProfileSelectorProps)
                         <ProfileAvatar profile={profile} size={18} />
                         <span className='truncate'>{profile.name}</span>
                         {profile.id === selected.id && (
-                            <Check size={13} className='ml-auto shrink-0 text-now-accent' strokeWidth={3} />
+                            <Check
+                                size={13}
+                                className='ml-auto shrink-0 text-now-accent'
+                                strokeWidth={3}
+                            />
                         )}
                     </button>
                 </MenuItem>
@@ -71,7 +76,8 @@ type ToggleRowConfig = {
         | 'calendar_enabled'
         | 'publish_to_azure'
         | 'week_start_monday'
-        | 'use_habit_color_accent';
+        | 'use_habit_color_accent'
+        | 'show_estimated_effort';
     title: string;
     description: string;
     /** Assumed value when the profile record predates the flag (server default). */
@@ -87,7 +93,7 @@ const TOGGLE_ROWS: ToggleRowConfig[] = [
     {
         key: 'calendar_enabled',
         title: "Today's schedule",
-        description: "Show read-only calendar events on the Today surface"
+        description: 'Show read-only calendar events on the Today surface'
     },
     {
         // Functional toggle, but it only flips the profile flag — no sync
@@ -108,6 +114,11 @@ const TOGGLE_ROWS: ToggleRowConfig[] = [
         title: 'Use habit color as accent',
         description:
             "Color each habit's detail view with that habit's own color instead of the standard cool accent"
+    },
+    {
+        key: 'show_estimated_effort',
+        title: 'Estimated effort field',
+        description: 'Show an estimated-effort (minutes) field when editing tasks'
     }
 ];
 
@@ -194,9 +205,7 @@ export const ProfilePreferencesCard = ({
                         <div className='text-[14.5px] font-medium' style={{ color: '#f0e7db' }}>
                             {row.title}
                         </div>
-                        <div className='mt-0.5 text-[12px] text-text-muted'>
-                            {row.description}
-                        </div>
+                        <div className='mt-0.5 text-[12px] text-text-muted'>{row.description}</div>
                     </div>
                     <EmberToggle
                         checked={profile[row.key] ?? row.defaultOn ?? false}
@@ -244,8 +253,7 @@ export const ProfilePreferencesCard = ({
                                     className='flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-left font-display text-[13px] text-text-secondary data-focus:bg-white/5'
                                 >
                                     {option.label}
-                                    {option.value ===
-                                        (profile.default_landing ?? 'today') && (
+                                    {option.value === (profile.default_landing ?? 'today') && (
                                         <Check
                                             size={13}
                                             className='ml-auto shrink-0 text-now-accent'
@@ -258,6 +266,8 @@ export const ProfilePreferencesCard = ({
                     </MenuItems>
                 </Menu>
             </div>
+
+            <PomodoroSettingsGroup profile={profile} />
         </SettingsCard>
     );
 };

@@ -56,7 +56,7 @@ export default function DebugPlayground() {
     return (
         <div
             className='flex min-h-screen flex-col items-center justify-center gap-3'
-            style={{ backgroundColor: 'var(--bg)' }}
+            style={{ backgroundColor: 'transparent' }}
         >
             <p className='font-mono text-[11px] uppercase tracking-[0.16em] text-text-muted'>
                 Dev debug playground

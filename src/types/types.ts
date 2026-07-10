@@ -43,6 +43,15 @@ export type TaskBand = 'now' | 'soon' | 'whenever' | 'hidden';
 /** Ordered active bands used for client-side grouping on the Today surface. */
 export const ACTIVE_TASK_BANDS: Exclude<TaskBand, 'hidden'>[] = ['now', 'soon', 'whenever'];
 
+/**
+ * Time-entry kind — mirrors backend `TimeEntryKind(int, Enum)` in constants.py.
+ * Stored on `time_entry.kind`.
+ */
+export enum TimeEntryKind {
+    STOPWATCH = 0,
+    POMODORO = 1
+}
+
 export type Frequency = {
     name: string;
     frequency: number;

@@ -20,35 +20,54 @@ export const useTaskDetailPane = () => {
     const location = useLocation();
 
     const [notesTaskId, setNotesTaskId] = useState<number | null>(null);
+    const [subtasksTaskId, setSubtasksTaskId] = useState<number | null>(null);
     const [selectedEditTaskId, setSelectedEditTaskId] = useState<number | null>(null);
+    // Whether the selected task should open straight into the edit form (from
+    // the context menu's "Edit…"/"Add subtask…") vs. the read-only view.
+    const [editIntent, setEditIntent] = useState(false);
 
     // The meta-row "notes" chip toggles the inline read-only panel.
     const toggleNotes = useCallback((taskId: number) => {
         setNotesTaskId((current) => (current === taskId ? null : taskId));
     }, []);
 
-    // Tapping a title edits the task. On wide screens it selects the task for the
-    // sticky pane (tapping the open one closes it). On narrow screens there is no
-    // pane — navigate to the full-page edit screen, remembering the current page
-    // (Today `/` or `/projects/:id`) so the screen can offer origin-aware back-nav.
+    // The subtask chip toggles a quick complete-off checklist inline.
+    const toggleSubtasks = useCallback((taskId: number) => {
+        setSubtasksTaskId((current) => (current === taskId ? null : taskId));
+    }, []);
+
+    // Tapping a title opens the task detail. On wide screens it selects the task
+    // for the sticky pane (tapping the open one closes it, unless it's an edit
+    // intent). On narrow screens there is no pane — navigate to the full-page
+    // detail screen, remembering the current page (Today `/` or `/projects/:id`)
+    // so the screen can offer origin-aware back-nav. `editing` opens edit mode.
     const selectEdit = useCallback(
-        (taskId: number) => {
+        (taskId: number, editing = false) => {
             if (isWide) {
-                setSelectedEditTaskId((current) => (current === taskId ? null : taskId));
+                setSelectedEditTaskId((current) =>
+                    current === taskId && !editing ? null : taskId
+                );
+                setEditIntent(editing);
                 return;
             }
-            navigate(`/tasks/${taskId}`, { state: { from: location.pathname } });
+            navigate(`/tasks/${taskId}`, { state: { from: location.pathname, editing } });
         },
         [isWide, navigate, location.pathname]
     );
 
-    const closeEdit = useCallback(() => setSelectedEditTaskId(null), []);
+    const closeEdit = useCallback(() => {
+        setSelectedEditTaskId(null);
+        setEditIntent(false);
+    }, []);
 
     return {
         isWide,
         notesTaskId,
+        subtasksTaskId,
         selectedEditTaskId,
+        editIntent,
         toggleNotes,
+        toggleSubtasks,
         selectEdit,
         closeEdit
     };

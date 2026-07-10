@@ -29,7 +29,7 @@ export default function HabitDetail({
 
     return (
         <ProtectedRoute>
-            <div className='min-h-screen' style={{ backgroundColor: 'var(--bg)' }}>
+            <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
                 <AppHeader maxWidthClass={PAGE_MAX_WIDTH} />
                 <div className={`mx-auto px-5 py-7 md:px-7 ${PAGE_MAX_WIDTH}`}>
                     <Link

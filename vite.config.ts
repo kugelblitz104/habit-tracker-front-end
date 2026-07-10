@@ -8,12 +8,6 @@ export default defineConfig(({ mode }) => {
 
     return {
         plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
-        build: {
-            // Ship ONE stylesheet instead of per-route CSS chunks. With split
-            // CSS, switching top-nav tabs renders the new route before its CSS
-            // chunk arrives, flashing fallback fonts/styles for a beat.
-            cssCodeSplit: false
-        },
         define: {
             __API_BASE_URL__: JSON.stringify(
                 env.API_BASE_URL || 'http://localhost:8080'

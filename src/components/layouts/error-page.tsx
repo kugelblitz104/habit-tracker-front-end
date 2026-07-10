@@ -8,7 +8,7 @@ export const ErrorPage = ({ message }: ErrorPageProps) => {
     return (
         <div
             className='flex min-h-screen items-center justify-center px-6'
-            style={{ backgroundColor: 'var(--bg)' }}
+            style={{ backgroundColor: 'transparent' }}
         >
             <div className='flex max-w-sm flex-col items-center gap-3 text-center'>
                 <AlertTriangle size={28} color='var(--color-danger)' strokeWidth={2} />

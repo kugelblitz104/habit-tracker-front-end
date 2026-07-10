@@ -4,9 +4,17 @@ import { useCalendarEvents } from '@/features/calendar/api/get-calendar-events';
 import { useAuth } from '@/lib/auth-context';
 import { getBrowserTimeZone, parseLocalDate, toLocalDateString } from '@/lib/date-utils';
 import { CalendarDays } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
-// Today + the next 7 days.
-const SCHEDULE_WINDOW_DAYS = 8;
+// How far ahead the schedule looks (includes today). Backend caps at 14.
+const DAY_PRESETS = [
+    { days: 1, label: 'Today' },
+    { days: 3, label: '3d' },
+    { days: 7, label: '1w' },
+    { days: 14, label: '2w' }
+] as const;
+const DEFAULT_WINDOW_DAYS = 7;
+const SCHEDULE_DAYS_KEY = 'today_schedule_days';
 
 // The panel lives on the Today page, so the upcoming list can't grow
 // unbounded: show at most this many upcoming rows, then a "+n more" line.
@@ -108,6 +116,17 @@ export const TodaySchedule = () => {
     const targetDate = toLocalDateString(new Date());
     const tz = getBrowserTimeZone();
 
+    // How many days ahead to show (persisted per browser).
+    const [windowDays, setWindowDays] = useState(DEFAULT_WINDOW_DAYS);
+    useEffect(() => {
+        const stored = Number(localStorage.getItem(SCHEDULE_DAYS_KEY));
+        if (DAY_PRESETS.some((preset) => preset.days === stored)) setWindowDays(stored);
+    }, []);
+    const changeWindow = (days: number) => {
+        setWindowDays(days);
+        localStorage.setItem(SCHEDULE_DAYS_KEY, String(days));
+    };
+
     const connectionsQuery = useCalendarConnections({
         profileId,
         queryConfig: { enabled: !!profileId && calendarEnabled }
@@ -119,7 +138,7 @@ export const TodaySchedule = () => {
     const eventsQuery = useCalendarEvents({
         profileId,
         targetDate,
-        days: SCHEDULE_WINDOW_DAYS,
+        days: windowDays,
         tz,
         queryConfig: {
             enabled: !!profileId && calendarEnabled && hasEnabledConnections
@@ -175,6 +194,31 @@ export const TodaySchedule = () => {
                 <span className='font-mono text-[10px]' style={{ color: '#615c72' }}>
                     read-only
                 </span>
+                <span
+                    className='flex items-center gap-0.5 rounded-chip border p-0.5'
+                    style={{ borderColor: 'var(--surface-input-border)' }}
+                >
+                    {DAY_PRESETS.map((preset) => {
+                        const selected = preset.days === windowDays;
+                        return (
+                            <button
+                                key={preset.days}
+                                type='button'
+                                onClick={() => changeWindow(preset.days)}
+                                aria-pressed={selected}
+                                className='rounded-chip px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] transition-colors'
+                                style={{
+                                    backgroundColor: selected
+                                        ? 'rgba(255,255,255,.06)'
+                                        : 'transparent',
+                                    color: selected ? '#a29bcf' : 'var(--color-text-muted)'
+                                }}
+                            >
+                                {preset.label}
+                            </button>
+                        );
+                    })}
+                </span>
                 <span className='flex-1' />
                 {enabledConnections.map((connection) => (
                     <span
@@ -207,7 +251,7 @@ export const TodaySchedule = () => {
                 </p>
             ) : eventsQuery.isLoading ? null : events.length === 0 ? (
                 <p className='font-mono text-[12px] text-text-faint'>
-                    No events in the next 7 days.
+                    {windowDays === 1 ? 'No events today.' : 'No events in this range.'}
                 </p>
             ) : (
                 <>
@@ -257,7 +301,7 @@ export const TodaySchedule = () => {
                                     className='mt-2 font-mono text-[10.5px]'
                                     style={{ color: '#6f685e' }}
                                 >
-                                    +{hiddenUpcomingCount} more this week
+                                    +{hiddenUpcomingCount} more
                                 </p>
                             )}
                         </div>

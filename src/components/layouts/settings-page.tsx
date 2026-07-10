@@ -34,7 +34,7 @@ export const SettingsPage = () => {
     ].filter(Boolean);
 
     return (
-        <div className='min-h-screen' style={{ backgroundColor: 'var(--bg)' }}>
+        <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
             <AppHeader />
             <div className={`mx-auto px-5 py-7 md:px-7 ${PAGE_MAX_WIDTH}`}>
                 <div className='mx-auto max-w-[820px]'>

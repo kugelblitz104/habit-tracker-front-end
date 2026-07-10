@@ -33,3 +33,16 @@ export const parseLocalDate = (dateStr: string): Date => {
     const [year, month, day] = dateStr.split('-').map(Number) as [number, number, number];
     return new Date(year, month - 1, day);
 };
+
+/**
+ * Parse a datetime string returned by the API. FastAPI serializes naive
+ * datetimes (the API container's clock runs UTC) with NO timezone designator,
+ * e.g. "2026-07-10T16:38:36.7" — the browser would otherwise read that as local
+ * time and skew any "now − then" math by the UTC offset. Append 'Z' so it's
+ * parsed as the UTC instant it actually is; values that already carry an offset
+ * or 'Z' are left untouched. Critical for live timer elapsed calculations.
+ */
+export const parseServerDate = (value: string): Date => {
+    const hasTz = /[zZ]$|[+-]\d{2}:?\d{2}$/.test(value);
+    return new Date(hasTz ? value : `${value}Z`);
+};

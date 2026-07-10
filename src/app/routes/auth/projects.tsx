@@ -1,6 +1,6 @@
 import type { ProjectRead } from '@/api';
 import { AppHeader } from '@/components/layouts/app-header';
-import { ToggleButton } from '@/components/ui/buttons/toggle-button';
+import { Switch } from '@headlessui/react';
 import { ProtectedRoute } from '@/features/auth/components/protected-route';
 import { useCreateProject } from '@/features/projects/api/create-projects';
 import { useProjects } from '@/features/projects/api/get-projects';
@@ -60,10 +60,6 @@ function ProjectsContent() {
     const projects = allProjects.filter((p) => !p.archived);
     const archivedProjects = allProjects.filter((p) => p.archived);
 
-    const subline =
-        `${projects.length} ${projects.length === 1 ? 'project' : 'projects'}` +
-        (archivedProjects.length > 0 ? ` · ${archivedProjects.length} archived` : '');
-
     // Quick-capture create path: name only, with a sensible random palette color.
     // Color/notes are editable afterwards on the project view.
     const handleCaptureProject = async (name: string) => {
@@ -83,31 +79,53 @@ function ProjectsContent() {
     };
 
     return (
-        <div className='min-h-screen' style={{ backgroundColor: 'var(--bg)' }}>
+        <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
             <AppHeader maxWidthClass={PAGE_MAX_WIDTH} />
             <div className={`mx-auto px-5 py-7 md:px-7 ${PAGE_MAX_WIDTH}`}>
-                <header className='mb-[30px] flex items-start justify-between gap-4'>
-                    <div>
-                        <h1 className='font-display text-[23px] font-bold tracking-[-0.01em] text-text-primary'>
-                            Projects
-                        </h1>
-                        <p className='mt-0.5 font-mono text-[12px] text-text-muted'>{subline}</p>
+                {archivedProjects.length > 0 && (
+                    <div className='mb-5 flex items-center justify-end'>
+                        <label className='flex cursor-pointer items-center gap-2'>
+                            <span
+                                className={`font-mono text-[10.5px] uppercase tracking-[0.12em] ${
+                                    showArchived ? 'text-habit-label' : 'text-text-muted'
+                                }`}
+                            >
+                                Archived ({archivedProjects.length})
+                            </span>
+                            <Switch
+                                checked={showArchived}
+                                onChange={setShowArchived}
+                                aria-label='Show archived projects'
+                                className='relative inline-flex h-[18px] w-8 shrink-0 items-center rounded-full border outline-none transition-colors focus-visible:opacity-80'
+                                style={{
+                                    borderColor: showArchived
+                                        ? 'var(--color-habit-accent)'
+                                        : 'var(--habit-container-border)',
+                                    backgroundColor: showArchived
+                                        ? 'var(--color-habit-accent)'
+                                        : 'transparent'
+                                }}
+                            >
+                                <span
+                                    aria-hidden='true'
+                                    className='pointer-events-none inline-block h-3 w-3 rounded-full transition-transform'
+                                    style={{
+                                        backgroundColor: '#eef3f7',
+                                        transform: showArchived
+                                            ? 'translateX(16px)'
+                                            : 'translateX(2px)'
+                                    }}
+                                />
+                            </Switch>
+                        </label>
                     </div>
-                    {archivedProjects.length > 0 && (
-                        <ToggleButton
-                            isActive={showArchived}
-                            onClick={() => setShowArchived((prev) => !prev)}
-                        >
-                            Archived
-                        </ToggleButton>
-                    )}
-                </header>
+                )}
 
                 <CaptureBar
                     onCapture={handleCaptureProject}
                     disabled={!activeProfileId}
                     isPending={createProject.isPending}
-                    placeholder='Add a project — type a name and press enter'
+                    placeholder='Add a project'
                 />
 
                 {projectsQuery.isError && (

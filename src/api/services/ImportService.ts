@@ -70,7 +70,7 @@ export class ImportService {
      * - `archived` → `archived`
      * - `sort_order` → `position`
      * - `notes` → `description`
-     * - Tracker `status` → Repetition `value` (1 = skipped, 2 = completed)
+     * - Tracker `status` → Repetition `value` (3 = skipped, 2 = completed)
      * - Tracker `note` → Repetition `notes`
      * @param includeArchived
      * @param profileId Only export habits belonging to this profile. Must belong to the current user; omit to export all of the user's habits.

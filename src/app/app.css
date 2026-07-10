@@ -1,3 +1,24 @@
+/*
+ * ALL third-party CSS is @imported here (not side-effect imported in
+ * root.tsx) so the whole app ships as this ONE stylesheet, linked
+ * explicitly via `app.css?url` in root.tsx's links(). Side-effect CSS
+ * imports land in a Vite CSS chunk that React Router's manifest loses
+ * when cssCodeSplit is off (react-router#13620) — the deployed app then
+ * renders with no stylesheet at all.
+ *
+ * react-toastify MUST stay first: our --toastify-* overrides further down
+ * beat its stock :root block only by source order.
+ */
+@import 'react-toastify/dist/ReactToastify.css';
+
+/* Self-hosted fonts (Space Grotesk display + JetBrains Mono meta). */
+@import '@fontsource/space-grotesk/400.css';
+@import '@fontsource/space-grotesk/500.css';
+@import '@fontsource/space-grotesk/600.css';
+@import '@fontsource/space-grotesk/700.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+
 @import 'tailwindcss';
 
 /*
@@ -132,6 +153,14 @@
 :root {
     /* ---- Dynamic theme defaults (tone=ember, heat=warm, focus=false) ---- */
     --bg: #17130c;
+    /* App background: a light orange glow fading from the top into --bg.
+       ADJUST HERE: the accent-mix % controls warmth/intensity, the second
+       stop (42%) controls how far down the glow reaches. */
+    --app-bg: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-now-accent) 14%, var(--bg)) 0%,
+        var(--bg) 42%
+    );
     --wash: 0.16;
     --glow: 0.42;
     --quiet: 1;
@@ -237,10 +266,16 @@
 /* Default the whole app to the warm dark theme. */
 html,
 body {
-    background-color: var(--bg);
+    background: var(--app-bg);
+    /* Anchor the glow to the top of the viewport (not the top of a long,
+       scrolling document). */
+    background-attachment: fixed;
     color: var(--color-text-primary);
     font-family: var(--font-display);
     color-scheme: dark;
+    /* Always reserve the scrollbar gutter so page width / centering is
+       identical whether a page scrolls (Today) or not (Projects, Settings…). */
+    scrollbar-gutter: stable;
 }
 
 /*

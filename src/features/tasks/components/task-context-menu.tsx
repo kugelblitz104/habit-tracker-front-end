@@ -2,7 +2,7 @@ import type { TaskRead, TaskUpdate } from '@/api';
 import { useProjects } from '@/features/projects/api/get-projects';
 import { parseLocalDate, toLocalDateString } from '@/lib/date-utils';
 import { TaskStatus } from '@/types/types';
-import { Check, ChevronLeft, ChevronRight, ListPlus, Pencil, Trash2 } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, ListPlus, Pencil, Timer, Trash2 } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router';
@@ -25,10 +25,17 @@ type TaskContextMenuProps = {
      * identical per surface (Today toasts done/cancelled; project view is quiet).
      */
     onStatusChange: (status: TaskStatus) => void;
-    /** Open the task editor (pane on wide screens, `/tasks/:id` on narrow). */
-    onSelectEdit: () => void;
+    /**
+     * Open the task detail (pane on wide screens, `/tasks/:id` on narrow).
+     * Pass `true` to open straight into the edit form.
+     */
+    onSelectEdit: (editing?: boolean) => void;
     /** Editor already open for this task — skip selectEdit's toggle-close. */
     editing: boolean;
+    /** Start a timer attached to this task (omit to hide the action). */
+    onStartTimer?: () => void;
+    /** Open the inline quick-add subtask popover (omit to fall back to the editor). */
+    onAddSubtask?: () => void;
 };
 
 type MenuView = 'root' | 'status' | 'priority' | 'project' | 'due' | 'scheduled';
@@ -55,6 +62,15 @@ const quickDate = (offsetDays: number): string => {
 
 const itemClass =
     'flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-left font-display text-[13px] hover:bg-white/5';
+
+const dateInputClass =
+    'w-full rounded-button border px-2 py-1 font-mono text-[12px] text-text-secondary outline-none focus-visible:ring-1 focus-visible:ring-now-accent';
+
+const dateInputStyle: React.CSSProperties = {
+    backgroundColor: 'var(--surface-input-bg)',
+    borderColor: 'var(--surface-input-border)',
+    colorScheme: 'dark'
+};
 
 const CURRENT_BG = 'rgba(255,255,255,0.05)';
 
@@ -111,7 +127,9 @@ export const TaskContextMenu = ({
     onClose,
     onStatusChange,
     onSelectEdit,
-    editing
+    editing,
+    onStartTimer,
+    onAddSubtask
 }: TaskContextMenuProps) => {
     const updateTask = useUpdateTask();
     const deleteTask = useDeleteTask();
@@ -192,8 +210,21 @@ export const TaskContextMenu = ({
     };
 
     const openEditor = () => {
-        // selectEdit toggles on wide screens — don't close an already-open pane.
-        if (!editing) onSelectEdit();
+        // Open straight into the edit form (edit intent keeps it open even when
+        // the pane already shows this task).
+        onSelectEdit(true);
+        onClose();
+    };
+
+    const handleStartTimer = () => {
+        onClose();
+        onStartTimer?.();
+    };
+
+    const handleAddSubtask = () => {
+        // Prefer the inline quick-add popover; fall back to the editor.
+        if (onAddSubtask) onAddSubtask();
+        else onSelectEdit(true);
         onClose();
     };
 
@@ -259,10 +290,20 @@ export const TaskContextMenu = ({
 
                     <Divider />
 
+                    {onStartTimer && (
+                        <button
+                            type='button'
+                            onClick={handleStartTimer}
+                            className={`${itemClass} text-text-secondary`}
+                        >
+                            <Timer size={14} className='text-text-muted' />
+                            Start timer
+                        </button>
+                    )}
                     {task.parent_id == null && (
                         <button
                             type='button'
-                            onClick={openEditor}
+                            onClick={handleAddSubtask}
                             className={`${itemClass} text-text-secondary`}
                         >
                             <ListPlus size={14} className='text-text-muted' />
@@ -441,6 +482,18 @@ export const TaskContextMenu = ({
                             </button>
                         );
                     })}
+                    <div className='px-2 py-1.5'>
+                        <input
+                            type='date'
+                            defaultValue={task.due_date ?? ''}
+                            onChange={(e) =>
+                                e.target.value && patchTask({ due_date: e.target.value })
+                            }
+                            aria-label='Pick a due date'
+                            className={dateInputClass}
+                            style={dateInputStyle}
+                        />
+                    </div>
                     {task.due_date && (
                         <>
                             <Divider />
@@ -486,6 +539,22 @@ export const TaskContextMenu = ({
                             </button>
                         );
                     })}
+                    <div className='px-2 py-1.5'>
+                        <input
+                            type='date'
+                            defaultValue={task.scheduled_date ?? ''}
+                            onChange={(e) =>
+                                e.target.value &&
+                                patchTask({
+                                    scheduled_date: e.target.value,
+                                    status: TaskStatus.SCHEDULED
+                                })
+                            }
+                            aria-label='Pick a scheduled date'
+                            className={dateInputClass}
+                            style={dateInputStyle}
+                        />
+                    </div>
                     {task.scheduled_date && (
                         <>
                             <Divider />

@@ -9,17 +9,21 @@ import { ProjectEditor } from '@/features/projects/components/project-editor';
 import { useTasks } from '@/features/tasks/api/get-tasks';
 import { useUpdateTask } from '@/features/tasks/api/update-tasks';
 import { BandSection } from '@/features/tasks/components/band-section';
+import { CompletedSection } from '@/features/tasks/components/completed-section';
 import { TaskDetailPane } from '@/features/tasks/components/task-detail-pane';
 import { useTaskDetailPane } from '@/features/tasks/hooks/use-task-detail-pane';
 import { countGroupedTasks, groupTasksByBand } from '@/features/tasks/utils/task-bands';
+import { useCreateTimeEntry } from '@/features/time-entries/api/create-time-entries';
+import { ProjectTimeLog } from '@/features/time-entries/components/project-time-log';
+import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
 import { AppHeader } from '@/components/layouts/app-header';
 import { sanitizeText } from '@/lib/input-sanitization';
 import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE } from '@/lib/layout';
 import { useAuth } from '@/lib/auth-context';
-import { type TaskStatus } from '@/types/types';
+import { TimeEntryKind, type TaskStatus } from '@/types/types';
 import { Archive, ArchiveRestore, Pencil, Trash } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import type { Route } from './+types/project';
 
@@ -31,23 +35,49 @@ function ProjectContent({ projectId }: { projectId: number }) {
     const { activeProfileId } = useAuth();
     const profileId = activeProfileId ?? undefined;
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // Origin-aware back: from Today go back to all tasks, otherwise to Projects.
+    const from = (location.state as { from?: string } | null)?.from;
+    const backTo = from === '/' ? '/' : '/projects';
+    const backLabel = from === '/' ? '‹ All tasks' : '‹ Projects';
 
     const projectQuery = useProject({ projectId });
     const tasksQuery = useTasks({ profileId, projectId });
     const updateTask = useUpdateTask();
     const updateProject = useUpdateProject();
     const deleteProject = useDeleteProject();
+    const createTimeEntry = useCreateTimeEntry();
 
     const [isEditing, setIsEditing] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-    const { isWide, notesTaskId, selectedEditTaskId, toggleNotes, selectEdit, closeEdit } =
-        useTaskDetailPane();
+    const {
+        isWide,
+        notesTaskId,
+        subtasksTaskId,
+        selectedEditTaskId,
+        editIntent,
+        toggleNotes,
+        toggleSubtasks,
+        selectEdit,
+        closeEdit
+    } = useTaskDetailPane();
+
+    const handleStartTimer = (taskId: number) => {
+        if (!activeProfileId) return;
+        createTimeEntry.mutate(
+            { profile_id: activeProfileId, task_id: taskId, kind: TimeEntryKind.STOPWATCH },
+            {
+                onSuccess: () => toast.success('Timer started'),
+                onError: (error) => toast.error(apiErrorMessage(error, 'Failed to start timer'))
+            }
+        );
+    };
 
     const project = projectQuery.data;
     const tasks = tasksQuery.data?.tasks ?? [];
-    const selectedTask = tasks.find((task) => task.id === selectedEditTaskId) ?? null;
-    const showPane = isWide && selectedTask !== null;
+    const showPane = isWide && selectedEditTaskId !== null;
 
     // Every task here belongs to this one project, so a single-entry map is all
     // TaskCard needs to render its project tag.
@@ -102,7 +132,7 @@ function ProjectContent({ projectId }: { projectId: number }) {
     const hasTasks = countGroupedTasks(grouped) > 0;
 
     return (
-        <div className='min-h-screen' style={{ backgroundColor: 'var(--bg)' }}>
+        <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
             <AppHeader maxWidthClass={showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH} />
             <div
                 className={`mx-auto px-5 py-7 md:px-7 ${
@@ -140,10 +170,10 @@ function ProjectContent({ projectId }: { projectId: number }) {
                                 {/* Header */}
                                 <header className='mb-[30px]'>
                                     <Link
-                                        to='/'
+                                        to={backTo}
                                         className='font-mono text-[12px] text-text-muted hover:text-text-secondary'
                                     >
-                                        ‹ All tasks
+                                        {backLabel}
                                     </Link>
 
                                     <div className='mt-3 flex items-start justify-between gap-4'>
@@ -237,6 +267,9 @@ function ProjectContent({ projectId }: { projectId: number }) {
                                         selectedEditTaskId={selectedEditTaskId}
                                         onToggleNotes={toggleNotes}
                                         onSelectEdit={selectEdit}
+                                        subtasksTaskId={subtasksTaskId}
+                                        onToggleSubtasks={toggleSubtasks}
+                                        onStartTimer={handleStartTimer}
                                         headerAccessory={
                                             band === 'now' ? (
                                                 <Link
@@ -255,6 +288,15 @@ function ProjectContent({ projectId }: { projectId: number }) {
                                         No tasks in this project yet.
                                     </p>
                                 )}
+
+                                <CompletedSection
+                                    profileId={activeProfileId}
+                                    projectId={projectId}
+                                    onSelectTask={selectEdit}
+                                    selectedTaskId={selectedEditTaskId}
+                                />
+
+                                <ProjectTimeLog profileId={activeProfileId} projectId={projectId} />
 
                                 {/* Footer: Archive / Delete danger zone, separated from the
                             content by a hairline (mirrors the habit detail footer). */}
@@ -295,7 +337,12 @@ function ProjectContent({ projectId }: { projectId: number }) {
                         )}
                     </div>
 
-                    <TaskDetailPane task={selectedTask} isWide={isWide} onClose={closeEdit} />
+                    <TaskDetailPane
+                        taskId={selectedEditTaskId}
+                        isWide={isWide}
+                        onClose={closeEdit}
+                        defaultEditing={editIntent}
+                    />
                 </div>
             </div>
 

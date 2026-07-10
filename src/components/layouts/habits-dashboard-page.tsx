@@ -115,9 +115,17 @@ export const HabitsDashboard = () => {
 
     const showPane = isWide && selectedHabitId != null;
     const subline = `${habits.length} ${habits.length === 1 ? 'habit' : 'habits'}`;
+    // Header = how many of today's habits still need doing (not done, not skipped).
+    const habitsLeft = habits.filter(
+        (habit) => !habit.archived && !habit.completed_today && !habit.skipped_today
+    ).length;
+    const headerTitle =
+        habitsLeft > 0
+            ? `${habitsLeft} ${habitsLeft === 1 ? 'habit' : 'habits'} left`
+            : 'All habits done';
 
     return (
-        <div className='min-h-screen' style={{ backgroundColor: 'var(--bg)' }}>
+        <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
             <AppHeader maxWidthClass={showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH} />
             <div
                 className={`mx-auto px-5 py-7 md:px-7 ${
@@ -130,7 +138,7 @@ export const HabitsDashboard = () => {
                         <header className='mb-[30px] flex items-start justify-between gap-4'>
                             <div>
                                 <h1 className='font-display text-[23px] font-bold tracking-[-0.01em] text-text-primary'>
-                                    Habits
+                                    {headerTitle}
                                 </h1>
                                 <p className='mt-0.5 font-mono text-[12px] text-text-muted'>
                                     {subline}
@@ -161,7 +169,7 @@ export const HabitsDashboard = () => {
                             onCapture={handleCaptureHabit}
                             disabled={!activeProfileId}
                             isPending={habitsAdd.isPending}
-                            placeholder='Add a habit — type a name and press enter'
+                            placeholder='Add a habit'
                         />
 
                         <HabitList

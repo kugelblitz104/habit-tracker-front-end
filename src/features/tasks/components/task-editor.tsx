@@ -1,4 +1,5 @@
 import type { TaskRead, TaskUpdate } from '@/api';
+import { useAuth } from '@/lib/auth-context';
 import { sanitizeMultilineText } from '@/lib/input-sanitization';
 import { TaskStatus } from '@/types/types';
 import { Trash2 } from 'lucide-react';
@@ -7,8 +8,11 @@ import { toast } from 'react-toastify';
 import { useDeleteTask } from '../api/delete-tasks';
 import { useUpdateTask } from '../api/update-tasks';
 import { SubtaskSection } from './subtask-section';
+import { useTimeEntrySummary } from '@/features/time-entries/api/get-time-entries';
+import { formatHumanDuration } from '@/features/time-entries/utils/format-duration';
 import {
     DateTimeField,
+    EstimatedEffortField,
     formFieldClass,
     formFieldStyle,
     formLabelClass,
@@ -19,8 +23,12 @@ import {
 
 type TaskEditorProps = {
     task: TaskRead;
-    /** Close the panel (Cancel, or after a successful save). */
+    /** Leave the editor (Cancel, or after a successful save). */
     onClose: () => void;
+    /** Called after a successful delete; falls back to onClose when omitted.
+     *  Lets a host (e.g. the detail view) close the whole surface rather than
+     *  just returning to a now-deleted task's read view. */
+    onDeleted?: () => void;
 };
 
 /**
@@ -30,7 +38,9 @@ type TaskEditorProps = {
  * via a partial PATCH that only sends changed fields. Bands are server-computed,
  * so a priority/due change may relocate the task once the list refetches.
  */
-export const TaskEditor = ({ task, onClose }: TaskEditorProps) => {
+export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
+    const { activeProfile } = useAuth();
+    const showEstimatedEffort = activeProfile?.show_estimated_effort ?? false;
     const updateTask = useUpdateTask();
     const deleteTask = useDeleteTask();
 
@@ -46,7 +56,16 @@ export const TaskEditor = ({ task, onClose }: TaskEditorProps) => {
     const [scheduledDate, setScheduledDate] = useState(task.scheduled_date ?? '');
     const [scheduledTime, setScheduledTime] = useState(task.scheduled_time ?? '');
     const [projectId, setProjectId] = useState<number | null>(task.project_id ?? null);
+    const [estimatedEffort, setEstimatedEffort] = useState<number | null>(
+        task.estimated_effort ?? null
+    );
     const [blockReason, setBlockReason] = useState(task.block_reason ?? '');
+
+    // Actual tracked time for this task (sum of completed entries), shown beside
+    // the estimate for a quick est-vs-actual read.
+    const summaryQuery = useTimeEntrySummary({ profileId: task.profile_id });
+    const trackedSeconds =
+        summaryQuery.data?.per_task?.find((row) => row.task_id === task.id)?.total_seconds ?? 0;
 
     // Scheduled date/time only apply while the task is Scheduled. Whenever the
     // selected status is anything else, drop the local values so the field starts
@@ -81,6 +100,9 @@ export const TaskEditor = ({ task, onClose }: TaskEditorProps) => {
             patch.scheduled_time = scheduledTime || null;
 
         if (projectId !== (task.project_id ?? null)) patch.project_id = projectId;
+
+        if (estimatedEffort !== (task.estimated_effort ?? null))
+            patch.estimated_effort = estimatedEffort;
 
         if (isBlocked) {
             const trimmedReason = blockReason.trim();
@@ -119,7 +141,7 @@ export const TaskEditor = ({ task, onClose }: TaskEditorProps) => {
         deleteTask.mutate(task.id, {
             onSuccess: () => {
                 toast.success('Task deleted');
-                onClose();
+                (onDeleted ?? onClose)();
             },
             onError: () => toast.error('Failed to delete task. Please try again.')
         });
@@ -176,6 +198,23 @@ export const TaskEditor = ({ task, onClose }: TaskEditorProps) => {
                     dateAriaLabel='Scheduled date'
                     timeAriaLabel='Scheduled time'
                 />
+            )}
+
+            {/* Estimated effort (+ actual tracked time for a quick comparison).
+                Field visibility is a per-profile preference. */}
+            {showEstimatedEffort && (
+                <div>
+                    <EstimatedEffortField
+                        id={`task-estimate-${task.id}`}
+                        value={estimatedEffort}
+                        onChange={setEstimatedEffort}
+                    />
+                    {trackedSeconds > 0 && (
+                        <p className='mt-1 font-mono text-[11px] text-text-faint'>
+                            {formatHumanDuration(trackedSeconds)} tracked
+                        </p>
+                    )}
+                </div>
             )}
 
             {/* Project */}

@@ -27,7 +27,7 @@ export const CaptureBar = ({
     onExpand,
     disabled = false,
     isPending = false,
-    placeholder = 'Add a task — type a title and press enter'
+    placeholder = 'Add a task'
 }: CaptureBarProps) => {
     const [value, setValue] = useState('');
 

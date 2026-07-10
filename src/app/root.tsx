@@ -69,6 +69,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <head>
                 <meta charSet='utf-8' />
                 <meta name='viewport' content='width=device-width, initial-scale=1' />
+                {/* PWA: installable app metadata + icons. */}
+                <link rel='manifest' href='/manifest.webmanifest' />
+                <meta name='theme-color' content='#17130c' />
+                <meta name='mobile-web-app-capable' content='yes' />
+                <meta name='apple-mobile-web-app-capable' content='yes' />
+                <meta name='apple-mobile-web-app-status-bar-style' content='black-translucent' />
+                <meta name='apple-mobile-web-app-title' content='Ergosphere' />
+                <link rel='icon' href='/icon-192.png' type='image/png' />
+                <link rel='apple-touch-icon' href='/icon-192.png' />
                 <Meta />
                 <Links />
             </head>
@@ -88,6 +97,13 @@ export default function App() {
                 defaultOptions: queryConfig
             })
     );
+
+    // Register the service worker (client-only) so the app is installable and
+    // works offline. Prod-safe: failures are swallowed.
+    React.useEffect(() => {
+        if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }, []);
     return (
         <QueryClientProvider client={queryClient}>
             <AuthProvider>
@@ -100,7 +116,7 @@ export default function App() {
                     data-heat='warm'
                     data-focus='false'
                     className='min-h-screen'
-                    style={{ backgroundColor: 'var(--bg)' }}
+                    style={{ backgroundColor: 'transparent' }}
                 >
                     <Outlet />
                     {/* Inside the tone wrapper so toasts inherit any theme vars

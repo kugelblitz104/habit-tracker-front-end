@@ -4,9 +4,11 @@ import { useLongPress } from '@/lib/use-long-press';
 import { TaskStatus, type TaskBand } from '@/types/types';
 import { ChevronRight, ListChecks } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import { getDueInfo, getScheduledLabel } from '../utils/task-format';
+import { CardSubtaskChecklist } from './card-subtask-checklist';
 import { PriorityMeter } from './priority-meter';
+import { SubtaskQuickAdd } from './subtask-quick-add';
 import { STATUS_META } from './status-config';
 import { StatusControl } from './status-control';
 import { TaskContextMenu, type MenuPoint } from './task-context-menu';
@@ -24,8 +26,14 @@ export type TaskCardProps = {
     editing: boolean;
     /** Toggle the read-only notes panel (meta-row "notes" chip). */
     onToggleNotes: () => void;
-    /** Select this task for the edit detail pane/overlay (title click). */
-    onSelectEdit: () => void;
+    /** Open this task's detail (title click = view; pass true for edit). */
+    onSelectEdit: (editing?: boolean) => void;
+    /** Whether the inline subtask quick-clear checklist is open. */
+    subtasksOpen?: boolean;
+    /** Toggle the subtask quick-clear checklist (subtask chip). */
+    onToggleSubtasks?: () => void;
+    /** Start a timer attached to this task (from the context menu). */
+    onStartTimer?: () => void;
     /** Prefer opening the status picker upward (last rows of a band). */
     openUpward?: boolean;
 };
@@ -55,7 +63,9 @@ const BAND_STYLE: Record<ActiveBand, BandStyle> = {
         title: 'text-[15.5px] font-medium leading-snug text-text-secondary'
     },
     whenever: {
-        container: 'border-b py-2',
+        // px-3 matches Soon's horizontal inset so the status control + title
+        // line up with the Soon / Needs-attention cards above (was flush-left).
+        container: 'border-b px-3 py-2',
         containerStyle: { borderColor: 'var(--color-whenever-ring)' },
         title: 'text-[14px] font-normal leading-snug text-whenever-text'
     }
@@ -83,8 +93,12 @@ export const TaskCard = ({
     editing,
     onToggleNotes,
     onSelectEdit,
+    subtasksOpen,
+    onToggleSubtasks,
+    onStartTimer,
     openUpward
 }: TaskCardProps) => {
+    const { pathname } = useLocation();
     const style = BAND_STYLE[band];
     const status = (task.status ?? TaskStatus.OPEN) as TaskStatus;
     const statusMeta = STATUS_META[status];
@@ -126,6 +140,9 @@ export const TaskCard = ({
     // and dismissal listeners exist only then.
     const [menuPoint, setMenuPoint] = useState<MenuPoint | null>(null);
     const closeMenu = useCallback(() => setMenuPoint(null), []);
+    // Inline "add subtask" quick-entry popover, opened from the context menu at
+    // the same cursor point.
+    const [subtaskAddPoint, setSubtaskAddPoint] = useState<MenuPoint | null>(null);
 
     // Swallow the click that trails a long-press so it can't also fire the
     // title's edit action (or a menu item that lands under the finger).
@@ -187,7 +204,7 @@ export const TaskCard = ({
                 <div className='min-w-0 flex-1'>
                     <button
                         type='button'
-                        onClick={onSelectEdit}
+                        onClick={() => onSelectEdit()}
                         aria-pressed={editing}
                         className={`block w-full truncate text-left font-display hover:opacity-90 ${
                             style.title
@@ -202,13 +219,11 @@ export const TaskCard = ({
                         {project && (
                             <Link
                                 to={`/projects/${project.id}`}
-                                className='inline-flex items-center gap-1.5 text-text-muted hover:text-text-secondary'
+                                state={{ from: pathname }}
+                                className='font-semibold transition-opacity hover:opacity-80'
+                                style={{ color: project.color }}
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                <span
-                                    className='inline-block h-2 w-2 rounded-full'
-                                    style={{ backgroundColor: project.color }}
-                                />
                                 {project.name}
                             </Link>
                         )}
@@ -216,10 +231,21 @@ export const TaskCard = ({
                         {statusMeta.pillText && statusMeta.pillBg && (
                             <span
                                 className='inline-block max-w-[220px] truncate rounded-chip px-2 py-0.5 align-bottom'
-                                style={{
-                                    color: statusMeta.pillText,
-                                    backgroundColor: statusMeta.pillBg
-                                }}
+                                style={
+                                    // A blocked task's pill is a hard-to-miss red so its
+                                    // reason jumps out.
+                                    status === TaskStatus.BLOCKED
+                                        ? {
+                                              color: 'var(--color-danger)',
+                                              backgroundColor:
+                                                  'var(--danger-bg, rgba(193,78,106,0.14))',
+                                              border: '1px solid var(--danger-border)'
+                                          }
+                                        : {
+                                              color: statusMeta.pillText,
+                                              backgroundColor: statusMeta.pillBg
+                                          }
+                                }
                                 title={pillLabel}
                             >
                                 {pillLabel}
@@ -242,23 +268,52 @@ export const TaskCard = ({
                             </span>
                         )}
 
-                        {subtaskCount > 0 && (
-                            <span
-                                className='inline-flex items-center gap-1 rounded-chip px-2 py-0.5'
-                                style={
-                                    allSubtasksDone
-                                        ? {
-                                              color: doneMeta.pillText ?? undefined,
-                                              backgroundColor: doneMeta.pillBg ?? undefined
-                                          }
-                                        : { color: 'var(--color-text-muted)' }
-                                }
-                                title={`${subtaskDoneCount} of ${subtaskCount} subtasks done`}
-                            >
-                                <ListChecks size={11} />
-                                {subtaskDoneCount}/{subtaskCount}
-                            </span>
-                        )}
+                        {subtaskCount > 0 &&
+                            (onToggleSubtasks ? (
+                                <button
+                                    type='button'
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onToggleSubtasks();
+                                    }}
+                                    aria-expanded={subtasksOpen}
+                                    className='inline-flex items-center gap-1 rounded-chip px-2 py-0.5 transition-colors'
+                                    style={
+                                        allSubtasksDone
+                                            ? {
+                                                  color: doneMeta.pillText ?? undefined,
+                                                  backgroundColor: doneMeta.pillBg ?? undefined
+                                              }
+                                            : { color: 'var(--color-text-muted)' }
+                                    }
+                                    title={`${subtaskDoneCount} of ${subtaskCount} subtasks done`}
+                                >
+                                    <ListChecks size={11} />
+                                    {subtaskDoneCount}/{subtaskCount}
+                                    <ChevronRight
+                                        size={11}
+                                        className={`transition-transform ${
+                                            subtasksOpen ? 'rotate-90' : ''
+                                        }`}
+                                    />
+                                </button>
+                            ) : (
+                                <span
+                                    className='inline-flex items-center gap-1 rounded-chip px-2 py-0.5'
+                                    style={
+                                        allSubtasksDone
+                                            ? {
+                                                  color: doneMeta.pillText ?? undefined,
+                                                  backgroundColor: doneMeta.pillBg ?? undefined
+                                              }
+                                            : { color: 'var(--color-text-muted)' }
+                                    }
+                                    title={`${subtaskDoneCount} of ${subtaskCount} subtasks done`}
+                                >
+                                    <ListChecks size={11} />
+                                    {subtaskDoneCount}/{subtaskCount}
+                                </span>
+                            ))}
 
                         {task.external_ref && task.external_url && (
                             <a
@@ -315,6 +370,11 @@ export const TaskCard = ({
                 </div>
             )}
 
+            {/* Subtask quick-clear checklist — opened by the subtask chip. */}
+            {subtasksOpen && onToggleSubtasks && subtaskCount > 0 && (
+                <CardSubtaskChecklist profileId={task.profile_id} parentId={task.id} />
+            )}
+
             {menuPoint && (
                 <TaskContextMenu
                     task={task}
@@ -323,6 +383,19 @@ export const TaskCard = ({
                     onStatusChange={onStatusChange}
                     onSelectEdit={onSelectEdit}
                     editing={editing}
+                    onStartTimer={onStartTimer}
+                    onAddSubtask={
+                        task.parent_id == null ? () => setSubtaskAddPoint(menuPoint) : undefined
+                    }
+                />
+            )}
+
+            {subtaskAddPoint && (
+                <SubtaskQuickAdd
+                    profileId={task.profile_id}
+                    parentId={task.id}
+                    point={subtaskAddPoint}
+                    onClose={() => setSubtaskAddPoint(null)}
                 />
             )}
         </div>

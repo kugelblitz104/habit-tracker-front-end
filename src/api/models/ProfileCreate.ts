@@ -12,5 +12,10 @@ export type ProfileCreate = {
     default_landing?: string;
     week_start_monday?: boolean;
     use_habit_color_accent?: boolean;
+    show_estimated_effort?: boolean;
+    pomodoro_work_minutes?: number;
+    pomodoro_break_minutes?: number;
+    pomodoro_long_break_minutes?: number;
+    pomodoro_cycles?: number;
 };
 

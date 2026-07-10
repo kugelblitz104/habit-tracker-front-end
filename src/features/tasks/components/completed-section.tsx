@@ -10,6 +10,12 @@ import { StatusControl } from './status-control';
 
 type CompletedSectionProps = {
     profileId: number | null | undefined;
+    /** Scope to a single project's closed tasks (project view). */
+    projectId?: number | null;
+    /** Open a closed task's detail (title click). Omit to render titles inert. */
+    onSelectTask?: (taskId: number) => void;
+    /** Task currently open in the detail pane, for highlight. */
+    selectedTaskId?: number | null;
 };
 
 const formatClosed = (closed: string | null | undefined): string | null => {
@@ -25,9 +31,15 @@ const formatClosed = (closed: string | null | undefined): string | null => {
  * profile's hidden (done/cancelled) tasks with completion dates. Cancelled tasks
  * are struck through with an ✕. Dimmed via `opacity: var(--quiet)`.
  */
-export const CompletedSection = ({ profileId }: CompletedSectionProps) => {
+export const CompletedSection = ({
+    profileId,
+    projectId,
+    onSelectTask,
+    selectedTaskId
+}: CompletedSectionProps) => {
     const query = useTasks({
         profileId: profileId ?? undefined,
+        projectId: projectId ?? undefined,
         includeClosed: true,
         band: 'hidden'
     });
@@ -54,12 +66,12 @@ export const CompletedSection = ({ profileId }: CompletedSectionProps) => {
                 {({ open }) => (
                     <>
                         <DisclosureButton className='flex w-full items-center gap-2 font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-whenever-label outline-none'>
+                            Closed
+                            <span className='font-normal text-text-faint'>{tasks.length}</span>
                             <ChevronRight
                                 size={14}
                                 className={`transition-transform ${open ? 'rotate-90' : ''}`}
                             />
-                            Closed
-                            <span className='font-normal text-text-faint'>{tasks.length}</span>
                         </DisclosureButton>
                         <DisclosurePanel className='mt-3'>
                             {tasks.length === 0 ? (
@@ -89,13 +101,27 @@ export const CompletedSection = ({ profileId }: CompletedSectionProps) => {
                                                     band='whenever'
                                                     openUpward
                                                 />
-                                                <span
-                                                    className={`min-w-0 flex-1 truncate font-display text-[13.5px] text-text-muted ${
-                                                        cancelled ? 'line-through' : ''
-                                                    }`}
-                                                >
-                                                    {task.title}
-                                                </span>
+                                                {onSelectTask ? (
+                                                    <button
+                                                        type='button'
+                                                        onClick={() => onSelectTask(task.id)}
+                                                        aria-pressed={selectedTaskId === task.id}
+                                                        className={`min-w-0 flex-1 truncate text-left font-display text-[13.5px] text-text-muted transition-colors hover:text-text-secondary ${
+                                                            cancelled ? 'line-through' : ''
+                                                        }`}
+                                                        title={task.title}
+                                                    >
+                                                        {task.title}
+                                                    </button>
+                                                ) : (
+                                                    <span
+                                                        className={`min-w-0 flex-1 truncate font-display text-[13.5px] text-text-muted ${
+                                                            cancelled ? 'line-through' : ''
+                                                        }`}
+                                                    >
+                                                        {task.title}
+                                                    </span>
+                                                )}
                                                 {closed && (
                                                     <span className='shrink-0 font-mono text-[10px] text-text-faint'>
                                                         {closed}

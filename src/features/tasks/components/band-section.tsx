@@ -1,5 +1,6 @@
 import type { ProjectRead, TaskRead } from '@/api';
 import type { TaskStatus } from '@/types/types';
+import { ChevronRight } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { TaskCard, type ActiveBand } from './task-card';
 
@@ -24,11 +25,20 @@ export type BandSectionProps = {
     /** Task selected for the edit detail pane/overlay, or null. */
     selectedEditTaskId: number | null;
     onToggleNotes: (taskId: number) => void;
-    onSelectEdit: (taskId: number) => void;
+    onSelectEdit: (taskId: number, editing?: boolean) => void;
+    /** Task whose subtask quick-clear checklist is open, or null. */
+    subtasksTaskId?: number | null;
+    onToggleSubtasks?: (taskId: number) => void;
+    /** Start a timer attached to a task (from the context menu). */
+    onStartTimer?: (taskId: number) => void;
     /** Extra node in the header (e.g. the 2c "also on Today ↗" note). */
     headerAccessory?: ReactNode;
     /** Show a subtle empty hint instead of hiding when there are no tasks. */
     emptyHint?: string;
+    /** Make the section header a collapse toggle (used for Whenever on Today). */
+    collapsible?: boolean;
+    collapsed?: boolean;
+    onToggleCollapsed?: () => void;
 };
 
 /**
@@ -47,8 +57,14 @@ export const BandSection = ({
     selectedEditTaskId,
     onToggleNotes,
     onSelectEdit,
+    subtasksTaskId,
+    onToggleSubtasks,
+    onStartTimer,
     headerAccessory,
-    emptyHint
+    emptyHint,
+    collapsible,
+    collapsed,
+    onToggleCollapsed
 }: BandSectionProps) => {
     if (tasks.length === 0 && !emptyHint) return null;
 
@@ -59,20 +75,43 @@ export const BandSection = ({
     // section below.
     const upwardFrom = Math.max(tasks.length - 2, 0);
 
+    const label = (
+        <>
+            <h2
+                className='font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em]'
+                style={{ color: meta.labelColor }}
+            >
+                {meta.label}
+            </h2>
+            <span className='font-mono text-[11px] text-text-faint'>{tasks.length}</span>
+        </>
+    );
+
     return (
         <section className='mb-[30px]' style={isQuiet ? { opacity: 'var(--quiet)' } : undefined}>
             <div className='mb-2.5 flex items-center gap-2'>
-                <h2
-                    className='font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em]'
-                    style={{ color: meta.labelColor }}
-                >
-                    {meta.label}
-                </h2>
-                <span className='font-mono text-[11px] text-text-faint'>{tasks.length}</span>
+                {collapsible ? (
+                    <button
+                        type='button'
+                        onClick={onToggleCollapsed}
+                        aria-expanded={!collapsed}
+                        className='flex items-center gap-2 rounded-[6px] py-0.5 pr-1 transition-colors hover:opacity-80'
+                    >
+                        {label}
+                        <ChevronRight
+                            size={13}
+                            className={`text-text-faint transition-transform ${
+                                collapsed ? '' : 'rotate-90'
+                            }`}
+                        />
+                    </button>
+                ) : (
+                    label
+                )}
                 {headerAccessory}
             </div>
 
-            {tasks.length === 0 ? (
+            {collapsed ? null : tasks.length === 0 ? (
                 <p className='font-mono text-[12px] text-text-faint'>{emptyHint}</p>
             ) : (
                 <div
@@ -93,7 +132,12 @@ export const BandSection = ({
                             notesOpen={notesTaskId === task.id}
                             editing={selectedEditTaskId === task.id}
                             onToggleNotes={() => onToggleNotes(task.id)}
-                            onSelectEdit={() => onSelectEdit(task.id)}
+                            onSelectEdit={(editing) => onSelectEdit(task.id, editing)}
+                            subtasksOpen={subtasksTaskId === task.id}
+                            onToggleSubtasks={
+                                onToggleSubtasks ? () => onToggleSubtasks(task.id) : undefined
+                            }
+                            onStartTimer={onStartTimer ? () => onStartTimer(task.id) : undefined}
                             openUpward={i >= upwardFrom}
                         />
                     ))}
