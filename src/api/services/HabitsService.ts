@@ -211,11 +211,11 @@ export class HabitsService {
      * Get all tracker entries for a specific habit, ordered by date (most recent first).
      *
      * - **habit_id**: The unique identifier of the habit
-     * - **limit**: Maximum number of trackers to return (default: 5, max: 100)
+     * - **limit**: Maximum number of trackers to return (default: 5, max: 1000)
      *
      * Returns tracker entries showing completion/skip status for each date.
      * @param habitId
-     * @param limit Maximum number of trackers to return (1-100)
+     * @param limit Maximum number of trackers to return (1-1000)
      * @returns TrackerList Successful Response
      * @throws ApiError
      */

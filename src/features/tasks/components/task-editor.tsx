@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useDeleteTask } from '../api/delete-tasks';
 import { useUpdateTask } from '../api/update-tasks';
+import { SubtaskSection } from './subtask-section';
 import {
     DateTimeField,
     formFieldClass,
@@ -143,6 +144,10 @@ export const TaskEditor = ({ task, onClose }: TaskEditorProps) => {
 
             {/* Notes / description */}
             <NotesField id={`task-notes-${task.id}`} value={notes} onChange={setNotes} />
+
+            {/* Subtasks — only on top-level tasks (one level deep); a subtask
+                being edited never shows its own nested section. */}
+            {task.parent_id == null && <SubtaskSection parent={task} />}
 
             {/* Priority — full-size labeled options; each shows what the level does. */}
             <PriorityField value={priority} onChange={setPriority} />

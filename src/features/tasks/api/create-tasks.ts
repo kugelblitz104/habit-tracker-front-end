@@ -33,6 +33,13 @@ export const useCreateTask = ({ mutationConfig }: UseCreateTaskOptions = {}) => 
                     queryKey: ['project', { projectId: data.project_id }]
                 });
             }
+            // Creating a subtask changes the parent's subtask counts, so refresh
+            // the parent's single-task query too (the list is covered above).
+            if (data.parent_id != null) {
+                queryClient.invalidateQueries({
+                    queryKey: ['task', { taskId: data.parent_id }]
+                });
+            }
             onSuccess?.(data, ...args);
         },
         ...restConfig

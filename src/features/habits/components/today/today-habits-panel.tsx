@@ -111,15 +111,10 @@ export const TodayHabitsPanel = ({ profile, onSelectHabit }: TodayHabitsPanelPro
     }
 
     return (
-        <section
-            className='mb-[30px] rounded-card border p-5'
-            style={{
-                opacity: 'var(--quiet)',
-                backgroundColor: 'var(--habit-container-bg)',
-                borderColor: 'var(--habit-container-border)'
-            }}
-        >
-            <div className='mb-4 flex items-start justify-between gap-3'>
+        <section className='mb-[30px]' style={{ opacity: 'var(--quiet)' }}>
+            {/* Header sits OUTSIDE the card so it aligns with the band/section
+                headers on the Today page (see band-section.tsx). */}
+            <div className='mb-2.5 flex items-start justify-between gap-3'>
                 <div className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1'>
                     <h2 className='font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-habit-label'>
                         Today&apos;s habits
@@ -166,35 +161,47 @@ export const TodayHabitsPanel = ({ profile, onSelectHabit }: TodayHabitsPanelPro
                 )}
             </div>
 
-            {habitsQuery.isLoading ? (
-                <p className='font-mono text-[12px] text-text-faint'>Loading habits…</p>
-            ) : habits.length === 0 ? (
-                <p className='font-mono text-[12px] text-text-faint'>No habits yet.</p>
-            ) : visibleGroups.length === 0 ? (
-                <p className='font-mono text-[12px] text-text-faint'>
-                    All caught up — {summary.auto} auto-skipped hidden
-                </p>
-            ) : (
-                <div className={`grid gap-x-8 gap-y-5 ${isPhone ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                    {visibleGroups.map(([category, categoryHabits]) => (
-                        <div key={category}>
-                            <p className='mb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-habit-label'>
-                                {category}
-                            </p>
-                            <div className='flex flex-col'>
-                                {categoryHabits.map((habit) => (
-                                    <HabitCheckboxRow
-                                        key={habit.id}
-                                        habit={habit}
-                                        onStatusChange={handleStatusChange}
-                                        onSelectHabit={onSelectHabit}
-                                    />
-                                ))}
+            <div
+                className='rounded-card border p-5'
+                style={{
+                    backgroundColor: 'var(--habit-container-bg)',
+                    borderColor: 'var(--habit-container-border)'
+                }}
+            >
+                {habitsQuery.isLoading ? (
+                    <p className='font-mono text-[12px] text-text-faint'>Loading habits…</p>
+                ) : habits.length === 0 ? (
+                    <p className='font-mono text-[12px] text-text-faint'>No habits yet.</p>
+                ) : visibleGroups.length === 0 ? (
+                    <p className='font-mono text-[12px] text-text-faint'>
+                        All caught up — {summary.auto} auto-skipped hidden
+                    </p>
+                ) : (
+                    <div
+                        className={`grid gap-x-8 gap-y-5 ${
+                            isPhone ? 'grid-cols-1' : 'grid-cols-2'
+                        }`}
+                    >
+                        {visibleGroups.map(([category, categoryHabits]) => (
+                            <div key={category}>
+                                <p className='mb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-habit-label'>
+                                    {category}
+                                </p>
+                                <div className='flex flex-col'>
+                                    {categoryHabits.map((habit) => (
+                                        <HabitCheckboxRow
+                                            key={habit.id}
+                                            habit={habit}
+                                            onStatusChange={handleStatusChange}
+                                            onSelectHabit={onSelectHabit}
+                                        />
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                        ))}
+                    </div>
+                )}
+            </div>
         </section>
     );
 };

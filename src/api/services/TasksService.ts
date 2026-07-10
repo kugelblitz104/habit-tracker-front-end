@@ -28,6 +28,14 @@ export class TasksService {
      *
      * Active tasks are ordered by priority (desc), due date (asc, no due date
      * last), then creation date (asc).
+     *
+     * Subtasks are returned in the same response as their parents, with
+     * **parent_id** set, so the frontend can nest them without extra requests.
+     * A subtask's **band** is the natural value its own status/priority/dates
+     * would produce (no special-casing) - the frontend ignores it and groups
+     * the subtask under its parent instead. Every task also carries
+     * **subtask_count** / **subtask_done_count** (done = status DONE only),
+     * computed in a single grouped query.
      * @param profileId The profile whose tasks to list
      * @param projectId Only tasks in this project
      * @param band Only tasks in this computed band (now, soon, whenever, hidden)
@@ -83,6 +91,9 @@ export class TasksService {
      * - **external_ref**: Optional external reference (e.g. "ADO-2841")
      * - **external_url**: Optional external URL
      * - **project_id**: Optional project (must belong to the same profile)
+     * - **parent_id**: Optional parent task, making this task a subtask. The
+     * parent must belong to the same profile and must not itself be a
+     * subtask (subtasks nest exactly one level deep)
      *
      * Scheduled data only lives on SCHEDULED tasks: if the created status is
      * anything other than SCHEDULED, scheduled_date/scheduled_time are forced to
@@ -116,7 +127,9 @@ export class TasksService {
      * Tasks are grouped by computed urgency band (Now / Soon / Whenever, plus a
      * "Completed & cancelled" section for done/cancelled tasks); empty sections
      * are omitted. Each task is a checklist line (`- [x]` when done) with
-     * indented detail bullets for the fields that are set. Ordering matches the
+     * indented detail bullets for the fields that are set. Subtasks never
+     * appear as top-level entries - they render as indented checklist lines
+     * under their parent, wherever the parent lands. Ordering matches the
      * tasks list endpoint: active bands by priority (desc), due date (asc, no
      * due date last), then creation date; the closed section by closed date
      * (most recent first).
@@ -141,7 +154,9 @@ export class TasksService {
     }
     /**
      * Get a task by ID
-     * Retrieve a specific task by its ID, including its computed urgency band.
+     * Retrieve a specific task by its ID, including its computed urgency band
+     * and its subtask counts (subtask_count / subtask_done_count, done = status
+     * DONE only).
      *
      * - **task_id**: The unique identifier of the task to retrieve
      * @param taskId
@@ -185,6 +200,16 @@ export class TasksService {
      * - **external_ref**: Optional external reference (e.g. "ADO-2841")
      * - **external_url**: Optional external URL
      * - **project_id**: Optional project (must belong to the task's profile)
+     * - **parent_id**: Optional parent task (must belong to the task's
+     * resulting profile and must not itself be a subtask; a task that has
+     * subtasks cannot become a subtask; a task cannot be its own parent).
+     * Set null to detach a subtask from its parent
+     *
+     * Moving a task to another profile follows the same philosophy as
+     * project_id: the resulting parent is validated against the resulting
+     * profile, so moving a subtask fails (400) unless parent_id is nulled in
+     * the same request, and moving a task that has subtasks always fails (400)
+     * since its subtasks would be left behind.
      *
      * Scheduled data only lives on SCHEDULED tasks: if the resulting status (the
      * new status if provided, else the existing one) is anything other than
@@ -220,7 +245,8 @@ export class TasksService {
      *
      * - **task_id**: The unique identifier of the task to delete
      *
-     * This action cannot be undone.
+     * Deleting a parent task also deletes all of its subtasks (database-level
+     * ON DELETE CASCADE). This action cannot be undone.
      * @param taskId
      * @returns any Successful Response
      * @throws ApiError

@@ -26,8 +26,15 @@ const formatClosed = (closed: string | null | undefined): string | null => {
  * are struck through with an ✕. Dimmed via `opacity: var(--quiet)`.
  */
 export const CompletedSection = ({ profileId }: CompletedSectionProps) => {
-    const query = useTasks({ profileId: profileId ?? undefined, includeClosed: true, band: 'hidden' });
-    const tasks = query.data?.tasks ?? [];
+    const query = useTasks({
+        profileId: profileId ?? undefined,
+        includeClosed: true,
+        band: 'hidden'
+    });
+    // Subtasks (`parent_id` set) never surface as top-level rows — a closed
+    // subtask shows only via its parent's progress count, so the disclosure
+    // count also reflects top-level tasks only.
+    const tasks = (query.data?.tasks ?? []).filter((task) => task.parent_id == null);
     const updateTask = useUpdateTask();
 
     // Reopen / re-close via the shared status picker. Setting status back to

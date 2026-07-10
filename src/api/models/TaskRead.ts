@@ -16,10 +16,13 @@ export type TaskRead = {
     external_ref?: (string | null);
     external_url?: (string | null);
     project_id?: (number | null);
+    parent_id?: (number | null);
     id: number;
     closed_date?: (string | null);
     created_date: string;
     updated_date?: (string | null);
     band?: string;
+    subtask_count?: number;
+    subtask_done_count?: number;
 };
 

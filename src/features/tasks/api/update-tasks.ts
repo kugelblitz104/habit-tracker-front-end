@@ -34,6 +34,14 @@ export const useUpdateTask = ({ mutationConfig }: UseUpdateTaskOptions = {}) => 
                     queryKey: ['project', { projectId: data.project_id }]
                 });
             }
+            // A subtask status flip changes the parent's subtask done count, so
+            // refresh the parent's single-task query too (the list is covered
+            // above).
+            if (data.parent_id != null) {
+                queryClient.invalidateQueries({
+                    queryKey: ['task', { taskId: data.parent_id }]
+                });
+            }
             onSuccess?.(data, ...args);
         },
         ...restConfig

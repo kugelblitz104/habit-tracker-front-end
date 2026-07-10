@@ -40,7 +40,10 @@ export const importHabits = async (file: File): Promise<ImportResult> => {
         }
 
         return await ImportService.importFromLoopHabitTrackerImportLoopHabitTrackerPost({
-            file: file
+            // Newer FastAPI describes uploads via contentMediaType, which the
+            // codegen types as `string` instead of Blob; the runtime multipart
+            // request is unchanged, so pass the File through the wrong type.
+            file: file as unknown as string
         });
     } catch (error) {
         throw new Error(`Failed to import habits: ${error}`);

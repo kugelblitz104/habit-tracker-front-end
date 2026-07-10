@@ -23,8 +23,7 @@ export class ImportService {
      * - `freq_den` → `range`
      * - `archived` → `archived`
      * - `position` → `sort_order`
-     * - Repetitions with `value >= 2` → Tracker with `completed=True`
-     * - Repetitions with `value == 1` → Tracker with `skipped=True`
+     * - Repetitions `value` → Tracker `status` (1 = skipped, 2 = completed)
      * - Repetitions `notes` → Tracker `note`
      * @param formData
      * @returns ImportResult Successful Response
@@ -62,8 +61,7 @@ export class ImportService {
      * - `archived` → `archived`
      * - `sort_order` → `position`
      * - `notes` → `description`
-     * - Tracker with `completed=True` → Repetition with `value=2`
-     * - Tracker with `skipped=True` → Repetition with `value=1`
+     * - Tracker `status` → Repetition `value` (1 = skipped, 2 = completed)
      * - Tracker `note` → Repetition `notes`
      * @param includeArchived
      * @returns ExportResult Successful Response

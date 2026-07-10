@@ -16,5 +16,6 @@ export type TaskCreate = {
     external_ref?: (string | null);
     external_url?: (string | null);
     project_id?: (number | null);
+    parent_id?: (number | null);
 };
 

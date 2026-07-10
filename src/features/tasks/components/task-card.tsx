@@ -1,12 +1,15 @@
 import type { ProjectRead, TaskRead } from '@/api';
 import { sanitizeText } from '@/lib/input-sanitization';
+import { useLongPress } from '@/lib/use-long-press';
 import { TaskStatus, type TaskBand } from '@/types/types';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, ListChecks } from 'lucide-react';
+import { useCallback, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { getDueInfo, getScheduledLabel } from '../utils/task-format';
 import { PriorityMeter } from './priority-meter';
 import { STATUS_META } from './status-config';
 import { StatusControl } from './status-control';
+import { TaskContextMenu, type MenuPoint } from './task-context-menu';
 
 export type ActiveBand = Exclude<TaskBand, 'hidden'>;
 
@@ -90,6 +93,13 @@ export const TaskCard = ({
     const scheduledLabel = getScheduledLabel(task.scheduled_date, task.scheduled_time);
     const hasNotes = !!task.notes && task.notes.trim().length > 0;
 
+    // Subtask progress ("2/5") — counts come computed on every TaskRead. When
+    // every subtask is done the chip picks up the Done pill's success tones.
+    const subtaskCount = task.subtask_count ?? 0;
+    const subtaskDoneCount = task.subtask_done_count ?? 0;
+    const allSubtasksDone = subtaskCount > 0 && subtaskDoneCount === subtaskCount;
+    const doneMeta = STATUS_META[TaskStatus.DONE];
+
     // Merge extra context into the status pill so a word isn't shown twice:
     // a blocked task with a reason reads "blocked · <reason>", and a scheduled
     // task folds its date/time in as "scheduled · Jul 17th · 1:00a" (both
@@ -100,8 +110,8 @@ export const TaskCard = ({
     const pillLabel = showBlockedReason
         ? `${statusMeta.label.toLowerCase()} · ${blockReason}`
         : isScheduled && scheduledLabel
-          ? scheduledLabel
-          : statusMeta.label.toLowerCase();
+        ? scheduledLabel
+        : statusMeta.label.toLowerCase();
 
     const containerStyle: React.CSSProperties = editing
         ? {
@@ -111,8 +121,59 @@ export const TaskCard = ({
           }
         : style.containerStyle ?? {};
 
+    // Context menu — opened by right-click (desktop) or long-press (touch) at
+    // the pointer/touch position. Rendered only while open so its project fetch
+    // and dismissal listeners exist only then.
+    const [menuPoint, setMenuPoint] = useState<MenuPoint | null>(null);
+    const closeMenu = useCallback(() => setMenuPoint(null), []);
+
+    // Swallow the click that trails a long-press so it can't also fire the
+    // title's edit action (or a menu item that lands under the finger).
+    const swallowNextClick = () => {
+        const swallow = (e: MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            cleanup();
+        };
+        const cleanup = () => {
+            document.removeEventListener('click', swallow, true);
+            window.clearTimeout(timer);
+        };
+        document.addEventListener('click', swallow, true);
+        const timer = window.setTimeout(cleanup, 500);
+    };
+
+    // Long-press → same menu on touch devices; reuses the tracker cells'
+    // useLongPress pattern (default 500ms / 10px move threshold).
+    const touchPointRef = useRef<MenuPoint | null>(null);
+    const longPressHandlers = useLongPress(() => {
+        if (touchPointRef.current) {
+            swallowNextClick();
+            setMenuPoint(touchPointRef.current);
+        }
+    });
+
     return (
-        <div className={style.container} style={containerStyle}>
+        <div
+            className={style.container}
+            style={containerStyle}
+            // Suppress the BROWSER context menu on task cards only, showing ours
+            // instead. (Android also routes native long-press through here.)
+            onContextMenu={(e) => {
+                e.preventDefault();
+                setMenuPoint({ x: e.clientX, y: e.clientY });
+            }}
+            onTouchStart={(e) => {
+                // Portal events bubble through the React tree — don't restart a
+                // long-press from touches on the open menu itself.
+                if (menuPoint) return;
+                const touch = e.touches[0];
+                if (touch) touchPointRef.current = { x: touch.clientX, y: touch.clientY };
+                longPressHandlers.onTouchStart(e);
+            }}
+            onTouchMove={longPressHandlers.onTouchMove}
+            onTouchEnd={longPressHandlers.onTouchEnd}
+        >
             <div className='flex items-start gap-3'>
                 <div className='pt-0.5'>
                     <StatusControl
@@ -181,6 +242,24 @@ export const TaskCard = ({
                             </span>
                         )}
 
+                        {subtaskCount > 0 && (
+                            <span
+                                className='inline-flex items-center gap-1 rounded-chip px-2 py-0.5'
+                                style={
+                                    allSubtasksDone
+                                        ? {
+                                              color: doneMeta.pillText ?? undefined,
+                                              backgroundColor: doneMeta.pillBg ?? undefined
+                                          }
+                                        : { color: 'var(--color-text-muted)' }
+                                }
+                                title={`${subtaskDoneCount} of ${subtaskCount} subtasks done`}
+                            >
+                                <ListChecks size={11} />
+                                {subtaskDoneCount}/{subtaskCount}
+                            </span>
+                        )}
+
                         {task.external_ref && task.external_url && (
                             <a
                                 href={task.external_url}
@@ -234,6 +313,17 @@ export const TaskCard = ({
                 >
                     {sanitizeText(task.notes ?? '')}
                 </div>
+            )}
+
+            {menuPoint && (
+                <TaskContextMenu
+                    task={task}
+                    point={menuPoint}
+                    onClose={closeMenu}
+                    onStatusChange={onStatusChange}
+                    onSelectEdit={onSelectEdit}
+                    editing={editing}
+                />
             )}
         </div>
     );

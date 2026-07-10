@@ -15,8 +15,7 @@ export class TrackersService {
      *
      * - **habit_id**: The ID of the habit being tracked
      * - **dated**: The date for this tracker entry
-     * - **completed**: Whether the habit was completed on this date
-     * - **skipped**: Whether the habit was skipped on this date
+     * - **status**: 0=not completed, 1=skipped, 2=completed
      * - **note**: Optional note about this entry
      * @param requestBody
      * @returns TrackerRead Successful Response
@@ -102,8 +101,7 @@ export class TrackersService {
      *
      * You can update any combination of these fields:
      * - **dated**: The date for this tracker entry
-     * - **completed**: Whether the habit was completed on this date
-     * - **skipped**: Whether the habit was skipped on this date
+     * - **status**: 0=not completed, 1=skipped, 2=completed
      * - **note**: Optional note about this entry
      * @param trackerId
      * @param requestBody
