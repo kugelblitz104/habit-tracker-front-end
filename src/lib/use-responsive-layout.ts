@@ -13,14 +13,6 @@ export const useResponsiveLayout = (): LayoutSize => {
     return 'sm';
 };
 
-// Calendar board: full weeks (7 days per column)
-export const WEEKS_BY_SIZE: Record<LayoutSize, number> = {
-    xl: 11,
-    lg: 8,
-    md: 6,
-    sm: 4
-};
-
 // Dashboard: days to show in mini-calendar (variable per screen size)
 export const DASHBOARD_DAYS_BY_SIZE: Record<LayoutSize, number> = {
     xl: 14,

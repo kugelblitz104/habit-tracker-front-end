@@ -52,9 +52,9 @@ const frequencyPresetName = (frequency: number, range: number): string => {
 
 /**
  * Inline habit editor rendered in place of the detail read-view (mirroring the
- * task editor's inline pattern) rather than in a modal. It reuses the same field
- * components + react-hook-form setup the AddHabitModal uses, sanitizes on submit,
- * and hands a merged HabitUpdate payload up to `onSave`.
+ * task editor's inline pattern) rather than in a modal. It uses the shared field
+ * components (TextField/ColorPicker/FrequencyPicker…) + react-hook-form,
+ * sanitizes on submit, and hands a merged HabitUpdate payload up to `onSave`.
  */
 export const HabitEditor = ({
     habit,

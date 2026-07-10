@@ -4,6 +4,12 @@ import { useState, type KeyboardEvent } from 'react';
 type CaptureBarProps = {
     /** Create a task from the typed title. Resolve clears the field; reject keeps it. */
     onCapture: (title: string) => Promise<void>;
+    /**
+     * When provided, Shift+Enter hands the typed text off to an expanded
+     * details form (and the trailing hint advertises it). Omitted on surfaces
+     * without a rich form (e.g. habit capture), where Shift+Enter just submits.
+     */
+    onExpand?: (draftTitle: string) => void;
     disabled?: boolean;
     isPending?: boolean;
     /** Override the input placeholder (defaults to the task capture copy). */
@@ -12,11 +18,13 @@ type CaptureBarProps = {
 
 /**
  * Full-width quick-capture input: leading +, README placeholder, trailing
- * "return ↵" hint. Enter creates a task and clears the field only once the
+ * keyboard hint. Enter creates a task and clears the field only once the
  * create succeeds; on failure the typed text is preserved for a retry.
+ * With `onExpand`, Shift+Enter opens the expanded details form instead.
  */
 export const CaptureBar = ({
     onCapture,
+    onExpand,
     disabled = false,
     isPending = false,
     placeholder = 'Add a task — type a title and press enter'
@@ -35,10 +43,15 @@ export const CaptureBar = ({
     };
 
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            submit();
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        if (e.shiftKey && onExpand) {
+            if (disabled || isPending) return;
+            onExpand(value.trim());
+            setValue('');
+            return;
         }
+        submit();
     };
 
     return (
@@ -61,7 +74,14 @@ export const CaptureBar = ({
                 aria-label='Add a task'
                 className='min-w-0 flex-1 bg-transparent font-display text-[14px] text-text-primary outline-none placeholder:text-text-faint'
             />
-            <span className='shrink-0 font-mono text-[10px] text-text-faint'>return ↵</span>
+            {onExpand ? (
+                <span className='flex shrink-0 items-center gap-2 font-mono text-[10px] text-text-faint'>
+                    <span>↵ add</span>
+                    <span>⇧↵ details</span>
+                </span>
+            ) : (
+                <span className='shrink-0 font-mono text-[10px] text-text-faint'>return ↵</span>
+            )}
         </div>
     );
 };

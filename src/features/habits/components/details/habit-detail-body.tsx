@@ -60,7 +60,7 @@ const frequencyMeta = (frequency: number, range: number): string => {
 /**
  * Shell-agnostic habit detail. Renders its own header row (name + meta +
  * Edit/Archive/Delete actions) and owns ALL data fetching, tracker/KPI/streak
- * optimism, and edit/delete modals. It never renders a PageShell/TitleBar so it
+ * optimism, and edit/delete modals. It never renders any page chrome so it
  * can be dropped into either the master-detail pane (wide) or the full-page cool
  * shell (narrow / deep-link).
  */

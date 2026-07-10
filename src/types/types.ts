@@ -1,9 +1,3 @@
-export type Meta = {
-    page: number;
-    total: number;
-    total_pages: number;
-};
-
 /**
  * Tracker status constants
  * 0 = not completed
@@ -21,12 +15,6 @@ export enum DisplayStatus {
     COMPLETED = 'completed',
     SKIPPED = 'skipped',
     AUTO_SKIPPED = 'auto_skipped'
-}
-
-export enum LoadingStatus {
-    PENDING = 'pending',
-    SUCCESS = 'success',
-    ERROR = 'error'
 }
 
 /**
@@ -52,14 +40,6 @@ export enum TaskStatus {
  */
 export type TaskBand = 'now' | 'soon' | 'whenever' | 'hidden';
 
-/** Priority scale for tasks: 0 none / 1 low / 2 medium / 3 high. */
-export enum TaskPriority {
-    NONE = 0,
-    LOW = 1,
-    MEDIUM = 2,
-    HIGH = 3
-}
-
 /** Ordered active bands used for client-side grouping on the Today surface. */
 export const ACTIVE_TASK_BANDS: Exclude<TaskBand, 'hidden'>[] = ['now', 'soon', 'whenever'];
 
@@ -81,13 +61,3 @@ export type DropdownOption = {
 };
 
 export type SortDirection = 'asc' | 'desc';
-
-export type HabitKPIs = {
-    id: number;
-    current_streak: number | null;
-    longest_streak: number | null;
-    total_completions: number;
-    thirty_day_completion_rate: number;
-    overall_completion_rate: number;
-    last_completed_date?: string | null;
-};

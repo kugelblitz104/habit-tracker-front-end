@@ -1,8 +1,10 @@
-import type { HabitRead, TrackerCreate, TrackerLite, TrackerRead, TrackerUpdate } from '@/api';
+import type { HabitRead, TrackerLite } from '@/api';
 import { Label } from '@/components/ui/label';
-import { createTracker } from '@/features/trackers/api/create-trackers';
 import { getTrackersLite } from '@/features/trackers/api/get-trackers';
-import { updateTracker } from '@/features/trackers/api/update-trackers';
+import {
+    toTrackerLite,
+    useTrackerMutations
+} from '@/features/trackers/hooks/use-tracker-mutations';
 import { calculateStreaks, getCurrentStreakLength } from '@/features/trackers/utils/kpi-utils';
 import {
     createNewTracker,
@@ -16,7 +18,7 @@ import { getFrequencyString } from '@/lib/date-utils';
 import { useLongPress } from '@/lib/use-long-press';
 import { DisplayStatus } from '@/types/types';
 import { Button } from '@headlessui/react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Flame } from 'lucide-react';
 import type { MouseEvent } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -64,8 +66,11 @@ export const HabitListElement = ({
 
     const [rowIsActive, setRowIsActive] = useState<boolean>(false);
     const [trackers, setTrackers] = useState<TrackerLite[]>([]);
-    const queryClient = useQueryClient();
     const currentDateRef = useRef<Date | null>(null);
+
+    // Shared optimistic mutations; unlike the Today panel's use-tracker-toggle
+    // this surface intentionally skips cache invalidation and error toasts.
+    const { trackerCreate, trackerUpdate } = useTrackerMutations(habit.id);
 
     const handleNoteClick = (date: Date) => {
         const tracker = findTrackerByDate(trackers, date);
@@ -100,49 +105,6 @@ export const HabitListElement = ({
         onStreakChange?.(habit.id, currentStreak);
     }, [habit.id, currentStreak, onStreakChange]);
 
-    const trackerCreate = useMutation({
-        mutationFn: (tracker: TrackerCreate) => createTracker(tracker),
-        onSuccess: async (data) => {
-            // Optimistically update ALL tracker caches for this habit (any days value)
-            queryClient.setQueriesData<{ trackers: TrackerRead[] }>(
-                { queryKey: ['trackers', { habitId: habit.id }] },
-                (oldData) => {
-                    if (!oldData?.trackers) return oldData;
-                    // Only add if not already present
-                    if (oldData.trackers.some((t) => t.id === data.id)) return oldData;
-                    return {
-                        ...oldData,
-                        trackers: [...oldData.trackers, data]
-                    };
-                }
-            );
-        },
-        onError: (error) => {
-            console.error('Error adding tracker:', error);
-        }
-    });
-
-    const trackerUpdate = useMutation({
-        mutationFn: ({ id, update }: { id: number; update: TrackerUpdate }) =>
-            updateTracker(id, update),
-        onSuccess: async (data) => {
-            // Optimistically update ALL tracker caches for this habit (any days value)
-            queryClient.setQueriesData<{ trackers: TrackerRead[] }>(
-                { queryKey: ['trackers', { habitId: habit.id }] },
-                (oldData) => {
-                    if (!oldData?.trackers) return oldData;
-                    return {
-                        ...oldData,
-                        trackers: oldData.trackers.map((t) => (t.id === data.id ? data : t))
-                    };
-                }
-            );
-        },
-        onError: (error) => {
-            console.error('Error updating tracker:', error);
-        }
-    });
-
     // functions
     const getStatus = (date: Date): DisplayStatus => {
         const tracker = findTrackerByDate(trackers, date);
@@ -161,15 +123,7 @@ export const HabitListElement = ({
             // create tracker if it doesn't exist
             const newTracker = createNewTracker(habit.id, date);
             trackerCreate.mutate(newTracker, {
-                onSuccess: (data) => {
-                    const trackerLite: TrackerLite = {
-                        id: data.id,
-                        dated: data.dated ?? '',
-                        status: data.status ?? 2,
-                        has_note: !!data.note
-                    };
-                    setTrackers([...trackers, trackerLite]);
-                }
+                onSuccess: (data) => setTrackers([...trackers, toTrackerLite(data)])
             });
             return;
         }
@@ -180,15 +134,8 @@ export const HabitListElement = ({
         trackerUpdate.mutate(
             { id: tracker.id, update },
             {
-                onSuccess: (data) => {
-                    const trackerLite: TrackerLite = {
-                        id: data.id,
-                        dated: data.dated ?? '',
-                        status: data.status ?? 2,
-                        has_note: !!data.note
-                    };
-                    setTrackers(trackers.map((t) => (t.id === tracker.id ? trackerLite : t)));
-                }
+                onSuccess: (data) =>
+                    setTrackers(trackers.map((t) => (t.id === tracker.id ? toTrackerLite(data) : t)))
             }
         );
     };

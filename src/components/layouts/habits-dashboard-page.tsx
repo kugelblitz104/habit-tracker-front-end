@@ -1,9 +1,8 @@
-import type { HabitCreate, HabitRead } from '@/api';
+import type { HabitRead } from '@/api';
 import { createHabit } from '@/features/habits/api/create-habits';
 import { getHabits } from '@/features/habits/api/get-habits';
 import { HabitDetailPane } from '@/features/habits/components/details/habit-detail-pane';
 import { HabitList } from '@/features/habits/components/dashboard/habit-list';
-import { AddHabitModal } from '@/features/habits/components/modals/add-habit-modal';
 import { SortHabitModal } from '@/features/habits/components/modals/sort-habit-modal';
 import { useHabitDetailPane } from '@/features/habits/hooks/use-habit-detail-pane';
 import { CaptureBar } from '@/features/tasks/components/capture-bar';
@@ -20,7 +19,10 @@ import { sortHabits } from '@/features/habits/api/update-habits';
 import { toast } from 'react-toastify';
 
 const ghostButton =
-    'inline-flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11.5px] text-text-secondary transition-colors hover:text-text-primary';
+    'inline-flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11.5px] text-text-secondary transition-colors';
+
+// Follows the active_profile localStorage key naming (see auth-context.tsx).
+const GROUP_BY_CATEGORY_STORAGE_KEY = 'habits_group_by_category';
 
 export const HabitsDashboard = () => {
     const layoutSize = useResponsiveLayout();
@@ -33,8 +35,20 @@ export const HabitsDashboard = () => {
 
     // hooks
     const [habits, setHabits] = useState<HabitRead[]>([]);
-    const [addHabitModalOpen, setAddHabitModalOpen] = useState(false);
     const [sortModalOpen, setSortModalOpen] = useState(false);
+    // Group-by-category display mode; hydrated from localStorage after mount
+    // (SSR renders the default flat list, same pattern as active_profile).
+    const [groupByCategory, setGroupByCategory] = useState(false);
+
+    useEffect(() => {
+        setGroupByCategory(localStorage.getItem(GROUP_BY_CATEGORY_STORAGE_KEY) === 'true');
+    }, []);
+
+    const handleToggleGroupByCategory = () => {
+        const next = !groupByCategory;
+        localStorage.setItem(GROUP_BY_CATEGORY_STORAGE_KEY, String(next));
+        setGroupByCategory(next);
+    };
     // Scope habits to the active profile (keyed per profile so it caches
     // separately and matches the Today panel). Gate until a profile resolves.
     const habitsQuery = useQuery({
@@ -68,7 +82,7 @@ export const HabitsDashboard = () => {
     }, [habitsQuery.data]);
 
     // Quick-capture create path: a daily habit with a cool default color. Full
-    // options (question, frequency, category…) live behind the AddHabitModal.
+    // options (question, frequency, category…) live in the detail-pane editor.
     const handleCaptureHabit = async (name: string) => {
         if (!activeProfileId) return;
         try {
@@ -125,8 +139,17 @@ export const HabitsDashboard = () => {
                             <button
                                 type='button'
                                 onClick={() => setSortModalOpen(true)}
-                                title='Change custom order'
-                                className={ghostButton}
+                                disabled={groupByCategory}
+                                title={
+                                    groupByCategory
+                                        ? 'Disable grouping to reorder'
+                                        : 'Change custom order'
+                                }
+                                className={`${ghostButton} ${
+                                    groupByCategory
+                                        ? 'cursor-not-allowed opacity-45'
+                                        : 'hover:text-text-primary'
+                                }`}
                                 style={{ borderColor: 'var(--habit-container-border)' }}
                             >
                                 <GripVertical size={13} />
@@ -148,6 +171,8 @@ export const HabitsDashboard = () => {
                             isWide={isWide}
                             selectedHabitId={selectedHabitId}
                             onSelectHabit={selectHabit}
+                            groupByCategory={groupByCategory}
+                            onToggleGroupByCategory={handleToggleGroupByCategory}
                         />
                     </div>
 
@@ -158,11 +183,6 @@ export const HabitsDashboard = () => {
                     />
                 </div>
 
-                <AddHabitModal
-                    isOpen={addHabitModalOpen}
-                    onClose={() => setAddHabitModalOpen(false)}
-                    handleAddHabit={(newHabit: HabitCreate) => habitsAdd.mutate(newHabit)}
-                />
                 <SortHabitModal
                     key={sortModalOpen ? 'open' : 'closed'} // Force remount to reset state
                     isOpen={sortModalOpen}

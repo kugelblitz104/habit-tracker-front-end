@@ -1,15 +1,9 @@
-import type { TrackerList, TrackerLiteList, TrackerRead } from '@/api';
-import { HabitsService } from '@/api';
-
-import { TrackersService } from '@/api';
+import type { TrackerLiteList, TrackerRead } from '@/api';
+import { HabitsService, TrackersService } from '@/api';
 import { getBrowserTimeZone } from '@/lib/date-utils';
 
 export const getTracker = async (trackerId: number): Promise<TrackerRead> => {
     return await TrackersService.readTrackerTrackersTrackerIdGet(trackerId);
-};
-
-export const getTrackers = async (habitId: number, limit: number): Promise<TrackerList> => {
-    return await HabitsService.listHabitTrackersHabitsHabitIdTrackersGet(habitId, limit);
 };
 
 /**

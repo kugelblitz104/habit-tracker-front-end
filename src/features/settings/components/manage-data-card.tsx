@@ -1,4 +1,7 @@
 import { exportHabits, importHabits } from '@/features/habits/api/import-export-habits';
+import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
+import { exportTasksMarkdown } from '@/features/tasks/api/export-tasks';
+import { useAuth } from '@/lib/auth-context';
 import { Download, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -16,12 +19,15 @@ const dataButtonStyle = {
 
 /**
  * MANAGE DATA card: Loop Habit Tracker .db import (hidden file input) and
- * export. Handlers carried over verbatim from the old settings page.
+ * export (handlers carried over verbatim from the old settings page), plus a
+ * Markdown export of the active profile's tasks.
  */
 export const ManageDataCard = () => {
+    const { activeProfile } = useAuth();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isExporting, setIsExporting] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
+    const [isExportingTasks, setIsExportingTasks] = useState(false);
 
     const handleExportHabits = async () => {
         setIsExporting(true);
@@ -32,6 +38,19 @@ export const ManageDataCard = () => {
             toast.error(`Failed to export habits: ${error}`);
         } finally {
             setIsExporting(false);
+        }
+    };
+
+    const handleExportTasks = async () => {
+        if (!activeProfile) return;
+        setIsExportingTasks(true);
+        try {
+            await exportTasksMarkdown(activeProfile.id, activeProfile.name);
+            toast.success('Tasks exported successfully');
+        } catch (error) {
+            toast.error(apiErrorMessage(error, 'Failed to export tasks'));
+        } finally {
+            setIsExportingTasks(false);
         }
     };
 
@@ -92,6 +111,21 @@ export const ManageDataCard = () => {
                 >
                     <Download size={14} />
                     Export data
+                </button>
+            </div>
+            <div className='mt-4'>
+                <div className='mb-2 text-[12px]' style={{ color: '#9a8f81' }}>
+                    Export tasks &mdash; download this profile&apos;s tasks as a Markdown checklist
+                </div>
+                <button
+                    type='button'
+                    onClick={handleExportTasks}
+                    disabled={isExportingTasks || !activeProfile}
+                    className={dataButtonClass}
+                    style={dataButtonStyle}
+                >
+                    <Download size={14} />
+                    Export tasks
                 </button>
             </div>
             <input

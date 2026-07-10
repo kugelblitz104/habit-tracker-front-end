@@ -1,8 +1,23 @@
 import type { HabitRead, TrackerLite, TrackerRead } from '@/api';
-import type { HabitKPIs } from '@/types/types';
 import { parseLocalDate } from '@/lib/date-utils';
 import { type Streak, TrackerStatus } from '@/types/types';
 import { isAutoSkipped, toLocalDateString } from './tracker-utils';
+
+/**
+ * Client-side KPI compute result. Deliberately NOT the generated `HabitKPIs`
+ * (the server contract in `@/api`): rates here are ×100 percentages, there are
+ * no weekday rates, and it carries the habit `id`. `kpi-adapter.ts` converts
+ * this into the server shape when patching query caches.
+ */
+export type ClientHabitKPIs = {
+    id: number;
+    current_streak: number | null;
+    longest_streak: number | null;
+    total_completions: number;
+    thirty_day_completion_rate: number;
+    overall_completion_rate: number;
+    last_completed_date?: string | null;
+};
 
 /**
  * Get the effective start date for KPI calculations.
@@ -212,7 +227,7 @@ const getLastCompletedDate = (trackers: (TrackerRead | TrackerLite)[]): string |
 export const calculateKPIsFromTrackers = (
     habit: HabitRead,
     trackers: (TrackerRead | TrackerLite)[]
-): HabitKPIs => {
+): ClientHabitKPIs => {
     const totalCompletions = trackers.filter((t) => t.status === TrackerStatus.COMPLETED).length;
     const streaks = calculateStreaks(trackers, habit.frequency, habit.range, habit.created_date);
 

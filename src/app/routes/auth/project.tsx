@@ -7,11 +7,12 @@ import { useUpdateTask } from '@/features/tasks/api/update-tasks';
 import { BandSection } from '@/features/tasks/components/band-section';
 import { TaskDetailPane } from '@/features/tasks/components/task-detail-pane';
 import { useTaskDetailPane } from '@/features/tasks/hooks/use-task-detail-pane';
+import { countGroupedTasks, groupTasksByBand } from '@/features/tasks/utils/task-bands';
 import { AppHeader } from '@/components/layouts/app-header';
 import { sanitizeText } from '@/lib/input-sanitization';
 import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE } from '@/lib/layout';
 import { useAuth } from '@/lib/auth-context';
-import { ACTIVE_TASK_BANDS, type TaskStatus } from '@/types/types';
+import { type TaskStatus } from '@/types/types';
 import { useMemo } from 'react';
 import { Link } from 'react-router';
 import type { Route } from './+types/project';
@@ -44,15 +45,7 @@ function ProjectContent({ projectId }: { projectId: number }) {
         return map;
     }, [project]);
 
-    // Group by the server-computed band (the UI never sets or computes a band).
-    const grouped = useMemo(
-        () =>
-            ACTIVE_TASK_BANDS.map((band) => ({
-                band,
-                tasks: tasks.filter((task) => task.band === band)
-            })),
-        [tasks]
-    );
+    const grouped = useMemo(() => groupTasksByBand(tasks), [tasks]);
 
     const handleStatusChange = (taskId: number, status: TaskStatus) => {
         updateTask.mutate({ taskId, data: { status } });
@@ -70,8 +63,7 @@ function ProjectContent({ projectId }: { projectId: number }) {
     // Base "has tasks" on the set actually rendered (known bands only), so a task
     // with an unknown/hidden band can't suppress the empty-state while showing
     // nowhere.
-    const renderedCount = grouped.reduce((sum, group) => sum + group.tasks.length, 0);
-    const hasTasks = renderedCount > 0;
+    const hasTasks = countGroupedTasks(grouped) > 0;
 
     return (
         <div className='min-h-screen' style={{ backgroundColor: 'var(--bg)' }}>

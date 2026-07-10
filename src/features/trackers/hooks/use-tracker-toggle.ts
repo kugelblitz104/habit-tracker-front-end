@@ -1,7 +1,9 @@
-import type { HabitRead, TrackerCreate, TrackerLite, TrackerRead, TrackerUpdate } from '@/api';
-import { createTracker } from '@/features/trackers/api/create-trackers';
+import type { HabitRead, TrackerLite } from '@/api';
 import { getTrackersLite } from '@/features/trackers/api/get-trackers';
-import { updateTracker } from '@/features/trackers/api/update-trackers';
+import {
+    toTrackerLite,
+    useTrackerMutations
+} from '@/features/trackers/hooks/use-tracker-mutations';
 import {
     createNewTracker,
     findTrackerByDate,
@@ -9,7 +11,7 @@ import {
     getTrackerDisplayStatus
 } from '@/features/trackers/utils/tracker-utils';
 import type { DisplayStatus } from '@/types/types';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -23,13 +25,11 @@ export type UseTrackerToggleResult = {
 };
 
 /**
- * Single-date tracker cycling with optimistic cache updates.
- *
- * This mirrors the optimistic create/update pattern in
- * `habit-list-element.tsx`, scoped to one date. `habit-list-element` keeps its
- * own copy because it additionally manages a multi-day grid, streak reporting,
- * note dialogs and long-press; unifying the two into this hook is a safe future
- * cleanup (TODO) but is out of scope for the Today habits panel.
+ * Single-date tracker cycling with optimistic cache updates, built on the
+ * shared `useTrackerMutations`. On top of the shared cache patching this hook
+ * also invalidates the lite/KPI/streak caches and toasts on error — the Today
+ * panel is a summary surface, so every other consumer of this habit's data
+ * must reconcile.
  */
 export const useTrackerToggle = (habit: HabitRead, date: Date): UseTrackerToggleResult => {
     const queryClient = useQueryClient();
@@ -63,52 +63,9 @@ export const useTrackerToggle = (habit: HabitRead, date: Date): UseTrackerToggle
         queryClient.invalidateQueries({ queryKey: ['streaks', { habitId: habit.id }] });
     };
 
-    const trackerCreate = useMutation({
-        mutationFn: (tracker: TrackerCreate) => createTracker(tracker),
-        onSuccess: async (data) => {
-            queryClient.setQueriesData<{ trackers: TrackerRead[] }>(
-                { queryKey: ['trackers', { habitId: habit.id }] },
-                (oldData) => {
-                    if (!oldData?.trackers) return oldData;
-                    if (oldData.trackers.some((t) => t.id === data.id)) return oldData;
-                    return { ...oldData, trackers: [...oldData.trackers, data] };
-                }
-            );
-            invalidateTrackerCaches();
-        },
-        onError: (error) => {
-            console.error('Error adding tracker:', error);
-            toast.error('Failed to update habit. Please try again.');
-        }
-    });
-
-    const trackerUpdate = useMutation({
-        mutationFn: ({ id, update }: { id: number; update: TrackerUpdate }) =>
-            updateTracker(id, update),
-        onSuccess: async (data) => {
-            queryClient.setQueriesData<{ trackers: TrackerRead[] }>(
-                { queryKey: ['trackers', { habitId: habit.id }] },
-                (oldData) => {
-                    if (!oldData?.trackers) return oldData;
-                    return {
-                        ...oldData,
-                        trackers: oldData.trackers.map((t) => (t.id === data.id ? data : t))
-                    };
-                }
-            );
-            invalidateTrackerCaches();
-        },
-        onError: (error) => {
-            console.error('Error updating tracker:', error);
-            toast.error('Failed to update habit. Please try again.');
-        }
-    });
-
-    const toLite = (data: TrackerRead): TrackerLite => ({
-        id: data.id,
-        dated: data.dated ?? '',
-        status: data.status ?? 2,
-        has_note: !!data.note
+    const { trackerCreate, trackerUpdate } = useTrackerMutations(habit.id, {
+        onSuccess: invalidateTrackerCaches,
+        onError: () => toast.error('Failed to update habit. Please try again.')
     });
 
     const toggle = () => {
@@ -121,7 +78,7 @@ export const useTrackerToggle = (habit: HabitRead, date: Date): UseTrackerToggle
         if (!tracker) {
             const newTracker = createNewTracker(habit.id, date);
             trackerCreate.mutate(newTracker, {
-                onSuccess: (data) => setTrackers((prev) => [...prev, toLite(data)])
+                onSuccess: (data) => setTrackers((prev) => [...prev, toTrackerLite(data)])
             });
             return;
         }
@@ -132,7 +89,7 @@ export const useTrackerToggle = (habit: HabitRead, date: Date): UseTrackerToggle
             {
                 onSuccess: (data) =>
                     setTrackers((prev) =>
-                        prev.map((t) => (t.id === tracker.id ? toLite(data) : t))
+                        prev.map((t) => (t.id === tracker.id ? toTrackerLite(data) : t))
                     )
             }
         );

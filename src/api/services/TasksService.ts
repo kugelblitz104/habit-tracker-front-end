@@ -106,6 +106,40 @@ export class TasksService {
         });
     }
     /**
+     * Export a profile's tasks as Markdown
+     * Export all of a profile's tasks as a Markdown document (`text/markdown`).
+     * The response body is the raw document - not JSON-wrapped - so the client
+     * can save it directly as a `.md` file.
+     *
+     * - **profile_id**: The profile whose tasks to export (required)
+     *
+     * Tasks are grouped by computed urgency band (Now / Soon / Whenever, plus a
+     * "Completed & cancelled" section for done/cancelled tasks); empty sections
+     * are omitted. Each task is a checklist line (`- [x]` when done) with
+     * indented detail bullets for the fields that are set. Ordering matches the
+     * tasks list endpoint: active bands by priority (desc), due date (asc, no
+     * due date last), then creation date; the closed section by closed date
+     * (most recent first).
+     * @param profileId The profile whose tasks to export
+     * @returns string Successful Response
+     * @throws ApiError
+     */
+    public static exportTasksMarkdownTasksExportGet(
+        profileId: number,
+    ): CancelablePromise<string> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/tasks/export',
+            query: {
+                'profile_id': profileId,
+            },
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Get a task by ID
      * Retrieve a specific task by its ID, including its computed urgency band.
      *

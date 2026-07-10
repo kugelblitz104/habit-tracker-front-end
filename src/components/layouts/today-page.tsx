@@ -11,13 +11,15 @@ import { useUpdateTask } from '@/features/tasks/api/update-tasks';
 import { BandSection } from '@/features/tasks/components/band-section';
 import { CaptureBar } from '@/features/tasks/components/capture-bar';
 import { CompletedSection } from '@/features/tasks/components/completed-section';
+import { TaskCaptureForm } from '@/features/tasks/components/task-capture-form';
 import { TaskDetailPane } from '@/features/tasks/components/task-detail-pane';
 import { useTaskDetailPane } from '@/features/tasks/hooks/use-task-detail-pane';
+import { countGroupedTasks, groupTasksByBand } from '@/features/tasks/utils/task-bands';
 import { formatShortDate } from '@/features/tasks/utils/task-format';
 import { useAuth } from '@/lib/auth-context';
 import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE } from '@/lib/layout';
-import { ACTIVE_TASK_BANDS, TaskStatus } from '@/types/types';
-import { useCallback, useMemo } from 'react';
+import { TaskStatus } from '@/types/types';
+import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -30,6 +32,10 @@ export const TodayDashboard = () => {
     const projectsQuery = useProjects({ profileId });
     const createTask = useCreateTask();
     const updateTask = useUpdateTask();
+
+    // Shift+Enter in the capture bar expands it into the full details form,
+    // carrying the typed text along. `null` = collapsed (plain capture bar).
+    const [captureDraft, setCaptureDraft] = useState<string | null>(null);
 
     const { isWide, notesTaskId, selectedEditTaskId, toggleNotes, selectEdit, closeEdit } =
         useTaskDetailPane();
@@ -64,22 +70,11 @@ export const TodayDashboard = () => {
         return map;
     }, [projectsQuery.data]);
 
-    // Group by the server-computed band (the UI never sets or computes a band).
-    const grouped = useMemo(
-        () =>
-            ACTIVE_TASK_BANDS.map((band) => ({
-                band,
-                tasks: tasks.filter((task) => task.band === band)
-            })),
-        [tasks]
-    );
+    const grouped = useMemo(() => groupTasksByBand(tasks), [tasks]);
 
-    // Count only tasks that actually land in a rendered band, so the "N open"
-    // figure never includes tasks (e.g. an unknown/hidden band) shown nowhere.
-    const openCount = useMemo(
-        () => grouped.reduce((sum, group) => sum + group.tasks.length, 0),
-        [grouped]
-    );
+    // Rendered-band count only, so the "N open" figure never includes tasks
+    // (e.g. an unknown/hidden band) shown nowhere.
+    const openCount = useMemo(() => countGroupedTasks(grouped), [grouped]);
 
     const subline = useMemo(() => {
         const now = new Date();
@@ -133,11 +128,20 @@ export const TodayDashboard = () => {
                             </p>
                         </header>
 
-                        <CaptureBar
-                            onCapture={handleCapture}
-                            disabled={!activeProfileId}
-                            isPending={createTask.isPending}
-                        />
+                        {captureDraft !== null && activeProfileId ? (
+                            <TaskCaptureForm
+                                profileId={activeProfileId}
+                                initialTitle={captureDraft}
+                                onClose={() => setCaptureDraft(null)}
+                            />
+                        ) : (
+                            <CaptureBar
+                                onCapture={handleCapture}
+                                onExpand={setCaptureDraft}
+                                disabled={!activeProfileId}
+                                isPending={createTask.isPending}
+                            />
+                        )}
 
                         {tasksQuery.isError && (
                             <p className='mb-6 font-mono text-[12px] text-danger'>

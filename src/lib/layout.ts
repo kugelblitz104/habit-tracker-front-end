@@ -6,7 +6,3 @@
 // when a detail pane (task/habit) is open beside the content.
 export const PAGE_MAX_WIDTH = 'max-w-[1080px]';
 export const PAGE_MAX_WIDTH_PANE = 'max-w-[1440px]';
-
-/** Pick the right max-width class for a surface based on pane state. */
-export const pageMaxWidth = (paneOpen: boolean): string =>
-    paneOpen ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH;
