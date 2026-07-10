@@ -8,6 +8,15 @@ export const getFrequencyString = (frequency: number, range: number) => {
 };
 
 /**
+ * The browser's IANA timezone name (e.g. 'America/New_York'). Sent as the `tz`
+ * query param so the server computes "today" in the user's zone rather than the
+ * server's (UTC) clock.
+ */
+export const getBrowserTimeZone = (): string => {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+};
+
+/**
  * Format a Date as YYYY-MM-DD in local time.
  */
 export const toLocalDateString = (date: Date): string => {

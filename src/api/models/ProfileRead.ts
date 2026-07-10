@@ -10,6 +10,8 @@ export type ProfileRead = {
     calendar_enabled?: boolean;
     publish_to_azure?: boolean;
     default_landing?: string;
+    week_start_monday?: boolean;
+    use_habit_color_accent?: boolean;
     id: number;
     created_date: string;
     updated_date?: (string | null);

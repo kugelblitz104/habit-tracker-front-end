@@ -73,10 +73,12 @@ export class CalendarConnectionsService {
         });
     }
     /**
-     * Get calendar events for a profile on a day
+     * Get calendar events for a profile over a day range
      * Fetch, cache and parse the profile's enabled ICS calendar feeds and return
-     * the normalized events of a single day (recurrences expanded). All-day
-     * events come first, then timed events ordered by start time.
+     * the normalized events of the window [target_date, target_date + days)
+     * (recurrences expanded). Each event carries the **event_date** it belongs
+     * to; events are ordered by event_date, then all-day events first, then
+     * timed events by start time.
      *
      * Successful fetches are cached for 15 minutes; a failing feed keeps serving
      * its stale cache, is not re-attempted for 5 minutes, and its failure is
@@ -84,10 +86,12 @@ export class CalendarConnectionsService {
      * response.
      *
      * - **profile_id**: The profile whose calendar events to list (required)
-     * - **target_date**: The day to list events for, YYYY-MM-DD (default: today)
+     * - **target_date**: The first day to list events for, YYYY-MM-DD (default: today)
+     * - **days**: Number of days in the window starting at target_date (default: 1, max: 14)
      * - **tz**: Optional IANA timezone for day boundaries (invalid name -> 422)
      * @param profileId The profile whose calendar events to list
      * @param targetDate The day to list events for (default: today)
+     * @param days Number of days to return events for, starting at target_date (default: 1, max: 14)
      * @param tz IANA timezone name (e.g. 'America/New_York'). When provided, the day runs from midnight to midnight in this zone and the default target_date is today in this zone; when omitted, day boundaries are interpreted in each feed's own timezone (legacy behavior).
      * @returns CalendarEventList Successful Response
      * @throws ApiError
@@ -95,6 +99,7 @@ export class CalendarConnectionsService {
     public static listCalendarEventsCalendarConnectionsEventsGet(
         profileId: number,
         targetDate?: (string | null),
+        days: number = 1,
         tz?: (string | null),
     ): CancelablePromise<CalendarEventList> {
         return __request(OpenAPI, {
@@ -103,6 +108,7 @@ export class CalendarConnectionsService {
             query: {
                 'profile_id': profileId,
                 'target_date': targetDate,
+                'days': days,
                 'tz': tz,
             },
             errors: {

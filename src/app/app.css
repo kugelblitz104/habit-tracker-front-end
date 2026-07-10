@@ -250,6 +250,11 @@ body {
  * every variant (default, success, error, info, warning) on-theme without
  * per-toast className plumbing. Accent green for success, --color-danger for
  * error, habit accent for info.
+ *
+ * ORDERING: react-toastify v11 injects its stock stylesheet at runtime as the
+ * FIRST child of <head>, so these equal-specificity overrides win by source
+ * order. Never import 'react-toastify/dist/ReactToastify.css' after this file
+ * (root.tsx used to) — the stock :root block would then clobber these vars.
  */
 :root {
     --toastify-color-light: var(--surface-card-bg);
@@ -261,6 +266,8 @@ body {
     --toastify-text-color-dark: var(--color-text-primary);
     --toastify-font-family: var(--font-display);
     --toastify-toast-bd-radius: var(--radius-button);
+    /* Default (non-variant) dark toast progress bar — stock is #bb86fc purple. */
+    --toastify-color-progress-dark: var(--color-now-accent);
 }
 
 .Toastify__toast {

@@ -1,6 +1,19 @@
 import { ProfileSwitcher } from '@/features/profiles/components/profile-switcher';
 import { PAGE_MAX_WIDTH } from '@/lib/layout';
+import React from 'react';
 import { Link, useLocation } from 'react-router';
+
+// DEV-ONLY debug menu. `import.meta.env.DEV` compiles to `false` in prod, the
+// dynamic import becomes unreachable dead code, and Rollup drops the module —
+// so the debug tooling never ships. Lazy (vs static import) guarantees the
+// exclusion regardless of side-effect analysis.
+const DebugMenu = import.meta.env.DEV
+    ? React.lazy(() =>
+          import('@/features/dev/components/debug-menu').then((m) => ({
+              default: m.DebugMenu
+          }))
+      )
+    : null;
 
 type NavTab = {
     label: string;
@@ -38,10 +51,7 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
     const activeKey = activeTabKey(pathname);
 
     return (
-        <header
-            className='border-b'
-            style={{ borderColor: 'var(--surface-card-border)' }}
-        >
+        <header className='border-b' style={{ borderColor: 'var(--surface-card-border)' }}>
             <div
                 className={`mx-auto flex items-stretch justify-between gap-3 px-5 md:px-7 ${maxWidthClass}`}
             >
@@ -58,7 +68,9 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
                                         ? 'text-text-primary'
                                         : 'border-transparent text-text-muted hover:text-text-secondary'
                                 }`}
-                                style={active ? { borderColor: 'var(--color-now-accent)' } : undefined}
+                                style={
+                                    active ? { borderColor: 'var(--color-now-accent)' } : undefined
+                                }
                             >
                                 {tab.dot && (
                                     <span
@@ -76,7 +88,12 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
                     })}
                 </nav>
 
-                <div className='flex items-center'>
+                <div className='flex items-center gap-2'>
+                    {import.meta.env.DEV && DebugMenu && (
+                        <React.Suspense fallback={null}>
+                            <DebugMenu />
+                        </React.Suspense>
+                    )}
                     <ProfileSwitcher />
                 </div>
             </div>

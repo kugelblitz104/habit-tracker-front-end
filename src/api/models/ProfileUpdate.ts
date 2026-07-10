@@ -10,5 +10,7 @@ export type ProfileUpdate = {
     calendar_enabled?: (boolean | null);
     publish_to_azure?: (boolean | null);
     default_landing?: (string | null);
+    week_start_monday?: (boolean | null);
+    use_habit_color_accent?: (boolean | null);
 };
 

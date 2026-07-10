@@ -32,15 +32,19 @@ const HollowCheckmark = ({ className }: { className: string }) => (
 
 /**
  * Small corner indicator shown on a calendar/dashboard cell that carries a note.
- * A simple ~6px filled dot tinted with the theme accent token so it reads
- * consistently on both the dark cells (missed/skipped) and the light completed
- * fill. The optional `color` prop is retained for call-site compatibility but the
- * tint is intentionally theme-driven.
+ * A simple ~6px dot filled with the HABIT's own color (falling back to the theme
+ * accent when no color is given). A thin dark outline ring keeps the pip visible
+ * even on cells already filled with the same habit color (completed chips),
+ * where a bare same-color dot would vanish.
  */
-export const NotePip = ({ className }: { className: string; color?: string }) => (
+export const NotePip = ({ className, color }: { className: string; color?: string }) => (
     <span
         aria-hidden='true'
-        className={`${className} pointer-events-none block h-1.5 w-1.5 rounded-full bg-[var(--color-habit-accent)]`}
+        className={`${className} pointer-events-none block h-1.5 w-1.5 rounded-full`}
+        style={{
+            background: color ?? 'var(--color-habit-accent)',
+            boxShadow: '0 0 0 1.5px rgba(15, 20, 24, 0.85)'
+        }}
     />
 );
 

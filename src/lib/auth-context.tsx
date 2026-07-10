@@ -1,6 +1,7 @@
 import { OpenAPI, type ProfileRead } from '@/api';
 import { useProfiles } from '@/features/profiles/api/get-profiles';
 import { getUser } from '@/features/users/api/get-users';
+import { useQueryClient } from '@tanstack/react-query';
 import React, {
     createContext,
     useContext,
@@ -22,7 +23,7 @@ interface User {
     updated_date?: string | null;
 }
 
-interface AuthContextType {
+export interface AuthContextType {
     user: User | null;
     token: string | null;
     isAuthenticated: boolean;
@@ -41,9 +42,14 @@ interface AuthContextType {
     profilesLoading: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Exported so the dev-only /dev/debug playground can render the login /
+// register pages under a stubbed "signed-out" context (their real
+// isAuthenticated redirect would otherwise bounce an authed dev to `/`).
+// App code should keep using AuthProvider / useAuth.
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const queryClient = useQueryClient();
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -91,12 +97,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
     }, [profileHydrated, profiles]);
 
-    // Reset the selection whenever the user isn't authenticated.
+    // Reset the selection whenever the user isn't authenticated — but only
+    // after the initial auth check has completed. The first render is always
+    // unauthenticated (initAuth hasn't run yet), and resetting then would wipe
+    // the localStorage-hydrated selection on every reload, bouncing the user
+    // back to their first profile.
     useEffect(() => {
-        if (!isAuthenticated) {
+        if (!isLoading && !isAuthenticated) {
             setActiveProfileIdState(null);
         }
-    }, [isAuthenticated]);
+    }, [isLoading, isAuthenticated]);
 
     const setActiveProfileId = (profileId: number) => {
         setActiveProfileIdState(profileId);
@@ -149,6 +159,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     const authorize = async (accessToken: string, refreshToken: string) => {
+        // Drop anything cached by a previous session before auth flips. With
+        // staleTime set, queries re-enabled by this login would otherwise be
+        // served the old session's cache (e.g. another user's ['profiles'])
+        // instead of refetching with the new token.
+        queryClient.clear();
+
         // Store tokens
         localStorage.setItem('access_token', accessToken);
         localStorage.setItem('refresh_token', refreshToken);
@@ -198,6 +214,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Clear API client token
         OpenAPI.TOKEN = undefined;
+
+        // Drop all cached server state so the next login can't render this
+        // session's data (authorize() clears again as a belt-and-braces).
+        queryClient.clear();
     };
 
     const value: AuthContextType = {

@@ -66,9 +66,16 @@ const ProfileSelector = ({ profiles, selected, onSelect }: ProfileSelectorProps)
 );
 
 type ToggleRowConfig = {
-    key: 'habits_enabled' | 'calendar_enabled' | 'publish_to_azure';
+    key:
+        | 'habits_enabled'
+        | 'calendar_enabled'
+        | 'publish_to_azure'
+        | 'week_start_monday'
+        | 'use_habit_color_accent';
     title: string;
     description: string;
+    /** Assumed value when the profile record predates the flag (server default). */
+    defaultOn?: boolean;
 };
 
 const TOGGLE_ROWS: ToggleRowConfig[] = [
@@ -88,6 +95,19 @@ const TOGGLE_ROWS: ToggleRowConfig[] = [
         key: 'publish_to_azure',
         title: 'Publish tasks to Azure DevOps',
         description: 'Work items sync out to ADO; this app stays the source of truth'
+    },
+    {
+        key: 'week_start_monday',
+        title: 'Week starts on Monday',
+        description:
+            'Habit calendars and weekday charts begin the week on Monday instead of Sunday',
+        defaultOn: true
+    },
+    {
+        key: 'use_habit_color_accent',
+        title: 'Use habit color as accent',
+        description:
+            "Color each habit's detail view with that habit's own color instead of the standard cool accent"
     }
 ];
 
@@ -179,7 +199,7 @@ export const ProfilePreferencesCard = ({
                         </div>
                     </div>
                     <EmberToggle
-                        checked={!!profile[row.key]}
+                        checked={profile[row.key] ?? row.defaultOn ?? false}
                         onChange={(value) => handleToggle(row, value)}
                         label={`${row.title} for ${profile.name}`}
                         disabled={updateProfile.isPending}

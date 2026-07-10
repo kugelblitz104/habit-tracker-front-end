@@ -9,6 +9,7 @@ export type CalendarEventRead = {
     title: string;
     location?: (string | null);
     all_day: boolean;
+    event_date: string;
     start: string;
     end?: (string | null);
 };

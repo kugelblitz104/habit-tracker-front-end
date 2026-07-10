@@ -54,7 +54,9 @@ export const StreakChart = ({ streaks, max = 6 }: StreakChartProps) => {
                                     className='flex h-full items-center justify-end rounded-[6px] px-2'
                                     style={{
                                         width: `${widthPct}%`,
-                                        background: isNow ? '#8fc0e0' : '#6f9dc0'
+                                        background: isNow
+                                            ? 'var(--habit-detail-accent-bright, #8fc0e0)'
+                                            : 'var(--habit-detail-accent, #6f9dc0)'
                                     }}
                                 >
                                     <span className='font-mono text-[11px] font-semibold text-[#0f1418]'>

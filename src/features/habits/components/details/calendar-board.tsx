@@ -19,6 +19,8 @@ type CalendarBoardProps = {
     habit?: HabitRead;
     /** Full tracker history (habit creation → today). */
     trackers: TrackerLite[];
+    /** Profile preference: weeks render Monday-first (default) or Sunday-first. */
+    weekStartMonday?: boolean;
     onTrackerCreate: (tracker: TrackerCreate) => Promise<TrackerRead>;
     onTrackerUpdate: (id: number, update: TrackerUpdate) => Promise<TrackerRead>;
 };
@@ -28,7 +30,9 @@ const PANEL =
 const TITLE =
     'm-0 font-display text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--color-habit-label)]';
 
-const WEEKDAY_HEADERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+// Weekday header rows for each week-start preference.
+const WEEKDAY_HEADERS_MONDAY = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const WEEKDAY_HEADERS_SUNDAY = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 const monthStart = (date: Date): Date => new Date(date.getFullYear(), date.getMonth(), 1);
 
@@ -41,7 +45,11 @@ const cellStyle = (status: DisplayStatus, isToday: boolean, isFuture: boolean): 
     } else {
         switch (status) {
             case DisplayStatus.COMPLETED:
-                style = { background: '#6f9dc0', color: '#0f1418', fontWeight: 600 };
+                style = {
+                    background: 'var(--habit-detail-accent, #6f9dc0)',
+                    color: '#0f1418',
+                    fontWeight: 600
+                };
                 break;
             case DisplayStatus.AUTO_SKIPPED:
                 style = {
@@ -70,10 +78,15 @@ const cellStyle = (status: DisplayStatus, isToday: boolean, isFuture: boolean): 
     if (isToday) {
         style = {
             ...style,
-            border: '2px solid #8fc0e0',
+            border: '2px solid var(--habit-detail-accent-bright, #8fc0e0)',
             // Give an otherwise-empty "today" cell a subtle highlight fill.
             ...(status === DisplayStatus.NOT_COMPLETED && !isFuture
-                ? { background: 'rgba(143,192,224,.12)', color: '#d7e6f2', fontWeight: 700 }
+                ? {
+                      background:
+                          'color-mix(in srgb, var(--habit-detail-accent-bright, #8fc0e0) 12%, transparent)',
+                      color: '#d7e6f2',
+                      fontWeight: 700
+                  }
                 : {})
         };
     }
@@ -126,7 +139,16 @@ const DayCell = ({
             aria-label={`${date.toLocaleDateString()} — ${status.replace('_', ' ')}`}
         >
             {date.getDate()}
-            {tracker?.has_note && <NotePip className='absolute -top-1 -right-1' color={habit.color} />}
+            {/* The pip follows the detail view's EFFECTIVE accent (habit color when
+                use_habit_color_accent is on, the cool default otherwise) so it always
+                matches the completed chips around it. The dashboard call site keeps
+                passing habit.color to match ITS surroundings. */}
+            {tracker?.has_note && (
+                <NotePip
+                    className='absolute -top-1 -right-1'
+                    color='var(--habit-detail-accent, #6f9dc0)'
+                />
+            )}
         </div>
     );
 };
@@ -141,6 +163,7 @@ const LegendSwatch = ({ label, style }: { label: string; style: CSSProperties })
 export const CalendarBoard = ({
     habit,
     trackers,
+    weekStartMonday = true,
     onTrackerCreate,
     onTrackerUpdate
 }: CalendarBoardProps) => {
@@ -188,11 +211,14 @@ export const CalendarBoard = ({
     const { leadingBlanks, days } = useMemo(() => {
         const year = viewMonth.getFullYear();
         const month = viewMonth.getMonth();
-        const firstWeekday = new Date(year, month, 1).getDay(); // Sunday = 0
+        // JS getDay(): 0 = Sunday … 6 = Saturday. Sunday-first grids use it
+        // directly; Monday-first grids rotate it so Monday = 0.
+        const firstDay = new Date(year, month, 1).getDay();
+        const firstWeekday = weekStartMonday ? (firstDay + 6) % 7 : firstDay;
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const daysArr = Array.from({ length: daysInMonth }, (_, i) => new Date(year, month, i + 1));
         return { leadingBlanks: firstWeekday, days: daysArr };
-    }, [viewMonth]);
+    }, [viewMonth, weekStartMonday]);
 
     const goPrevious = () => {
         if (!hasPrevious) return;
@@ -278,14 +304,13 @@ export const CalendarBoard = ({
             </div>
 
             <div className='mb-[6px] grid grid-cols-7 gap-[6px]'>
-                {WEEKDAY_HEADERS.map((label, i) => (
-                    <span
-                        key={i}
-                        className='text-center font-mono text-[10px] text-[#5f7688]'
-                    >
-                        {label}
-                    </span>
-                ))}
+                {(weekStartMonday ? WEEKDAY_HEADERS_MONDAY : WEEKDAY_HEADERS_SUNDAY).map(
+                    (label, i) => (
+                        <span key={i} className='text-center font-mono text-[10px] text-[#5f7688]'>
+                            {label}
+                        </span>
+                    )
+                )}
             </div>
 
             <div className='grid grid-cols-7 gap-[6px]'>
@@ -307,7 +332,10 @@ export const CalendarBoard = ({
             </div>
 
             <div className='mt-[14px] flex flex-wrap gap-3'>
-                <LegendSwatch label='Completed' style={{ background: '#6f9dc0' }} />
+                <LegendSwatch
+                    label='Completed'
+                    style={{ background: 'var(--habit-detail-accent, #6f9dc0)' }}
+                />
                 <LegendSwatch
                     label='Auto-kept'
                     style={{

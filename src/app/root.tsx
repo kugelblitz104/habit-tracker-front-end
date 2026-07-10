@@ -9,8 +9,13 @@ import {
 
 // import type { Route } from './+types/root';
 
-import './app.css';
+// Toastify's stylesheet MUST be imported BEFORE app.css: with cssCodeSplit
+// off the bundle concatenates CSS in import order, and app.css's --toastify-*
+// vars / .Toastify__* rules only beat the stock ones by coming later. (v11's
+// runtime self-injection can't be relied on under React Router SSR — without
+// this import toasts render unstyled at the bottom of the page.)
 import 'react-toastify/dist/ReactToastify.css';
+import './app.css';
 
 // Self-hosted fonts (Space Grotesk display + JetBrains Mono meta) via @fontsource.
 import '@fontsource/space-grotesk/400.css';
@@ -98,19 +103,22 @@ export default function App() {
                     style={{ backgroundColor: 'var(--bg)' }}
                 >
                     <Outlet />
+                    {/* Inside the tone wrapper so toasts inherit any theme vars
+                        that become tone-scoped later (ToastContainer renders
+                        inline here, not in a portal). */}
+                    <ToastContainer
+                        position='top-right'
+                        autoClose={5000}
+                        hideProgressBar={false}
+                        newestOnTop
+                        closeOnClick
+                        rtl={false}
+                        pauseOnFocusLoss
+                        draggable
+                        pauseOnHover
+                        theme='dark'
+                    />
                 </div>
-                <ToastContainer
-                    position='top-right'
-                    autoClose={5000}
-                    hideProgressBar={false}
-                    newestOnTop
-                    closeOnClick
-                    rtl={false}
-                    pauseOnFocusLoss
-                    draggable
-                    pauseOnHover
-                    theme='dark'
-                />
             </AuthProvider>
         </QueryClientProvider>
     );

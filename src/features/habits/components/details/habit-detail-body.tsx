@@ -26,10 +26,12 @@ import {
     adaptKpisToServerShape,
     adaptStreaksToServerShape
 } from '@/features/trackers/utils/kpi-adapter';
+import { useAuth } from '@/lib/auth-context';
 import { parseLocalDate, toLocalDateString } from '@/lib/date-utils';
 import { TrackerStatus } from '@/types/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Archive, ArchiveRestore, Pencil, Trash } from 'lucide-react';
+import type { CSSProperties } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -74,6 +76,12 @@ export const HabitDetailBody = ({
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const queryClient = useQueryClient();
+
+    // Per-profile display preferences (both default to the server defaults when
+    // the profile record predates the flags).
+    const { activeProfile } = useAuth();
+    const weekStartMonday = activeProfile?.week_start_monday ?? true;
+    const useHabitColorAccent = activeProfile?.use_habit_color_accent ?? false;
 
     // Let the host react to edit-mode (e.g. the pane drops its card chrome).
     useEffect(() => {
@@ -404,6 +412,26 @@ export const HabitDetailBody = ({
     const ghostButton =
         'inline-flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11.5px] transition-colors';
 
+    // The detail view's accent, threaded to every child (KPI rings, streak bars,
+    // weekday-chart fills, month-grid completed chips, note pips) as CSS custom
+    // properties on the root element. With use_habit_color_accent ON the habit's
+    // own color drives all of them (shades derived via color-mix); OFF keeps the
+    // theme's fixed cool-blue values, matching the pre-flag rendering exactly.
+    const habitAccent = useHabitColorAccent && habit?.color ? habit.color : null;
+    const accentVars = {
+        '--habit-detail-accent': habitAccent ?? '#6f9dc0',
+        '--habit-detail-accent-bright': habitAccent
+            ? `color-mix(in srgb, ${habitAccent} 70%, white)`
+            : '#8fc0e0',
+        '--habit-detail-accent-soft': habitAccent
+            ? `color-mix(in srgb, ${habitAccent} 48%, #191d22)`
+            : '#3f5a6b',
+        '--habit-detail-accent-ring': habitAccent ?? '#7fa8c9',
+        '--habit-detail-accent-ring-dim': habitAccent
+            ? `color-mix(in srgb, ${habitAccent} 76%, #14181d)`
+            : '#5f8aa8'
+    } as CSSProperties;
+
     // Inline edit surface replaces the read view (mirrors the task editor pattern).
     if (isEditing && habit) {
         return (
@@ -433,7 +461,7 @@ export const HabitDetailBody = ({
     }
 
     return (
-        <div className='flex flex-col gap-6'>
+        <div className='flex flex-col gap-6' style={accentVars}>
             {/* Header: name + meta, with a lone Edit affordance top-right.
                 No archive/delete on the name's axis — those live in the footer.
                 In compact (pane) mode the pane floats a close (X) in the card's
@@ -485,11 +513,15 @@ export const HabitDetailBody = ({
                 <CalendarBoard
                     habit={habit}
                     trackers={trackers}
+                    weekStartMonday={weekStartMonday}
                     onTrackerCreate={handleTrackerCreate}
                     onTrackerUpdate={handleTrackerUpdate}
                 />
                 <div className='flex flex-col gap-5'>
-                    <WeekdayChart rates={kpisQuery.data?.weekday_completion_rates} />
+                    <WeekdayChart
+                        rates={kpisQuery.data?.weekday_completion_rates}
+                        weekStartMonday={weekStartMonday}
+                    />
                     <StreakChart streaks={streaksQuery.data ?? []} />
                 </div>
             </div>

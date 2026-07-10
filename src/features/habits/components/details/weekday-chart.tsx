@@ -4,6 +4,8 @@ type WeekdayChartProps = {
      * (0 = Monday … 6 = Sunday), exactly as the server returns them.
      */
     rates?: number[];
+    /** Profile preference: columns render Monday-first (default) or Sunday-first. */
+    weekStartMonday?: boolean;
 };
 
 const PANEL =
@@ -11,9 +13,20 @@ const PANEL =
 const TITLE =
     'm-0 font-display text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--color-habit-label)]';
 
-// Display order is Sunday-first (S M T W T F S). Map each display column to its
-// Python-weekday index (Sun = 6, Mon = 0 … Sat = 5).
-const DISPLAY = [
+// Rates are indexed by Python weekday (Mon = 0 … Sun = 6), so each display
+// column carries the `py` index it reads from. Monday-first columns read
+// rates[i] directly; Sunday-first just moves the Sunday column (rates[6]) up
+// front.
+const DISPLAY_MONDAY_FIRST = [
+    { label: 'M', py: 0 },
+    { label: 'T', py: 1 },
+    { label: 'W', py: 2 },
+    { label: 'T', py: 3 },
+    { label: 'F', py: 4 },
+    { label: 'S', py: 5 },
+    { label: 'S', py: 6 }
+];
+const DISPLAY_SUNDAY_FIRST = [
     { label: 'S', py: 6 },
     { label: 'M', py: 0 },
     { label: 'T', py: 1 },
@@ -23,7 +36,8 @@ const DISPLAY = [
     { label: 'S', py: 5 }
 ];
 
-export const WeekdayChart = ({ rates }: WeekdayChartProps) => {
+export const WeekdayChart = ({ rates, weekStartMonday = true }: WeekdayChartProps) => {
+    const display = weekStartMonday ? DISPLAY_MONDAY_FIRST : DISPLAY_SUNDAY_FIRST;
     const safeRates = rates && rates.length === 7 ? rates : new Array(7).fill(0);
     const maxRate = Math.max(...safeRates, 0);
     // A day is "strong" (accent) when it clears half of the best weekday; below
@@ -34,7 +48,7 @@ export const WeekdayChart = ({ rates }: WeekdayChartProps) => {
         <div className={PANEL}>
             <h2 className={TITLE}>By weekday</h2>
             <div className='mt-4 flex h-[92px] items-end gap-[9px]'>
-                {DISPLAY.map((col, i) => {
+                {display.map((col, i) => {
                     const rate = safeRates[col.py] ?? 0;
                     const isStrong = maxRate > 0 && rate >= strongThreshold;
                     return (
@@ -47,7 +61,9 @@ export const WeekdayChart = ({ rates }: WeekdayChartProps) => {
                                 style={{
                                     height: `${Math.round(rate * 100)}%`,
                                     minHeight: rate > 0 ? 3 : 0,
-                                    background: isStrong ? '#6f9dc0' : '#3f5a6b'
+                                    background: isStrong
+                                        ? 'var(--habit-detail-accent, #6f9dc0)'
+                                        : 'var(--habit-detail-accent-soft, #3f5a6b)'
                                 }}
                                 title={`${Math.round(rate * 100)}%`}
                             />

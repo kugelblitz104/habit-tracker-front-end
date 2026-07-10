@@ -116,12 +116,18 @@ export const KpiBoard = ({ kpis, compact = false }: KpiBoardProps) => {
 
             <div className={`${CARD} gap-[6px]`}>
                 <div className={LABEL}>30-day</div>
-                <Ring fraction={kpis.thirty_day_completion_rate} accent='#7fa8c9' />
+                <Ring
+                    fraction={kpis.thirty_day_completion_rate}
+                    accent='var(--habit-detail-accent-ring, #7fa8c9)'
+                />
             </div>
 
             <div className={`${CARD} gap-[6px]`}>
                 <div className={LABEL}>Overall</div>
-                <Ring fraction={kpis.overall_completion_rate} accent='#5f8aa8' />
+                <Ring
+                    fraction={kpis.overall_completion_rate}
+                    accent='var(--habit-detail-accent-ring-dim, #5f8aa8)'
+                />
             </div>
         </div>
     );

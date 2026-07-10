@@ -233,9 +233,11 @@ export class UsersService {
      * - **limit**: Maximum number of habits to return (default: 5, max: 100)
      * - **profile_id**: Optional. Only habits belonging to this profile (must
      * belong to the user)
+     * - **tz**: Optional IANA timezone for determining "today" (invalid name -> 422)
      * @param userId
      * @param limit Maximum number of habits to return (1-100)
      * @param profileId Only habits belonging to this profile
+     * @param tz IANA timezone name (e.g. 'America/New_York'). When provided, 'today' for completed_today/skipped_today is today in this zone; when omitted, the server's local date is used.
      * @returns HabitList Successful Response
      * @throws ApiError
      */
@@ -243,6 +245,7 @@ export class UsersService {
         userId: number,
         limit: number = 5,
         profileId?: (number | null),
+        tz?: (string | null),
     ): CancelablePromise<HabitList> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -253,6 +256,7 @@ export class UsersService {
             query: {
                 'limit': limit,
                 'profile_id': profileId,
+                'tz': tz,
             },
             errors: {
                 404: `Not found`,

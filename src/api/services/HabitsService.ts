@@ -79,18 +79,24 @@ export class HabitsService {
      * Retrieve a specific habit by its ID.
      *
      * - **habit_id**: The unique identifier of the habit to retrieve
+     * - **tz**: Optional IANA timezone for determining "today" (invalid name -> 422)
      * @param habitId
+     * @param tz IANA timezone name (e.g. 'America/New_York'). When provided, 'today' for completed_today/skipped_today is today in this zone; when omitted, the server's local date is used.
      * @returns HabitRead Successful Response
      * @throws ApiError
      */
     public static readHabitHabitsHabitIdGet(
         habitId: number,
+        tz?: (string | null),
     ): CancelablePromise<HabitRead> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/habits/{habit_id}',
             path: {
                 'habit_id': habitId,
+            },
+            query: {
+                'tz': tz,
             },
             errors: {
                 404: `Not found`,
@@ -248,9 +254,11 @@ export class HabitsService {
      * - **habit_id**: The unique identifier of the habit
      * - **end_date**: End date for the range (defaults to today)
      * - **days**: Number of days to fetch (1-3660, default: 42 = 6 weeks)
+     * - **tz**: Optional IANA timezone for the default end_date (invalid name -> 422)
      * @param habitId
      * @param endDate End date for the date range (defaults to today). Format: YYYY-MM-DD
      * @param days Number of days to fetch (1-3660, default: 42 = 6 weeks)
+     * @param tz IANA timezone name (e.g. 'America/New_York'). When provided, the default end_date is today in this zone; when omitted, the server's local date is used.
      * @returns TrackerLiteList Successful Response
      * @throws ApiError
      */
@@ -258,6 +266,7 @@ export class HabitsService {
         habitId: number,
         endDate?: (string | null),
         days: number = 42,
+        tz?: (string | null),
     ): CancelablePromise<TrackerLiteList> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -268,6 +277,7 @@ export class HabitsService {
             query: {
                 'end_date': endDate,
                 'days': days,
+                'tz': tz,
             },
             errors: {
                 404: `Not found`,
@@ -284,18 +294,24 @@ export class HabitsService {
      * mirrors the frontend so client and server agree.
      *
      * - **habit_id**: The unique identifier of the habit
+     * - **tz**: Optional IANA timezone for determining "today" (invalid name -> 422)
      * @param habitId
+     * @param tz IANA timezone name (e.g. 'America/New_York'). When provided, KPIs are computed against today in this zone; when omitted, the server's local date is used.
      * @returns HabitKPIs Successful Response
      * @throws ApiError
      */
     public static readHabitKpisHabitsHabitIdKpisGet(
         habitId: number,
+        tz?: (string | null),
     ): CancelablePromise<HabitKPIs> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/habits/{habit_id}/kpis',
             path: {
                 'habit_id': habitId,
+            },
+            query: {
+                'tz': tz,
             },
             errors: {
                 404: `Not found`,
@@ -313,18 +329,24 @@ export class HabitsService {
      * habit's trackers on the fly - nothing is persisted.
      *
      * - **habit_id**: The unique identifier of the habit
+     * - **tz**: Optional IANA timezone for determining "today" (invalid name -> 422)
      * @param habitId
+     * @param tz IANA timezone name (e.g. 'America/New_York'). When provided, streaks are computed against today in this zone; when omitted, the server's local date is used.
      * @returns HabitStreak Successful Response
      * @throws ApiError
      */
     public static readHabitStreaksHabitsHabitIdStreaksGet(
         habitId: number,
+        tz?: (string | null),
     ): CancelablePromise<Array<HabitStreak>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/habits/{habit_id}/streaks',
             path: {
                 'habit_id': habitId,
+            },
+            query: {
+                'tz': tz,
             },
             errors: {
                 404: `Not found`,
