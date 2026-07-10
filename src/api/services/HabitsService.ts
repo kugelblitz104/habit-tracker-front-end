@@ -247,10 +247,10 @@ export class HabitsService {
      *
      * - **habit_id**: The unique identifier of the habit
      * - **end_date**: End date for the range (defaults to today)
-     * - **days**: Number of days to fetch (default: 42 = 6 weeks)
+     * - **days**: Number of days to fetch (1-3660, default: 42 = 6 weeks)
      * @param habitId
      * @param endDate End date for the date range (defaults to today). Format: YYYY-MM-DD
-     * @param days Number of days to fetch (1-365, default: 42 = 6 weeks)
+     * @param days Number of days to fetch (1-3660, default: 42 = 6 weeks)
      * @returns TrackerLiteList Successful Response
      * @throws ApiError
      */

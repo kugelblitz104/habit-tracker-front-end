@@ -1,5 +1,6 @@
 import type { ProjectRead } from '@/api';
 import { AppHeader } from '@/components/layouts/app-header';
+import { TodaySchedule } from '@/features/calendar/components/today-schedule';
 import { HabitDetailPane } from '@/features/habits/components/details/habit-detail-pane';
 import { TodayHabitsPanel } from '@/features/habits/components/today/today-habits-panel';
 import { useHabitDetailPane } from '@/features/habits/hooks/use-habit-detail-pane';
@@ -11,7 +12,6 @@ import { BandSection } from '@/features/tasks/components/band-section';
 import { CaptureBar } from '@/features/tasks/components/capture-bar';
 import { CompletedSection } from '@/features/tasks/components/completed-section';
 import { TaskDetailPane } from '@/features/tasks/components/task-detail-pane';
-import { TodaySchedule } from '@/features/tasks/components/today-schedule';
 import { useTaskDetailPane } from '@/features/tasks/hooks/use-task-detail-pane';
 import { formatShortDate } from '@/features/tasks/utils/task-format';
 import { useAuth } from '@/lib/auth-context';

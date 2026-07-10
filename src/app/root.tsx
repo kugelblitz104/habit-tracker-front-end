@@ -20,6 +20,16 @@ import '@fontsource/space-grotesk/700.css';
 import '@fontsource/jetbrains-mono/400.css';
 import '@fontsource/jetbrains-mono/500.css';
 
+// Hashed URLs for the primary latin woff2 files, preloaded below so the fonts
+// are fetched with the document instead of lazily on first glyph paint — the
+// lazy fetch is what flashed fallback fonts when a weight was first used.
+import spaceGrotesk400Url from '@fontsource/space-grotesk/files/space-grotesk-latin-400-normal.woff2?url';
+import spaceGrotesk500Url from '@fontsource/space-grotesk/files/space-grotesk-latin-500-normal.woff2?url';
+import spaceGrotesk600Url from '@fontsource/space-grotesk/files/space-grotesk-latin-600-normal.woff2?url';
+import spaceGrotesk700Url from '@fontsource/space-grotesk/files/space-grotesk-latin-700-normal.woff2?url';
+import jetbrainsMono400Url from '@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2?url';
+import jetbrainsMono500Url from '@fontsource/jetbrains-mono/files/jetbrains-mono-latin-500-normal.woff2?url';
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { ToastContainer } from 'react-toastify';
@@ -29,6 +39,24 @@ import '@/lib/api-client';
 import { queryConfig } from '@/lib/react-query';
 import { AuthProvider } from '@/lib/auth-context';
 import type { Route } from './+types/root';
+
+// Preload every weight used at first paint (crossOrigin is required for font
+// preloads even same-origin, or browsers discard the preloaded response).
+export const links: Route.LinksFunction = () =>
+    [
+        spaceGrotesk400Url,
+        spaceGrotesk500Url,
+        spaceGrotesk600Url,
+        spaceGrotesk700Url,
+        jetbrainsMono400Url,
+        jetbrainsMono500Url
+    ].map((href) => ({
+        rel: 'preload',
+        as: 'font',
+        type: 'font/woff2',
+        href,
+        crossOrigin: 'anonymous' as const
+    }));
 
 export function Layout({ children }: { children: React.ReactNode }) {
     return (

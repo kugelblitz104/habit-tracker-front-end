@@ -1,14 +1,15 @@
 import { Login } from '@/features/auth/api/login';
+import {
+    settingsPrimaryButtonClass,
+    settingsPrimaryButtonStyle
+} from '@/features/settings/components/settings-card';
 import { useAuth } from '@/lib/auth-context';
 import { sanitizeFormData, sanitizeUsername } from '@/lib/input-sanitization';
 import { Button, Fieldset } from '@headlessui/react';
-import classNames from 'classnames';
 import { useEffect, useState } from 'react';
 import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router';
-import { Card } from '../ui/card';
 import { TextField } from '../ui/forms/text-field';
-import { PageShell } from '../ui/page-shell';
 
 interface ILoginFormInput {
     username: string;
@@ -55,9 +56,26 @@ export const LoginPage = () => {
     }, [isAuthenticated, navigate]);
 
     return (
-        <PageShell title='Login'>
-            <div className='flex justify-center m-4'>
-                <Card title='Login'>
+        <div
+            className='flex min-h-screen flex-col items-center justify-center px-4 py-10'
+            style={{ backgroundColor: 'var(--bg)' }}
+        >
+            <div className='w-full max-w-[400px]'>
+                <header className='mb-6 text-center'>
+                    <h1 className='font-display text-[24px] font-bold text-text-primary'>
+                        Habit Tracker
+                    </h1>
+                    <p className='mt-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-text-muted'>
+                        Sign in to continue
+                    </p>
+                </header>
+                <div
+                    className='rounded-card border p-5 md:p-6'
+                    style={{
+                        backgroundColor: 'var(--surface-card-bg)',
+                        borderColor: 'var(--surface-card-border)'
+                    }}
+                >
                     <FormProvider {...methods}>
                         <form onSubmit={methods.handleSubmit(onSubmit)} className='space-y-4'>
                             <Fieldset className='space-y-4'>
@@ -76,35 +94,40 @@ export const LoginPage = () => {
                                 />
                             </Fieldset>
                             <div className='flex flex-col gap-3'>
-                                <div className='flex items-center gap-3 w-full'>
-                                    <Button
-                                        disabled={isSubmitting}
-                                        type='submit'
-                                        className={classNames(
-                                            'flex-auto bg-sky-500 rounded-md px-4 py-2',
-                                            {
-                                                'bg-sky-950': isSubmitting
-                                            }
-                                        )}
-                                    >
-                                        {isSubmitting ? 'Logging in...' : 'Login'}
-                                    </Button>
+                                <Button
+                                    disabled={isSubmitting}
+                                    type='submit'
+                                    className={`${settingsPrimaryButtonClass} flex w-full items-center justify-center gap-2`}
+                                    style={settingsPrimaryButtonStyle}
+                                >
                                     {isSubmitting && (
-                                        <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-sky-500'></div>
+                                        <span
+                                            aria-hidden='true'
+                                            className='h-3.5 w-3.5 animate-spin rounded-full border-b-2'
+                                            style={{ borderColor: 'var(--button-primary-text)' }}
+                                        ></span>
                                     )}
-                                </div>
-                                {loginError && <div className='text-red-500'>{loginError}</div>}
-                                <div className='text-center'>
+                                    {isSubmitting ? 'Signing in...' : 'Sign in'}
+                                </Button>
+                                {loginError && (
+                                    <div className='font-mono text-[11px] text-danger'>
+                                        {loginError}
+                                    </div>
+                                )}
+                                <div className='text-center text-[13px] text-text-muted'>
                                     Don't have an account?{' '}
-                                    <Link to='/register' className='text-sky-400 underline'>
+                                    <Link
+                                        to='/register'
+                                        className='text-text-secondary-soft transition-colors hover:text-now-accent'
+                                    >
                                         Register
                                     </Link>
                                 </div>
                             </div>
                         </form>
                     </FormProvider>
-                </Card>
+                </div>
             </div>
-        </PageShell>
+        </div>
     );
 };

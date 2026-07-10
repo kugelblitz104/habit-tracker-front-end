@@ -23,18 +23,28 @@ export const DeleteUserDataModal = ({
 
     return (
         <BaseModal isOpen={isOpen} onClose={onClose} title={`Delete ${entityName}`}>
-            <p>
-                Are you sure you want to delete your {entityName}? {entityWarning} This action{' '}
-                <strong>cannot be undone.</strong>
+            <p className='font-mono text-[12px] leading-relaxed text-text-muted'>
+                Are you sure you want to delete your{' '}
+                <strong className='font-semibold text-text-secondary'>{entityName}</strong>?{' '}
+                {entityWarning} This action{' '}
+                <strong className='font-semibold text-danger'>cannot be undone.</strong>
             </p>
-            <div className='mt-4 flex justify-end'>
-                <CloseButton type='button' className='rounded-md px-2 py-1' onClick={onClose}>
+            <div className='mt-4 flex justify-end gap-2'>
+                <CloseButton
+                    type='button'
+                    className='rounded-button px-3.5 py-1.5 font-mono text-[11.5px] uppercase tracking-[0.12em] text-text-muted transition-colors hover:text-text-secondary'
+                    onClick={onClose}
+                >
                     Cancel
                 </CloseButton>
                 <Button
                     type='button'
                     onClick={handleSubmit}
-                    className='bg-red-500 text-white px-2 py-1 rounded-md'
+                    className='rounded-button px-3.5 py-1.5 font-mono text-[11.5px] font-semibold uppercase tracking-[0.12em] transition-opacity hover:opacity-90'
+                    style={{
+                        backgroundColor: 'var(--color-danger-solid)',
+                        color: 'var(--button-primary-text)'
+                    }}
                 >
                     Delete
                 </Button>

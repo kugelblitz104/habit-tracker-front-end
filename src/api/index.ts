@@ -9,6 +9,12 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { Body_import_from_loop_habit_tracker_import_loop_habit_tracker_post } from './models/Body_import_from_loop_habit_tracker_import_loop_habit_tracker_post';
 export type { Body_login_auth_login_post } from './models/Body_login_auth_login_post';
+export type { CalendarConnectionCreate } from './models/CalendarConnectionCreate';
+export type { CalendarConnectionList } from './models/CalendarConnectionList';
+export type { CalendarConnectionRead } from './models/CalendarConnectionRead';
+export type { CalendarConnectionUpdate } from './models/CalendarConnectionUpdate';
+export type { CalendarEventList } from './models/CalendarEventList';
+export type { CalendarEventRead } from './models/CalendarEventRead';
 export type { ExportResult } from './models/ExportResult';
 export type { HabitCreate } from './models/HabitCreate';
 export type { HabitKPIs } from './models/HabitKPIs';
@@ -46,6 +52,7 @@ export type { UserUpdate } from './models/UserUpdate';
 export type { ValidationError } from './models/ValidationError';
 
 export { AuthenticationService } from './services/AuthenticationService';
+export { CalendarConnectionsService } from './services/CalendarConnectionsService';
 export { HabitsService } from './services/HabitsService';
 export { ImportService } from './services/ImportService';
 export { ProfilesService } from './services/ProfilesService';

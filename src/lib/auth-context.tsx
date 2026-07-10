@@ -75,14 +75,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     // Default to the user's first profile when nothing valid is selected
-    // (also guards against deleted / foreign ids).
+    // (also guards against deleted / foreign ids). Persist the healed
+    // selection too — otherwise every reload replays the stale stored id
+    // (and its 404s) until profiles load. The setItem inside the updater is
+    // idempotent, so StrictMode's double-invoke is harmless.
     useEffect(() => {
         if (!profileHydrated || profiles.length === 0) return;
         setActiveProfileIdState((current) => {
             if (current != null && profiles.some((p) => p.id === current)) {
                 return current;
             }
-            return profiles[0]!.id;
+            const fallbackId = profiles[0]!.id;
+            localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, String(fallbackId));
+            return fallbackId;
         });
     }, [profileHydrated, profiles]);
 

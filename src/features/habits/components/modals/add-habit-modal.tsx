@@ -138,30 +138,41 @@ export const AddHabitModal = ({
                             )}
                         />
                         <Field className='mb-2'>
-                            <Label className='block'>Notes</Label>
+                            <Label className='mb-1 block font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-text-faint'>
+                                Notes
+                            </Label>
                             <Textarea
                                 {...methods.register('notes', validationPatterns.notes)}
-                                className={`block bg-black border-slate rounded-md py-1 px-2 w-full
-                                ${methods.formState.errors.notes && 'border-red-500'}`}
+                                className='block w-full resize-none rounded-button border px-2.5 py-1.5 font-mono text-[12px] text-text-secondary outline-none transition-colors placeholder:text-text-faint focus-visible:ring-1 focus-visible:ring-now-accent'
+                                style={{
+                                    backgroundColor: 'var(--surface-input-bg)',
+                                    borderColor: methods.formState.errors.notes
+                                        ? 'var(--color-danger)'
+                                        : 'var(--surface-input-border)'
+                                }}
                                 wrap='soft'
                             />
                             {methods.formState.errors.notes && (
-                                <span className='text-red-400 text-sm mt-1 block'>
+                                <span className='mt-1 block font-mono text-[11px] text-danger'>
                                     {methods.formState.errors.notes.message as string}
                                 </span>
                             )}
                         </Field>
                     </Fieldset>
-                    <div className='flex space-x-2'>
+                    <div className='mt-4 flex justify-end gap-2'>
+                        <CloseButton className='rounded-button px-3.5 py-1.5 font-mono text-[11.5px] uppercase tracking-[0.12em] text-text-muted transition-colors hover:text-text-secondary'>
+                            Close
+                        </CloseButton>
                         <Button
                             type='submit'
-                            className='flex-auto bg-sky-500 hover:bg-sky-700 rounded-md px-2 py-1'
+                            className='rounded-button px-3.5 py-1.5 font-mono text-[11.5px] font-semibold uppercase tracking-[0.12em] transition-opacity hover:opacity-90'
+                            style={{
+                                background: 'var(--button-primary-gradient)',
+                                color: 'var(--button-primary-text)'
+                            }}
                         >
                             Submit
                         </Button>
-                        <CloseButton className='flex-auto bg-red-500 hover:bg-red-700 rounded-md px-2 py-1'>
-                            Close
-                        </CloseButton>
                     </div>
                 </form>
             </FormProvider>
