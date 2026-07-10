@@ -2,6 +2,7 @@ import { exportHabits, importHabits } from '@/features/habits/api/import-export-
 import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
 import { exportTasksMarkdown } from '@/features/tasks/api/export-tasks';
 import { useAuth } from '@/lib/auth-context';
+import { useQueryClient } from '@tanstack/react-query';
 import { Download, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -18,21 +19,23 @@ const dataButtonStyle = {
 } as const;
 
 /**
- * MANAGE DATA card: Loop Habit Tracker .db import (hidden file input) and
- * export (handlers carried over verbatim from the old settings page), plus a
- * Markdown export of the active profile's tasks.
+ * MANAGE DATA card: Loop Habit Tracker .db import/export scoped to the
+ * active profile (imported habits land in it; export only includes its
+ * habits), plus a Markdown export of the active profile's tasks.
  */
 export const ManageDataCard = () => {
     const { activeProfile } = useAuth();
+    const queryClient = useQueryClient();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isExporting, setIsExporting] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const [isExportingTasks, setIsExportingTasks] = useState(false);
 
     const handleExportHabits = async () => {
+        if (!activeProfile) return;
         setIsExporting(true);
         try {
-            await exportHabits(false);
+            await exportHabits(false, activeProfile.id);
             toast.success('Habits exported successfully');
         } catch (error) {
             toast.error(`Failed to export habits: ${error}`);
@@ -60,15 +63,18 @@ export const ManageDataCard = () => {
 
     const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (!file) return;
+        if (!file || !activeProfile) return;
 
         setIsImporting(true);
         try {
-            const result = await importHabits(file);
+            const result = await importHabits(file, activeProfile.id);
             if (result.success) {
                 toast.success(
                     `Imported ${result.habits_imported} habits and ${result.trackers_imported} trackers`
                 );
+                // New habits (and their history) exist server-side now; drop
+                // every habit-scoped cache so the dashboard/today views refetch.
+                queryClient.invalidateQueries({ queryKey: ['habits'] });
             } else {
                 toast.warning(`Import completed with issues: ${result.message}`);
             }
@@ -95,7 +101,7 @@ export const ManageDataCard = () => {
                 <button
                     type='button'
                     onClick={handleImportClick}
-                    disabled={isImporting || isExporting}
+                    disabled={isImporting || isExporting || !activeProfile}
                     className={dataButtonClass}
                     style={dataButtonStyle}
                 >
@@ -105,7 +111,7 @@ export const ManageDataCard = () => {
                 <button
                     type='button'
                     onClick={handleExportHabits}
-                    disabled={isExporting || isImporting}
+                    disabled={isExporting || isImporting || !activeProfile}
                     className={dataButtonClass}
                     style={dataButtonStyle}
                 >

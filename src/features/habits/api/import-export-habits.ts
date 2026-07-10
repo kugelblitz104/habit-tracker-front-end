@@ -1,14 +1,16 @@
 import { ImportService, type ImportResult } from '@/api';
 
 /**
- * Export all user habits to a Loop Habit Tracker compatible database file.
+ * Export habits to a Loop Habit Tracker compatible database file.
  * The backend returns the SQLite file as base64-encoded JSON (ExportResult),
  * which we decode and trigger as a browser download.
  * @param includeArchived Whether to include archived habits
+ * @param profileId Only export this profile's habits (omit for all profiles)
  */
-export const exportHabits = async (includeArchived = false): Promise<void> => {
+export const exportHabits = async (includeArchived = false, profileId?: number): Promise<void> => {
     const result = await ImportService.exportToLoopHabitTrackerImportLoopHabitTrackerGet(
-        includeArchived
+        includeArchived,
+        profileId
     );
 
     // Decode base64 string to raw bytes
@@ -32,19 +34,24 @@ export const exportHabits = async (includeArchived = false): Promise<void> => {
 /**
  * Import habits from a Loop Habit Tracker compatible database file
  * @param file The .db file to import
+ * @param profileId Profile the imported habits belong to (omit for the
+ *                  user's oldest profile)
  */
-export const importHabits = async (file: File): Promise<ImportResult> => {
+export const importHabits = async (file: File, profileId?: number): Promise<ImportResult> => {
     try {
         if (!file.name.endsWith('.db')) {
             throw new Error('File must be a Loop Habit Tracker .db file');
         }
 
-        return await ImportService.importFromLoopHabitTrackerImportLoopHabitTrackerPost({
-            // Newer FastAPI describes uploads via contentMediaType, which the
-            // codegen types as `string` instead of Blob; the runtime multipart
-            // request is unchanged, so pass the File through the wrong type.
-            file: file as unknown as string
-        });
+        return await ImportService.importFromLoopHabitTrackerImportLoopHabitTrackerPost(
+            {
+                // Newer FastAPI describes uploads via contentMediaType, which the
+                // codegen types as `string` instead of Blob; the runtime multipart
+                // request is unchanged, so pass the File through the wrong type.
+                file: file as unknown as string
+            },
+            profileId
+        );
     } catch (error) {
         throw new Error(`Failed to import habits: ${error}`);
     }
