@@ -183,6 +183,30 @@ export const TaskDetailBody = ({
                     </div>
                 </div>
 
+                {/* Due / scheduled / project — a quieter subheader below status. */}
+                {(task.due_date || task.scheduled_date || project) && (
+                    <div className='flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11.5px] text-text-faint'>
+                        {project && (
+                            <Link
+                                to={`/projects/${project.id}`}
+                                state={{ from: pathname }}
+                                className='font-semibold transition-opacity hover:opacity-80'
+                                style={{ color: project.color }}
+                            >
+                                {project.name}
+                            </Link>
+                        )}
+                        {task.due_date && (
+                            <span>Due {formatShortDate(parseLocalDate(task.due_date))}</span>
+                        )}
+                        {task.scheduled_date && (
+                            <span>
+                                Scheduled {formatShortDate(parseLocalDate(task.scheduled_date))}
+                            </span>
+                        )}
+                    </div>
+                )}
+
                 {/* Status · band · priority — right under the title. */}
                 <div className='flex flex-wrap items-center gap-2'>
                     <MetaChip>
@@ -214,29 +238,7 @@ export const TaskDetailBody = ({
                     )}
                 </div>
 
-                {/* Due / scheduled / project — a quieter subheader below status. */}
-                {(task.due_date || task.scheduled_date || project) && (
-                    <div className='flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11.5px] text-text-faint'>
-                        {project && (
-                            <Link
-                                to={`/projects/${project.id}`}
-                                state={{ from: pathname }}
-                                className='font-semibold transition-opacity hover:opacity-80'
-                                style={{ color: project.color }}
-                            >
-                                {project.name}
-                            </Link>
-                        )}
-                        {task.due_date && (
-                            <span>Due {formatShortDate(parseLocalDate(task.due_date))}</span>
-                        )}
-                        {task.scheduled_date && (
-                            <span>
-                                Scheduled {formatShortDate(parseLocalDate(task.scheduled_date))}
-                            </span>
-                        )}
-                    </div>
-                )}
+
             </div>
 
             {/* Block reason — only while the task is actually blocked, in a
