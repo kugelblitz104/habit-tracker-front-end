@@ -1,5 +1,6 @@
+import { useAuth } from '@/lib/auth-context';
 import { useResponsiveLayout } from '@/lib/use-responsive-layout';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 /**
  * Master-detail state for the Habits dashboard, mirroring use-task-detail-pane.
@@ -12,8 +13,15 @@ import { useCallback, useState } from 'react';
 export const useHabitDetailPane = () => {
     const layout = useResponsiveLayout();
     const isWide = layout === 'lg' || layout === 'xl';
+    const { activeProfileId } = useAuth();
 
     const [selectedHabitId, setSelectedHabitId] = useState<number | null>(null);
+
+    // Habits are profile-scoped: switching profiles closes any open habit pane
+    // so a previous profile's habit doesn't linger.
+    useEffect(() => {
+        setSelectedHabitId(null);
+    }, [activeProfileId]);
 
     // Tapping a habit name selects it for the pane; tapping the open one closes.
     const selectHabit = useCallback((habitId: number) => {

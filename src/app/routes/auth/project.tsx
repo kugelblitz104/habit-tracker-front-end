@@ -8,11 +8,16 @@ import { DeleteProjectModal } from '@/features/projects/components/delete-projec
 import { ProjectEditor } from '@/features/projects/components/project-editor';
 import { useTasks } from '@/features/tasks/api/get-tasks';
 import { useUpdateTask } from '@/features/tasks/api/update-tasks';
-import { BandSection } from '@/features/tasks/components/band-section';
-import { CompletedSection } from '@/features/tasks/components/completed-section';
+import {
+    TaskCaptureBar,
+    type TaskCaptureDraft
+} from '@/features/tasks/components/task-capture-bar';
+import { TaskCaptureForm } from '@/features/tasks/components/task-capture-form';
+import { TaskControlsBar } from '@/features/tasks/components/task-controls-bar';
 import { TaskDetailPane } from '@/features/tasks/components/task-detail-pane';
+import { TaskListView } from '@/features/tasks/components/task-list-view';
+import { useTaskControls } from '@/features/tasks/hooks/use-task-controls';
 import { useTaskDetailPane } from '@/features/tasks/hooks/use-task-detail-pane';
-import { countGroupedTasks, groupTasksByBand } from '@/features/tasks/utils/task-bands';
 import { useCreateTimeEntry } from '@/features/time-entries/api/create-time-entries';
 import { ProjectTimeLog } from '@/features/time-entries/components/project-time-log';
 import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
@@ -37,13 +42,14 @@ function ProjectContent({ projectId }: { projectId: number }) {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Origin-aware back: from Today go back to all tasks, otherwise to Projects.
+    // Origin-aware back: return to wherever the project was opened from.
     const from = (location.state as { from?: string } | null)?.from;
-    const backTo = from === '/' ? '/' : '/projects';
-    const backLabel = from === '/' ? '‹ All tasks' : '‹ Projects';
+    const backTo = from === '/' ? '/' : from === '/tasks' ? '/tasks' : '/projects';
+    const backLabel = from === '/' ? '‹ Today' : from === '/tasks' ? '‹ All tasks' : '‹ Projects';
 
     const projectQuery = useProject({ projectId });
-    const tasksQuery = useTasks({ profileId, projectId });
+    // Include closed so the Status filter/group can reach done/cancelled tasks.
+    const tasksQuery = useTasks({ profileId, projectId, includeClosed: true });
     const updateTask = useUpdateTask();
     const updateProject = useUpdateProject();
     const deleteProject = useDeleteProject();
@@ -51,6 +57,9 @@ function ProjectContent({ projectId }: { projectId: number }) {
 
     const [isEditing, setIsEditing] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    // Quick-add draft carried into the expanded capture form (see Today).
+    const [captureDraft, setCaptureDraft] = useState<TaskCaptureDraft | null>(null);
+    const [controls, setControls] = useTaskControls(`project_tasks_controls`);
 
     const {
         isWide,
@@ -76,7 +85,11 @@ function ProjectContent({ projectId }: { projectId: number }) {
     };
 
     const project = projectQuery.data;
-    const tasks = tasksQuery.data?.tasks ?? [];
+    // Top-level tasks only (subtasks are managed within their parent).
+    const tasks = useMemo(
+        () => (tasksQuery.data?.tasks ?? []).filter((t) => t.parent_id == null),
+        [tasksQuery.data]
+    );
     const showPane = isWide && selectedEditTaskId !== null;
 
     // Every task here belongs to this one project, so a single-entry map is all
@@ -86,8 +99,6 @@ function ProjectContent({ projectId }: { projectId: number }) {
         if (project) map.set(project.id, project);
         return map;
     }, [project]);
-
-    const grouped = useMemo(() => groupTasksByBand(tasks), [tasks]);
 
     const handleStatusChange = (taskId: number, status: TaskStatus) => {
         updateTask.mutate({ taskId, data: { status } });
@@ -126,10 +137,6 @@ function ProjectContent({ projectId }: { projectId: number }) {
     const total = openCount + doneCount;
     const donePct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
     const notes = project?.notes?.trim();
-    // Base "has tasks" on the set actually rendered (known bands only), so a task
-    // with an unknown/hidden band can't suppress the empty-state while showing
-    // nowhere.
-    const hasTasks = countGroupedTasks(grouped) > 0;
 
     return (
         <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
@@ -250,18 +257,45 @@ function ProjectContent({ projectId }: { projectId: number }) {
                                     </div>
                                 )}
 
+                                {/* Quick-add, pre-attached to this project (an @token
+                                    still lets you retarget to another). */}
+                                {activeProfileId &&
+                                    (captureDraft !== null ? (
+                                        <TaskCaptureForm
+                                            profileId={activeProfileId}
+                                            initial={captureDraft}
+                                            onClose={() => setCaptureDraft(null)}
+                                        />
+                                    ) : (
+                                        <TaskCaptureBar
+                                            profileId={activeProfileId}
+                                            defaultProjectId={projectId}
+                                            onExpand={setCaptureDraft}
+                                        />
+                                    ))}
+
                                 {tasksQuery.isError && (
                                     <p className='mb-6 font-mono text-[12px] text-danger'>
                                         Failed to load tasks.
                                     </p>
                                 )}
 
-                                {grouped.map(({ band, tasks: bandTasks }) => (
-                                    <BandSection
-                                        key={band}
-                                        band={band}
-                                        tasks={bandTasks}
+                                <TaskControlsBar
+                                    controls={controls}
+                                    onChange={setControls}
+                                    projects={[]}
+                                    showProjectOptions={false}
+                                />
+
+                                {tasksQuery.isLoading ? (
+                                    <p className='font-mono text-[12px] text-text-faint'>
+                                        Loading tasks…
+                                    </p>
+                                ) : (
+                                    <TaskListView
+                                        tasks={tasks}
                                         projectsById={projectsById}
+                                        controls={controls}
                                         onStatusChange={handleStatusChange}
                                         notesTaskId={notesTaskId}
                                         selectedEditTaskId={selectedEditTaskId}
@@ -270,33 +304,16 @@ function ProjectContent({ projectId }: { projectId: number }) {
                                         subtasksTaskId={subtasksTaskId}
                                         onToggleSubtasks={toggleSubtasks}
                                         onStartTimer={handleStartTimer}
-                                        headerAccessory={
-                                            band === 'now' ? (
-                                                <Link
-                                                    to='/'
-                                                    className='font-mono text-[11px] text-text-faint hover:text-text-muted'
-                                                >
-                                                    also on Today ↗
-                                                </Link>
-                                            ) : undefined
-                                        }
+                                        emptyHint='No tasks in this project yet.'
                                     />
-                                ))}
-
-                                {!hasTasks && !tasksQuery.isLoading && !tasksQuery.isError && (
-                                    <p className='font-mono text-[12px] text-text-faint'>
-                                        No tasks in this project yet.
-                                    </p>
                                 )}
 
-                                <CompletedSection
-                                    profileId={activeProfileId}
-                                    projectId={projectId}
-                                    onSelectTask={selectEdit}
-                                    selectedTaskId={selectedEditTaskId}
-                                />
-
-                                <ProjectTimeLog profileId={activeProfileId} projectId={projectId} />
+                                <div className='mt-[30px]'>
+                                    <ProjectTimeLog
+                                        profileId={activeProfileId}
+                                        projectId={projectId}
+                                    />
+                                </div>
 
                                 {/* Footer: Archive / Delete danger zone, separated from the
                             content by a hairline (mirrors the habit detail footer). */}

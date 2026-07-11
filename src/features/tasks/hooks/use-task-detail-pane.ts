@@ -1,5 +1,6 @@
+import { useAuth } from '@/lib/auth-context';
 import { useResponsiveLayout } from '@/lib/use-responsive-layout';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
 /**
@@ -18,6 +19,7 @@ export const useTaskDetailPane = () => {
     const isWide = layout === 'lg' || layout === 'xl';
     const navigate = useNavigate();
     const location = useLocation();
+    const { activeProfileId } = useAuth();
 
     const [notesTaskId, setNotesTaskId] = useState<number | null>(null);
     const [subtasksTaskId, setSubtasksTaskId] = useState<number | null>(null);
@@ -25,6 +27,16 @@ export const useTaskDetailPane = () => {
     // Whether the selected task should open straight into the edit form (from
     // the context menu's "Edit…"/"Add subtask…") vs. the read-only view.
     const [editIntent, setEditIntent] = useState(false);
+
+    // Selections are profile-scoped: switching profiles must clear any open
+    // notes peek / detail / edit pane so a previous profile's task doesn't
+    // linger in the pane after the switch.
+    useEffect(() => {
+        setNotesTaskId(null);
+        setSubtasksTaskId(null);
+        setSelectedEditTaskId(null);
+        setEditIntent(false);
+    }, [activeProfileId]);
 
     // The meta-row "notes" chip toggles the inline read-only panel.
     const toggleNotes = useCallback((taskId: number) => {

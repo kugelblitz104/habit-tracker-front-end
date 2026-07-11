@@ -1,13 +1,16 @@
 import type { TaskCreate } from '@/api';
+import { useAuth } from '@/lib/auth-context';
 import { sanitizeMultilineText } from '@/lib/input-sanitization';
 import { TaskStatus } from '@/types/types';
-import { useId, useState, type KeyboardEvent } from 'react';
+import { useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { toast } from 'react-toastify';
 import { useCreateTask } from '../api/create-tasks';
+import { parseTaskInput } from '../utils/parse-task-input';
+import type { TaskCaptureDraft } from './task-capture-bar';
+import { HighlightedTaskInput } from './highlighted-task-input';
 import {
     DateTimeField,
-    formFieldClass,
-    formFieldStyle,
+    EstimatedEffortField,
     formLabelClass,
     NotesField,
     PriorityField,
@@ -16,42 +19,84 @@ import {
 
 type TaskCaptureFormProps = {
     profileId: number;
-    /** Title typed into the capture bar before it expanded (may be empty). */
-    initialTitle: string;
+    /** Parsed one-line draft carried over from the capture bar. */
+    initial: TaskCaptureDraft;
     /** Collapse back to the capture bar (Cancel, Escape, or after a create). */
     onClose: () => void;
 };
 
 /**
- * Expanded quick-capture form, opened by Shift+Enter in the capture bar. Sits
- * inline where the bar was and lets details (notes, priority, due, scheduled,
- * project) be set at creation time. Built from the same field primitives as
- * `TaskEditor` so the two forms stay visually identical. Enter in the title
- * field submits the whole form; Escape anywhere cancels.
+ * Expanded quick-capture form, opened by Shift+Enter / the + button in the
+ * capture bar. Sits inline where the bar was and lets details (notes, priority,
+ * due, scheduled, project, estimate) be set at creation time. Fields arrive
+ * pre-filled from the capture bar's parsed tokens; the title also keeps parsing
+ * tokens live, so typing e.g. `!high` here still lights up the Priority field.
+ * Built from the same field primitives as `TaskEditor` so the two forms stay
+ * visually identical. Enter in the title submits; Escape anywhere cancels.
  */
-export const TaskCaptureForm = ({ profileId, initialTitle, onClose }: TaskCaptureFormProps) => {
+export const TaskCaptureForm = ({ profileId, initial, onClose }: TaskCaptureFormProps) => {
     const formId = useId();
     const createTask = useCreateTask();
+    const { activeProfile } = useAuth();
+    const showEstimatedEffort = activeProfile?.show_estimated_effort ?? false;
 
-    const [title, setTitle] = useState(initialTitle);
-    const [notes, setNotes] = useState('');
-    const [priority, setPriority] = useState(0);
-    const [dueDate, setDueDate] = useState('');
+    const [title, setTitle] = useState(initial.title);
+    const [notes, setNotes] = useState(initial.notes ?? '');
+    const [priority, setPriority] = useState(initial.priority ?? 0);
+    const [dueDate, setDueDate] = useState(initial.dueDate ?? '');
     const [dueTime, setDueTime] = useState('');
-    const [scheduledDate, setScheduledDate] = useState('');
+    const [scheduledDate, setScheduledDate] = useState(initial.scheduledDate ?? '');
     const [scheduledTime, setScheduledTime] = useState('');
-    const [projectId, setProjectId] = useState<number | null>(null);
+    const [projectId, setProjectId] = useState<number | null>(initial.projectId);
+    const [estimatedEffort, setEstimatedEffort] = useState<number | null>(
+        initial.estimatedMinutes ?? null
+    );
 
-    const canSubmit = title.trim().length > 0 && !createTask.isPending;
+    // Track the token values already applied so live re-parsing only pushes a
+    // field when its token actually changes — manual edits to a field then stick.
+    const applied = useRef({
+        priority: initial.priority,
+        scheduledDate: initial.scheduledDate,
+        dueDate: initial.dueDate,
+        estimatedMinutes: initial.estimatedMinutes
+    });
+
+    const parsed = useMemo(() => parseTaskInput(title, new Date().getFullYear()), [title]);
+
+    // Live token → field population as the title is edited (priority/dates/est).
+    // Notes and project stay in their own fields to avoid double-editing surfaces.
+    const handleTitleChange = (next: string) => {
+        setTitle(next);
+        const p = parseTaskInput(next, new Date().getFullYear());
+        if (p.priority !== applied.current.priority) {
+            setPriority(p.priority ?? 0);
+            applied.current.priority = p.priority;
+        }
+        if (p.scheduledDate !== applied.current.scheduledDate) {
+            setScheduledDate(p.scheduledDate ?? '');
+            applied.current.scheduledDate = p.scheduledDate;
+        }
+        if (p.dueDate !== applied.current.dueDate) {
+            setDueDate(p.dueDate ?? '');
+            applied.current.dueDate = p.dueDate;
+        }
+        if (p.estimatedMinutes !== applied.current.estimatedMinutes) {
+            setEstimatedEffort(p.estimatedMinutes ?? null);
+            applied.current.estimatedMinutes = p.estimatedMinutes;
+        }
+    };
+
+    const canSubmit = parsed.cleanTitle.length > 0 && !createTask.isPending;
 
     const handleSubmit = () => {
         if (!canSubmit) return;
 
-        const data: TaskCreate = { profile_id: profileId, title: title.trim() };
+        const data: TaskCreate = { profile_id: profileId, title: parsed.cleanTitle };
 
         const cleanNotes = sanitizeMultilineText(notes);
         if (cleanNotes.length > 0) data.notes = cleanNotes;
         if (priority !== 0) data.priority = priority;
+        if (estimatedEffort != null) data.estimated_effort = estimatedEffort;
         if (dueDate) {
             data.due_date = dueDate;
             if (dueTime) data.due_time = dueTime;
@@ -100,22 +145,29 @@ export const TaskCaptureForm = ({ profileId, initialTitle, onClose }: TaskCaptur
             }}
             onKeyDown={handleFormKeyDown}
         >
-            {/* Title */}
+            {/* Title (keeps highlighting/parsing tokens live) */}
             <div>
                 <label className={formLabelClass} htmlFor={`capture-title-${formId}`}>
                     Title
                 </label>
-                <input
-                    id={`capture-title-${formId}`}
-                    type='text'
-                    value={title}
-                    autoFocus
-                    onChange={(e) => setTitle(e.target.value)}
-                    onKeyDown={handleTitleKeyDown}
-                    placeholder='What needs doing?'
-                    className={`${formFieldClass} font-display text-[13px] text-text-primary placeholder:text-text-faint`}
-                    style={formFieldStyle}
-                />
+                <div
+                    className='w-full rounded-button border px-2.5 py-1.5'
+                    style={{
+                        backgroundColor: 'var(--surface-input-bg)',
+                        borderColor: 'var(--surface-input-border)'
+                    }}
+                >
+                    <HighlightedTaskInput
+                        value={title}
+                        segments={parsed.segments}
+                        onChange={handleTitleChange}
+                        onKeyDown={handleTitleKeyDown}
+                        placeholder='What needs doing?'
+                        autoFocus
+                        ariaLabel='Task title'
+                        inputRef={undefined}
+                    />
+                </div>
             </div>
 
             {/* Notes / description */}
@@ -143,11 +195,19 @@ export const TaskCaptureForm = ({ profileId, initialTitle, onClose }: TaskCaptur
                         dateAriaLabel='Scheduled date'
                         timeAriaLabel='Scheduled time'
                     />
+                    {showEstimatedEffort && (
+                        <EstimatedEffortField
+                            id={`capture-estimate-${formId}`}
+                            value={estimatedEffort}
+                            onChange={setEstimatedEffort}
+                        />
+                    )}
                     <ProjectField
                         id={`capture-project-${formId}`}
                         profileId={profileId}
                         value={projectId}
                         onChange={setProjectId}
+                        initialCreatingName={initial.createProjectName}
                     />
                 </div>
             </div>

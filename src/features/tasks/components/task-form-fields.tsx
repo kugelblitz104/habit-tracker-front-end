@@ -276,6 +276,9 @@ type ProjectFieldProps = {
     value: number | null;
     onChange: (value: number | null) => void;
     id?: string;
+    /** Open straight into inline-create mode with this name pre-filled (used by
+     *  quick-add when an `@name` token matched no existing project). */
+    initialCreatingName?: string;
 };
 
 /** Sentinel option value that swaps the select for the inline create input. */
@@ -289,13 +292,19 @@ const CREATE_PROJECT_OPTION = '__create-project__';
  * name input (confirm/cancel); the created project (random palette color, both
  * editable later on the project view) is selected on success.
  */
-export const ProjectField = ({ profileId, value, onChange, id }: ProjectFieldProps) => {
+export const ProjectField = ({
+    profileId,
+    value,
+    onChange,
+    id,
+    initialCreatingName
+}: ProjectFieldProps) => {
     const generatedId = useId();
     const fieldId = id ?? `task-project-${generatedId}`;
     const projectsQuery = useProjects({ profileId, includeArchived: true });
     const createProject = useCreateProject();
-    const [isCreating, setIsCreating] = useState(false);
-    const [newName, setNewName] = useState('');
+    const [isCreating, setIsCreating] = useState(!!initialCreatingName);
+    const [newName, setNewName] = useState(initialCreatingName ?? '');
 
     const allProjects = projectsQuery.data?.projects ?? [];
     const projects = allProjects.filter((project) => !project.archived || project.id === value);

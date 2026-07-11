@@ -88,14 +88,17 @@
     --color-surface-espresso: #1e150d;
     --color-titlebar: #0f0c07;
 
-    /* Text ramp */
+    /* Text ramp.
+       Subtitle/secondary greys (muted/faint/faint-soft) were nudged lighter on
+       2026-07-10 for readability — still clearly grey, just higher contrast on
+       the dark surfaces. ADJUST THESE THREE if subheaders read too bright/dim. */
     --color-text-primary: #f6ece1;
     --color-text-now: #fbf1e6;
     --color-text-secondary: #e7dccb;
-    --color-text-secondary-soft: #c8bcae;
-    --color-text-muted: #8a8177;
-    --color-text-faint: #6f685e;
-    --color-text-faint-soft: #57524a;
+    --color-text-secondary-soft: #ccc1b3;
+    --color-text-muted: #a69c8f;
+    --color-text-faint: #8c8377;
+    --color-text-faint-soft: #6d665c;
 
     /* Now band */
     --color-now-accent: #ff8a45;

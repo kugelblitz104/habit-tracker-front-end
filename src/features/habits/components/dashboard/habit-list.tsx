@@ -6,8 +6,13 @@ import { NoteDialog } from '@/features/habits/components/modals/note-dialog';
 import { createTracker } from '@/features/trackers/api/create-trackers';
 import { updateTracker } from '@/features/trackers/api/update-trackers';
 import { createNewTracker } from '@/features/trackers/utils/tracker-utils';
-import { TrackerStatus, type DropdownOption, type SortDirection } from '@/types/types';
-import { Fragment, useCallback, useMemo, useState } from 'react';
+import {
+    DisplayStatus,
+    TrackerStatus,
+    type DropdownOption,
+    type SortDirection
+} from '@/types/types';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { HabitListElement } from './habit-list-element';
 import { useQuery } from '@tanstack/react-query';
 import { getTracker } from '@/features/trackers/api/get-trackers';
@@ -51,6 +56,10 @@ export type HabitListProps = {
     groupByCategory?: boolean;
     /** Renders the "Group by category" toggle next to the filters when provided. */
     onToggleGroupByCategory?: () => void;
+    /** Reports how many (non-archived) habits are still "to do" today — the same
+     *  logic as the Incomplete filter (today status is not-completed or skipped,
+     *  auto-skipped excluded). `null` until every row has reported. */
+    onIncompleteCountChange?: (count: number | null) => void;
 };
 
 export const HabitList = ({
@@ -61,7 +70,8 @@ export const HabitList = ({
     selectedHabitId = null,
     onSelectHabit,
     groupByCategory = false,
-    onToggleGroupByCategory
+    onToggleGroupByCategory,
+    onIncompleteCountChange
 }: HabitListProps) => {
     // hooks - use useMemo to prevent hydration mismatch
     const today = useMemo(() => new Date(), []);
@@ -82,6 +92,7 @@ export const HabitList = ({
     });
     const [habitStreaks, setHabitStreaks] = useState<Map<number, number>>(new Map());
     const [visibility, setVisibility] = useState<Map<number, boolean>>(new Map());
+    const [todayStatuses, setTodayStatuses] = useState<Map<number, DisplayStatus>>(new Map());
 
     const selectedTrackerQuery = useQuery({
         queryKey: ['tracker', noteDialogState.trackerId],
@@ -112,6 +123,35 @@ export const HabitList = ({
             return next;
         });
     }, []);
+
+    // Rows report today's resolved status (incl. auto-skip); deduped to avoid loops.
+    const handleTodayStatusChange = useCallback((habitId: number, status: DisplayStatus) => {
+        setTodayStatuses((prev) => {
+            if (prev.get(habitId) === status) return prev;
+            const next = new Map(prev);
+            next.set(habitId, status);
+            return next;
+        });
+    }, []);
+
+    // "Habits left today" = same rule as the Incomplete filter: a non-archived
+    // habit whose today status is not-completed or (manually) skipped. Reported
+    // to the page header. `null` until every non-archived row has reported so the
+    // header shows a settled figure rather than flashing a partial count.
+    const nonArchived = useMemo(() => habits.filter((h) => !h.archived), [habits]);
+    useEffect(() => {
+        if (!onIncompleteCountChange) return;
+        const allReported = nonArchived.every((h) => todayStatuses.has(h.id));
+        if (!allReported) {
+            onIncompleteCountChange(null);
+            return;
+        }
+        const count = nonArchived.filter((h) => {
+            const status = todayStatuses.get(h.id);
+            return status === DisplayStatus.NOT_COMPLETED || status === DisplayStatus.SKIPPED;
+        }).length;
+        onIncompleteCountChange(count);
+    }, [nonArchived, todayStatuses, onIncompleteCountChange]);
 
     const handleNoteOpen = useCallback(
         (habitId: number, date: Date, tracker: TrackerLite | undefined) => {
@@ -408,6 +448,9 @@ export const HabitList = ({
                                                           onVisibilityChange={
                                                               handleVisibilityChange
                                                           }
+                                                          onTodayStatusChange={
+                                                              handleTodayStatusChange
+                                                          }
                                                           onNoteOpen={handleNoteOpen}
                                                       />
                                                   ))}
@@ -428,6 +471,7 @@ export const HabitList = ({
                                               )}
                                               onStreakChange={handleStreakChange}
                                               onVisibilityChange={handleVisibilityChange}
+                                              onTodayStatusChange={handleTodayStatusChange}
                                               onNoteOpen={handleNoteOpen}
                                           />
                                       ))}

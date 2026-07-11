@@ -83,7 +83,13 @@ export const TaskDetailBody = ({
         () =>
             (subtasksQuery.data?.tasks ?? [])
                 .filter((t) => t.parent_id === taskId)
-                .sort((a, b) => a.created_date.localeCompare(b.created_date)),
+                // Completed subtasks sink to the bottom; creation order within a group.
+                .sort((a, b) => {
+                    const aDone = a.status === TaskStatus.DONE ? 1 : 0;
+                    const bDone = b.status === TaskStatus.DONE ? 1 : 0;
+                    if (aDone !== bDone) return aDone - bDone;
+                    return a.created_date.localeCompare(b.created_date);
+                }),
         [subtasksQuery.data, taskId]
     );
 
@@ -237,8 +243,6 @@ export const TaskDetailBody = ({
                         <MetaChip>Est. {task.estimated_effort}m</MetaChip>
                     )}
                 </div>
-
-
             </div>
 
             {/* Block reason — only while the task is actually blocked, in a

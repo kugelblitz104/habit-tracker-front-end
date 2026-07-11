@@ -35,6 +35,9 @@ export type HabitListElementProps = {
     onSelectHabit?: (habitId: number) => void;
     onStreakChange?: (habitId: number, streak: number) => void;
     onVisibilityChange?: (habitId: number, visible: boolean) => void;
+    /** Report today's resolved display status (incl. auto-skip) up so the page
+     *  header can count "still to do" with the same logic as the filter. */
+    onTodayStatusChange?: (habitId: number, status: DisplayStatus) => void;
     onNoteOpen?: (habitId: number, date: Date, tracker: TrackerLite | undefined) => void;
 };
 
@@ -48,6 +51,7 @@ export const HabitListElement = ({
     onSelectHabit,
     onStreakChange,
     onVisibilityChange,
+    onTodayStatusChange,
     onNoteOpen
 }: HabitListElementProps) => {
     // useMemo to prevent hydration mismatch
@@ -135,7 +139,9 @@ export const HabitListElement = ({
             { id: tracker.id, update },
             {
                 onSuccess: (data) =>
-                    setTrackers(trackers.map((t) => (t.id === tracker.id ? toTrackerLite(data) : t)))
+                    setTrackers(
+                        trackers.map((t) => (t.id === tracker.id ? toTrackerLite(data) : t))
+                    )
             }
         );
     };
@@ -162,6 +168,12 @@ export const HabitListElement = ({
     useEffect(() => {
         onVisibilityChange?.(habit.id, isVisible);
     }, [habit.id, isVisible, onVisibilityChange]);
+
+    // Report today's resolved status up (runs even when the row hides itself
+    // below, so the count stays complete under the incomplete filter).
+    useEffect(() => {
+        onTodayStatusChange?.(habit.id, todayStatus);
+    }, [habit.id, todayStatus, onTodayStatusChange]);
 
     // If filtering for incomplete and today is completed, skipped, or auto-skipped, hide this habit
     if (!isVisible) {
@@ -258,10 +270,7 @@ export const HabitListElement = ({
                             </span>
                         </Button>
                         {tracker?.has_note && (
-                            <NotePip
-                                className='absolute right-1.5 top-1.5'
-                                color={habit.color}
-                            />
+                            <NotePip className='absolute right-1.5 top-1.5' color={habit.color} />
                         )}
                     </td>
                 );

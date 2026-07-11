@@ -1,4 +1,5 @@
 import { ProfileSwitcher } from '@/features/profiles/components/profile-switcher';
+import { useAuth } from '@/lib/auth-context';
 import { PAGE_MAX_WIDTH } from '@/lib/layout';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { Check, Menu as MenuIcon } from 'lucide-react';
@@ -26,6 +27,7 @@ type NavTab = {
 
 const TABS: NavTab[] = [
     { label: 'Today', to: '/', hub: true },
+    { label: 'Tasks', to: '/tasks' },
     { label: 'Habits', to: '/habits' },
     { label: 'Projects', to: '/projects' },
     { label: 'Timer', to: '/timer' }
@@ -38,6 +40,8 @@ const TABS: NavTab[] = [
  */
 function activeTabKey(pathname: string): string | null {
     if (pathname === '/') return '/';
+    // Full-page task detail (/tasks/:id) and the All-tasks list both light Tasks.
+    if (pathname === '/tasks' || pathname.startsWith('/tasks/')) return '/tasks';
     if (pathname.startsWith('/habits') || pathname.startsWith('/details')) return '/habits';
     if (pathname.startsWith('/projects')) return '/projects';
     if (pathname.startsWith('/timer')) return '/timer';
@@ -58,8 +62,14 @@ const menuItemsStyle = {
  */
 export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: string }) {
     const { pathname } = useLocation();
+    const { activeProfile } = useAuth();
     const activeKey = activeTabKey(pathname);
-    const activeTab = TABS.find((tab) => tab.to === activeKey) ?? null;
+    // When a profile has habits disabled the feature is hidden wholesale — the
+    // Habits tab disappears as if it were never added (the /habits route itself
+    // redirects to Today).
+    const tabs =
+        activeProfile?.habits_enabled === false ? TABS.filter((tab) => tab.to !== '/habits') : TABS;
+    const activeTab = tabs.find((tab) => tab.to === activeKey) ?? null;
 
     return (
         <header className='border-b' style={{ borderColor: 'var(--surface-card-border)' }}>
@@ -68,7 +78,7 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
             >
                 {/* Inline tabs (md and up) */}
                 <nav className='hidden items-center gap-1 sm:gap-1.5 md:flex'>
-                    {TABS.map((tab) => {
+                    {tabs.map((tab) => {
                         const active = tab.to === activeKey;
                         // The Today "hub" tab is a filled pill (orange gradient when
                         // active, grey when not); the rest are underline tabs.
@@ -129,7 +139,7 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
                         className='z-50 w-44 rounded-button border p-1 shadow-popover outline-none'
                         style={menuItemsStyle}
                     >
-                        {TABS.map((tab) => {
+                        {tabs.map((tab) => {
                             const active = tab.to === activeKey;
                             return (
                                 <MenuItem key={tab.to}>

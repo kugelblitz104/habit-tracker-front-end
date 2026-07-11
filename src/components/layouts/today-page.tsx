@@ -6,12 +6,14 @@ import { HabitDetailPane } from '@/features/habits/components/details/habit-deta
 import { TodayHabitsPanel } from '@/features/habits/components/today/today-habits-panel';
 import { useHabitDetailPane } from '@/features/habits/hooks/use-habit-detail-pane';
 import { useProjects } from '@/features/projects/api/get-projects';
-import { useCreateTask } from '@/features/tasks/api/create-tasks';
 import { useTasks } from '@/features/tasks/api/get-tasks';
 import { useUpdateTask } from '@/features/tasks/api/update-tasks';
 import { BandSection } from '@/features/tasks/components/band-section';
-import { CaptureBar } from '@/features/tasks/components/capture-bar';
 import { CompletedSection } from '@/features/tasks/components/completed-section';
+import {
+    TaskCaptureBar,
+    type TaskCaptureDraft
+} from '@/features/tasks/components/task-capture-bar';
 import { TaskCaptureForm } from '@/features/tasks/components/task-capture-form';
 import { TaskDetailPane } from '@/features/tasks/components/task-detail-pane';
 import { useTaskDetailPane } from '@/features/tasks/hooks/use-task-detail-pane';
@@ -36,13 +38,12 @@ export const TodayDashboard = () => {
     const projectsQuery = useProjects({ profileId });
     // Closed tasks (for the "done today" count under the header).
     const closedQuery = useTasks({ profileId, includeClosed: true, band: 'hidden' });
-    const createTask = useCreateTask();
     const updateTask = useUpdateTask();
     const createTimeEntry = useCreateTimeEntry();
 
-    // Shift+Enter in the capture bar expands it into the full details form,
-    // carrying the typed text along. `null` = collapsed (plain capture bar).
-    const [captureDraft, setCaptureDraft] = useState<string | null>(null);
+    // Shift+Enter / + in the capture bar expands it into the full details form,
+    // carrying the parsed draft along. `null` = collapsed (plain capture bar).
+    const [captureDraft, setCaptureDraft] = useState<TaskCaptureDraft | null>(null);
 
     // Collapse state for the (hidable) Whenever band, persisted per browser.
     const [hideWhenever, setHideWhenever] = useState(false);
@@ -152,18 +153,6 @@ export const TodayDashboard = () => {
         return { inProgress, blocked, doneToday };
     }, [tasks, closedQuery.data]);
 
-    const handleCapture = async (title: string) => {
-        if (!activeProfileId) return;
-        try {
-            await createTask.mutateAsync({ profile_id: activeProfileId, title });
-            toast.success('Task created');
-        } catch (error) {
-            toast.error('Failed to add task. Please try again.');
-            // Re-throw so the capture bar keeps the typed text for a retry.
-            throw error;
-        }
-    };
-
     const handleStatusChange = (taskId: number, status: TaskStatus) => {
         updateTask.mutate(
             { taskId, data: { status } },
@@ -219,15 +208,14 @@ export const TodayDashboard = () => {
                         {captureDraft !== null && activeProfileId ? (
                             <TaskCaptureForm
                                 profileId={activeProfileId}
-                                initialTitle={captureDraft}
+                                initial={captureDraft}
                                 onClose={() => setCaptureDraft(null)}
                             />
                         ) : (
-                            <CaptureBar
-                                onCapture={handleCapture}
+                            <TaskCaptureBar
+                                profileId={activeProfileId}
                                 onExpand={setCaptureDraft}
                                 disabled={!activeProfileId}
-                                isPending={createTask.isPending}
                             />
                         )}
 

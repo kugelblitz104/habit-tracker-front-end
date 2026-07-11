@@ -20,7 +20,7 @@ const UNCATEGORIZED = 'Uncategorized';
 /**
  * Cool-toned "Today's habits" panel. Fetches the active profile's habits, groups
  * them by category into a responsive grid, and shows a done/auto/skipped summary.
- * When the profile has habits disabled it renders the dashed off-state note.
+ * When the profile has habits disabled the panel renders nothing at all.
  * Dimmed via `opacity: var(--quiet)`.
  */
 export const TodayHabitsPanel = ({ profile, onSelectHabit }: TodayHabitsPanelProps) => {
@@ -96,18 +96,10 @@ export const TodayHabitsPanel = ({ profile, onSelectHabit }: TodayHabitsPanelPro
             .filter(([, categoryHabits]) => categoryHabits.length > 0);
     }, [grouped, statuses, showAutoSkipped]);
 
-    // Per-profile feature toggle: habits off → dashed placeholder, no panel.
+    // Per-profile feature toggle: habits off → the section is gone entirely, as
+    // if habits were never a feature (no placeholder, no "turn on" prompt).
     if (profile && profile.habits_enabled === false) {
-        return (
-            <section className='mb-[30px]' style={{ opacity: 'var(--quiet)' }}>
-                <div
-                    className='rounded-row border border-dashed px-4 py-6 text-center font-mono text-[12px] text-text-faint'
-                    style={{ borderColor: 'var(--habit-container-border)' }}
-                >
-                    Habits are off for this profile — turn them on in Settings.
-                </div>
-            </section>
-        );
+        return null;
     }
 
     return (

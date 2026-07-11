@@ -96,7 +96,8 @@ const EventRow = ({ event }: { event: CalendarEventRead }) => {
 
 /**
  * Read-only "Today's schedule" section: the active profile's ICS calendar
- * events for today, with a per-connection legend, plus a quieter "Upcoming"
+ * events for today, with a per-connection legend that doubles as show/hide
+ * checkboxes (view-side, persisted per profile), plus a quieter "Upcoming"
  * subsection for the next 7 days grouped by day. Lavender header is
  * deliberate — the calendar is its own cool accent, distinct from bands.
  * Hidden entirely when the profile has calendars disabled; dimmed via
@@ -135,6 +136,30 @@ export const TodaySchedule = () => {
     const enabledConnections = connections.filter((connection) => connection.enabled !== false);
     const hasEnabledConnections = enabledConnections.length > 0;
 
+    // View-side calendar visibility: the legend acts as checkboxes so a shared
+    // calendar (e.g. a partner's) can be hidden from this view without touching
+    // its Settings on/off state. Persisted per profile.
+    const hiddenStorageKey = profileId ? `today_schedule_hidden_calendars_${profileId}` : null;
+    const [hiddenIds, setHiddenIds] = useState<Set<number>>(new Set());
+    useEffect(() => {
+        if (!hiddenStorageKey) return;
+        try {
+            const raw = localStorage.getItem(hiddenStorageKey);
+            setHiddenIds(raw ? new Set<number>(JSON.parse(raw)) : new Set());
+        } catch {
+            setHiddenIds(new Set());
+        }
+    }, [hiddenStorageKey]);
+    const toggleHidden = (id: number) => {
+        setHiddenIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            if (hiddenStorageKey) localStorage.setItem(hiddenStorageKey, JSON.stringify([...next]));
+            return next;
+        });
+    };
+
     const eventsQuery = useCalendarEvents({
         profileId,
         targetDate,
@@ -147,10 +172,13 @@ export const TodaySchedule = () => {
     const events = eventsQuery.data?.events ?? [];
     const errors = eventsQuery.data?.errors ?? [];
 
+    // Drop events from calendars the user has hidden in the legend.
+    const visibleEvents = events.filter((event) => !hiddenIds.has(event.connection_id));
+
     // Split on event_date as plain YYYY-MM-DD strings — both come from the
     // same tz, and string comparison avoids any Date round-trip day shifts.
-    const todayEvents = events.filter((event) => event.event_date === targetDate);
-    const upcomingEvents = events.filter((event) => event.event_date > targetDate);
+    const todayEvents = visibleEvents.filter((event) => event.event_date === targetDate);
+    const upcomingEvents = visibleEvents.filter((event) => event.event_date > targetDate);
 
     // Group upcoming events by day. The server orders by event_date (all-day
     // first within each day), so contiguous runs are complete day groups.
@@ -220,19 +248,31 @@ export const TodaySchedule = () => {
                     })}
                 </span>
                 <span className='flex-1' />
-                {enabledConnections.map((connection) => (
-                    <span
-                        key={connection.id}
-                        className='inline-flex items-center gap-1.5 text-[11px]'
-                        style={{ color: '#8f8aa0' }}
-                    >
-                        <span
-                            className='h-2 w-2 rounded-[2px]'
-                            style={{ backgroundColor: connection.color }}
-                        />
-                        {connection.name}
-                    </span>
-                ))}
+                {enabledConnections.map((connection) => {
+                    const hidden = hiddenIds.has(connection.id);
+                    return (
+                        <button
+                            key={connection.id}
+                            type='button'
+                            onClick={() => toggleHidden(connection.id)}
+                            aria-pressed={!hidden}
+                            title={hidden ? 'Show this calendar' : 'Hide this calendar'}
+                            className='inline-flex items-center gap-1.5 text-[11px] transition-opacity'
+                            style={{ color: '#8f8aa0', opacity: hidden ? 0.45 : 1 }}
+                        >
+                            <span
+                                className='h-2.5 w-2.5 rounded-[3px]'
+                                style={{
+                                    backgroundColor: hidden ? 'transparent' : connection.color,
+                                    border: `1.5px solid ${connection.color}`
+                                }}
+                            />
+                            <span style={{ textDecoration: hidden ? 'line-through' : 'none' }}>
+                                {connection.name}
+                            </span>
+                        </button>
+                    );
+                })}
             </div>
 
             {!hasEnabledConnections ? (
@@ -249,9 +289,13 @@ export const TodaySchedule = () => {
                 <p className='font-mono text-[12px] text-text-faint'>
                     Couldn&apos;t load today&apos;s schedule.
                 </p>
-            ) : eventsQuery.isLoading ? null : events.length === 0 ? (
+            ) : eventsQuery.isLoading ? null : visibleEvents.length === 0 ? (
                 <p className='font-mono text-[12px] text-text-faint'>
-                    {windowDays === 1 ? 'No events today.' : 'No events in this range.'}
+                    {events.length > 0
+                        ? 'All shown calendars are hidden.'
+                        : windowDays === 1
+                        ? 'No events today.'
+                        : 'No events in this range.'}
                 </p>
             ) : (
                 <>

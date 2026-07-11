@@ -13,6 +13,7 @@ import { useResponsiveLayout, DASHBOARD_DAYS_BY_SIZE } from '@/lib/use-responsiv
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { GripVertical } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Navigate } from 'react-router';
 import { ErrorPage } from './error-page';
 import { LoadingPage } from './loading-page';
 import { sortHabits } from '@/features/habits/api/update-habits';
@@ -28,7 +29,7 @@ export const HabitsDashboard = () => {
     const layoutSize = useResponsiveLayout();
     const days = DASHBOARD_DAYS_BY_SIZE[layoutSize];
     const isSmall = layoutSize === 'sm';
-    const { user, activeProfileId } = useAuth();
+    const { user, activeProfile, activeProfileId } = useAuth();
     const userId = user?.id || 0; // Fallback to non-existent user ID
 
     const { isWide, selectedHabitId, selectHabit, closeHabit } = useHabitDetailPane();
@@ -39,6 +40,9 @@ export const HabitsDashboard = () => {
     // Group-by-category display mode; hydrated from localStorage after mount
     // (SSR renders the default flat list, same pattern as active_profile).
     const [groupByCategory, setGroupByCategory] = useState(false);
+    // "Habits left today" count reported up from HabitList, computed with the
+    // same logic as the Incomplete filter (auto-skip aware). null until settled.
+    const [incompleteCount, setIncompleteCount] = useState<number | null>(null);
 
     useEffect(() => {
         setGroupByCategory(localStorage.getItem(GROUP_BY_CATEGORY_STORAGE_KEY) === 'true');
@@ -101,6 +105,12 @@ export const HabitsDashboard = () => {
         }
     };
 
+    // Habits disabled for this profile → the feature is hidden wholesale, so the
+    // dashboard route itself bounces to Today (the nav tab is already gone).
+    if (activeProfile && activeProfile.habits_enabled === false) {
+        return <Navigate to='/' replace />;
+    }
+
     if (!user) {
         return <ErrorPage message='User not authenticated' />;
     }
@@ -115,10 +125,14 @@ export const HabitsDashboard = () => {
 
     const showPane = isWide && selectedHabitId != null;
     const subline = `${habits.length} ${habits.length === 1 ? 'habit' : 'habits'}`;
-    // Header = how many of today's habits still need doing (not done, not skipped).
-    const habitsLeft = habits.filter(
+    // Header = how many of today's habits still need doing, using the SAME rule
+    // as the Incomplete filter (HabitList reports it; auto-skipped habits don't
+    // count). Until rows settle (`null`), fall back to a server-field
+    // approximation so the title doesn't flash a wrong figure.
+    const approxLeft = habits.filter(
         (habit) => !habit.archived && !habit.completed_today && !habit.skipped_today
     ).length;
+    const habitsLeft = incompleteCount ?? approxLeft;
     const headerTitle =
         habitsLeft > 0
             ? `${habitsLeft} ${habitsLeft === 1 ? 'habit' : 'habits'} left`
@@ -181,6 +195,7 @@ export const HabitsDashboard = () => {
                             onSelectHabit={selectHabit}
                             groupByCategory={groupByCategory}
                             onToggleGroupByCategory={handleToggleGroupByCategory}
+                            onIncompleteCountChange={setIncompleteCount}
                         />
                     </div>
 
