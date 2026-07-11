@@ -1,4 +1,5 @@
 import type { HabitRead } from '@/api';
+import { BaseModal } from '@/components/ui/modals/base-modal';
 import { Label } from '@/components/ui/label';
 import { getFrequencyString } from '@/lib/date-utils';
 import { GripVertical } from 'lucide-react';
@@ -13,41 +14,7 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Button, Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
-
-/** Themed dialog shell shared by both the empty and populated states. */
-const SortDialogShell = ({
-    isOpen,
-    onClose,
-    children
-}: {
-    isOpen: boolean;
-    onClose: () => void;
-    children: React.ReactNode;
-}) => (
-    <Dialog
-        open={isOpen}
-        onClose={onClose}
-        transition
-        className='relative z-50 transition-opacity duration-300 ease-out data-closed:opacity-0'
-    >
-        <DialogBackdrop className='fixed inset-0 bg-black/60' />
-        <div className='fixed inset-0 flex items-center justify-center p-4'>
-            <DialogPanel
-                className='w-full max-w-md space-y-4 overflow-y-auto rounded-card border p-5 shadow-popover'
-                style={{
-                    backgroundColor: 'var(--bg)',
-                    borderColor: 'var(--surface-card-border)'
-                }}
-            >
-                <DialogTitle className='font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-habit-label'>
-                    Sort Habits
-                </DialogTitle>
-                {children}
-            </DialogPanel>
-        </div>
-    </Dialog>
-);
+import { Button } from '@headlessui/react';
 
 type ItemProps = {
     habit: HabitRead;
@@ -159,14 +126,14 @@ export const SortHabitModal = ({
 
     if (habitsState.length === 0) {
         return (
-            <SortDialogShell isOpen={isOpen} onClose={onClose}>
+            <BaseModal isOpen={isOpen} onClose={onClose} title='Sort Habits'>
                 <p className='font-mono text-[12px] text-text-muted'>No habits to sort.</p>
-            </SortDialogShell>
+            </BaseModal>
         );
     }
 
     return (
-        <SortDialogShell isOpen={isOpen} onClose={onClose}>
+        <BaseModal isOpen={isOpen} onClose={onClose} title='Sort Habits'>
             <DndContext
                 collisionDetection={closestCenter}
                 sensors={sensors}
@@ -217,6 +184,6 @@ export const SortHabitModal = ({
                     Save Order
                 </Button>
             </div>
-        </SortDialogShell>
+        </BaseModal>
     );
 };

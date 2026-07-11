@@ -1,0 +1,325 @@
+import type { TaskRead, TaskUpdate } from '@/api';
+import { POPOVER_PANEL_CLASS, popoverPanelStyle } from '@/components/ui/menu';
+import { useProjects } from '@/features/projects/api/get-projects';
+import { parseLocalDate } from '@/lib/date-utils';
+import { TaskStatus } from '@/types/types';
+import { ListPlus, Pencil, Timer, Trash2 } from 'lucide-react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useLocation } from 'react-router';
+import { toast } from 'react-toastify';
+import { useUpdateTask } from '../../api/update-tasks';
+import { useDeleteTaskWithConfirm } from '../../hooks/use-delete-task-with-confirm';
+import { PRIORITY_LEVELS } from '../../utils/priority-config';
+import { formatShortDate } from '../../utils/task-format';
+import { STATUS_META } from '../status-config';
+import { DateSubmenu } from './date-submenu';
+import { PrioritySubmenu } from './priority-submenu';
+import { ProjectSubmenu } from './project-submenu';
+import { Divider, RootRow, itemClass } from './shared';
+import { StatusSubmenu } from './status-submenu';
+
+export type MenuPoint = { x: number; y: number };
+
+type TaskContextMenuProps = {
+    task: TaskRead;
+    /** Viewport (client) coordinates the menu opens at — cursor or touch point. */
+    point: MenuPoint;
+    onClose: () => void;
+    /**
+     * Same handler the card's round status picker uses, so toast behavior stays
+     * identical per surface (Today toasts done/cancelled; project view is quiet).
+     */
+    onStatusChange: (status: TaskStatus) => void;
+    /**
+     * Open the task detail (pane on wide screens, `/tasks/:id` on narrow).
+     * Pass `true` to open straight into the edit form.
+     */
+    onSelectEdit: (editing?: boolean) => void;
+    /** Editor already open for this task — skip selectEdit's toggle-close. */
+    editing: boolean;
+    /** Start a timer attached to this task (omit to hide the action). */
+    onStartTimer?: () => void;
+    /** Open the inline quick-add subtask popover (omit to fall back to the editor). */
+    onAddSubtask?: () => void;
+};
+
+type MenuView = 'root' | 'status' | 'priority' | 'project' | 'due' | 'scheduled';
+
+/**
+ * Right-click / long-press context menu for a task card. A small controlled
+ * popover portalled to <body> at the cursor point (clamped to the viewport),
+ * styled like the app's other dropdowns (profile switcher / status picker).
+ * Submenus (status/priority/project/due/scheduled — see the sibling files in
+ * this folder) drill in-place with a back header rather than flying out, so
+ * the same layout works for touch.
+ *
+ * Dismissal: click/tap outside (pointerdown capture — this also guarantees only
+ * one menu is open at a time, since opening another card's menu starts with a
+ * pointerdown outside this one), Escape, any scroll outside the panel, viewport
+ * resize, or a route change.
+ */
+export const TaskContextMenu = ({
+    task,
+    point,
+    onClose,
+    onStatusChange,
+    onSelectEdit,
+    editing,
+    onStartTimer,
+    onAddSubtask
+}: TaskContextMenuProps) => {
+    const updateTask = useUpdateTask();
+    const { deleteWithConfirm } = useDeleteTaskWithConfirm();
+
+    // Archived-aware project options — same rules as the editor's ProjectField:
+    // archived projects are hidden unless the task's CURRENT project is archived,
+    // which stays visible so the task doesn't look unassigned.
+    const projectsQuery = useProjects({ profileId: task.profile_id, includeArchived: true });
+    const allProjects = projectsQuery.data?.projects ?? [];
+    const projects = allProjects.filter((p) => !p.archived || p.id === task.project_id);
+    const currentProject = allProjects.find((p) => p.id === task.project_id);
+
+    const status = (task.status ?? TaskStatus.OPEN) as TaskStatus;
+    const priority = task.priority ?? 0;
+
+    const [view, setView] = useState<MenuView>('root');
+    const panelRef = useRef<HTMLDivElement>(null);
+    const [pos, setPos] = useState<MenuPoint>(point);
+
+    // Clamp to the viewport once the panel has a size; re-clamp when the view
+    // changes since submenu heights differ.
+    useLayoutEffect(() => {
+        const el = panelRef.current;
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const margin = 8;
+        setPos({
+            x: Math.max(margin, Math.min(point.x, window.innerWidth - rect.width - margin)),
+            y: Math.max(margin, Math.min(point.y, window.innerHeight - rect.height - margin))
+        });
+    }, [point, view]);
+
+    // Outside-dismissal listeners.
+    useEffect(() => {
+        const onPointerDown = (e: PointerEvent) => {
+            if (!panelRef.current?.contains(e.target as Node)) onClose();
+        };
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
+        const onScroll = (e: Event) => {
+            // Ignore scrolls inside the panel itself (long project lists).
+            if (panelRef.current?.contains(e.target as Node)) return;
+            onClose();
+        };
+        document.addEventListener('pointerdown', onPointerDown, true);
+        document.addEventListener('keydown', onKeyDown);
+        window.addEventListener('scroll', onScroll, true);
+        window.addEventListener('resize', onClose);
+        return () => {
+            document.removeEventListener('pointerdown', onPointerDown, true);
+            document.removeEventListener('keydown', onKeyDown);
+            window.removeEventListener('scroll', onScroll, true);
+            window.removeEventListener('resize', onClose);
+        };
+    }, [onClose]);
+
+    // Close on route change (e.g. something navigates while the menu is open).
+    const location = useLocation();
+    const openedAtPath = useRef(location.pathname);
+    useEffect(() => {
+        if (location.pathname !== openedAtPath.current) onClose();
+    }, [location.pathname, onClose]);
+
+    // Quiet partial PATCH via the shared mutation (it invalidates all the right
+    // caches); errors toast like TaskEditor's save, successes stay silent.
+    const patchTask = (data: TaskUpdate) => {
+        updateTask.mutate(
+            { taskId: task.id, data },
+            { onError: () => toast.error('Failed to save changes. Please try again.') }
+        );
+        onClose();
+    };
+
+    const handleStatus = (s: TaskStatus) => {
+        onStatusChange(s);
+        onClose();
+    };
+
+    const openEditor = () => {
+        // Open straight into the edit form (edit intent keeps it open even when
+        // the pane already shows this task).
+        onSelectEdit(true);
+        onClose();
+    };
+
+    const handleStartTimer = () => {
+        onClose();
+        onStartTimer?.();
+    };
+
+    const handleAddSubtask = () => {
+        // Prefer the inline quick-add popover; fall back to the editor.
+        if (onAddSubtask) onAddSubtask();
+        else onSelectEdit(true);
+        onClose();
+    };
+
+    // Match TaskEditor's delete affordance: window.confirm, then the shared
+    // delete mutation with its success/error toasts.
+    const handleDelete = () => {
+        onClose();
+        deleteWithConfirm(task.id);
+    };
+
+    const dueHint = task.due_date ? formatShortDate(parseLocalDate(task.due_date)) : 'None';
+    const scheduledHint = task.scheduled_date
+        ? formatShortDate(parseLocalDate(task.scheduled_date))
+        : 'None';
+
+    const panel = (
+        <div
+            ref={panelRef}
+            role='menu'
+            aria-label={`Task actions: ${task.title}`}
+            className={`fixed max-h-[70vh] w-56 overflow-y-auto ${POPOVER_PANEL_CLASS}`}
+            style={{ ...popoverPanelStyle, left: pos.x, top: pos.y }}
+            onContextMenu={(e) => {
+                // Keep the browser menu off the panel, and stop the (React-tree)
+                // bubble so the card doesn't reposition the menu.
+                e.preventDefault();
+                e.stopPropagation();
+            }}
+        >
+            {view === 'root' && (
+                <>
+                    <RootRow
+                        label='Status'
+                        hint={STATUS_META[status].label}
+                        onClick={() => setView('status')}
+                    />
+                    <RootRow
+                        label='Priority'
+                        hint={PRIORITY_LEVELS[priority]?.label ?? 'None'}
+                        onClick={() => setView('priority')}
+                    />
+                    <RootRow
+                        label='Move to project'
+                        hint={currentProject?.name ?? 'No project'}
+                        onClick={() => setView('project')}
+                    />
+                    <RootRow label='Due' hint={dueHint} onClick={() => setView('due')} />
+                    <RootRow
+                        label='Scheduled'
+                        hint={scheduledHint}
+                        onClick={() => setView('scheduled')}
+                    />
+
+                    <Divider />
+
+                    {onStartTimer && (
+                        <button
+                            type='button'
+                            onClick={handleStartTimer}
+                            className={`${itemClass} text-text-secondary`}
+                        >
+                            <Timer size={14} className='text-text-muted' />
+                            Start timer
+                        </button>
+                    )}
+                    {task.parent_id == null && (
+                        <button
+                            type='button'
+                            onClick={handleAddSubtask}
+                            className={`${itemClass} text-text-secondary`}
+                        >
+                            <ListPlus size={14} className='text-text-muted' />
+                            Add subtask…
+                        </button>
+                    )}
+                    <button
+                        type='button'
+                        onClick={openEditor}
+                        className={`${itemClass} text-text-secondary`}
+                    >
+                        <Pencil size={14} className='text-text-muted' />
+                        Edit…
+                    </button>
+
+                    <Divider />
+
+                    <button
+                        type='button'
+                        onClick={handleDelete}
+                        className={itemClass}
+                        style={{ color: 'var(--color-danger)' }}
+                    >
+                        <Trash2 size={14} />
+                        Delete
+                    </button>
+                </>
+            )}
+
+            {view === 'status' && (
+                <StatusSubmenu
+                    status={status}
+                    onSelect={handleStatus}
+                    onBack={() => setView('root')}
+                />
+            )}
+
+            {view === 'priority' && (
+                <PrioritySubmenu
+                    priority={priority}
+                    onSelect={(p) => patchTask({ priority: p })}
+                    onBack={() => setView('root')}
+                />
+            )}
+
+            {view === 'project' && (
+                <ProjectSubmenu
+                    projects={projects}
+                    currentProjectId={task.project_id}
+                    onSelect={(projectId) => patchTask({ project_id: projectId })}
+                    onBack={() => setView('root')}
+                />
+            )}
+
+            {view === 'due' && (
+                <DateSubmenu
+                    label='Due'
+                    currentDate={task.due_date}
+                    onPick={(date) => patchTask({ due_date: date })}
+                    // Clearing drops the time too — a time without a date is
+                    // meaningless (mirrors DateTimeField).
+                    onClear={() => patchTask({ due_date: null, due_time: null })}
+                    clearLabel='Clear due date'
+                    dateAriaLabel='Pick a due date'
+                    onBack={() => setView('root')}
+                />
+            )}
+
+            {view === 'scheduled' && (
+                <DateSubmenu
+                    label='Scheduled'
+                    currentDate={task.scheduled_date}
+                    // Scheduled date/time only stick on Scheduled tasks (the
+                    // backend nulls them otherwise), so picking a date implies
+                    // the status — mirrors TaskCaptureForm.
+                    onPick={(date) =>
+                        patchTask({ scheduled_date: date, status: TaskStatus.SCHEDULED })
+                    }
+                    // Clears the date/time but leaves the status alone, matching
+                    // the editor's DateTimeField clear.
+                    onClear={() => patchTask({ scheduled_date: null, scheduled_time: null })}
+                    clearLabel='Clear scheduled date'
+                    dateAriaLabel='Pick a scheduled date'
+                    onBack={() => setView('root')}
+                />
+            )}
+        </div>
+    );
+
+    return createPortal(panel, document.body);
+};

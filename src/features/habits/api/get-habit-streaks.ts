@@ -15,7 +15,7 @@ export const getHabitStreaks = async (habitId: number): Promise<Array<HabitStrea
     );
 };
 
-export const getHabitStreaksQueryOptions = (habitId: number | null | undefined) => {
+const getHabitStreaksQueryOptions = (habitId: number | null | undefined) => {
     return queryOptions({
         queryKey: ['streaks', { habitId }],
         queryFn: () => getHabitStreaks(habitId!),

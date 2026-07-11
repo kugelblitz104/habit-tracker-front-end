@@ -1,8 +1,10 @@
 import type { ProjectRead, TaskRead } from '@/api';
 import type { TaskStatus } from '@/types/types';
 import { useMemo } from 'react';
+import { toActiveBand, upwardFrom } from '../utils/task-bands';
 import { buildTaskSections, type TaskControlsState } from '../utils/task-controls';
-import { TaskCard, type ActiveBand } from './task-card';
+import { SectionHeader } from './section-header';
+import { TaskCard } from './task-card';
 
 type TaskListViewProps = {
     tasks: TaskRead[];
@@ -19,11 +21,6 @@ type TaskListViewProps = {
     /** Shown when the (filtered) list is empty. */
     emptyHint?: string;
 };
-
-// TaskCard styles off an active band; closed tasks (band 'hidden') fall back to
-// the quiet 'whenever' look.
-const toActiveBand = (band: TaskRead['band']): ActiveBand =>
-    band === 'now' || band === 'soon' ? band : 'whenever';
 
 /**
  * Flat task surface renderer: applies the sort/group/filter controls and paints
@@ -62,26 +59,17 @@ export const TaskListView = ({
     return (
         <div className='flex flex-col gap-[26px]'>
             {sections.map((section) => {
-                const upwardFrom = Math.max(section.tasks.length - 2, 0);
+                const upwardIdx = upwardFrom(section.tasks.length);
                 return (
                     <section key={section.key}>
                         {section.label && (
                             <div className='mb-2.5 flex items-center gap-2'>
-                                {section.color && (
-                                    <span
-                                        className='h-2 w-2 rounded-[2px]'
-                                        style={{ backgroundColor: section.color }}
-                                    />
-                                )}
-                                <h2
-                                    className='font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em]'
-                                    style={{ color: section.color ?? 'var(--color-text-muted)' }}
-                                >
-                                    {section.label}
-                                </h2>
-                                <span className='font-mono text-[11px] text-text-faint'>
-                                    {section.tasks.length}
-                                </span>
+                                <SectionHeader
+                                    label={section.label}
+                                    color={section.color}
+                                    count={section.tasks.length}
+                                    dot
+                                />
                             </div>
                         )}
                         <div className='flex flex-col' style={{ gap: 'var(--space-band-gap)' }}>
@@ -109,7 +97,7 @@ export const TaskListView = ({
                                     onStartTimer={
                                         onStartTimer ? () => onStartTimer(task.id) : undefined
                                     }
-                                    openUpward={i >= upwardFrom}
+                                    openUpward={i >= upwardIdx}
                                 />
                             ))}
                         </div>

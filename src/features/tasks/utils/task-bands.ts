@@ -1,7 +1,7 @@
 import type { TaskRead } from '@/api';
 import { ACTIVE_TASK_BANDS, type TaskBand } from '@/types/types';
 
-export type BandGroup = {
+type BandGroup = {
     band: Exclude<TaskBand, 'hidden'>;
     tasks: TaskRead[];
 };
@@ -25,3 +25,18 @@ export const groupTasksByBand = (tasks: TaskRead[]): BandGroup[] =>
  */
 export const countGroupedTasks = (groups: BandGroup[]): number =>
     groups.reduce((sum, group) => sum + group.tasks.length, 0);
+
+/**
+ * Map a task's (possibly 'hidden'/null) server band onto the three bands a
+ * card/meter actually styles for. Closed tasks (band 'hidden') fall back to
+ * the quiet 'whenever' look, same as any other non now/soon band.
+ */
+export const toActiveBand = (band: TaskRead['band']): Exclude<TaskBand, 'hidden'> =>
+    band === 'now' || band === 'soon' ? band : 'whenever';
+
+/**
+ * The last `n` rows of a list should open their status/context menus upward so
+ * the popover never covers the section below. Returns the index at which
+ * "upward" starts — rows from here to the end open upward.
+ */
+export const upwardFrom = (count: number): number => Math.max(count - 2, 0);

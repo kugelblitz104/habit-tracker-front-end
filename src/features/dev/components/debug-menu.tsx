@@ -1,4 +1,5 @@
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
+import { ThemedMenuItems } from '@/components/ui/menu';
+import { Menu, MenuButton, MenuItem } from '@headlessui/react';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { FlaskConical } from 'lucide-react';
 import { useNavigate } from 'react-router';
@@ -81,14 +82,7 @@ export const DebugMenu = () => {
             >
                 <FlaskConical size={14} />
             </MenuButton>
-            <MenuItems
-                anchor={{ to: 'bottom end', gap: 8 }}
-                className='z-50 w-60 rounded-button border p-1 shadow-popover outline-none'
-                style={{
-                    backgroundColor: 'var(--bg)',
-                    borderColor: 'var(--surface-card-border)'
-                }}
-            >
+            <ThemedMenuItems anchor={{ to: 'bottom end', gap: 8 }} className='w-60'>
                 <p className={LABEL_CLASS}>Toasts</p>
                 {/* Plain buttons (not MenuItem) so the menu stays open while
                     firing several variants back to back. */}
@@ -132,7 +126,7 @@ export const DebugMenu = () => {
                         </p>
                     )
                 )}
-            </MenuItems>
+            </ThemedMenuItems>
         </Menu>
     );
 };

@@ -1,11 +1,12 @@
 import type { HabitRead, TrackerCreate, TrackerLite, TrackerRead, TrackerUpdate } from '@/api';
 import { NoteDialog } from '@/features/habits/components/modals/note-dialog';
+import { useNoteDialog } from '@/features/habits/hooks/use-note-dialog';
 import { getTracker } from '@/features/trackers/api/get-trackers';
 import {
     createNewTracker,
     findTrackerByDate,
+    getDisplayStatusForDate,
     getNextTrackerState,
-    getTrackerDisplayStatus,
     NotePip
 } from '@/features/trackers/utils/tracker-utils';
 import { parseLocalDate, toLocalDateString } from '@/lib/date-utils';
@@ -14,6 +15,7 @@ import { DisplayStatus, TrackerStatus } from '@/types/types';
 import { useQuery } from '@tanstack/react-query';
 import type { CSSProperties } from 'react';
 import { useMemo, useState } from 'react';
+import { DetailPanel } from './detail-panel';
 
 type CalendarBoardProps = {
     habit?: HabitRead;
@@ -24,11 +26,6 @@ type CalendarBoardProps = {
     onTrackerCreate: (tracker: TrackerCreate) => Promise<TrackerRead>;
     onTrackerUpdate: (id: number, update: TrackerUpdate) => Promise<TrackerRead>;
 };
-
-const PANEL =
-    'bg-[var(--habit-container-bg)] border border-[var(--habit-container-border)] rounded-card px-5 py-[18px]';
-const TITLE =
-    'm-0 font-display text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--color-habit-label)]';
 
 // Weekday header rows for each week-start preference.
 const WEEKDAY_HEADERS_MONDAY = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -114,12 +111,7 @@ const DayCell = ({
     onNoteClick
 }: DayCellProps) => {
     const tracker = findTrackerByDate(trackers, date);
-    const status = getTrackerDisplayStatus(tracker, {
-        date,
-        trackers,
-        frequency: habit.frequency,
-        range: habit.range
-    });
+    const status = getDisplayStatusForDate(trackers, date, habit);
     const longPressHandlers = useLongPress(() => {
         if (!isFuture) onNoteClick(date, tracker);
     });
@@ -167,9 +159,7 @@ export const CalendarBoard = ({
     onTrackerCreate,
     onTrackerUpdate
 }: CalendarBoardProps) => {
-    const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
-    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-    const [selectedTrackerId, setSelectedTrackerId] = useState<number | null>(null);
+    const noteDialog = useNoteDialog();
 
     const today = useMemo(() => {
         const now = new Date();
@@ -180,9 +170,9 @@ export const CalendarBoard = ({
 
     // Fetch full tracker details when the note dialog opens.
     const { data: selectedTrackerFull } = useQuery({
-        queryKey: ['tracker', selectedTrackerId],
-        queryFn: () => getTracker(selectedTrackerId!),
-        enabled: !!selectedTrackerId && isNoteDialogOpen,
+        queryKey: ['tracker', noteDialog.trackerId],
+        queryFn: () => getTracker(noteDialog.trackerId!),
+        enabled: !!noteDialog.trackerId && noteDialog.isOpen,
         staleTime: 0
     });
 
@@ -240,20 +230,23 @@ export const CalendarBoard = ({
     };
 
     const handleNoteClick = (date: Date, tracker: TrackerLite | undefined) => {
-        setSelectedDate(date);
-        setSelectedTrackerId(tracker?.id || null);
-        setIsNoteDialogOpen(true);
+        noteDialog.open({ date, trackerId: tracker?.id ?? null });
     };
 
     const handleNoteSave = (note: string) => {
-        if (!habit || !selectedDate) return;
+        if (!habit || !noteDialog.date) return;
         // Resolve the existing tracker for this date from the already-loaded lite
         // history (do NOT depend on the lazily-fetched full detail, which may not
         // have resolved yet — relying on it can create a duplicate for a date that
         // already has a tracker).
-        const existingId = selectedTrackerId ?? findTrackerByDate(trackers, selectedDate)?.id ?? null;
+        const existingId =
+            noteDialog.trackerId ?? findTrackerByDate(trackers, noteDialog.date)?.id ?? null;
         if (existingId === null) {
-            const newTracker = createNewTracker(habit.id, selectedDate, TrackerStatus.NOT_COMPLETED);
+            const newTracker = createNewTracker(
+                habit.id,
+                noteDialog.date,
+                TrackerStatus.NOT_COMPLETED
+            );
             newTracker.note = note;
             onTrackerCreate(newTracker);
         } else {
@@ -262,7 +255,7 @@ export const CalendarBoard = ({
     };
 
     if (!habit) {
-        return <div className={`${PANEL} text-[#8ba3b5]`}>No habit selected</div>;
+        return <DetailPanel className='text-[#8ba3b5]'>No habit selected</DetailPanel>;
     }
 
     const isToday = (date: Date) => date.getTime() === today.getTime();
@@ -276,11 +269,9 @@ export const CalendarBoard = ({
         }`;
 
     return (
-        <div className={PANEL}>
-            <div className='mb-[14px] flex items-center justify-between'>
-                <h2 className={TITLE}>
-                    {viewMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                </h2>
+        <DetailPanel
+            title={viewMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+            headerExtra={
                 <div className='flex items-center gap-[6px]'>
                     <button
                         type='button'
@@ -301,8 +292,8 @@ export const CalendarBoard = ({
                         ›
                     </button>
                 </div>
-            </div>
-
+            }
+        >
             <div className='mb-[6px] grid grid-cols-7 gap-[6px]'>
                 {(weekStartMonday ? WEEKDAY_HEADERS_MONDAY : WEEKDAY_HEADERS_SUNDAY).map(
                     (label, i) => (
@@ -361,12 +352,12 @@ export const CalendarBoard = ({
             </div>
 
             <NoteDialog
-                isOpen={isNoteDialogOpen}
-                date={selectedDate || new Date()}
+                isOpen={noteDialog.isOpen}
+                date={noteDialog.date || new Date()}
                 note={selectedTrackerFull?.note || ''}
-                onClose={() => setIsNoteDialogOpen(false)}
+                onClose={noteDialog.close}
                 onSave={handleNoteSave}
             />
-        </div>
+        </DetailPanel>
     );
 };

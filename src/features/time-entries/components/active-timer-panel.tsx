@@ -1,14 +1,11 @@
-import { useProjects } from '@/features/projects/api/get-projects';
-import { useTasks } from '@/features/tasks/api/get-tasks';
 import { useAuth } from '@/lib/auth-context';
 import { Pause, Timer } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
-import { toast } from 'react-toastify';
 import { useActiveTimeEntry } from '../api/get-time-entries';
-import { useStopTimeEntry } from '../api/stop-time-entries';
-import { useUpdateTimeEntry } from '../api/update-time-entries';
+import { useEditableEntryLabel } from '../hooks/use-editable-entry-label';
 import { useElapsedSeconds } from '../hooks/use-elapsed-seconds';
+import { useEntryContextName } from '../hooks/use-entry-context-name';
+import { useStopActiveTimer } from '../hooks/use-stop-active-timer';
 import { formatClock } from '../utils/format-duration';
 
 /**
@@ -22,48 +19,21 @@ export const ActiveTimerPanel = () => {
     const profileId = activeProfileId ?? undefined;
 
     const activeQuery = useActiveTimeEntry({ profileId });
-    const tasksQuery = useTasks({ profileId });
-    const projectsQuery = useProjects({ profileId, includeArchived: true });
-    const stopTimeEntry = useStopTimeEntry();
-    const updateTimeEntry = useUpdateTimeEntry();
-
     const active = activeQuery.data ?? null;
     const elapsed = useElapsedSeconds(active?.started_at, !!active);
 
     // Editable label for the running entry.
-    const [labelDraft, setLabelDraft] = useState('');
-    useEffect(() => {
-        setLabelDraft(active?.label ?? '');
-    }, [active?.id, active?.label]);
+    const {
+        draft: labelDraft,
+        setDraft: setLabelDraft,
+        commit: commitLabel
+    } = useEditableEntryLabel(active);
 
-    const commitLabel = () => {
-        if (!active) return;
-        const next = labelDraft.trim();
-        if (next === (active.label ?? '')) return;
-        updateTimeEntry.mutate({ entryId: active.id, data: { label: next || null } });
-    };
+    // What the running timer is attached to (task, adhoc project).
+    const contextNameFor = useEntryContextName({ profileId, includeProjects: true });
+    const context = active ? contextNameFor(active) : null;
 
-    // What the running timer is attached to (task, adhoc project) plus its label.
-    const context = useMemo(() => {
-        if (!active) return null;
-        if (active.task_id != null) {
-            return tasksQuery.data?.tasks?.find((t) => t.id === active.task_id)?.title ?? null;
-        }
-        if (active.project_id != null) {
-            return (
-                projectsQuery.data?.projects?.find((p) => p.id === active.project_id)?.name ?? null
-            );
-        }
-        return null;
-    }, [active, tasksQuery.data, projectsQuery.data]);
-
-    const handleStop = () => {
-        if (!active || stopTimeEntry.isPending) return;
-        stopTimeEntry.mutate(active.id, {
-            onSuccess: () => toast.success('Timer stopped'),
-            onError: () => toast.error('Failed to stop timer.')
-        });
-    };
+    const { handleStop, isPending: isStopping } = useStopActiveTimer(active);
 
     return (
         <section className='mb-[30px]'>
@@ -117,7 +87,7 @@ export const ActiveTimerPanel = () => {
                         <button
                             type='button'
                             onClick={handleStop}
-                            disabled={stopTimeEntry.isPending}
+                            disabled={isStopping}
                             className='inline-flex items-center gap-1.5 rounded-button border px-3 py-1.5 font-display text-[12.5px] font-semibold transition-colors hover:brightness-125 disabled:opacity-50'
                             style={{
                                 borderColor: 'var(--danger-border)',

@@ -46,6 +46,13 @@ const FIELDS: FieldConfig[] = [
  * the ember input + gradient-save treatment. Validation and sanitization are
  * unchanged; saving still logs the user out (handled by the caller's
  * handleUpdateUser) because credentials may have changed.
+ *
+ * Not rebuilt on `TextField` (components/ui/forms/text-field.tsx): that field
+ * uses its own token set (mono uppercase label + `rounded-button`/`--surface-
+ * input-*` classes) rather than the settings input tokens used here
+ * (`rounded-[9px]` + `rgba(255,255,255,.04)` surface, font-display). Swapping
+ * would visibly change this form, so the hand-rolled label+input+error markup
+ * stays as-is.
  */
 export const UpdateUserForm = ({ user, handleUpdateUser }: UpdateUserFormProps) => {
     const {

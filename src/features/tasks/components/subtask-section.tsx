@@ -1,13 +1,15 @@
 import type { TaskRead } from '@/api';
 import { TaskStatus } from '@/types/types';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowUpFromLine, Check, Trash2 } from 'lucide-react';
+import { ArrowUpFromLine, Trash2 } from 'lucide-react';
 import { useRef, useState, type KeyboardEvent } from 'react';
 import { toast } from 'react-toastify';
 import { useCreateTask } from '../api/create-tasks';
 import { useDeleteTask } from '../api/delete-tasks';
 import { useTasks } from '../api/get-tasks';
 import { useUpdateTask } from '../api/update-tasks';
+import { sortSubtasks } from '../utils/subtasks';
+import { SubtaskRow } from './subtask-row';
 import { formFieldClass, formFieldStyle, formLabelClass } from './task-form-fields';
 
 type SubtaskSectionProps = {
@@ -42,14 +44,9 @@ export const SubtaskSection = ({ parent }: SubtaskSectionProps) => {
 
     // Completed subtasks sink to the bottom; within each group, creation order.
     // The "Hide done" toggle drops completed rows entirely.
-    const subtasks = allSubtasks
-        .filter((task) => !hideDone || task.status !== TaskStatus.DONE)
-        .sort((a, b) => {
-            const aDone = a.status === TaskStatus.DONE ? 1 : 0;
-            const bDone = b.status === TaskStatus.DONE ? 1 : 0;
-            if (aDone !== bDone) return aDone - bDone;
-            return a.created_date.localeCompare(b.created_date) || a.id - b.id;
-        });
+    const subtasks = sortSubtasks(
+        allSubtasks.filter((task) => !hideDone || task.status !== TaskStatus.DONE)
+    );
 
     const handleToggle = (subtask: TaskRead) => {
         const done = subtask.status === TaskStatus.DONE;
@@ -146,75 +143,39 @@ export const SubtaskSection = ({ parent }: SubtaskSectionProps) => {
 
             {subtasks.length > 0 && (
                 <ul className='mb-1.5 flex flex-col'>
-                    {subtasks.map((subtask) => {
-                        const done = subtask.status === TaskStatus.DONE;
-                        return (
-                            <li
-                                key={subtask.id}
-                                className='flex items-center gap-2 border-b py-1.5'
-                                style={{ borderColor: 'var(--surface-input-border)' }}
-                            >
-                                <button
-                                    type='button'
-                                    role='checkbox'
-                                    aria-checked={done}
-                                    aria-label={
-                                        done
-                                            ? `Mark "${subtask.title}" not done`
-                                            : `Mark "${subtask.title}" done`
-                                    }
-                                    onClick={() => handleToggle(subtask)}
-                                    disabled={updateTask.isPending}
-                                    className='flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors disabled:cursor-not-allowed'
-                                    style={{
-                                        borderColor: done
-                                            ? 'var(--color-status-done-check)'
-                                            : 'var(--surface-input-border)',
-                                        backgroundColor: done
-                                            ? 'rgba(63, 107, 74, 0.35)'
-                                            : 'transparent'
-                                    }}
-                                >
-                                    {done && (
-                                        <Check
-                                            size={11}
-                                            style={{ color: 'var(--color-status-done-check)' }}
-                                        />
-                                    )}
-                                </button>
-                                <span
-                                    className={`min-w-0 flex-1 truncate font-mono text-[12px] ${
-                                        done
-                                            ? 'text-text-faint line-through'
-                                            : 'text-text-secondary'
-                                    }`}
-                                    title={subtask.title}
-                                >
-                                    {subtask.title}
-                                </span>
-                                <button
-                                    type='button'
-                                    onClick={() => handlePromote(subtask.id)}
-                                    disabled={updateTask.isPending}
-                                    aria-label={`Promote subtask "${subtask.title}" to a task`}
-                                    title='Promote to a task'
-                                    className='shrink-0 rounded-full p-1 text-text-faint transition-colors hover:text-text-secondary disabled:cursor-not-allowed disabled:opacity-50'
-                                >
-                                    <ArrowUpFromLine size={12} />
-                                </button>
-                                <button
-                                    type='button'
-                                    onClick={() => handleDelete(subtask.id)}
-                                    disabled={deleteTask.isPending}
-                                    aria-label={`Delete subtask "${subtask.title}"`}
-                                    title='Delete subtask'
-                                    className='shrink-0 rounded-full p-1 text-text-faint transition-colors hover:text-[var(--color-danger)] disabled:cursor-not-allowed disabled:opacity-50'
-                                >
-                                    <Trash2 size={12} />
-                                </button>
-                            </li>
-                        );
-                    })}
+                    {subtasks.map((subtask) => (
+                        <SubtaskRow
+                            key={subtask.id}
+                            subtask={subtask}
+                            variant='checklist'
+                            onToggle={() => handleToggle(subtask)}
+                            disabled={updateTask.isPending}
+                            actions={
+                                <>
+                                    <button
+                                        type='button'
+                                        onClick={() => handlePromote(subtask.id)}
+                                        disabled={updateTask.isPending}
+                                        aria-label={`Promote subtask "${subtask.title}" to a task`}
+                                        title='Promote to a task'
+                                        className='shrink-0 rounded-full p-1 text-text-faint transition-colors hover:text-text-secondary disabled:cursor-not-allowed disabled:opacity-50'
+                                    >
+                                        <ArrowUpFromLine size={12} />
+                                    </button>
+                                    <button
+                                        type='button'
+                                        onClick={() => handleDelete(subtask.id)}
+                                        disabled={deleteTask.isPending}
+                                        aria-label={`Delete subtask "${subtask.title}"`}
+                                        title='Delete subtask'
+                                        className='shrink-0 rounded-full p-1 text-text-faint transition-colors hover:text-[var(--color-danger)] disabled:cursor-not-allowed disabled:opacity-50'
+                                    >
+                                        <Trash2 size={12} />
+                                    </button>
+                                </>
+                            }
+                        />
+                    ))}
                 </ul>
             )}
 

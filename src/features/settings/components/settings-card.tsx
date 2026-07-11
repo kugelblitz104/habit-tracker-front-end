@@ -1,43 +1,30 @@
+import {
+    ghostButtonBorder,
+    ghostButtonClass,
+    primaryButtonClass,
+    primaryButtonStyle
+} from '@/components/ui/buttons/button-styles';
+import {
+    fieldLabelClass,
+    fieldLabelStyle,
+    SECTION_LABEL_COLOR,
+    themedInputClass,
+    themedInputStyle
+} from '@/components/ui/forms/input-styles';
 import type { CSSProperties, ReactNode } from 'react';
 
-/** Mono uppercase section-label color from the Settings design frame. */
-export const SETTINGS_LABEL_COLOR = '#a5988a';
-
-/**
- * Ghost button treatment shared across the settings cards ("Switch", "Manage",
- * inline form cancels). Border color comes via inline style so the exact
- * design alpha (rgba(255,255,255,.14)) is preserved.
- */
-export const settingsGhostButtonClass =
-    'rounded-[8px] border px-3 py-1.5 text-[12.5px] text-text-secondary-soft transition-colors ' +
-    'hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50';
-
-export const settingsGhostBorder = 'rgba(255,255,255,.14)';
-
-/** Primary gradient button (Save changes / Create profile). */
-export const settingsPrimaryButtonClass =
-    'inline-block rounded-[9px] px-[18px] py-2.5 text-[13.5px] font-semibold transition-opacity ' +
-    'hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50';
-
-export const settingsPrimaryButtonStyle: CSSProperties = {
-    background: 'var(--button-primary-gradient)',
-    color: 'var(--button-primary-text)'
-};
-
-/** Themed input used by the settings inline forms (Account, connections…). */
-export const settingsInputClass =
-    'w-full rounded-[9px] border px-3 py-2.5 font-display text-[14px] text-text-primary ' +
-    'outline-none transition-colors placeholder:text-text-faint focus-visible:ring-1 ' +
-    'focus-visible:ring-now-accent';
-
-export const settingsInputStyle: CSSProperties = {
-    backgroundColor: 'rgba(255,255,255,.04)',
-    borderColor: 'rgba(255,255,255,.1)'
-};
-
-export const settingsFieldLabelClass = 'mb-1.5 block text-[11.5px]';
-
-export const settingsFieldLabelStyle: CSSProperties = { color: '#9a8f81' };
+// These generic themed tokens now live in `components/ui` (they're used by the
+// auth pages and account form too, not just Settings). Re-exported here under
+// their historical `settings*` names so existing imports keep working.
+export const SETTINGS_LABEL_COLOR = SECTION_LABEL_COLOR;
+export const settingsGhostButtonClass = ghostButtonClass;
+export const settingsGhostBorder = ghostButtonBorder;
+export const settingsPrimaryButtonClass = primaryButtonClass;
+export const settingsPrimaryButtonStyle = primaryButtonStyle;
+export const settingsInputClass = themedInputClass;
+export const settingsInputStyle = themedInputStyle;
+export const settingsFieldLabelClass = fieldLabelClass;
+export const settingsFieldLabelStyle = fieldLabelStyle;
 
 type SettingsCardProps = {
     /** Mono uppercase section label ("Profiles", "Danger zone"…). */

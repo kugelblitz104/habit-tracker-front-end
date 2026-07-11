@@ -1,6 +1,7 @@
+import { ThemedMenuItems } from '@/components/ui/menu';
 import { LogoutModal } from '@/features/auth/components/modals/logout-modal';
 import { useAuth } from '@/lib/auth-context';
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
+import { Menu, MenuButton, MenuItem } from '@headlessui/react';
 import { Check, ChevronDown, LogOut, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -34,14 +35,7 @@ export const ProfileSwitcher = () => {
                     </span>
                     <ChevronDown size={14} className='text-text-muted' />
                 </MenuButton>
-                <MenuItems
-                    anchor={{ to: 'bottom end', gap: 8 }}
-                    className='z-50 w-56 rounded-button border p-1 shadow-popover outline-none'
-                    style={{
-                        backgroundColor: 'var(--bg)',
-                        borderColor: 'var(--surface-card-border)'
-                    }}
-                >
+                <ThemedMenuItems anchor={{ to: 'bottom end', gap: 8 }} className='w-56'>
                     <p className='px-2 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-text-faint'>
                         Profiles
                     </p>
@@ -96,7 +90,7 @@ export const ProfileSwitcher = () => {
                             Logout
                         </button>
                     </MenuItem>
-                </MenuItems>
+                </ThemedMenuItems>
             </Menu>
 
             <LogoutModal

@@ -1,11 +1,7 @@
 import type { TaskRead } from '@/api';
-import {
-    formFieldClass,
-    formFieldStyle,
-    selectOptionStyle
-} from '@/features/tasks/components/task-form-fields';
 import { useMemo } from 'react';
 import { useTasks } from '@/features/tasks/api/get-tasks';
+import { EntitySelect } from './entity-select';
 
 type TaskSelectProps = {
     profileId: number | null | undefined;
@@ -56,24 +52,20 @@ export const TaskSelect = ({ profileId, value, onChange, disabled, id }: TaskSel
         () => buildOrderedOptions(tasksQuery.data?.tasks ?? []),
         [tasksQuery.data]
     );
+    const entityOptions = options.map(({ task, isChild }) => ({
+        value: task.id,
+        label: task.title,
+        indent: isChild
+    }));
 
     return (
-        <select
+        <EntitySelect
             id={id}
-            value={value ?? ''}
+            value={value}
+            onChange={onChange}
             disabled={disabled}
-            onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))}
-            className={`${formFieldClass} disabled:cursor-not-allowed disabled:opacity-60`}
-            style={{ ...formFieldStyle, colorScheme: 'dark' }}
-        >
-            <option style={selectOptionStyle} value=''>
-                No task (untethered)
-            </option>
-            {options.map(({ task, isChild }) => (
-                <option style={selectOptionStyle} key={task.id} value={task.id}>
-                    {isChild ? `  └ ${task.title}` : task.title}
-                </option>
-            ))}
-        </select>
+            options={entityOptions}
+            placeholder='No task (untethered)'
+        />
     );
 };

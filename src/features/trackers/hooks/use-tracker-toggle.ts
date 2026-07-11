@@ -7,8 +7,8 @@ import {
 import {
     createNewTracker,
     findTrackerByDate,
-    getNextTrackerState,
-    getTrackerDisplayStatus
+    getDisplayStatusForDate,
+    getNextTrackerState
 } from '@/features/trackers/utils/tracker-utils';
 import type { DisplayStatus } from '@/types/types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -95,12 +95,7 @@ export const useTrackerToggle = (habit: HabitRead, date: Date): UseTrackerToggle
         );
     };
 
-    const status = getTrackerDisplayStatus(findTrackerByDate(trackers, date), {
-        date,
-        trackers,
-        frequency: habit.frequency,
-        range: habit.range
-    });
+    const status = getDisplayStatusForDate(trackers, date, habit);
 
     return {
         status,

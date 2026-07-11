@@ -7,7 +7,7 @@ import DOMPurify from 'dompurify';
 /**
  * Sanitizes HTML content to prevent XSS attacks
  */
-export const sanitizeHtml = (input: string): string => {
+const sanitizeHtml = (input: string): string => {
     return DOMPurify.sanitize(input, {
         ALLOWED_TAGS: [], // No HTML tags allowed
         ALLOWED_ATTR: []

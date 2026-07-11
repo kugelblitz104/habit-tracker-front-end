@@ -5,7 +5,7 @@ interface JWTPayload {
     [key: string]: unknown;
 }
 
-export const decodeToken = (token: string): JWTPayload | null => {
+const decodeToken = (token: string): JWTPayload | null => {
     try {
         const parts = token.split('.');
         if (parts.length !== 3 || !parts[1]) {

@@ -2,13 +2,15 @@ import type { ProfileRead } from '@/api';
 import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
 import { TimeEntryKind } from '@/types/types';
 import { Coffee, Pause, Play, SkipForward } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useCreateTimeEntry } from '../api/create-time-entries';
 import { useActiveTimeEntry } from '../api/get-time-entries';
 import { useStopTimeEntry } from '../api/stop-time-entries';
-import { useUpdateTimeEntry } from '../api/update-time-entries';
+import { useEditableEntryLabel } from '../hooks/use-editable-entry-label';
 import { useElapsedSeconds } from '../hooks/use-elapsed-seconds';
+import { usePomodoroSession } from '../hooks/use-pomodoro-session';
+import { useStopActiveTimer } from '../hooks/use-stop-active-timer';
 import { formatClock } from '../utils/format-duration';
 import { LabelInput } from './label-input';
 import { ProjectSelect } from './project-select';
@@ -17,27 +19,6 @@ import { TaskSelect } from './task-select';
 type TimerPanelProps = {
     profile: ProfileRead | null;
     profileId: number | null | undefined;
-};
-
-const POMODORO_DEFAULTS = {
-    work: 25,
-    break: 5,
-    longBreak: 15,
-    cycles: 4
-};
-
-/** Best-effort completion alert: always toast, plus a desktop notification when granted. */
-const notify = (title: string, body: string) => {
-    toast.success(`${title} — ${body}`);
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-        if (Notification.permission === 'granted') {
-            try {
-                new Notification(title, { body });
-            } catch {
-                // Notification construction can throw on some platforms; the toast covers it.
-            }
-        }
-    }
 };
 
 /**
@@ -50,23 +31,16 @@ export const TimerPanel = ({ profile, profileId }: TimerPanelProps) => {
     const activeQuery = useActiveTimeEntry({ profileId });
     const createTimeEntry = useCreateTimeEntry();
     const stopTimeEntry = useStopTimeEntry();
-    const updateTimeEntry = useUpdateTimeEntry();
 
     const active = activeQuery.data ?? null;
     const running = !!active;
 
     // Editable label for the running entry, synced when the active entry changes.
-    const [runningLabel, setRunningLabel] = useState('');
-    useEffect(() => {
-        setRunningLabel(active?.label ?? '');
-    }, [active?.id, active?.label]);
-
-    const commitRunningLabel = () => {
-        if (!active) return;
-        const next = runningLabel.trim();
-        if (next === (active.label ?? '')) return;
-        updateTimeEntry.mutate({ entryId: active.id, data: { label: next || null } });
-    };
+    const {
+        draft: runningLabel,
+        setDraft: setRunningLabel,
+        commit: commitRunningLabel
+    } = useEditableEntryLabel(active);
 
     // Mode is user-chosen while idle, but follows the running entry's kind so a
     // timer started elsewhere (e.g. Today) shows correctly here.
@@ -82,75 +56,29 @@ export const TimerPanel = ({ profile, profileId }: TimerPanelProps) => {
     const [projectId, setProjectId] = useState<number | null>(null);
     const [label, setLabel] = useState('');
 
-    const work = profile?.pomodoro_work_minutes ?? POMODORO_DEFAULTS.work;
-    const breakMin = profile?.pomodoro_break_minutes ?? POMODORO_DEFAULTS.break;
-    const longBreakMin = profile?.pomodoro_long_break_minutes ?? POMODORO_DEFAULTS.longBreak;
-    const cycles = profile?.pomodoro_cycles ?? POMODORO_DEFAULTS.cycles;
-    const workSeconds = work * 60;
-
     const elapsed = useElapsedSeconds(active?.started_at, running);
 
-    // Break state (local only — breaks are not tracked as time entries).
-    const [breakUntil, setBreakUntil] = useState<number | null>(null);
-    const [breakIsLong, setBreakIsLong] = useState(false);
-    const [breakRemaining, setBreakRemaining] = useState(0);
-    const [completedWork, setCompletedWork] = useState(0);
-    const onBreak = breakUntil !== null;
+    const {
+        work,
+        breakMin,
+        longBreakMin,
+        cycles,
+        workSeconds,
+        onBreak,
+        breakRemaining,
+        breakIsLong,
+        completedWork,
+        skipBreak
+    } = usePomodoroSession({
+        profile,
+        activeId: active?.id,
+        running,
+        isPomodoro,
+        elapsed,
+        stopEntry: stopTimeEntry.mutate
+    });
 
-    // Guards a single auto-stop when a pomodoro work session reaches its target.
-    const completingRef = useRef(false);
-    useEffect(() => {
-        // Reset the guard whenever the running entry changes (new session).
-        completingRef.current = false;
-    }, [active?.id]);
-
-    // Break countdown ticker.
-    useEffect(() => {
-        if (breakUntil === null) return;
-        const tick = () => {
-            const remaining = Math.max(0, Math.ceil((breakUntil - Date.now()) / 1000));
-            setBreakRemaining(remaining);
-            if (remaining <= 0) {
-                setBreakUntil(null);
-                notify(
-                    breakIsLong ? 'Long break over' : 'Break over',
-                    'Ready for the next session.'
-                );
-            }
-        };
-        tick();
-        const id = setInterval(tick, 1000);
-        return () => clearInterval(id);
-    }, [breakUntil, breakIsLong]);
-
-    const beginBreak = () => {
-        const nextCompleted = completedWork + 1;
-        const isLong = nextCompleted % cycles === 0;
-        setCompletedWork(nextCompleted);
-        setBreakIsLong(isLong);
-        setBreakUntil(Date.now() + (isLong ? longBreakMin : breakMin) * 60 * 1000);
-    };
-
-    // Auto-stop a pomodoro work session once it hits the configured length.
-    useEffect(() => {
-        if (!running || !isPomodoro || onBreak) return;
-        if (elapsed < workSeconds || completingRef.current) return;
-        completingRef.current = true;
-        const entryId = active?.id;
-        if (entryId === undefined) return;
-        stopTimeEntry.mutate(entryId, {
-            onSuccess: () => {
-                notify(
-                    'Pomodoro complete',
-                    `Nice work — time for a ${
-                        (completedWork + 1) % cycles === 0 ? 'long break' : 'break'
-                    }.`
-                );
-                beginBreak();
-            }
-        });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [running, isPomodoro, onBreak, elapsed, workSeconds]);
+    const { handleStop, isPending: isStopping } = useStopActiveTimer(active);
 
     const handleStart = () => {
         if (!profileId || createTimeEntry.isPending) return;
@@ -171,16 +99,6 @@ export const TimerPanel = ({ profile, profileId }: TimerPanelProps) => {
             }
         );
     };
-
-    const handleStop = () => {
-        if (!active || stopTimeEntry.isPending) return;
-        stopTimeEntry.mutate(active.id, {
-            onSuccess: () => toast.success('Timer stopped'),
-            onError: (error) => toast.error(apiErrorMessage(error, 'Failed to stop timer'))
-        });
-    };
-
-    const skipBreak = () => setBreakUntil(null);
 
     // What the big readout shows and how it's labeled.
     let displaySeconds: number;
@@ -350,7 +268,7 @@ export const TimerPanel = ({ profile, profileId }: TimerPanelProps) => {
                     <button
                         type='button'
                         onClick={handleStop}
-                        disabled={stopTimeEntry.isPending}
+                        disabled={isStopping}
                         className='inline-flex items-center gap-2 rounded-button border px-6 py-2.5 font-display text-[14px] font-semibold transition-colors hover:brightness-125 disabled:opacity-50'
                         style={{
                             borderColor: 'var(--danger-border)',

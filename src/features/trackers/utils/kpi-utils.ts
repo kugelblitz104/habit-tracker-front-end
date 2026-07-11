@@ -9,7 +9,7 @@ import { isAutoSkipped, toLocalDateString } from './tracker-utils';
  * no weekday rates, and it carries the habit `id`. `kpi-adapter.ts` converts
  * this into the server shape when patching query caches.
  */
-export type ClientHabitKPIs = {
+type ClientHabitKPIs = {
     id: number;
     current_streak: number | null;
     longest_streak: number | null;

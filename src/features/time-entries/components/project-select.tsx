@@ -1,9 +1,5 @@
-import {
-    formFieldClass,
-    formFieldStyle,
-    selectOptionStyle
-} from '@/features/tasks/components/task-form-fields';
 import { useProjects } from '@/features/projects/api/get-projects';
+import { EntitySelect } from './entity-select';
 
 type ProjectSelectProps = {
     profileId: number | null | undefined;
@@ -22,25 +18,19 @@ export const ProjectSelect = ({ profileId, value, onChange, disabled, id }: Proj
     const projects = (projectsQuery.data?.projects ?? []).filter(
         (project) => !project.archived || project.id === value
     );
+    const options = projects.map((project) => ({
+        value: project.id,
+        label: project.archived ? `${project.name} (archived)` : project.name
+    }));
 
     return (
-        <select
+        <EntitySelect
             id={id}
-            value={value ?? ''}
+            value={value}
+            onChange={onChange}
             disabled={disabled}
-            onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))}
-            className={`${formFieldClass} disabled:cursor-not-allowed disabled:opacity-60`}
-            style={{ ...formFieldStyle, colorScheme: 'dark' }}
-        >
-            <option style={selectOptionStyle} value=''>
-                No project
-            </option>
-            {projects.map((project) => (
-                <option style={selectOptionStyle} key={project.id} value={project.id}>
-                    {project.name}
-                    {project.archived ? ' (archived)' : ''}
-                </option>
-            ))}
-        </select>
+            options={options}
+            placeholder='No project'
+        />
     );
 };

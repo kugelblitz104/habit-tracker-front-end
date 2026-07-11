@@ -1,74 +1,17 @@
 import type { ProfileRead } from '@/api';
+import { EmberToggle } from '@/components/ui/forms/ember-toggle';
+import { ThemedMenuItems } from '@/components/ui/menu';
 import { useUpdateProfile } from '@/features/profiles/api/update-profiles';
-import { ProfileAvatar } from '@/features/profiles/components/profile-avatar';
 import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
+import { ProfileSelector } from '@/features/settings/components/profile-selector';
 import { PomodoroSettingsGroup } from '@/features/time-entries/components/pomodoro-settings-group';
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
+import { Menu, MenuButton, MenuItem } from '@headlessui/react';
 import { Check, ChevronDown } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { EmberToggle } from './ember-toggle';
 import { SettingsCard } from './settings-card';
 
-const menuItemsClass = 'z-50 rounded-button border p-1 shadow-popover outline-none';
-
-const menuItemsStyle = {
-    backgroundColor: 'var(--bg)',
-    borderColor: 'var(--surface-card-border)'
-} as const;
-
-type ProfileSelectorProps = {
-    profiles: ProfileRead[];
-    selected: ProfileRead;
-    onSelect: (profileId: number) => void;
-};
-
-/**
- * "Editing {avatar} {name} ▾" pill — picks which profile the preferences card
- * (and the Calendars subgroup in Connections) is scoped to.
- */
-const ProfileSelector = ({ profiles, selected, onSelect }: ProfileSelectorProps) => (
-    <Menu as='div' className='relative'>
-        <MenuButton
-            className='inline-flex items-center gap-[7px] rounded-chip border px-[11px] py-1 text-[12px] text-text-secondary-soft outline-none transition-colors hover:text-text-primary focus-visible:ring-2 focus-visible:ring-now-accent'
-            style={{
-                backgroundColor: 'rgba(255,255,255,.04)',
-                borderColor: 'rgba(255,255,255,.1)'
-            }}
-        >
-            Editing
-            <span className='inline-flex items-center gap-[5px] font-semibold'>
-                <ProfileAvatar profile={selected} size={14} />
-                {selected.name}
-            </span>
-            <ChevronDown size={12} className='text-text-muted' />
-        </MenuButton>
-        <MenuItems
-            anchor={{ to: 'bottom end', gap: 6 }}
-            className={`w-52 ${menuItemsClass}`}
-            style={menuItemsStyle}
-        >
-            {profiles.map((profile) => (
-                <MenuItem key={profile.id}>
-                    <button
-                        type='button'
-                        onClick={() => onSelect(profile.id)}
-                        className='flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-left font-display text-[13px] text-text-secondary data-focus:bg-white/5'
-                    >
-                        <ProfileAvatar profile={profile} size={18} />
-                        <span className='truncate'>{profile.name}</span>
-                        {profile.id === selected.id && (
-                            <Check
-                                size={13}
-                                className='ml-auto shrink-0 text-now-accent'
-                                strokeWidth={3}
-                            />
-                        )}
-                    </button>
-                </MenuItem>
-            ))}
-        </MenuItems>
-    </Menu>
-);
+const menuItemClass =
+    'flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-left font-display text-[13px] text-text-secondary data-focus:bg-white/5';
 
 type ToggleRowConfig = {
     key:
@@ -240,17 +183,13 @@ export const ProfilePreferencesCard = ({
                         {landingLabel}
                         <ChevronDown size={12} className='text-text-muted' />
                     </MenuButton>
-                    <MenuItems
-                        anchor={{ to: 'bottom end', gap: 6 }}
-                        className={`w-36 ${menuItemsClass}`}
-                        style={menuItemsStyle}
-                    >
+                    <ThemedMenuItems anchor={{ to: 'bottom end', gap: 6 }} className='w-36'>
                         {LANDING_OPTIONS.map((option) => (
                             <MenuItem key={option.value}>
                                 <button
                                     type='button'
                                     onClick={() => handleLanding(option.value)}
-                                    className='flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-left font-display text-[13px] text-text-secondary data-focus:bg-white/5'
+                                    className={menuItemClass}
                                 >
                                     {option.label}
                                     {option.value === (profile.default_landing ?? 'today') && (
@@ -263,7 +202,7 @@ export const ProfilePreferencesCard = ({
                                 </button>
                             </MenuItem>
                         ))}
-                    </MenuItems>
+                    </ThemedMenuItems>
                 </Menu>
             </div>
 

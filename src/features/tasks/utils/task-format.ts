@@ -3,7 +3,7 @@ import { parseLocalDate, toLocalDateString } from '@/lib/date-utils';
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 /** Ordinal suffix for a day-of-month (1st, 2nd, 3rd, 4th, …). */
-export const ordinal = (day: number): string => {
+const ordinal = (day: number): string => {
     const rem100 = day % 100;
     if (rem100 >= 11 && rem100 <= 13) return `${day}th`;
     switch (day % 10) {

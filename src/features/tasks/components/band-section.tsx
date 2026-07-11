@@ -2,6 +2,8 @@ import type { ProjectRead, TaskRead } from '@/api';
 import type { TaskStatus } from '@/types/types';
 import { ChevronRight } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { upwardFrom } from '../utils/task-bands';
+import { SectionHeader } from './section-header';
 import { TaskCard, type ActiveBand } from './task-card';
 
 type BandMeta = {
@@ -73,18 +75,10 @@ export const BandSection = ({
 
     // The last row(s) open their status picker upward so it never covers the
     // section below.
-    const upwardFrom = Math.max(tasks.length - 2, 0);
+    const upwardIdx = upwardFrom(tasks.length);
 
     const label = (
-        <>
-            <h2
-                className='font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em]'
-                style={{ color: meta.labelColor }}
-            >
-                {meta.label}
-            </h2>
-            <span className='font-mono text-[11px] text-text-faint'>{tasks.length}</span>
-        </>
+        <SectionHeader label={meta.label} color={meta.labelColor} count={tasks.length} />
     );
 
     return (
@@ -138,7 +132,7 @@ export const BandSection = ({
                                 onToggleSubtasks ? () => onToggleSubtasks(task.id) : undefined
                             }
                             onStartTimer={onStartTimer ? () => onStartTimer(task.id) : undefined}
-                            openUpward={i >= upwardFrom}
+                            openUpward={i >= upwardIdx}
                         />
                     ))}
                 </div>

@@ -6,6 +6,13 @@ type LabeledSwitchProps = {
     onChange: (checked: boolean) => void;
 };
 
+// Not delegated to `EmberToggle`: this is a different visual treatment (a
+// classic h-6 w-11 rounded-full track tinted with `--color-habit-accent` and a
+// sliding white knob) rather than the ember pill (custom width/height, warm
+// gradient track, absolutely-positioned knob). Delegating would require
+// EmberToggle to grow a habit-accent color variant and a differently-shaped
+// track, which risks a visible regression here — left as its own
+// implementation instead.
 export const LabeledSwitch = ({ label, checked, onChange }: LabeledSwitchProps) => {
     return (
         <Field className='mb-3 flex items-center justify-between'>

@@ -1,3 +1,4 @@
+import { POPOVER_PANEL_CLASS, popoverPanelStyle } from '@/components/ui/menu';
 import { TaskStatus, type TaskBand } from '@/types/types';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { Check } from 'lucide-react';
@@ -48,11 +49,8 @@ export const StatusControl = ({
             </PopoverButton>
             <PopoverPanel
                 anchor={{ to: openUpward ? 'top start' : 'bottom start', gap: 8 }}
-                className='z-50 w-52 rounded-button border p-1 shadow-popover outline-none'
-                style={{
-                    backgroundColor: 'var(--bg)',
-                    borderColor: 'var(--surface-card-border)'
-                }}
+                className={`w-52 ${POPOVER_PANEL_CLASS}`}
+                style={popoverPanelStyle}
             >
                 {({ close }) => (
                     <ul className='font-display text-[13px]'>

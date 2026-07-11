@@ -1,20 +1,15 @@
 import type { CalendarEventRead } from '@/api';
 import { useCalendarConnections } from '@/features/calendar/api/get-calendar-connections';
 import { useCalendarEvents } from '@/features/calendar/api/get-calendar-events';
+import {
+    DAY_PRESETS,
+    useScheduleWindowDays
+} from '@/features/calendar/hooks/use-schedule-window-days';
+import { useHiddenCalendars } from '@/features/calendar/hooks/use-hidden-calendars';
+import { groupUpcomingEvents } from '@/features/calendar/utils/group-upcoming-events';
 import { useAuth } from '@/lib/auth-context';
 import { getBrowserTimeZone, parseLocalDate, toLocalDateString } from '@/lib/date-utils';
 import { CalendarDays } from 'lucide-react';
-import { useEffect, useState } from 'react';
-
-// How far ahead the schedule looks (includes today). Backend caps at 14.
-const DAY_PRESETS = [
-    { days: 1, label: 'Today' },
-    { days: 3, label: '3d' },
-    { days: 7, label: '1w' },
-    { days: 14, label: '2w' }
-] as const;
-const DEFAULT_WINDOW_DAYS = 7;
-const SCHEDULE_DAYS_KEY = 'today_schedule_days';
 
 // The panel lives on the Today page, so the upcoming list can't grow
 // unbounded: show at most this many upcoming rows, then a "+n more" line.
@@ -118,15 +113,7 @@ export const TodaySchedule = () => {
     const tz = getBrowserTimeZone();
 
     // How many days ahead to show (persisted per browser).
-    const [windowDays, setWindowDays] = useState(DEFAULT_WINDOW_DAYS);
-    useEffect(() => {
-        const stored = Number(localStorage.getItem(SCHEDULE_DAYS_KEY));
-        if (DAY_PRESETS.some((preset) => preset.days === stored)) setWindowDays(stored);
-    }, []);
-    const changeWindow = (days: number) => {
-        setWindowDays(days);
-        localStorage.setItem(SCHEDULE_DAYS_KEY, String(days));
-    };
+    const { windowDays, changeWindow } = useScheduleWindowDays();
 
     const connectionsQuery = useCalendarConnections({
         profileId,
@@ -139,26 +126,7 @@ export const TodaySchedule = () => {
     // View-side calendar visibility: the legend acts as checkboxes so a shared
     // calendar (e.g. a partner's) can be hidden from this view without touching
     // its Settings on/off state. Persisted per profile.
-    const hiddenStorageKey = profileId ? `today_schedule_hidden_calendars_${profileId}` : null;
-    const [hiddenIds, setHiddenIds] = useState<Set<number>>(new Set());
-    useEffect(() => {
-        if (!hiddenStorageKey) return;
-        try {
-            const raw = localStorage.getItem(hiddenStorageKey);
-            setHiddenIds(raw ? new Set<number>(JSON.parse(raw)) : new Set());
-        } catch {
-            setHiddenIds(new Set());
-        }
-    }, [hiddenStorageKey]);
-    const toggleHidden = (id: number) => {
-        setHiddenIds((prev) => {
-            const next = new Set(prev);
-            if (next.has(id)) next.delete(id);
-            else next.add(id);
-            if (hiddenStorageKey) localStorage.setItem(hiddenStorageKey, JSON.stringify([...next]));
-            return next;
-        });
-    };
+    const { hiddenIds, toggleHidden } = useHiddenCalendars(profileId);
 
     const eventsQuery = useCalendarEvents({
         profileId,
@@ -180,26 +148,13 @@ export const TodaySchedule = () => {
     const todayEvents = visibleEvents.filter((event) => event.event_date === targetDate);
     const upcomingEvents = visibleEvents.filter((event) => event.event_date > targetDate);
 
-    // Group upcoming events by day. The server orders by event_date (all-day
-    // first within each day), so contiguous runs are complete day groups.
-    const upcomingDays: { date: string; events: CalendarEventRead[] }[] = [];
-    for (const event of upcomingEvents) {
-        const lastDay = upcomingDays[upcomingDays.length - 1];
-        if (lastDay && lastDay.date === event.event_date) lastDay.events.push(event);
-        else upcomingDays.push({ date: event.event_date, events: [event] });
-    }
-
-    // Cap total visible upcoming rows; truncate mid-day if needed.
-    let upcomingBudget = UPCOMING_EVENT_CAP;
-    const visibleUpcomingDays: { date: string; events: CalendarEventRead[] }[] = [];
-    for (const day of upcomingDays) {
-        if (upcomingBudget <= 0) break;
-        visibleUpcomingDays.push({ date: day.date, events: day.events.slice(0, upcomingBudget) });
-        upcomingBudget -= day.events.length;
-    }
-    const hiddenUpcomingCount =
-        upcomingEvents.length -
-        visibleUpcomingDays.reduce((count, day) => count + day.events.length, 0);
+    // Group upcoming events by day and cap the total rows shown (truncating
+    // mid-day if needed). The server orders by event_date (all-day first
+    // within each day), so contiguous runs are complete day groups.
+    const { days: visibleUpcomingDays, hiddenCount: hiddenUpcomingCount } = groupUpcomingEvents(
+        upcomingEvents,
+        UPCOMING_EVENT_CAP
+    );
 
     // Per-profile feature toggle: calendars off (or profile not loaded yet)
     // → no section at all.

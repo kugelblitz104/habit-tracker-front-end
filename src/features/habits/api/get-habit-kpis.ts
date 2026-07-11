@@ -12,7 +12,7 @@ export const getHabitKpis = async (habitId: number): Promise<HabitKPIs> => {
     return await HabitsService.readHabitKpisHabitsHabitIdKpisGet(habitId, getBrowserTimeZone());
 };
 
-export const getHabitKpisQueryOptions = (habitId: number | null | undefined) => {
+const getHabitKpisQueryOptions = (habitId: number | null | undefined) => {
     return queryOptions({
         queryKey: ['kpis', { habitId }],
         queryFn: () => getHabitKpis(habitId!),

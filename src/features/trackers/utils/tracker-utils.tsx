@@ -1,4 +1,4 @@
-import type { TrackerCreate, TrackerLite, TrackerRead, TrackerUpdate } from '@/api';
+import type { HabitRead, TrackerCreate, TrackerLite, TrackerRead, TrackerUpdate } from '@/api';
 import { toLocalDateString } from '@/lib/date-utils';
 import { DisplayStatus, TrackerStatus } from '@/types/types';
 import { Check, ChevronsRight, Square } from 'lucide-react';
@@ -78,6 +78,27 @@ export const getTrackerDisplayStatus = (
     }
 
     return DisplayStatus.NOT_COMPLETED;
+};
+
+/**
+ * Resolve the display status for `date` from a tracker list: finds the tracker
+ * for that date (if any) and folds in auto-skip eligibility from the habit's
+ * frequency/range. Shared by the dashboard row, the detail calendar's day
+ * cells, and the Today panel's toggle so all three read a date's status the
+ * same way.
+ */
+export const getDisplayStatusForDate = (
+    trackers: TrackerLite[],
+    date: Date,
+    habit: Pick<HabitRead, 'frequency' | 'range'>
+): DisplayStatus => {
+    const tracker = findTrackerByDate(trackers, date);
+    return getTrackerDisplayStatus(tracker, {
+        date,
+        trackers,
+        frequency: habit.frequency,
+        range: habit.range
+    });
 };
 
 /**

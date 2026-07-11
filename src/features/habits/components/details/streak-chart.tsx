@@ -1,5 +1,6 @@
 import type { HabitStreak } from '@/api';
 import { parseLocalDate, toLocalDateString } from '@/lib/date-utils';
+import { DetailPanel } from './detail-panel';
 
 type StreakChartProps = {
     /** Streaks from the server, oldest-first (the ongoing streak, if any, is last). */
@@ -7,11 +8,6 @@ type StreakChartProps = {
     /** How many of the most-recent streaks to display. */
     max?: number;
 };
-
-const PANEL =
-    'bg-[var(--habit-container-bg)] border border-[var(--habit-container-border)] rounded-card px-5 py-[18px]';
-const TITLE =
-    'm-0 font-display text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--color-habit-label)]';
 
 const startLabel = (dateString: string): string =>
     parseLocalDate(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -27,18 +23,16 @@ export const StreakChart = ({ streaks, max = 6 }: StreakChartProps) => {
 
     if (rows.length === 0) {
         return (
-            <div className={PANEL}>
-                <h2 className={TITLE}>Recent streaks</h2>
+            <DetailPanel title='Recent streaks'>
                 <div className='mt-3 font-mono text-[10.5px] text-[#5f7688]'>No streaks yet</div>
-            </div>
+            </DetailPanel>
         );
     }
 
     const longest = Math.max(...rows.map((s) => s.length));
 
     return (
-        <div className={PANEL}>
-            <h2 className={TITLE}>Recent streaks</h2>
+        <DetailPanel title='Recent streaks'>
             <div className='mt-[14px] flex flex-col gap-2'>
                 {rows.map((streak, i) => {
                     const isNow = streak.end_date === todayStr;
@@ -68,6 +62,6 @@ export const StreakChart = ({ streaks, max = 6 }: StreakChartProps) => {
                     );
                 })}
             </div>
-        </div>
+        </DetailPanel>
     );
 };

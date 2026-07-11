@@ -1,7 +1,8 @@
+import { MENU_ITEM_CLASS, ThemedMenuItems } from '@/components/ui/menu';
 import { ProfileSwitcher } from '@/features/profiles/components/profile-switcher';
 import { useAuth } from '@/lib/auth-context';
 import { PAGE_MAX_WIDTH } from '@/lib/layout';
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
+import { Menu, MenuButton, MenuItem } from '@headlessui/react';
 import { Check, Menu as MenuIcon } from 'lucide-react';
 import React from 'react';
 import { Link, useLocation } from 'react-router';
@@ -47,11 +48,6 @@ function activeTabKey(pathname: string): string | null {
     if (pathname.startsWith('/timer')) return '/timer';
     return null;
 }
-
-const menuItemsStyle = {
-    backgroundColor: 'var(--bg)',
-    borderColor: 'var(--surface-card-border)'
-} as const;
 
 /**
  * Persistent top navigation shared by Today / Habits / Projects / Timer (and
@@ -134,19 +130,12 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
                         <MenuIcon size={18} className='text-text-secondary' />
                         {activeTab?.label ?? 'Menu'}
                     </MenuButton>
-                    <MenuItems
-                        anchor={{ to: 'bottom start', gap: 4 }}
-                        className='z-50 w-44 rounded-button border p-1 shadow-popover outline-none'
-                        style={menuItemsStyle}
-                    >
+                    <ThemedMenuItems anchor={{ to: 'bottom start', gap: 4 }} className='w-44'>
                         {tabs.map((tab) => {
                             const active = tab.to === activeKey;
                             return (
                                 <MenuItem key={tab.to}>
-                                    <Link
-                                        to={tab.to}
-                                        className='flex w-full items-center gap-2 rounded-[6px] px-2 py-2 text-left font-display text-[14px] text-text-secondary data-focus:bg-white/5'
-                                    >
+                                    <Link to={tab.to} className={MENU_ITEM_CLASS}>
                                         {tab.label}
                                         {active && (
                                             <Check
@@ -159,7 +148,7 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
                                 </MenuItem>
                             );
                         })}
-                    </MenuItems>
+                    </ThemedMenuItems>
                 </Menu>
 
                 <div className='flex items-center gap-2'>

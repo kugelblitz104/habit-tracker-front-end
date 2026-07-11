@@ -9,8 +9,8 @@ import { calculateStreaks, getCurrentStreakLength } from '@/features/trackers/ut
 import {
     createNewTracker,
     findTrackerByDate,
+    getDisplayStatusForDate,
     getNextTrackerState,
-    getTrackerDisplayStatus,
     getTrackerIcon,
     NotePip
 } from '@/features/trackers/utils/tracker-utils';
@@ -110,15 +110,7 @@ export const HabitListElement = ({
     }, [habit.id, currentStreak, onStreakChange]);
 
     // functions
-    const getStatus = (date: Date): DisplayStatus => {
-        const tracker = findTrackerByDate(trackers, date);
-        return getTrackerDisplayStatus(tracker, {
-            date,
-            trackers: trackers as any, // TrackerLite[] is compatible for auto-skip checking
-            frequency: habit.frequency,
-            range: habit.range
-        });
-    };
+    const getStatus = (date: Date): DisplayStatus => getDisplayStatusForDate(trackers, date, habit);
 
     const handleCheckboxClick = (date: Date) => {
         const tracker = findTrackerByDate(trackers, date);

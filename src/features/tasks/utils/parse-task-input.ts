@@ -60,7 +60,7 @@ const pad2 = (n: number) => String(n).padStart(2, '0');
  * date. Accepts `M-D`, `M/D`, `M-D-YY`, `M-D-YYYY` (and `/` variants). A missing
  * year defaults to `fallbackYear`; a two-digit year maps to 2000+YY.
  */
-export const parseFlexibleDate = (raw: string, fallbackYear: number): string | null => {
+const parseFlexibleDate = (raw: string, fallbackYear: number): string | null => {
     const parts = raw.split(/[-/]/);
     if (parts.length < 2 || parts.length > 3) return null;
     if (parts.some((p) => p === '' || !/^\d+$/.test(p))) return null;

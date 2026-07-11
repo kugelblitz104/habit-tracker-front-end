@@ -2,15 +2,15 @@ import type { ProjectRead, TaskRead } from '@/api';
 import { sanitizeText } from '@/lib/input-sanitization';
 import { useLongPress } from '@/lib/use-long-press';
 import { TaskStatus, type TaskBand } from '@/types/types';
-import { ChevronRight, ListChecks } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router';
+import { useLocation } from 'react-router';
 import { getDueInfo, getScheduledLabel } from '../utils/task-format';
 import { CardSubtaskChecklist } from './card-subtask-checklist';
 import { PriorityMeter } from './priority-meter';
 import { SubtaskQuickAdd } from './subtask-quick-add';
 import { STATUS_META } from './status-config';
 import { StatusControl } from './status-control';
+import { TaskCardMetaRow } from './task-card-meta-row';
 import { TaskContextMenu, type MenuPoint } from './task-context-menu';
 
 export type ActiveBand = Exclude<TaskBand, 'hidden'>;
@@ -112,7 +112,6 @@ export const TaskCard = ({
     const subtaskCount = task.subtask_count ?? 0;
     const subtaskDoneCount = task.subtask_done_count ?? 0;
     const allSubtasksDone = subtaskCount > 0 && subtaskDoneCount === subtaskCount;
-    const doneMeta = STATUS_META[TaskStatus.DONE];
 
     // Merge extra context into the status pill so a word isn't shown twice:
     // a blocked task with a reason reads "blocked · <reason>", and a scheduled
@@ -215,140 +214,23 @@ export const TaskCard = ({
                     </button>
 
                     {/* Meta row — always directly beneath the title, left-aligned. */}
-                    <div className='mt-1 flex flex-wrap items-center gap-2 font-mono text-[11px]'>
-                        {project && (
-                            <Link
-                                to={`/projects/${project.id}`}
-                                state={{ from: pathname }}
-                                className='font-semibold transition-opacity hover:opacity-80'
-                                style={{ color: project.color }}
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                {project.name}
-                            </Link>
-                        )}
-
-                        {statusMeta.pillText && statusMeta.pillBg && (
-                            <span
-                                className='inline-block max-w-[220px] truncate rounded-chip px-2 py-0.5 align-bottom'
-                                style={
-                                    // A blocked task's pill is a hard-to-miss red so its
-                                    // reason jumps out.
-                                    status === TaskStatus.BLOCKED
-                                        ? {
-                                              color: 'var(--color-danger)',
-                                              backgroundColor:
-                                                  'var(--danger-bg, rgba(193,78,106,0.14))',
-                                              border: '1px solid var(--danger-border)'
-                                          }
-                                        : {
-                                              color: statusMeta.pillText,
-                                              backgroundColor: statusMeta.pillBg
-                                          }
-                                }
-                                title={pillLabel}
-                            >
-                                {pillLabel}
-                            </span>
-                        )}
-
-                        {due && (
-                            <span
-                                className='rounded-chip px-2 py-0.5'
-                                style={
-                                    due.hot
-                                        ? {
-                                              color: 'var(--color-status-duetoday)',
-                                              backgroundColor: 'var(--status-duetoday-bg)'
-                                          }
-                                        : { color: 'var(--color-text-muted)' }
-                                }
-                            >
-                                {due.label}
-                            </span>
-                        )}
-
-                        {subtaskCount > 0 &&
-                            (onToggleSubtasks ? (
-                                <button
-                                    type='button'
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onToggleSubtasks();
-                                    }}
-                                    aria-expanded={subtasksOpen}
-                                    className='inline-flex items-center gap-1 rounded-chip px-2 py-0.5 transition-colors'
-                                    style={
-                                        allSubtasksDone
-                                            ? {
-                                                  color: doneMeta.pillText ?? undefined,
-                                                  backgroundColor: doneMeta.pillBg ?? undefined
-                                              }
-                                            : { color: 'var(--color-text-muted)' }
-                                    }
-                                    title={`${subtaskDoneCount} of ${subtaskCount} subtasks done`}
-                                >
-                                    <ListChecks size={11} />
-                                    {subtaskDoneCount}/{subtaskCount}
-                                    <ChevronRight
-                                        size={11}
-                                        className={`transition-transform ${
-                                            subtasksOpen ? 'rotate-90' : ''
-                                        }`}
-                                    />
-                                </button>
-                            ) : (
-                                <span
-                                    className='inline-flex items-center gap-1 rounded-chip px-2 py-0.5'
-                                    style={
-                                        allSubtasksDone
-                                            ? {
-                                                  color: doneMeta.pillText ?? undefined,
-                                                  backgroundColor: doneMeta.pillBg ?? undefined
-                                              }
-                                            : { color: 'var(--color-text-muted)' }
-                                    }
-                                    title={`${subtaskDoneCount} of ${subtaskCount} subtasks done`}
-                                >
-                                    <ListChecks size={11} />
-                                    {subtaskDoneCount}/{subtaskCount}
-                                </span>
-                            ))}
-
-                        {task.external_ref && task.external_url && (
-                            <a
-                                href={task.external_url}
-                                target='_blank'
-                                rel='noreferrer'
-                                onClick={(e) => e.stopPropagation()}
-                                className='rounded-chip px-2 py-0.5'
-                                style={{
-                                    color: 'var(--color-azure-text)',
-                                    backgroundColor: 'var(--azure-bg)',
-                                    border: '1px solid var(--azure-border)'
-                                }}
-                            >
-                                {task.external_ref} ↗
-                            </a>
-                        )}
-
-                        {hasNotes && (
-                            <button
-                                type='button'
-                                onClick={onToggleNotes}
-                                aria-expanded={notesOpen}
-                                className='inline-flex items-center gap-0.5 text-text-faint hover:text-text-muted'
-                            >
-                                notes
-                                <ChevronRight
-                                    size={12}
-                                    className={`transition-transform ${
-                                        notesOpen ? 'rotate-90' : ''
-                                    }`}
-                                />
-                            </button>
-                        )}
-                    </div>
+                    <TaskCardMetaRow
+                        task={task}
+                        project={project}
+                        pathname={pathname}
+                        statusMeta={statusMeta}
+                        status={status}
+                        pillLabel={pillLabel}
+                        due={due}
+                        subtaskCount={subtaskCount}
+                        subtaskDoneCount={subtaskDoneCount}
+                        allSubtasksDone={allSubtasksDone}
+                        subtasksOpen={subtasksOpen}
+                        onToggleSubtasks={onToggleSubtasks}
+                        hasNotes={hasNotes}
+                        notesOpen={notesOpen}
+                        onToggleNotes={onToggleNotes}
+                    />
                 </div>
 
                 <div className='pt-1.5'>

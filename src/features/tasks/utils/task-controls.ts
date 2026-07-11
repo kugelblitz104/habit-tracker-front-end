@@ -1,6 +1,7 @@
 import type { ProjectRead, TaskRead } from '@/api';
 import { TaskStatus } from '@/types/types';
 import { STATUS_META } from '../components/status-config';
+import { PRIORITY_LABELS } from './priority-config';
 
 /**
  * Sort / group / filter model for the flat task surfaces (the dedicated
@@ -31,7 +32,7 @@ export const DEFAULT_TASK_CONTROLS: TaskControlsState = {
     filterStatus: 'all'
 };
 
-export type TaskSection = {
+type TaskSection = {
     key: string;
     /** Section header; null renders no header (flat list). */
     label: string | null;
@@ -39,7 +40,7 @@ export type TaskSection = {
     tasks: TaskRead[];
 };
 
-export const PRIORITY_LABELS = ['None', 'Low', 'Medium', 'High'];
+export { PRIORITY_LABELS };
 
 // Fixed section order for the priority / status groupings.
 const PRIORITY_ORDER = [3, 2, 1, 0];

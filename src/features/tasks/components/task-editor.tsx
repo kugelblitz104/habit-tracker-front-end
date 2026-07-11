@@ -5,8 +5,8 @@ import { TaskStatus } from '@/types/types';
 import { Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { useDeleteTask } from '../api/delete-tasks';
 import { useUpdateTask } from '../api/update-tasks';
+import { useDeleteTaskWithConfirm } from '../hooks/use-delete-task-with-confirm';
 import { SubtaskSection } from './subtask-section';
 import { useTimeEntrySummary } from '@/features/time-entries/api/get-time-entries';
 import { formatHumanDuration } from '@/features/time-entries/utils/format-duration';
@@ -42,7 +42,7 @@ export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
     const { activeProfile } = useAuth();
     const showEstimatedEffort = activeProfile?.show_estimated_effort ?? false;
     const updateTask = useUpdateTask();
-    const deleteTask = useDeleteTask();
+    const { deleteWithConfirm, isPending: isDeletePending } = useDeleteTaskWithConfirm();
 
     const status = (task.status ?? TaskStatus.OPEN) as TaskStatus;
     const isBlocked = status === TaskStatus.BLOCKED;
@@ -135,17 +135,7 @@ export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
     // Hard-delete: confirm first (deletion is irreversible), then remove the task.
     // The delete mutation invalidates the ['tasks'] / project caches, so the task
     // drops out of every band once the confirmation resolves.
-    const handleDelete = () => {
-        if (deleteTask.isPending) return;
-        if (!window.confirm('Delete this task? This cannot be undone.')) return;
-        deleteTask.mutate(task.id, {
-            onSuccess: () => {
-                toast.success('Task deleted');
-                (onDeleted ?? onClose)();
-            },
-            onError: () => toast.error('Failed to delete task. Please try again.')
-        });
-    };
+    const handleDelete = () => deleteWithConfirm(task.id, { onSuccess: onDeleted ?? onClose });
 
     return (
         <div className='mt-3 flex flex-col gap-3 rounded-button border p-3' style={formFieldStyle}>
@@ -249,7 +239,7 @@ export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
                 <button
                     type='button'
                     onClick={handleDelete}
-                    disabled={deleteTask.isPending}
+                    disabled={isDeletePending}
                     className='inline-flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11.5px] transition-colors hover:brightness-125 disabled:cursor-not-allowed disabled:opacity-50'
                     style={{
                         borderColor: 'var(--danger-border)',
@@ -257,7 +247,7 @@ export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
                     }}
                 >
                     <Trash2 size={13} />
-                    {deleteTask.isPending ? 'Deleting…' : 'Delete task'}
+                    {isDeletePending ? 'Deleting…' : 'Delete task'}
                 </button>
                 <div className='flex items-center gap-2'>
                     <button

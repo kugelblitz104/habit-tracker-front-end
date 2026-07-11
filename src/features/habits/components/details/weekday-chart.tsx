@@ -1,3 +1,5 @@
+import { DetailPanel } from './detail-panel';
+
 type WeekdayChartProps = {
     /**
      * Length-7 completion rates (0.0–1.0) indexed by Python weekday
@@ -7,11 +9,6 @@ type WeekdayChartProps = {
     /** Profile preference: columns render Monday-first (default) or Sunday-first. */
     weekStartMonday?: boolean;
 };
-
-const PANEL =
-    'bg-[var(--habit-container-bg)] border border-[var(--habit-container-border)] rounded-card px-5 py-[18px]';
-const TITLE =
-    'm-0 font-display text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--color-habit-label)]';
 
 // Rates are indexed by Python weekday (Mon = 0 … Sun = 6), so each display
 // column carries the `py` index it reads from. Monday-first columns read
@@ -45,8 +42,7 @@ export const WeekdayChart = ({ rates, weekStartMonday = true }: WeekdayChartProp
     const strongThreshold = maxRate * 0.5;
 
     return (
-        <div className={PANEL}>
-            <h2 className={TITLE}>By weekday</h2>
+        <DetailPanel title='By weekday'>
             <div className='mt-4 flex h-[92px] items-end gap-[9px]'>
                 {display.map((col, i) => {
                     const rate = safeRates[col.py] ?? 0;
@@ -77,6 +73,6 @@ export const WeekdayChart = ({ rates, weekStartMonday = true }: WeekdayChartProp
                     );
                 })}
             </div>
-        </div>
+        </DetailPanel>
     );
 };
