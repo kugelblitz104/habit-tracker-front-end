@@ -1,5 +1,6 @@
 import type { ProjectRead } from '@/api';
 import { POPOVER_PANEL_CLASS, popoverPanelStyle } from '@/components/ui/menu';
+import { toLocalDateString } from '@/lib/date-utils';
 import { Checkbox, Field, Label as HeadlessLabel, Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { ArrowDown, ArrowUp, Check, ChevronDown, Download } from 'lucide-react';
 import { STATUS_ORDER, STATUS_META } from './status-config';
@@ -8,7 +9,9 @@ import {
     ALL_PRIORITY_VALUES,
     ALL_STATUS_VALUES,
     PRIORITY_LABELS,
+    TASK_DATE_FIELD_LABELS,
     type TaskControlsState,
+    type TaskDateField,
     type TaskGroupBy,
     type TaskSortBy
 } from '../utils/task-controls';
@@ -133,10 +136,149 @@ const CheckboxFilterPopover = ({
     );
 };
 
+const DATE_FIELD_OPTIONS: { value: TaskDateField; label: string }[] = [
+    { value: 'due', label: 'Due date' },
+    { value: 'scheduled', label: 'Scheduled date' },
+    { value: 'completed', label: 'Completed date' },
+    { value: 'created', label: 'Created date' }
+];
+
+const daysAgo = (n: number): string => {
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    return toLocalDateString(d);
+};
+const startOfThisMonth = (): string => {
+    const d = new Date();
+    return toLocalDateString(new Date(d.getFullYear(), d.getMonth(), 1));
+};
+
+// Quick presets, all ending "today". Ranges are computed on click so "today"
+// is always current (no stale bound baked in at render).
+const DATE_PRESETS: { label: string; range: () => { dateFrom: string; dateTo: string } }[] = [
+    { label: '7 days', range: () => ({ dateFrom: daysAgo(6), dateTo: toLocalDateString(new Date()) }) },
+    { label: '2 weeks', range: () => ({ dateFrom: daysAgo(13), dateTo: toLocalDateString(new Date()) }) },
+    { label: '3 weeks', range: () => ({ dateFrom: daysAgo(20), dateTo: toLocalDateString(new Date()) }) },
+    { label: '30 days', range: () => ({ dateFrom: daysAgo(29), dateTo: toLocalDateString(new Date()) }) },
+    { label: 'This month', range: () => ({ dateFrom: startOfThisMonth(), dateTo: toLocalDateString(new Date()) }) }
+];
+
+const presetButtonClass =
+    'rounded-button border px-1.5 py-1 font-mono text-[10px] uppercase tracking-[0.06em] text-text-secondary transition-colors hover:text-text-primary';
+
+type DateFilterPopoverProps = {
+    controls: TaskControlsState;
+    onChange: (patch: Partial<TaskControlsState>) => void;
+};
+
+/**
+ * Date-range filter popover: pick a date field (Due / Scheduled / Completed /
+ * Created), then a preset window or a custom From/To range (inclusive). No
+ * field selected = no date filtering. Follows the same popover chrome as the
+ * checkbox filters.
+ */
+const DateFilterPopover = ({ controls, onChange }: DateFilterPopoverProps) => {
+    const { dateField, dateFrom, dateTo } = controls;
+    const summary = !dateField
+        ? 'Date: Any'
+        : `${TASK_DATE_FIELD_LABELS[dateField]}${
+              dateFrom || dateTo ? `: ${dateFrom || '…'} → ${dateTo || '…'}` : ''
+          }`;
+
+    return (
+        <Popover className='relative'>
+            <PopoverButton className={filterButtonClass} style={selectStyle}>
+                {summary}
+                <ChevronDown size={12} />
+            </PopoverButton>
+            <PopoverPanel
+                anchor='bottom start'
+                className={`${POPOVER_PANEL_CLASS} mt-1 w-64`}
+                style={popoverPanelStyle}
+            >
+                <div className='flex flex-col gap-2 p-2'>
+                    <label className='flex flex-col gap-1'>
+                        <span className={labelClass}>Filter by</span>
+                        <select
+                            className={selectClass}
+                            style={selectStyle}
+                            value={dateField ?? 'none'}
+                            onChange={(e) => {
+                                const v = e.target.value;
+                                onChange(
+                                    v === 'none'
+                                        ? { dateField: null, dateFrom: '', dateTo: '' }
+                                        : { dateField: v as TaskDateField }
+                                );
+                            }}
+                        >
+                            <option style={selectOptionStyle} value='none'>
+                                No date filter
+                            </option>
+                            {DATE_FIELD_OPTIONS.map((o) => (
+                                <option key={o.value} style={selectOptionStyle} value={o.value}>
+                                    {o.label}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+
+                    {dateField && (
+                        <>
+                            <div className='flex flex-wrap gap-1'>
+                                {DATE_PRESETS.map((preset) => (
+                                    <button
+                                        key={preset.label}
+                                        type='button'
+                                        className={presetButtonClass}
+                                        style={selectStyle}
+                                        onClick={() => onChange(preset.range())}
+                                    >
+                                        {preset.label}
+                                    </button>
+                                ))}
+                            </div>
+                            <label className='flex items-center justify-between gap-2'>
+                                <span className={labelClass}>From</span>
+                                <input
+                                    type='date'
+                                    className={selectClass}
+                                    style={selectStyle}
+                                    value={dateFrom}
+                                    aria-label='From date'
+                                    onChange={(e) => onChange({ dateFrom: e.target.value })}
+                                />
+                            </label>
+                            <label className='flex items-center justify-between gap-2'>
+                                <span className={labelClass}>To</span>
+                                <input
+                                    type='date'
+                                    className={selectClass}
+                                    style={selectStyle}
+                                    value={dateTo}
+                                    aria-label='To date'
+                                    onChange={(e) => onChange({ dateTo: e.target.value })}
+                                />
+                            </label>
+                            <button
+                                type='button'
+                                className={`${quickActionClass} self-start`}
+                                onClick={() => onChange({ dateFrom: '', dateTo: '' })}
+                            >
+                                Clear range
+                            </button>
+                        </>
+                    )}
+                </div>
+            </PopoverPanel>
+        </Popover>
+    );
+};
+
 /**
  * Compact sort / group / filter bar for the flat task surfaces. Purely
  * presentational — it edits a `TaskControlsState` the parent owns (and
- * persists). Filtering by project/priority/status and grouping by the same
+ * persists). Filtering by project/priority/status/date and grouping by the same
  * dimensions; the smart sort mirrors the server's default band ordering.
  */
 export const TaskControlsBar = ({
@@ -284,6 +426,12 @@ export const TaskControlsBar = ({
                     selected={controls.filterStatuses}
                     onChange={(next) => set({ filterStatuses: next })}
                 />
+            </div>
+
+            {/* Filter: date range (Due / Scheduled / Completed / Created). */}
+            <div className='flex flex-col gap-1'>
+                <span className={labelClass}>Date</span>
+                <DateFilterPopover controls={controls} onChange={set} />
             </div>
 
             {/* Export the current (filtered/grouped/sorted) view as Markdown. */}

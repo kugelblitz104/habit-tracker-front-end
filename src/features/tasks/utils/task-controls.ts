@@ -12,6 +12,15 @@ import { PRIORITY_LABELS } from './priority-config';
 export type TaskGroupBy = 'none' | 'project' | 'priority' | 'status';
 export type TaskSortBy = 'smart' | 'priority' | 'due' | 'created' | 'title' | 'status';
 export type TaskSortDir = 'asc' | 'desc';
+/** Which task date the date-range filter compares against. */
+export type TaskDateField = 'due' | 'scheduled' | 'completed' | 'created';
+
+export const TASK_DATE_FIELD_LABELS: Record<TaskDateField, string> = {
+    due: 'Due',
+    scheduled: 'Scheduled',
+    completed: 'Completed',
+    created: 'Created'
+};
 
 export type TaskControlsState = {
     groupBy: TaskGroupBy;
@@ -23,6 +32,11 @@ export type TaskControlsState = {
     filterPriorities: number[];
     /** Multi-select status filter — membership test, order doesn't matter. */
     filterStatuses: number[];
+    /** Date-range filter field; null = no date filtering at all. */
+    dateField: TaskDateField | null;
+    /** Inclusive range bounds as YYYY-MM-DD; '' means open-ended on that side. */
+    dateFrom: string;
+    dateTo: string;
 };
 
 // Fixed section order for the priority / status groupings.
@@ -44,6 +58,17 @@ const CLOSED_STATUS_VALUES: number[] = [TaskStatus.DONE, TaskStatus.CANCELLED];
 export const isClosedStatus = (status: number): boolean =>
     CLOSED_STATUS_VALUES.includes(status);
 
+/** Not immediately actionable — blocked/needs-info are waiting on something and
+ *  scheduled is slated for later, so these sink to the bottom of their band and
+ *  of the "smart" sort, below the tasks you can actually act on now. */
+const BACKBURNER_STATUS_VALUES: number[] = [
+    TaskStatus.BLOCKED,
+    TaskStatus.NEEDS_INFO,
+    TaskStatus.SCHEDULED
+];
+export const isBackburnerStatus = (status: number): boolean =>
+    BACKBURNER_STATUS_VALUES.includes(status);
+
 /** Every status value, for a "select all" affordance in the filter UI. */
 export const ALL_STATUS_VALUES: number[] = [...STATUS_ORDER];
 /** Active (non-closed) statuses — the default Status filter selection. */
@@ -57,7 +82,10 @@ export const DEFAULT_TASK_CONTROLS: TaskControlsState = {
     sortDir: 'asc',
     filterProjectId: 'all',
     filterPriorities: [...ALL_PRIORITY_VALUES],
-    filterStatuses: [...ACTIVE_STATUS_VALUES]
+    filterStatuses: [...ACTIVE_STATUS_VALUES],
+    dateField: null,
+    dateFrom: '',
+    dateTo: ''
 };
 
 export type TaskSection = {
@@ -71,6 +99,11 @@ export type TaskSection = {
 export { PRIORITY_LABELS };
 
 const compareSmart = (a: TaskRead, b: TaskRead): number => {
+    // Back-burner statuses (blocked / needs info / scheduled) sink below the
+    // actionable ones regardless of priority or due date.
+    const ba = isBackburnerStatus(a.status ?? 0) ? 1 : 0;
+    const bb = isBackburnerStatus(b.status ?? 0) ? 1 : 0;
+    if (ba !== bb) return ba - bb;
     const pa = a.priority ?? 0;
     const pb = b.priority ?? 0;
     if (pa !== pb) return pb - pa; // priority desc
@@ -127,6 +160,37 @@ const sortTasks = (tasks: TaskRead[], sortBy: TaskSortBy, dir: TaskSortDir): Tas
     return sorted;
 };
 
+/** The task's date (YYYY-MM-DD) for the given filter field, or null when unset.
+ *  closed_date/created_date are datetimes — take the date part only. */
+const taskDateFor = (task: TaskRead, field: TaskDateField): string | null => {
+    switch (field) {
+        case 'due':
+            return task.due_date ?? null;
+        case 'scheduled':
+            return task.scheduled_date ?? null;
+        case 'completed':
+            return task.closed_date ? task.closed_date.split('T')[0]! : null;
+        case 'created':
+            return task.created_date.split('T')[0]!;
+    }
+};
+
+/**
+ * Whether a task falls within the active date-range filter (inclusive), or
+ * true when no date filter is set. A task lacking the selected date (e.g. no
+ * due date when filtering by Due) is excluded while the filter is active.
+ * Exported so the separately-fetched Closed section can apply the same rule
+ * (its own query bypasses buildTaskSections).
+ */
+export const passesDateFilter = (task: TaskRead, controls: TaskControlsState): boolean => {
+    if (!controls.dateField) return true;
+    const value = taskDateFor(task, controls.dateField);
+    if (!value) return false;
+    if (controls.dateFrom && value < controls.dateFrom) return false;
+    if (controls.dateTo && value > controls.dateTo) return false;
+    return true;
+};
+
 const passesFilters = (task: TaskRead, controls: TaskControlsState): boolean => {
     if (controls.filterProjectId === 'none') {
         if (task.project_id != null) return false;
@@ -135,6 +199,7 @@ const passesFilters = (task: TaskRead, controls: TaskControlsState): boolean => 
     }
     if (!controls.filterPriorities.includes(task.priority ?? 0)) return false;
     if (!controls.filterStatuses.includes(task.status ?? 0)) return false;
+    if (!passesDateFilter(task, controls)) return false;
     return true;
 };
 
@@ -158,9 +223,11 @@ export const splitTasksForControls = (
 };
 
 /** Whether the Closed section should render at all — i.e. the user has Done
- *  and/or Cancelled checked in the Status filter (both unchecked by default). */
+ *  and/or Cancelled checked in the Status filter (both unchecked by default),
+ *  or is filtering by completed date (which only closed tasks can satisfy, so
+ *  the section is surfaced automatically for that case). */
 export const showClosedSection = (controls: TaskControlsState): boolean =>
-    controls.filterStatuses.some((s) => isClosedStatus(s));
+    controls.filterStatuses.some((s) => isClosedStatus(s)) || controls.dateField === 'completed';
 
 /**
  * Apply the current filters, then group + sort into display sections. Grouping

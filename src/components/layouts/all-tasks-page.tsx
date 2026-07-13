@@ -14,7 +14,11 @@ import { TaskDetailPane } from '@/features/tasks/components/task-detail-pane';
 import { TaskListView } from '@/features/tasks/components/task-list-view';
 import { useTaskControls } from '@/features/tasks/hooks/use-task-controls';
 import { useTaskDetailPane } from '@/features/tasks/hooks/use-task-detail-pane';
-import { buildTaskSections, showClosedSection } from '@/features/tasks/utils/task-controls';
+import {
+    buildTaskSections,
+    passesDateFilter,
+    showClosedSection
+} from '@/features/tasks/utils/task-controls';
 import { downloadMarkdownFile, renderTasksMarkdown, slugify } from '@/features/tasks/utils/task-markdown';
 import { useCreateTimeEntry } from '@/features/time-entries/api/create-time-entries';
 import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
@@ -22,7 +26,8 @@ import { useAuth } from '@/lib/auth-context';
 import { toLocalDateString } from '@/lib/date-utils';
 import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE } from '@/lib/layout';
 import { TaskStatus, TimeEntryKind } from '@/types/types';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router';
 import { toast } from 'react-toastify';
 
 /**
@@ -56,6 +61,18 @@ export const AllTasksDashboard = () => {
         selectEdit,
         closeEdit
     } = useTaskDetailPane();
+
+    // Open a task's detail pane when arriving from global search (on wide
+    // screens it routes here with the id in router state; narrow goes straight
+    // to the full-page /tasks/:id route). Keyed on location.key so repeat
+    // searches re-trigger even when already on this page.
+    const location = useLocation();
+    useEffect(() => {
+        const openTaskId = (location.state as { openTaskId?: number } | null)?.openTaskId;
+        if (openTaskId != null) selectEdit(openTaskId);
+        // selectEdit is stable for a given viewport; re-run only on navigation.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location.key]);
 
     const showPane = isWide && selectedEditTaskId !== null;
 
@@ -106,7 +123,12 @@ export const AllTasksDashboard = () => {
     const handleExport = useCallback(() => {
         const sections = buildTaskSections(tasks, controls, projectsById);
         const closedTasks = showClosed
-            ? allLoadedTasks.filter((t) => t.parent_id == null && t.band === 'hidden')
+            ? allLoadedTasks.filter(
+                  (t) =>
+                      t.parent_id == null &&
+                      t.band === 'hidden' &&
+                      passesDateFilter(t, controls)
+              )
             : [];
         const markdown = renderTasksMarkdown({
             title: 'All tasks',
@@ -187,6 +209,7 @@ export const AllTasksDashboard = () => {
                                         profileId={activeProfileId}
                                         onSelectTask={selectEdit}
                                         selectedTaskId={selectedEditTaskId}
+                                        controls={controls}
                                     />
                                 )}
                             </>

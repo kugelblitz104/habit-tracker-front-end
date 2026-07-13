@@ -1,10 +1,11 @@
 import { MENU_ITEM_CLASS, ThemedMenuItems } from '@/components/ui/menu';
 import { ProfileSwitcher } from '@/features/profiles/components/profile-switcher';
+import { SearchPalette } from '@/features/search/components/search-palette';
 import { useAuth } from '@/lib/auth-context';
 import { PAGE_MAX_WIDTH } from '@/lib/layout';
 import { Menu, MenuButton, MenuItem } from '@headlessui/react';
-import { Check, Menu as MenuIcon } from 'lucide-react';
-import React from 'react';
+import { Check, Menu as MenuIcon, Search } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 
 // DEV-ONLY debug menu. `import.meta.env.DEV` compiles to `false` in prod, the
@@ -60,6 +61,20 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
     const { pathname } = useLocation();
     const { activeProfile } = useAuth();
     const activeKey = activeTabKey(pathname);
+    const [searchOpen, setSearchOpen] = useState(false);
+
+    // Global ⌘K / Ctrl+K opens the search palette from anywhere. Only one header
+    // is mounted at a time (one per page), so this registers a single listener.
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                setSearchOpen(true);
+            }
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, []);
     // When a profile has habits disabled the feature is hidden wholesale — the
     // Habits tab disappears as if it were never added (the /habits route itself
     // redirects to Today).
@@ -160,6 +175,15 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
                 </Menu>
 
                 <div className='flex items-center gap-2'>
+                    <button
+                        type='button'
+                        onClick={() => setSearchOpen(true)}
+                        aria-label='Search'
+                        title='Search (⌘K)'
+                        className='rounded-full p-1.5 text-text-muted transition-colors hover:text-text-primary'
+                    >
+                        <Search size={18} />
+                    </button>
                     {import.meta.env.DEV && DebugMenu && (
                         <React.Suspense fallback={null}>
                             <DebugMenu />
@@ -168,6 +192,7 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
                     <ProfileSwitcher />
                 </div>
             </div>
+            <SearchPalette open={searchOpen} onClose={() => setSearchOpen(false)} />
         </header>
     );
 }

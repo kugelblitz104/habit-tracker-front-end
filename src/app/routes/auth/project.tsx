@@ -21,7 +21,11 @@ import { TaskDetailPane } from '@/features/tasks/components/task-detail-pane';
 import { TaskListView } from '@/features/tasks/components/task-list-view';
 import { useTaskControls } from '@/features/tasks/hooks/use-task-controls';
 import { useTaskDetailPane } from '@/features/tasks/hooks/use-task-detail-pane';
-import { buildTaskSections, showClosedSection } from '@/features/tasks/utils/task-controls';
+import {
+    buildTaskSections,
+    passesDateFilter,
+    showClosedSection
+} from '@/features/tasks/utils/task-controls';
 import { downloadMarkdownFile, renderTasksMarkdown, slugify } from '@/features/tasks/utils/task-markdown';
 import { useCreateTimeEntry } from '@/features/time-entries/api/create-time-entries';
 import { ProjectTimeLog } from '@/features/time-entries/components/project-time-log';
@@ -128,7 +132,12 @@ function ProjectContent({ projectId }: { projectId: number }) {
     const handleExport = useCallback(() => {
         const sections = buildTaskSections(tasks, controls, projectsById);
         const closedTasks = showClosed
-            ? allLoadedTasks.filter((t) => t.parent_id == null && t.band === 'hidden')
+            ? allLoadedTasks.filter(
+                  (t) =>
+                      t.parent_id == null &&
+                      t.band === 'hidden' &&
+                      passesDateFilter(t, controls)
+              )
             : [];
         const markdown = renderTasksMarkdown({
             title: project?.name ?? 'Project',
@@ -302,6 +311,7 @@ function ProjectContent({ projectId }: { projectId: number }) {
                                                 projectId={projectId}
                                                 onSelectTask={selectEdit}
                                                 selectedTaskId={selectedEditTaskId}
+                                                controls={controls}
                                             />
                                         )}
                                     </>

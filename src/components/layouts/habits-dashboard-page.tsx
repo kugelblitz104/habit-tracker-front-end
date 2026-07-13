@@ -13,7 +13,7 @@ import { useResponsiveLayout, DASHBOARD_DAYS_BY_SIZE } from '@/lib/use-responsiv
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { GripVertical } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Navigate } from 'react-router';
+import { Navigate, useLocation } from 'react-router';
 import { ErrorPage } from './error-page';
 import { LoadingPage } from './loading-page';
 import { sortHabits } from '@/features/habits/api/update-habits';
@@ -33,6 +33,17 @@ export const HabitsDashboard = () => {
     const userId = user?.id || 0; // Fallback to non-existent user ID
 
     const { isWide, selectedHabitId, selectHabit, closeHabit } = useHabitDetailPane();
+
+    // Open a habit's detail pane when arriving from global search (wide screens
+    // route here with the id in router state; narrow goes to /details/:id).
+    // Keyed on location.key so repeat searches re-trigger.
+    const location = useLocation();
+    useEffect(() => {
+        const openHabitId = (location.state as { openHabitId?: number } | null)?.openHabitId;
+        if (openHabitId != null) selectHabit(openHabitId);
+        // selectHabit is stable; re-run only on navigation.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location.key]);
 
     // hooks
     const [habits, setHabits] = useState<HabitRead[]>([]);

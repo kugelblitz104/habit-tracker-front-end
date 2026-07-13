@@ -1,11 +1,11 @@
 import type { HabitRead, TrackerLite } from '@/api';
 import { Label } from '@/components/ui/label';
+import { useHabitKpis } from '@/features/habits/api/get-habit-kpis';
 import { getTrackersLite } from '@/features/trackers/api/get-trackers';
 import {
     toTrackerLite,
     useTrackerMutations
 } from '@/features/trackers/hooks/use-tracker-mutations';
-import { calculateStreaks, getCurrentStreakLength } from '@/features/trackers/utils/kpi-utils';
 import {
     createNewTracker,
     findTrackerByDate,
@@ -93,16 +93,18 @@ export const HabitListElement = ({
         staleTime: 1000 * 60 // 1 minute
     });
 
-    const currentStreak = useMemo(() => {
-        if (!habit || trackers.length === 0) return 0;
-        const habitStreaks = calculateStreaks(
-            trackers,
-            habit.frequency,
-            habit.range,
-            habit.created_date
-        );
-        return getCurrentStreakLength(habitStreaks);
-    }, [habit, trackers]);
+    // Streak comes from the server KPI (full-history, source of truth) so the
+    // dashboard matches the detail view's KPI board exactly. The limited
+    // trackers-lite window above only drives the day-by-day check cells and can
+    // never be a valid streak source (it would truncate any streak longer than
+    // the visible range). The ['kpis', { habitId }] cache is shared with — and
+    // patched by — the detail view, so edits there stay in sync here.
+    // Small layout hides the streak column entirely, so skip the KPI fetch there.
+    const kpisQuery = useHabitKpis({
+        habitId: habit.id,
+        queryConfig: { staleTime: 1000 * 60, enabled: !isSmall }
+    });
+    const currentStreak = kpisQuery.data?.current_streak ?? 0;
 
     // Report streak changes to parent for sorting purposes
     useEffect(() => {

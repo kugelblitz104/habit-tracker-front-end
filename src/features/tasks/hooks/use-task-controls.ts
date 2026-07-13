@@ -29,6 +29,16 @@ const sanitizeControls = (raw: unknown): TaskControlsState => {
     if (Array.isArray(parsed.filterStatuses) && parsed.filterStatuses.every((v) => typeof v === 'number')) {
         next.filterStatuses = parsed.filterStatuses as number[];
     }
+    if (
+        parsed.dateField === 'due' ||
+        parsed.dateField === 'scheduled' ||
+        parsed.dateField === 'completed' ||
+        parsed.dateField === 'created'
+    ) {
+        next.dateField = parsed.dateField;
+    }
+    if (typeof parsed.dateFrom === 'string') next.dateFrom = parsed.dateFrom;
+    if (typeof parsed.dateTo === 'string') next.dateTo = parsed.dateTo;
     return next;
 };
 

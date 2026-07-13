@@ -5,6 +5,7 @@ import { TaskStatus } from '@/types/types';
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
 import { ChevronRight } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { passesDateFilter, type TaskControlsState } from '../utils/task-controls';
 import { formatShortDate } from '../utils/task-format';
 import { StatusControl } from './status-control';
 
@@ -16,6 +17,9 @@ type CompletedSectionProps = {
     onSelectTask?: (taskId: number) => void;
     /** Task currently open in the detail pane, for highlight. */
     selectedTaskId?: number | null;
+    /** Current controls — used to apply the date-range filter to closed tasks
+     *  (this section fetches its own list, bypassing buildTaskSections). */
+    controls?: TaskControlsState;
 };
 
 const formatClosed = (closed: string | null | undefined): string | null => {
@@ -35,7 +39,8 @@ export const CompletedSection = ({
     profileId,
     projectId,
     onSelectTask,
-    selectedTaskId
+    selectedTaskId,
+    controls
 }: CompletedSectionProps) => {
     const query = useTasks({
         profileId: profileId ?? undefined,
@@ -45,8 +50,12 @@ export const CompletedSection = ({
     });
     // Subtasks (`parent_id` set) never surface as top-level rows — a closed
     // subtask shows only via its parent's progress count, so the disclosure
-    // count also reflects top-level tasks only.
-    const tasks = (query.data?.tasks ?? []).filter((task) => task.parent_id == null);
+    // count also reflects top-level tasks only. The active date-range filter (if
+    // any) is applied here too so "completed in the last 3 weeks" narrows this
+    // list as well as the active bands.
+    const tasks = (query.data?.tasks ?? []).filter(
+        (task) => task.parent_id == null && (!controls || passesDateFilter(task, controls))
+    );
     const updateTask = useUpdateTask();
 
     // Reopen / re-close via the shared status picker. Setting status back to
