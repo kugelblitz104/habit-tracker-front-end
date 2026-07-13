@@ -45,9 +45,9 @@ export type DueInfo = {
 };
 
 /**
- * Resolve a task `due_date` (YYYY-MM-DD) into a chip label + urgency. Overdue
- * uses the same hot treatment as due-today (the README defines no distinct
- * overdue style), labelling the actual date.
+ * Resolve a task `due_date` (YYYY-MM-DD) into a chip label + urgency. Overdue,
+ * due-today and due-tomorrow each get a plain-English label (all "hot" except
+ * future dates further out, which fall back to the short-date label).
  */
 export const getDueInfo = (
     dueDate: string | null | undefined,
@@ -56,9 +56,12 @@ export const getDueInfo = (
     if (!dueDate) return null;
     const due = parseLocalDate(dueDate);
     const todayStr = toLocalDateString(today);
+    const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    const tomorrowStr = toLocalDateString(tomorrow);
 
     if (dueDate === todayStr) return { label: 'due today', hot: true };
-    if (dueDate < todayStr) return { label: `due ${formatShortDate(due)}`, hot: true };
+    if (dueDate < todayStr) return { label: 'overdue', hot: true };
+    if (dueDate === tomorrowStr) return { label: 'due tomorrow', hot: true };
     return { label: `due ${formatShortDate(due)}`, hot: false };
 };
 

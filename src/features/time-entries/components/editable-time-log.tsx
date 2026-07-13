@@ -5,12 +5,22 @@ import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useDeleteTimeEntry } from '../api/delete-time-entries';
 import { useUpdateTimeEntry } from '../api/update-time-entries';
+import type { EntryProject } from '../hooks/use-entry-project';
 import { formatHumanDuration } from '../utils/format-duration';
+import { ProjectSelect } from './project-select';
+import { TaskSelect } from './task-select';
 
 type EditableTimeLogProps = {
     entries: TimeEntryRead[];
     /** Fallback title when an entry has no label (e.g. the task/project name). */
     contextNameFor?: (entry: TimeEntryRead) => string | null;
+    /** Resolves an entry's associated project (task's parent project, or the
+     *  adhoc project it's attached to) — only consulted when `showProject`. */
+    projectFor?: (entry: TimeEntryRead) => EntryProject | null;
+    /** Render a small colored project "pip" on each row. Off by default —
+     *  the task/project detail logs don't need it; only the timer page's
+     *  RecentEntries opts in. */
+    showProject?: boolean;
 };
 
 const localDateKey = (value: string): string => {
@@ -28,16 +38,18 @@ const formatTime = (value: string): string =>
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
-/** Server datetime -> value for <input type="datetime-local"> (local wall time). */
-const toLocalInput = (value: string): string => {
+/** Server datetime -> value for <input type="datetime-local"> (local wall time).
+ *  Exported so ManualEntryForm's start/end inputs share the same round-trip. */
+export const toLocalInput = (value: string): string => {
     const d = parseServerDate(value);
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
         d.getHours()
     )}:${pad(d.getMinutes())}`;
 };
 
-/** datetime-local value (local wall time) -> ISO (UTC) for the API. */
-const fromLocalInput = (local: string): string | null => {
+/** datetime-local value (local wall time) -> ISO (UTC) for the API.
+ *  Exported so ManualEntryForm sends start/end the same way EntryEditor does. */
+export const fromLocalInput = (local: string): string | null => {
     if (!local) return null;
     const d = new Date(local);
     return Number.isNaN(d.getTime()) ? null : d.toISOString();
@@ -66,10 +78,33 @@ const fieldLabelClass =
     'w-16 shrink-0 font-mono text-[10px] uppercase tracking-[0.1em] text-text-faint';
 
 /**
- * Inline editor revealed when a time entry is clicked. Label, start and end are
- * editable; duration is two-way with them — editing start or end recomputes the
- * duration (server-side), and editing duration moves the end time relative to
- * the start.
+ * Small secondary "pip" naming the project a row/group belongs to — bold text
+ * in the project's own color, matching the task-card project tag. Subtle by
+ * design: it never competes with the row's primary label/context line.
+ */
+const ProjectPip = ({ project }: { project: EntryProject | null | undefined }) => {
+    if (!project) return null;
+    return (
+        <span
+            className='truncate font-semibold'
+            style={{ color: project.color }}
+            title={project.name}
+        >
+            {project.name}
+        </span>
+    );
+};
+
+/** Which target select to show for an entry: project when it's an adhoc
+ *  project-attached entry, otherwise task (covers task-attached and untethered). */
+const initialTargetType = (entry: TimeEntryRead): 'task' | 'project' =>
+    entry.project_id != null && entry.task_id == null ? 'project' : 'task';
+
+/**
+ * Inline editor revealed when a time entry is clicked. Label, start, end and the
+ * task/project association are editable; duration is two-way with start/end —
+ * editing start or end recomputes the duration (server-side), and editing
+ * duration moves the end time relative to the start.
  */
 const EntryEditor = ({ entry }: { entry: TimeEntryRead }) => {
     const updateEntry = useUpdateTimeEntry();
@@ -80,9 +115,13 @@ const EntryEditor = ({ entry }: { entry: TimeEntryRead }) => {
     const [minutes, setMinutes] = useState(
         entry.duration_seconds != null ? String(Math.round(entry.duration_seconds / 60)) : ''
     );
+    const [targetType, setTargetType] = useState<'task' | 'project'>(initialTargetType(entry));
+    const [taskId, setTaskId] = useState<number | null>(entry.task_id ?? null);
+    const [projectId, setProjectId] = useState<number | null>(entry.project_id ?? null);
 
     // Resync from the entry after any invalidation (start/end/duration are
-    // interdependent, so a change to one refreshes the others).
+    // interdependent, so a change to one refreshes the others; the association
+    // can change from here or elsewhere too).
     useEffect(() => {
         setLabel(entry.label ?? '');
         setStart(toLocalInput(entry.started_at));
@@ -90,7 +129,17 @@ const EntryEditor = ({ entry }: { entry: TimeEntryRead }) => {
         setMinutes(
             entry.duration_seconds != null ? String(Math.round(entry.duration_seconds / 60)) : ''
         );
-    }, [entry.label, entry.started_at, entry.ended_at, entry.duration_seconds]);
+        setTargetType(initialTargetType(entry));
+        setTaskId(entry.task_id ?? null);
+        setProjectId(entry.project_id ?? null);
+    }, [
+        entry.label,
+        entry.started_at,
+        entry.ended_at,
+        entry.duration_seconds,
+        entry.task_id,
+        entry.project_id
+    ]);
 
     const patch = (data: Record<string, unknown>) =>
         updateEntry.mutate(
@@ -126,6 +175,21 @@ const EntryEditor = ({ entry }: { entry: TimeEntryRead }) => {
         patch({ ended_at: new Date(startMs + mins * 60 * 1000).toISOString() });
     };
 
+    // Association: task and project are mutually exclusive server-side (a
+    // task-attached entry derives its project from the task), so setting one
+    // always clears the other; clearing the selection untethers the entry.
+    const commitTask = (next: number | null) => {
+        setTaskId(next);
+        if (next !== (entry.task_id ?? null) || entry.project_id != null)
+            patch({ task_id: next, project_id: null });
+    };
+
+    const commitProject = (next: number | null) => {
+        setProjectId(next);
+        if (next !== (entry.project_id ?? null) || entry.task_id != null)
+            patch({ project_id: next, task_id: null });
+    };
+
     const handleDelete = () => {
         if (deleteEntry.isPending) return;
         deleteEntry.mutate(
@@ -138,8 +202,61 @@ const EntryEditor = ({ entry }: { entry: TimeEntryRead }) => {
     };
 
     return (
-        <div className='mt-1.5 flex flex-col gap-1.5'>
+        <div className='mt-1.5 flex flex-col gap-2'>
             <div className='flex items-center gap-2'>
+                <span className={fieldLabelClass}>Attach</span>
+                <div className='min-w-0 flex-1'>
+                    {targetType === 'task' ? (
+                        <TaskSelect
+                            profileId={entry.profile_id}
+                            value={taskId}
+                            onChange={commitTask}
+                            disabled={updateEntry.isPending}
+                            id={`entry-task-${entry.id}`}
+                        />
+                    ) : (
+                        <ProjectSelect
+                            profileId={entry.profile_id}
+                            value={projectId}
+                            onChange={commitProject}
+                            disabled={updateEntry.isPending}
+                            id={`entry-project-${entry.id}`}
+                        />
+                    )}
+                </div>
+                <div
+                    className='flex shrink-0 items-center gap-1 rounded-chip border p-0.5'
+                    style={{ borderColor: 'var(--surface-input-border)' }}
+                >
+                    {[
+                        { type: 'task' as const, label: 'Task' },
+                        { type: 'project' as const, label: 'Project' }
+                    ].map((option) => {
+                        const selected = targetType === option.type;
+                        return (
+                            <button
+                                key={option.type}
+                                type='button'
+                                onClick={() => setTargetType(option.type)}
+                                aria-pressed={selected}
+                                className='rounded-chip px-2.5 py-0.5 font-mono text-[10.5px] uppercase tracking-[0.08em] transition-colors'
+                                style={{
+                                    backgroundColor: selected
+                                        ? 'rgba(255,255,255,.06)'
+                                        : 'transparent',
+                                    color: selected
+                                        ? 'var(--color-now-accent)'
+                                        : 'var(--color-text-muted)'
+                                }}
+                            >
+                                {option.label}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+            <div className='flex items-center gap-2'>
+                <span className={fieldLabelClass}>Label</span>
                 <input
                     type='text'
                     value={label}
@@ -161,34 +278,40 @@ const EntryEditor = ({ entry }: { entry: TimeEntryRead }) => {
                     <Trash2 size={14} />
                 </button>
             </div>
-            <label className='flex items-center gap-2'>
-                <span className={fieldLabelClass}>Start</span>
-                <input
-                    type='datetime-local'
-                    value={start}
-                    onChange={(e) => setStart(e.target.value)}
-                    onBlur={commitStart}
-                    aria-label='Start time'
-                    className={inputClass}
-                    style={inputStyle}
-                />
-            </label>
-            {!entry.is_running && (
-                <>
+            <div className='flex items-center gap-3'>
+                <div className='flex flex-col gap-2'>
                     <label className='flex items-center gap-2'>
-                        <span className={fieldLabelClass}>End</span>
+                        <span className={fieldLabelClass}>Start</span>
                         <input
                             type='datetime-local'
-                            value={end}
-                            onChange={(e) => setEnd(e.target.value)}
-                            onBlur={commitEnd}
-                            aria-label='End time'
+                            value={start}
+                            onChange={(e) => setStart(e.target.value)}
+                            onBlur={commitStart}
+                            aria-label='Start time'
                             className={inputClass}
                             style={inputStyle}
                         />
                     </label>
-                    <label className='flex items-center gap-2'>
-                        <span className={fieldLabelClass}>Duration</span>
+                    {!entry.is_running && (
+                        <label className='flex items-center gap-2'>
+                            <span className={fieldLabelClass}>End</span>
+                            <input
+                                type='datetime-local'
+                                value={end}
+                                onChange={(e) => setEnd(e.target.value)}
+                                onBlur={commitEnd}
+                                aria-label='End time'
+                                className={inputClass}
+                                style={inputStyle}
+                            />
+                        </label>
+                    )}
+                </div>
+                {!entry.is_running && (
+                    <label className='flex shrink-0 items-center gap-2'>
+                        <span className='shrink-0 font-mono text-[10px] uppercase tracking-[0.1em] text-text-faint'>
+                            Duration
+                        </span>
                         <input
                             type='number'
                             min={0}
@@ -201,8 +324,8 @@ const EntryEditor = ({ entry }: { entry: TimeEntryRead }) => {
                         />
                         <span className='font-mono text-[11px] text-text-faint'>min</span>
                     </label>
-                </>
-            )}
+                )}
+            </div>
         </div>
     );
 };
@@ -215,12 +338,15 @@ const EntryEditor = ({ entry }: { entry: TimeEntryRead }) => {
 const EntryRow = ({
     entry,
     primary,
-    showDate
+    showDate,
+    project
 }: {
     entry: TimeEntryRead;
     /** Label or context name; null when there's neither. */
     primary: string | null;
     showDate: boolean;
+    /** The entry's project pip; undefined/null renders nothing. */
+    project?: EntryProject | null;
 }) => {
     const [editing, setEditing] = useState(false);
     const dateTime = [showDate ? formatDate(entry.started_at) : null, formatTime(entry.started_at)]
@@ -245,9 +371,10 @@ const EntryRow = ({
                     <div className='truncate font-display text-[13px] text-text-secondary'>
                         {primary ?? dateTime}
                     </div>
-                    {primary && (
-                        <div className='mt-0.5 font-mono text-[11px] text-text-faint'>
-                            {dateTime}
+                    {(primary || project) && (
+                        <div className='mt-0.5 flex items-center gap-1.5 font-mono text-[11px] text-text-faint'>
+                            {primary && <span>{dateTime}</span>}
+                            <ProjectPip project={project} />
                         </div>
                     )}
                 </div>
@@ -266,11 +393,21 @@ const EntryRow = ({
  * group with a count and an "entries" expander; a single entry renders as a
  * click-to-edit row. Clicking an entry reveals its label + duration editor.
  */
-export const EditableTimeLog = ({ entries, contextNameFor }: EditableTimeLogProps) => {
+export const EditableTimeLog = ({
+    entries,
+    contextNameFor,
+    projectFor,
+    showProject = false
+}: EditableTimeLogProps) => {
     const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
     const primaryFor = (entry: TimeEntryRead): string | null =>
         entry.label?.trim() || contextNameFor?.(entry) || null;
+
+    // Resolved lazily per row/group — undefined (not called) when the caller
+    // doesn't opt in, so task/project detail logs pay nothing extra.
+    const projectOf = (entry: TimeEntryRead): EntryProject | null =>
+        showProject ? projectFor?.(entry) ?? null : null;
 
     const groups = useMemo<Group[]>(() => {
         const map = new Map<string, Group>();
@@ -304,14 +441,18 @@ export const EditableTimeLog = ({ entries, contextNameFor }: EditableTimeLogProp
                             entry={group.entries[0]!}
                             primary={group.primary}
                             showDate
+                            project={projectOf(group.entries[0]!)}
                         />
                     );
                 }
                 const open = expanded.has(group.key);
                 const first = group.entries[0]!;
                 // With a label/context that's the title (date in the subline);
-                // without one, the date leads.
+                // without one, the date leads. The group's entries share a
+                // label/date, so its first entry's project stands in for the
+                // whole group.
                 const heading = group.primary ?? formatDate(first.started_at);
+                const groupProject = projectOf(first);
                 return (
                     <div
                         key={group.key}
@@ -342,10 +483,13 @@ export const EditableTimeLog = ({ entries, contextNameFor }: EditableTimeLogProp
                                 <div className='truncate font-display text-[13px] text-text-secondary'>
                                     {heading}
                                 </div>
-                                <div className='mt-0.5 flex items-center gap-1 font-mono text-[11px] text-text-faint'>
-                                    {group.primary
-                                        ? `${formatDate(first.started_at)} · entries`
-                                        : 'entries'}
+                                <div className='mt-0.5 flex items-center gap-1.5 font-mono text-[11px] text-text-faint'>
+                                    <span>
+                                        {group.primary
+                                            ? `${formatDate(first.started_at)} · entries`
+                                            : 'entries'}
+                                    </span>
+                                    <ProjectPip project={groupProject} />
                                     <ChevronRight
                                         size={12}
                                         className={`transition-transform ${
@@ -366,6 +510,7 @@ export const EditableTimeLog = ({ entries, contextNameFor }: EditableTimeLogProp
                                         entry={entry}
                                         primary={null}
                                         showDate={false}
+                                        project={projectOf(entry)}
                                     />
                                 ))}
                             </div>

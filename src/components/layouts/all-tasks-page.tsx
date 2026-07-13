@@ -8,14 +8,18 @@ import {
     type TaskCaptureDraft
 } from '@/features/tasks/components/task-capture-bar';
 import { TaskCaptureForm } from '@/features/tasks/components/task-capture-form';
+import { CompletedSection } from '@/features/tasks/components/completed-section';
 import { TaskControlsBar } from '@/features/tasks/components/task-controls-bar';
 import { TaskDetailPane } from '@/features/tasks/components/task-detail-pane';
 import { TaskListView } from '@/features/tasks/components/task-list-view';
 import { useTaskControls } from '@/features/tasks/hooks/use-task-controls';
 import { useTaskDetailPane } from '@/features/tasks/hooks/use-task-detail-pane';
+import { buildTaskSections, showClosedSection } from '@/features/tasks/utils/task-controls';
+import { downloadMarkdownFile, renderTasksMarkdown, slugify } from '@/features/tasks/utils/task-markdown';
 import { useCreateTimeEntry } from '@/features/time-entries/api/create-time-entries';
 import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
 import { useAuth } from '@/lib/auth-context';
+import { toLocalDateString } from '@/lib/date-utils';
 import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE } from '@/lib/layout';
 import { TaskStatus, TimeEntryKind } from '@/types/types';
 import { useCallback, useMemo, useState } from 'react';
@@ -28,7 +32,7 @@ import { toast } from 'react-toastify';
  * detail pane as the other task surfaces.
  */
 export const AllTasksDashboard = () => {
-    const { activeProfileId } = useAuth();
+    const { activeProfile, activeProfileId } = useAuth();
     const profileId = activeProfileId ?? undefined;
 
     // Everything (incl. done/cancelled) so the Status filter/group can reach
@@ -93,6 +97,28 @@ export const AllTasksDashboard = () => {
         [activeProfileId, createTimeEntry]
     );
 
+    // Done/cancelled tasks are excluded from the main grouped list by default
+    // (they live in the Closed section below); the section itself only shows
+    // once the user checks Done and/or Cancelled in the Status filter.
+    const showClosed = showClosedSection(controls);
+    const allLoadedTasks = tasksQuery.data?.tasks ?? [];
+
+    const handleExport = useCallback(() => {
+        const sections = buildTaskSections(tasks, controls, projectsById);
+        const closedTasks = showClosed
+            ? allLoadedTasks.filter((t) => t.parent_id == null && t.band === 'hidden')
+            : [];
+        const markdown = renderTasksMarkdown({
+            title: 'All tasks',
+            sections,
+            closedTasks,
+            allTasks: allLoadedTasks,
+            projectsById
+        });
+        const profileSlug = slugify(activeProfile?.name ?? 'tasks');
+        downloadMarkdownFile(`tasks-${profileSlug}-${toLocalDateString(new Date())}.md`, markdown);
+    }, [tasks, controls, projectsById, showClosed, allLoadedTasks, activeProfile]);
+
     return (
         <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
             <AppHeader maxWidthClass={showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH} />
@@ -130,6 +156,7 @@ export const AllTasksDashboard = () => {
                             controls={controls}
                             onChange={setControls}
                             projects={projects}
+                            onExport={handleExport}
                         />
 
                         {tasksQuery.isError ? (
@@ -139,20 +166,30 @@ export const AllTasksDashboard = () => {
                         ) : tasksQuery.isLoading ? (
                             <p className='font-mono text-[12px] text-text-faint'>Loading tasks…</p>
                         ) : (
-                            <TaskListView
-                                tasks={tasks}
-                                projectsById={projectsById}
-                                controls={controls}
-                                onStatusChange={handleStatusChange}
-                                notesTaskId={notesTaskId}
-                                selectedEditTaskId={selectedEditTaskId}
-                                onToggleNotes={toggleNotes}
-                                onSelectEdit={selectEdit}
-                                subtasksTaskId={subtasksTaskId}
-                                onToggleSubtasks={toggleSubtasks}
-                                onStartTimer={handleStartTimer}
-                                emptyHint='No tasks yet. Add one above.'
-                            />
+                            <>
+                                <TaskListView
+                                    tasks={tasks}
+                                    projectsById={projectsById}
+                                    controls={controls}
+                                    onStatusChange={handleStatusChange}
+                                    notesTaskId={notesTaskId}
+                                    selectedEditTaskId={selectedEditTaskId}
+                                    onToggleNotes={toggleNotes}
+                                    onSelectEdit={selectEdit}
+                                    subtasksTaskId={subtasksTaskId}
+                                    onToggleSubtasks={toggleSubtasks}
+                                    onStartTimer={handleStartTimer}
+                                    emptyHint='No tasks yet. Add one above.'
+                                />
+
+                                {showClosed && (
+                                    <CompletedSection
+                                        profileId={activeProfileId}
+                                        onSelectTask={selectEdit}
+                                        selectedTaskId={selectedEditTaskId}
+                                    />
+                                )}
+                            </>
                         )}
                     </div>
 

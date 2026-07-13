@@ -279,6 +279,18 @@ body {
     /* Always reserve the scrollbar gutter so page width / centering is
        identical whether a page scrolls (Today) or not (Projects, Settings…). */
     scrollbar-gutter: stable;
+    /* Plain content shouldn't show the text (I-beam) cursor as if it were an
+       editable field; only real inputs do. Text stays selectable/copyable —
+       this changes the cursor, not user-select. Links/buttons keep their own
+       (pointer) cursor via the UA sheet / cursor-pointer utility classes. */
+    cursor: default;
+}
+
+input,
+textarea,
+[contenteditable],
+[contenteditable] * {
+    cursor: text;
 }
 
 /*

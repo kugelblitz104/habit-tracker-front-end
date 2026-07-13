@@ -20,6 +20,9 @@ type TaskListViewProps = {
     onStartTimer?: (taskId: number) => void;
     /** Shown when the (filtered) list is empty. */
     emptyHint?: string;
+    /** Whether to render each card's project pip. Default true; the project
+     *  view passes false since every card already shares that one project. */
+    showProject?: boolean;
 };
 
 /**
@@ -39,7 +42,8 @@ export const TaskListView = ({
     subtasksTaskId,
     onToggleSubtasks,
     onStartTimer,
-    emptyHint = 'No tasks match these filters.'
+    emptyHint = 'No tasks match these filters.',
+    showProject = true
 }: TaskListViewProps) => {
     const sections = useMemo(
         () => buildTaskSections(tasks, controls, projectsById),
@@ -83,6 +87,7 @@ export const TaskListView = ({
                                             ? projectsById.get(task.project_id)
                                             : undefined
                                     }
+                                    showProject={showProject}
                                     onStatusChange={(status) => onStatusChange(task.id, status)}
                                     notesOpen={notesTaskId === task.id}
                                     editing={selectedEditTaskId === task.id}

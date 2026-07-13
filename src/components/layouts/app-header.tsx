@@ -68,7 +68,15 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
     const activeTab = tabs.find((tab) => tab.to === activeKey) ?? null;
 
     return (
-        <header className='border-b' style={{ borderColor: 'var(--surface-card-border)' }}>
+        <header
+            className='sticky top-0 z-40 border-b'
+            style={{
+                borderColor: 'var(--surface-card-border)',
+                // Solid base so scrolled content doesn't bleed through the sticky
+                // bar (the page's top glow is a fixed body gradient behind this).
+                backgroundColor: 'var(--bg)'
+            }}
+        >
             <div
                 className={`mx-auto flex items-stretch justify-between gap-3 px-5 md:px-7 ${maxWidthClass}`}
             >

@@ -72,7 +72,6 @@ export const HabitList = ({
     // Note dialog: `target` carries the habit id being annotated, since this one
     // dialog instance serves every row in the grid.
     const noteDialog = useNoteDialog<number>();
-    const [note, setNote] = useState('');
 
     const selectedTrackerQuery = useQuery({
         queryKey: ['tracker', noteDialog.trackerId],
@@ -150,7 +149,6 @@ export const HabitList = ({
 
     const handleNoteOpen = useCallback(
         (habitId: number, date: Date, tracker: TrackerLite | undefined) => {
-            setNote(selectedTrackerQuery.data?.note || '');
             noteDialog.open({ date, trackerId: tracker?.id ?? null, target: habitId });
         },
         []
@@ -162,7 +160,7 @@ export const HabitList = ({
             const habit = habits.find((h) => h.id === noteDialog.target);
             if (!habit) return;
 
-            if (!selectedTrackerQuery.data && selectedTrackerQuery.isFetched) {
+            if (noteDialog.trackerId === null) {
                 // Create tracker with note
                 const newTracker = createNewTracker(
                     habit.id,
@@ -174,12 +172,12 @@ export const HabitList = ({
             } else {
                 // Update existing tracker's note
                 const update: TrackerUpdate = { note: noteText };
-                noteTrackerUpdate.mutate({ id: selectedTrackerQuery.data!.id, update });
+                noteTrackerUpdate.mutate({ id: noteDialog.trackerId, update });
             }
 
             noteDialog.close();
         },
-        [noteDialog, selectedTrackerQuery, habits, noteTrackerCreate, noteTrackerUpdate]
+        [noteDialog, habits, noteTrackerCreate, noteTrackerUpdate]
     );
 
     if (!habits || habits.length === 0) {
@@ -334,7 +332,7 @@ export const HabitList = ({
             <NoteDialog
                 isOpen={noteDialog.isOpen}
                 date={noteDialog.date || new Date()}
-                note={note}
+                note={selectedTrackerQuery.data?.note || ''}
                 onClose={noteDialog.close}
                 onSave={handleNoteSave}
             />

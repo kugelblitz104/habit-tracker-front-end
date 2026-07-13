@@ -15,20 +15,24 @@ import {
     type TaskCaptureDraft
 } from '@/features/tasks/components/task-capture-bar';
 import { TaskCaptureForm } from '@/features/tasks/components/task-capture-form';
+import { CompletedSection } from '@/features/tasks/components/completed-section';
 import { TaskControlsBar } from '@/features/tasks/components/task-controls-bar';
 import { TaskDetailPane } from '@/features/tasks/components/task-detail-pane';
 import { TaskListView } from '@/features/tasks/components/task-list-view';
 import { useTaskControls } from '@/features/tasks/hooks/use-task-controls';
 import { useTaskDetailPane } from '@/features/tasks/hooks/use-task-detail-pane';
+import { buildTaskSections, showClosedSection } from '@/features/tasks/utils/task-controls';
+import { downloadMarkdownFile, renderTasksMarkdown, slugify } from '@/features/tasks/utils/task-markdown';
 import { useCreateTimeEntry } from '@/features/time-entries/api/create-time-entries';
 import { ProjectTimeLog } from '@/features/time-entries/components/project-time-log';
 import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
 import { AppHeader } from '@/components/layouts/app-header';
 import { sanitizeText } from '@/lib/input-sanitization';
+import { toLocalDateString } from '@/lib/date-utils';
 import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE } from '@/lib/layout';
 import { useAuth } from '@/lib/auth-context';
 import { TimeEntryKind, type TaskStatus } from '@/types/types';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import type { Route } from './+types/project';
@@ -100,6 +104,28 @@ function ProjectContent({ projectId }: { projectId: number }) {
         if (project) map.set(project.id, project);
         return map;
     }, [project]);
+
+    // Done/cancelled tasks are excluded from the main grouped list by default
+    // (they live in the Closed section below); the section itself only shows
+    // once the user checks Done and/or Cancelled in the Status filter.
+    const showClosed = showClosedSection(controls);
+    const allLoadedTasks = tasksQuery.data?.tasks ?? [];
+
+    const handleExport = useCallback(() => {
+        const sections = buildTaskSections(tasks, controls, projectsById);
+        const closedTasks = showClosed
+            ? allLoadedTasks.filter((t) => t.parent_id == null && t.band === 'hidden')
+            : [];
+        const markdown = renderTasksMarkdown({
+            title: project?.name ?? 'Project',
+            sections,
+            closedTasks,
+            allTasks: allLoadedTasks,
+            projectsById
+        });
+        const projectSlug = slugify(project?.name ?? 'project');
+        downloadMarkdownFile(`tasks-${projectSlug}-${toLocalDateString(new Date())}.md`, markdown);
+    }, [tasks, controls, projectsById, showClosed, allLoadedTasks, project]);
 
     const handleStatusChange = (taskId: number, status: TaskStatus) => {
         updateTask.mutate({ taskId, data: { status } });
@@ -231,6 +257,7 @@ function ProjectContent({ projectId }: { projectId: number }) {
                                     onChange={setControls}
                                     projects={[]}
                                     showProjectOptions={false}
+                                    onExport={handleExport}
                                 />
 
                                 {tasksQuery.isLoading ? (
@@ -238,20 +265,32 @@ function ProjectContent({ projectId }: { projectId: number }) {
                                         Loading tasks…
                                     </p>
                                 ) : (
-                                    <TaskListView
-                                        tasks={tasks}
-                                        projectsById={projectsById}
-                                        controls={controls}
-                                        onStatusChange={handleStatusChange}
-                                        notesTaskId={notesTaskId}
-                                        selectedEditTaskId={selectedEditTaskId}
-                                        onToggleNotes={toggleNotes}
-                                        onSelectEdit={selectEdit}
-                                        subtasksTaskId={subtasksTaskId}
-                                        onToggleSubtasks={toggleSubtasks}
-                                        onStartTimer={handleStartTimer}
-                                        emptyHint='No tasks in this project yet.'
-                                    />
+                                    <>
+                                        <TaskListView
+                                            tasks={tasks}
+                                            projectsById={projectsById}
+                                            controls={controls}
+                                            onStatusChange={handleStatusChange}
+                                            notesTaskId={notesTaskId}
+                                            selectedEditTaskId={selectedEditTaskId}
+                                            onToggleNotes={toggleNotes}
+                                            onSelectEdit={selectEdit}
+                                            subtasksTaskId={subtasksTaskId}
+                                            onToggleSubtasks={toggleSubtasks}
+                                            onStartTimer={handleStartTimer}
+                                            emptyHint='No tasks in this project yet.'
+                                            showProject={false}
+                                        />
+
+                                        {showClosed && (
+                                            <CompletedSection
+                                                profileId={activeProfileId}
+                                                projectId={projectId}
+                                                onSelectTask={selectEdit}
+                                                selectedTaskId={selectedEditTaskId}
+                                            />
+                                        )}
+                                    </>
                                 )}
 
                                 <div className='mt-[30px]'>

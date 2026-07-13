@@ -27,6 +27,12 @@ type HighlightedTaskInputProps = {
     segments: TaskInputSegment[];
     onChange: (value: string) => void;
     onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
+    /**
+     * Fired whenever the caret/selection position changes (typing, arrow
+     * keys, click) so a parent can do caret-relative work — e.g. detecting an
+     * in-progress `@project` token for autocomplete. Reports `selectionStart`.
+     */
+    onCaretChange?: (position: number) => void;
     placeholder?: string;
     disabled?: boolean;
     autoFocus?: boolean;
@@ -40,6 +46,7 @@ export const HighlightedTaskInput = ({
     segments,
     onChange,
     onKeyDown,
+    onCaretChange,
     placeholder,
     disabled = false,
     autoFocus = false,
@@ -89,8 +96,10 @@ export const HighlightedTaskInput = ({
                 onChange={(e) => {
                     onChange(e.target.value);
                     syncScroll(e.target);
+                    onCaretChange?.(e.target.selectionStart ?? e.target.value.length);
                 }}
                 onKeyDown={onKeyDown}
+                onSelect={(e) => onCaretChange?.(e.currentTarget.selectionStart ?? e.currentTarget.value.length)}
                 onScroll={(e) => syncScroll(e.currentTarget)}
                 placeholder={placeholder}
                 className={`relative w-full bg-transparent whitespace-pre text-transparent caret-text-primary outline-none ${SHARED_TEXT_CLASS}`}

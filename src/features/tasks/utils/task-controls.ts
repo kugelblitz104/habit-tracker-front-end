@@ -19,28 +19,11 @@ export type TaskControlsState = {
     sortDir: TaskSortDir;
     /** number = that project, 'none' = no project, 'all' = don't filter. */
     filterProjectId: number | 'none' | 'all';
-    filterPriority: number | 'all';
-    filterStatus: number | 'all';
+    /** Multi-select priority filter — membership test, order doesn't matter. */
+    filterPriorities: number[];
+    /** Multi-select status filter — membership test, order doesn't matter. */
+    filterStatuses: number[];
 };
-
-export const DEFAULT_TASK_CONTROLS: TaskControlsState = {
-    groupBy: 'none',
-    sortBy: 'smart',
-    sortDir: 'asc',
-    filterProjectId: 'all',
-    filterPriority: 'all',
-    filterStatus: 'all'
-};
-
-type TaskSection = {
-    key: string;
-    /** Section header; null renders no header (flat list). */
-    label: string | null;
-    color?: string;
-    tasks: TaskRead[];
-};
-
-export { PRIORITY_LABELS };
 
 // Fixed section order for the priority / status groupings.
 const PRIORITY_ORDER = [3, 2, 1, 0];
@@ -54,6 +37,38 @@ const STATUS_ORDER = [
     TaskStatus.DONE,
     TaskStatus.CANCELLED
 ];
+
+/** Done/cancelled — these never interleave in the main grouped list; they
+ *  render in the separate "Closed" section (CompletedSection) instead. */
+const CLOSED_STATUS_VALUES: number[] = [TaskStatus.DONE, TaskStatus.CANCELLED];
+export const isClosedStatus = (status: number): boolean =>
+    CLOSED_STATUS_VALUES.includes(status);
+
+/** Every status value, for a "select all" affordance in the filter UI. */
+export const ALL_STATUS_VALUES: number[] = [...STATUS_ORDER];
+/** Active (non-closed) statuses — the default Status filter selection. */
+export const ACTIVE_STATUS_VALUES: number[] = STATUS_ORDER.filter((s) => !isClosedStatus(s));
+/** Every priority value, for a "select all" affordance in the filter UI. */
+export const ALL_PRIORITY_VALUES: number[] = [...PRIORITY_ORDER];
+
+export const DEFAULT_TASK_CONTROLS: TaskControlsState = {
+    groupBy: 'none',
+    sortBy: 'smart',
+    sortDir: 'asc',
+    filterProjectId: 'all',
+    filterPriorities: [...ALL_PRIORITY_VALUES],
+    filterStatuses: [...ACTIVE_STATUS_VALUES]
+};
+
+export type TaskSection = {
+    key: string;
+    /** Section header; null renders no header (flat list). */
+    label: string | null;
+    color?: string;
+    tasks: TaskRead[];
+};
+
+export { PRIORITY_LABELS };
 
 const compareSmart = (a: TaskRead, b: TaskRead): number => {
     const pa = a.priority ?? 0;
@@ -118,26 +133,48 @@ const passesFilters = (task: TaskRead, controls: TaskControlsState): boolean => 
     } else if (controls.filterProjectId !== 'all') {
         if (task.project_id !== controls.filterProjectId) return false;
     }
-    if (controls.filterPriority !== 'all' && (task.priority ?? 0) !== controls.filterPriority) {
-        return false;
-    }
-    if (controls.filterStatus !== 'all' && (task.status ?? 0) !== controls.filterStatus) {
-        return false;
-    }
+    if (!controls.filterPriorities.includes(task.priority ?? 0)) return false;
+    if (!controls.filterStatuses.includes(task.status ?? 0)) return false;
     return true;
 };
+
+/**
+ * Apply the current filters, then split into active vs. closed (done/
+ * cancelled). Closed tasks never interleave in the main grouped list — they
+ * belong in the separate "Closed" section (CompletedSection), which is gated
+ * on `showClosedSection` below.
+ */
+export const splitTasksForControls = (
+    tasks: TaskRead[],
+    controls: TaskControlsState
+): { active: TaskRead[]; closed: TaskRead[] } => {
+    const active: TaskRead[] = [];
+    const closed: TaskRead[] = [];
+    for (const task of tasks) {
+        if (!passesFilters(task, controls)) continue;
+        (isClosedStatus(task.status ?? 0) ? closed : active).push(task);
+    }
+    return { active, closed };
+};
+
+/** Whether the Closed section should render at all — i.e. the user has Done
+ *  and/or Cancelled checked in the Status filter (both unchecked by default). */
+export const showClosedSection = (controls: TaskControlsState): boolean =>
+    controls.filterStatuses.some((s) => isClosedStatus(s));
 
 /**
  * Apply the current filters, then group + sort into display sections. Grouping
  * order is fixed (priority high→none, status active→closed, projects A→Z with
  * "No project" last); tasks within each section follow the sort controls.
+ * Closed (done/cancelled) tasks are always excluded here — they render in the
+ * separate Closed section instead (see `splitTasksForControls`).
  */
 export const buildTaskSections = (
     tasks: TaskRead[],
     controls: TaskControlsState,
     projectsById: Map<number, ProjectRead>
 ): TaskSection[] => {
-    const filtered = tasks.filter((task) => passesFilters(task, controls));
+    const { active: filtered } = splitTasksForControls(tasks, controls);
 
     if (controls.groupBy === 'none') {
         return [

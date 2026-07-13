@@ -3,7 +3,7 @@ import { useAuth } from '@/lib/auth-context';
 import { sanitizeMultilineText } from '@/lib/input-sanitization';
 import { TaskStatus } from '@/types/types';
 import { Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type KeyboardEvent } from 'react';
 import { toast } from 'react-toastify';
 import { useUpdateTask } from '../api/update-tasks';
 import { useDeleteTaskWithConfirm } from '../hooks/use-delete-task-with-confirm';
@@ -137,8 +137,22 @@ export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
     // drops out of every band once the confirmation resolves.
     const handleDelete = () => deleteWithConfirm(task.id, { onSuccess: onDeleted ?? onClose });
 
+    // Enter saves the task. Skips the multiline notes textarea (Enter = newline);
+    // the subtask rapid-add input stops propagation on Enter (adds a subtask), so
+    // this bubble-phase handler never fires for it.
+    const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+        if (e.key !== 'Enter' || e.shiftKey || e.defaultPrevented) return;
+        if ((e.target as HTMLElement).tagName === 'TEXTAREA') return;
+        e.preventDefault();
+        handleSave();
+    };
+
     return (
-        <div className='mt-3 flex flex-col gap-3 rounded-button border p-3' style={formFieldStyle}>
+        <div
+            className='mt-3 flex flex-col gap-3 rounded-button border p-3'
+            style={formFieldStyle}
+            onKeyDown={handleKeyDown}
+        >
             {/* Title */}
             <div>
                 <label className={formLabelClass} htmlFor={`task-title-${task.id}`}>

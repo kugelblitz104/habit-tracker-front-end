@@ -95,9 +95,16 @@ export const useHabitDetailData = (habitId: number) => {
     );
 
     // Reconcile the KPI/streak caches with the server once a mutation has persisted.
+    // Also invalidate the trackers-lite/trackers caches so every other consumer of
+    // this habit's trackers (the Today panel, the dashboard grid) picks up the
+    // change too — mirrors `invalidateTrackerCaches` in `use-tracker-toggle.ts`,
+    // which otherwise leaves those caches stale after a detail-view edit and can
+    // make the Today panel's auto-skip computation diverge from this view.
     const invalidateKpiCaches = useCallback(() => {
         queryClient.invalidateQueries({ queryKey: ['kpis', { habitId }] });
         queryClient.invalidateQueries({ queryKey: ['streaks', { habitId }] });
+        queryClient.invalidateQueries({ queryKey: ['trackers-lite', { habitId }] });
+        queryClient.invalidateQueries({ queryKey: ['trackers', { habitId }] });
     }, [habitId, queryClient]);
 
     // mutations

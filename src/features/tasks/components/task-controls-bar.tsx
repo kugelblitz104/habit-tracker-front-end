@@ -1,9 +1,12 @@
 import type { ProjectRead } from '@/api';
-import { TaskStatus } from '@/types/types';
-import { ArrowDown, ArrowUp } from 'lucide-react';
+import { POPOVER_PANEL_CLASS, popoverPanelStyle } from '@/components/ui/menu';
+import { Checkbox, Field, Label as HeadlessLabel, Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
+import { ArrowDown, ArrowUp, Check, ChevronDown, Download } from 'lucide-react';
 import { STATUS_ORDER, STATUS_META } from './status-config';
 import { selectOptionStyle } from './task-form-fields';
 import {
+    ALL_PRIORITY_VALUES,
+    ALL_STATUS_VALUES,
     PRIORITY_LABELS,
     type TaskControlsState,
     type TaskGroupBy,
@@ -16,6 +19,9 @@ type TaskControlsBarProps = {
     projects: ProjectRead[];
     /** Project view fixes the project, so its project group/filter are hidden. */
     showProjectOptions?: boolean;
+    /** Export the currently filtered/grouped/sorted view as Markdown. Omit to
+     *  hide the Export button. */
+    onExport?: () => void;
 };
 
 const selectClass =
@@ -28,6 +34,105 @@ const selectStyle = {
 const labelClass =
     'font-mono text-[9.5px] font-semibold uppercase tracking-[0.12em] text-text-faint';
 
+/** Same chrome as the native `<select>`s above, but as a button that opens a
+ *  checkbox popover instead of a listbox. */
+const filterButtonClass =
+    'flex items-center gap-1 rounded-button border px-2 py-1 font-mono text-[11px] text-text-secondary outline-none transition-colors hover:text-text-primary focus-visible:ring-1 focus-visible:ring-now-accent';
+
+const checkboxRowClass =
+    'flex w-full cursor-pointer items-center gap-2 rounded-[6px] px-2 py-1.5 text-left font-display text-[13px] text-text-secondary hover:bg-white/5';
+
+const quickActionClass =
+    'font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-text-faint hover:text-text-secondary';
+
+type CheckboxOption = { value: number; label: string; color?: string };
+
+type CheckboxFilterPopoverProps = {
+    label: string;
+    options: CheckboxOption[];
+    allValues: number[];
+    selected: number[];
+    onChange: (next: number[]) => void;
+};
+
+/**
+ * Themed checkbox-list popover — used for the multi-select Status and
+ * Priority filters. Reuses the app's shared popover panel chrome
+ * (POPOVER_PANEL_CLASS/popoverPanelStyle); toggling a row updates the
+ * `selected` array via set membership, not index.
+ */
+const CheckboxFilterPopover = ({
+    label,
+    options,
+    allValues,
+    selected,
+    onChange
+}: CheckboxFilterPopoverProps) => {
+    const toggle = (value: number, checked: boolean) => {
+        onChange(checked ? [...selected, value] : selected.filter((v) => v !== value));
+    };
+
+    const summary =
+        selected.length === 0
+            ? `${label}: None`
+            : selected.length === allValues.length
+            ? `${label}: All`
+            : `${label} (${selected.length})`;
+
+    return (
+        <Popover className='relative'>
+            <PopoverButton className={filterButtonClass} style={selectStyle}>
+                {summary}
+                <ChevronDown size={12} />
+            </PopoverButton>
+            <PopoverPanel
+                anchor='bottom start'
+                className={`${POPOVER_PANEL_CLASS} mt-1 w-48`}
+                style={popoverPanelStyle}
+            >
+                <div className='flex items-center justify-between gap-2 px-2 pb-1'>
+                    <button
+                        type='button'
+                        className={quickActionClass}
+                        onClick={() => onChange([...allValues])}
+                    >
+                        All
+                    </button>
+                    <button
+                        type='button'
+                        className={quickActionClass}
+                        onClick={() => onChange([])}
+                    >
+                        None
+                    </button>
+                </div>
+                {options.map((option) => (
+                    <Field key={option.value} className={checkboxRowClass}>
+                        <Checkbox
+                            checked={selected.includes(option.value)}
+                            onChange={(checked) => toggle(option.value, checked)}
+                            className='group flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-[3px] border data-checked:border-now-accent data-checked:bg-now-accent'
+                            style={{ borderColor: 'var(--surface-input-border)' }}
+                        >
+                            <Check
+                                size={10}
+                                className='hidden text-bg group-data-checked:block'
+                                style={{ color: 'var(--bg)' }}
+                            />
+                        </Checkbox>
+                        <HeadlessLabel
+                            className='min-w-0 flex-1 cursor-pointer truncate select-none'
+                            style={option.color ? { color: option.color } : undefined}
+                        >
+                            {option.label}
+                        </HeadlessLabel>
+                    </Field>
+                ))}
+            </PopoverPanel>
+        </Popover>
+    );
+};
+
 /**
  * Compact sort / group / filter bar for the flat task surfaces. Purely
  * presentational — it edits a `TaskControlsState` the parent owns (and
@@ -38,7 +143,8 @@ export const TaskControlsBar = ({
     controls,
     onChange,
     projects,
-    showProjectOptions = true
+    showProjectOptions = true,
+    onExport
 }: TaskControlsBarProps) => {
     const set = (patch: Partial<TaskControlsState>) => onChange({ ...controls, ...patch });
 
@@ -151,51 +257,48 @@ export const TaskControlsBar = ({
                 </label>
             )}
 
-            {/* Filter: priority */}
-            <label className='flex flex-col gap-1'>
+            {/* Filter: priority (multi-select checkboxes) */}
+            <div className='flex flex-col gap-1'>
                 <span className={labelClass}>Priority</span>
-                <select
-                    className={selectClass}
-                    style={selectStyle}
-                    value={String(controls.filterPriority)}
-                    onChange={(e) => {
-                        const v = e.target.value;
-                        set({ filterPriority: v === 'all' ? 'all' : Number(v) });
-                    }}
-                >
-                    <option style={selectOptionStyle} value='all'>
-                        Any
-                    </option>
-                    {[3, 2, 1, 0].map((p) => (
-                        <option style={selectOptionStyle} key={p} value={p}>
-                            {PRIORITY_LABELS[p]}
-                        </option>
-                    ))}
-                </select>
-            </label>
+                <CheckboxFilterPopover
+                    label='Priority'
+                    options={[3, 2, 1, 0].map((p) => ({ value: p, label: PRIORITY_LABELS[p]! }))}
+                    allValues={ALL_PRIORITY_VALUES}
+                    selected={controls.filterPriorities}
+                    onChange={(next) => set({ filterPriorities: next })}
+                />
+            </div>
 
-            {/* Filter: status */}
-            <label className='flex flex-col gap-1'>
+            {/* Filter: status (multi-select checkboxes; Done/Cancelled default off —
+                closed tasks live in the separate Closed section instead). */}
+            <div className='flex flex-col gap-1'>
                 <span className={labelClass}>Status</span>
-                <select
-                    className={selectClass}
+                <CheckboxFilterPopover
+                    label='Status'
+                    options={STATUS_ORDER.map((s) => ({
+                        value: s,
+                        label: STATUS_META[s].label,
+                        color: STATUS_META[s].color
+                    }))}
+                    allValues={ALL_STATUS_VALUES}
+                    selected={controls.filterStatuses}
+                    onChange={(next) => set({ filterStatuses: next })}
+                />
+            </div>
+
+            {/* Export the current (filtered/grouped/sorted) view as Markdown. */}
+            {onExport && (
+                <button
+                    type='button'
+                    onClick={onExport}
+                    className={`${filterButtonClass} ml-auto`}
                     style={selectStyle}
-                    value={String(controls.filterStatus)}
-                    onChange={(e) => {
-                        const v = e.target.value;
-                        set({ filterStatus: v === 'all' ? 'all' : Number(v) });
-                    }}
+                    title='Export this view as Markdown'
                 >
-                    <option style={selectOptionStyle} value='all'>
-                        Any
-                    </option>
-                    {STATUS_ORDER.map((s) => (
-                        <option style={selectOptionStyle} key={s} value={s}>
-                            {STATUS_META[s].label}
-                        </option>
-                    ))}
-                </select>
-            </label>
+                    <Download size={12} />
+                    Export
+                </button>
+            )}
         </div>
     );
 };

@@ -8,6 +8,9 @@ import { STATUS_META, type StatusMeta } from './status-config';
 type TaskCardMetaRowProps = {
     task: TaskRead;
     project?: ProjectRead;
+    /** Whether to render the project pip at all. Default true; the project
+     *  view (every card shares one project) passes false to hide it. */
+    showProject?: boolean;
     /** Current route path — carried through the project link's `from` state. */
     pathname: string;
     statusMeta: StatusMeta;
@@ -36,6 +39,7 @@ type TaskCardMetaRowProps = {
 export const TaskCardMetaRow = ({
     task,
     project,
+    showProject = true,
     pathname,
     statusMeta,
     status,
@@ -54,7 +58,7 @@ export const TaskCardMetaRow = ({
 
     return (
         <div className='mt-1 flex flex-wrap items-center gap-2 font-mono text-[11px]'>
-            {project && (
+            {showProject && project && (
                 <Link
                     to={`/projects/${project.id}`}
                     state={{ from: pathname }}

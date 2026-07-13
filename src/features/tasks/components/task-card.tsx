@@ -19,6 +19,10 @@ export type TaskCardProps = {
     task: TaskRead;
     band: ActiveBand;
     project?: ProjectRead;
+    /** Whether to render the project pip at all. Default true; the project
+     *  view (every card shares one project) passes false to hide it — the
+     *  task DETAIL view is unaffected and always shows the project. */
+    showProject?: boolean;
     onStatusChange: (status: TaskStatus) => void;
     /** Whether the inline read-only notes panel is open. */
     notesOpen: boolean;
@@ -88,6 +92,7 @@ export const TaskCard = ({
     task,
     band,
     project,
+    showProject = true,
     onStatusChange,
     notesOpen,
     editing,
@@ -217,6 +222,7 @@ export const TaskCard = ({
                     <TaskCardMetaRow
                         task={task}
                         project={project}
+                        showProject={showProject}
                         pathname={pathname}
                         statusMeta={statusMeta}
                         status={status}
