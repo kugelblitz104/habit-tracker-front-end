@@ -3,6 +3,7 @@ import { Check } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTasks } from '../api/get-tasks';
 import { useUpdateTask } from '../api/update-tasks';
+import { sortSubtasks } from '../utils/subtasks';
 
 type CardSubtaskChecklistProps = {
     profileId: number;
@@ -20,10 +21,7 @@ export const CardSubtaskChecklist = ({ profileId, parentId }: CardSubtaskCheckli
     const updateTask = useUpdateTask();
 
     const subtasks = useMemo(
-        () =>
-            (tasksQuery.data?.tasks ?? [])
-                .filter((t) => t.parent_id === parentId)
-                .sort((a, b) => a.created_date.localeCompare(b.created_date)),
+        () => sortSubtasks((tasksQuery.data?.tasks ?? []).filter((t) => t.parent_id === parentId)),
         [tasksQuery.data, parentId]
     );
 

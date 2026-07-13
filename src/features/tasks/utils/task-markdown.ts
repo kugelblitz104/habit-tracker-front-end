@@ -82,6 +82,21 @@ const renderTaskWithSubtasks = (
     return lines;
 };
 
+/**
+ * Render a SINGLE task (plus its subtasks) as a Markdown checklist block —
+ * the same per-task shape used inside the full view export, but without the
+ * document heading / section chrome, for copying one task to the clipboard
+ * from the detail view. `subtasks` should be the task's direct children.
+ */
+export const renderTaskMarkdown = (
+    task: TaskRead,
+    subtasks: TaskRead[],
+    projectsById: Map<number, ProjectRead>
+): string => {
+    const subtasksByParent = new Map<number, TaskRead[]>([[task.id, subtasks]]);
+    return renderTaskWithSubtasks(task, projectsById, subtasksByParent).join('\n') + '\n';
+};
+
 export type TaskMarkdownInput = {
     /** Document heading, e.g. "All tasks" or the project's name. */
     title: string;

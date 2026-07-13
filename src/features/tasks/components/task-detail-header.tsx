@@ -1,7 +1,7 @@
 import type { ProjectRead, TaskRead } from '@/api';
 import { parseLocalDate } from '@/lib/date-utils';
 import { TaskStatus } from '@/types/types';
-import { Pencil, X } from 'lucide-react';
+import { ClipboardCopy, Pencil, X } from 'lucide-react';
 import { Link } from 'react-router';
 import { toActiveBand } from '../utils/task-bands';
 import { formatShortDate } from '../utils/task-format';
@@ -33,6 +33,8 @@ type TaskDetailHeaderProps = {
     showEstimatedEffort: boolean;
     onEdit: () => void;
     onClose?: () => void;
+    /** Copy this task (and its subtasks) to the clipboard as Markdown. */
+    onCopy?: () => void;
 };
 
 /**
@@ -46,7 +48,8 @@ export const TaskDetailHeader = ({
     pathname,
     showEstimatedEffort,
     onEdit,
-    onClose
+    onClose,
+    onCopy
 }: TaskDetailHeaderProps) => {
     const status = (task.status ?? TaskStatus.OPEN) as TaskStatus;
     const meta = STATUS_META[status];
@@ -62,6 +65,18 @@ export const TaskDetailHeader = ({
                     {task.title}
                 </h1>
                 <div className='flex shrink-0 items-center gap-1.5'>
+                    {onCopy && (
+                        <button
+                            type='button'
+                            onClick={onCopy}
+                            aria-label='Copy task as Markdown'
+                            title='Copy as Markdown'
+                            className='rounded-button border p-1.5 text-text-muted transition-colors hover:text-text-primary'
+                            style={{ borderColor: 'var(--surface-input-border)' }}
+                        >
+                            <ClipboardCopy size={14} />
+                        </button>
+                    )}
                     <button
                         type='button'
                         onClick={onEdit}

@@ -18,5 +18,6 @@ export type TaskCreate = {
     estimated_effort?: (number | null);
     project_id?: (number | null);
     parent_id?: (number | null);
+    sort_order?: number;
 };
 

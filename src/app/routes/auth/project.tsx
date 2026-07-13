@@ -32,7 +32,7 @@ import { toLocalDateString } from '@/lib/date-utils';
 import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE } from '@/lib/layout';
 import { useAuth } from '@/lib/auth-context';
 import { TimeEntryKind, type TaskStatus } from '@/types/types';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import type { Route } from './+types/project';
@@ -46,6 +46,20 @@ function ProjectContent({ projectId }: { projectId: number }) {
     const profileId = activeProfileId ?? undefined;
     const navigate = useNavigate();
     const location = useLocation();
+
+    // Projects are profile-scoped: switching the active profile means this
+    // project no longer belongs to the visible profile, so bounce back to the
+    // all-projects list. Guard against the initial null -> id resolution on
+    // first load (auth-context fills activeProfileId once profiles fetch) so a
+    // fresh deep-link to /projects/:id isn't immediately redirected away.
+    const prevProfileId = useRef(activeProfileId);
+    useEffect(() => {
+        const prev = prevProfileId.current;
+        prevProfileId.current = activeProfileId;
+        if (prev != null && activeProfileId != null && prev !== activeProfileId) {
+            navigate('/projects');
+        }
+    }, [activeProfileId, navigate]);
 
     // Origin-aware back: return to wherever the project was opened from.
     const from = (location.state as { from?: string } | null)?.from;

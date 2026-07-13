@@ -18,6 +18,7 @@ export type TaskRead = {
     estimated_effort?: (number | null);
     project_id?: (number | null);
     parent_id?: (number | null);
+    sort_order?: number;
     id: number;
     closed_date?: (string | null);
     created_date: string;

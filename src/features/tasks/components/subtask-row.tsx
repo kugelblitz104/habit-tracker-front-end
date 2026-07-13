@@ -1,60 +1,73 @@
 import type { TaskRead } from '@/api';
 import { TaskStatus } from '@/types/types';
-import { Check } from 'lucide-react';
-import type { ReactNode } from 'react';
+import type { DraggableAttributes } from '@dnd-kit/core';
+import type { CSSProperties, ReactNode } from 'react';
+import { StatusControl } from './status-control';
 
 type SubtaskRowProps = {
     subtask: TaskRead;
-    onToggle: () => void;
+    /** Change the subtask's status (the round glyph opens the 8-status picker). */
+    onStatusChange: (status: TaskStatus) => void;
     disabled?: boolean;
     /**
-     * 'checklist' — SubtaskSection's editable row: a `role=checkbox` toggle
-     * button (so trailing actions stay independently clickable) in a `<li>`,
-     * mono-styled title.
-     * 'view' — TaskDetailBody's read-only row: the whole row is the toggle
-     * button, display-font title, no trailing actions.
+     * 'checklist' — SubtaskSection's editable row: a `<li>` with a leading drag
+     * handle, the status glyph, a mono title and trailing actions.
+     * 'view' — TaskDetailBody's read-only row: status glyph + display-font
+     * title, no drag handle or trailing actions.
      */
     variant: 'checklist' | 'view';
     /** Checklist-only trailing actions (promote / delete). */
     actions?: ReactNode;
+    /** Checklist-only leading drag handle (dnd-kit grip). */
+    handle?: ReactNode;
+    /** Checklist-only sortable wiring for the `<li>`. */
+    setNodeRef?: (node: HTMLElement | null) => void;
+    style?: CSSProperties;
+    attributes?: DraggableAttributes;
+    isDragging?: boolean;
 };
 
 /**
- * Shared checkbox-row chrome for a subtask: a bordered square that fills in
- * and shows a check when done, plus the title (struck through + faint when
- * done). The two hosts wrap this differently — see `variant` — so both keep
- * their existing exact markup/behavior while sharing the checkbox/title bits.
+ * Shared row chrome for a subtask: the same round status glyph parent tasks use
+ * (click to open the 8-status picker) plus the title (struck through + faint
+ * when done). Subtasks surface *only* their status — other metadata (priority,
+ * notes, …) stays hidden unless the task is promoted to a full task. The two
+ * hosts wrap this differently via `variant`.
  */
-export const SubtaskRow = ({ subtask, onToggle, disabled, variant, actions }: SubtaskRowProps) => {
-    const done = subtask.status === TaskStatus.DONE;
+export const SubtaskRow = ({
+    subtask,
+    onStatusChange,
+    disabled,
+    variant,
+    actions,
+    handle,
+    setNodeRef,
+    style,
+    attributes,
+    isDragging
+}: SubtaskRowProps) => {
+    const status = (subtask.status ?? TaskStatus.OPEN) as TaskStatus;
+    const done = status === TaskStatus.DONE;
 
     if (variant === 'checklist') {
         return (
             <li
+                ref={setNodeRef}
                 className='flex items-center gap-2 border-b py-1.5'
-                style={{ borderColor: 'var(--surface-input-border)' }}
+                style={{
+                    ...style,
+                    borderColor: 'var(--surface-input-border)',
+                    opacity: isDragging ? 0.5 : 1
+                }}
+                {...attributes}
             >
-                <button
-                    type='button'
-                    role='checkbox'
-                    aria-checked={done}
-                    aria-label={
-                        done ? `Mark "${subtask.title}" not done` : `Mark "${subtask.title}" done`
-                    }
-                    onClick={onToggle}
+                {handle}
+                <StatusControl
+                    status={status}
+                    onSelect={onStatusChange}
+                    band='whenever'
                     disabled={disabled}
-                    className='flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors disabled:cursor-not-allowed'
-                    style={{
-                        borderColor: done
-                            ? 'var(--color-status-done-check)'
-                            : 'var(--surface-input-border)',
-                        backgroundColor: done ? 'rgba(63, 107, 74, 0.35)' : 'transparent'
-                    }}
-                >
-                    {done && (
-                        <Check size={11} style={{ color: 'var(--color-status-done-check)' }} />
-                    )}
-                </button>
+                />
                 <span
                     className={`min-w-0 flex-1 truncate font-mono text-[12px] ${
                         done ? 'text-text-faint line-through' : 'text-text-secondary'
@@ -69,28 +82,8 @@ export const SubtaskRow = ({ subtask, onToggle, disabled, variant, actions }: Su
     }
 
     return (
-        <button
-            type='button'
-            onClick={onToggle}
-            className='flex items-center gap-2 rounded-button px-1.5 py-1 text-left transition-colors hover:bg-white/5'
-        >
-            <span
-                className='flex h-4 w-4 shrink-0 items-center justify-center rounded border'
-                style={{
-                    borderColor: done
-                        ? 'var(--color-status-done-check)'
-                        : 'var(--surface-input-border)',
-                    backgroundColor: done ? 'rgba(63, 107, 74, 0.35)' : 'transparent'
-                }}
-            >
-                {done && (
-                    <Check
-                        size={11}
-                        strokeWidth={3}
-                        style={{ color: 'var(--color-status-done-check)' }}
-                    />
-                )}
-            </span>
+        <div className='flex items-center gap-2 rounded-button px-1.5 py-1'>
+            <StatusControl status={status} onSelect={onStatusChange} band='whenever' />
             <span
                 className={`font-display text-[13px] ${
                     done ? 'text-text-faint line-through' : 'text-text-secondary'
@@ -98,6 +91,6 @@ export const SubtaskRow = ({ subtask, onToggle, disabled, variant, actions }: Su
             >
                 {subtask.title}
             </span>
-        </button>
+        </div>
     );
 };

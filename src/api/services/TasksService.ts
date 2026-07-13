@@ -153,6 +153,35 @@ export class TasksService {
         });
     }
     /**
+     * Reorder tasks
+     * Reorder tasks by providing their IDs in the desired display order.
+     *
+     * - **task_ids**: List of task IDs in the order you want them displayed
+     *
+     * The first ID gets the lowest sort_order, the last the highest; tasks are
+     * displayed in ascending sort_order (with created_date as a tiebreak). This
+     * is used for drag-to-reorder among a set of siblings (e.g. one parent's
+     * subtasks); the caller is expected to pass a coherent sibling set, but the
+     * endpoint only enforces ownership, not shared parentage.
+     * @param requestBody
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static sortTasksTasksSortPut(
+        requestBody: Array<number>,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'PUT',
+            url: '/tasks/sort',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Get a task by ID
      * Retrieve a specific task by its ID, including its computed urgency band
      * and its subtask counts (subtask_count / subtask_done_count, done = status

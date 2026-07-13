@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import { useId } from 'react';
 import { PRIORITY_LEVELS } from '../utils/priority-config';
+import { ParentTaskAutocomplete, type ParentTaskOption } from './parent-task-autocomplete';
 import { TimePicker } from './time-picker';
 
 /**
@@ -230,6 +231,36 @@ export const EstimatedEffortField = ({ value, onChange, id }: EstimatedEffortFie
                 className={`${formFieldClass} placeholder:text-text-faint`}
                 style={{ ...formFieldStyle, width: '8rem' }}
             />
+        </div>
+    );
+};
+
+type ParentTaskFieldProps = {
+    /** Current parent task id, or null when this is a top-level task. */
+    value: number | null;
+    onChange: (value: number | null) => void;
+    /** Candidate parents (the profile's other top-level tasks). */
+    options: ParentTaskOption[];
+    id?: string;
+};
+
+/**
+ * Parent-task selector — demotes a top-level task to a subtask (or detaches an
+ * existing subtask via "None"). Only rendered for tasks that have no subtasks
+ * of their own (subtasks nest one level deep, so a task with children can't
+ * itself become a subtask). Demoting keeps the task's own metadata; it just
+ * stops being surfaced in favor of the parent's while it's a subtask. The
+ * picker is a type-to-filter autocomplete (see ParentTaskAutocomplete).
+ */
+export const ParentTaskField = ({ value, onChange, options, id }: ParentTaskFieldProps) => {
+    const generatedId = useId();
+    const fieldId = id ?? `task-parent-${generatedId}`;
+    return (
+        <div>
+            <label className={formLabelClass} htmlFor={fieldId}>
+                Parent task
+            </label>
+            <ParentTaskAutocomplete id={fieldId} value={value} onChange={onChange} options={options} />
         </div>
     );
 };

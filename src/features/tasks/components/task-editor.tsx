@@ -5,6 +5,7 @@ import { TaskStatus } from '@/types/types';
 import { Trash2 } from 'lucide-react';
 import { useEffect, useState, type KeyboardEvent } from 'react';
 import { toast } from 'react-toastify';
+import { useTasks } from '../api/get-tasks';
 import { useUpdateTask } from '../api/update-tasks';
 import { useDeleteTaskWithConfirm } from '../hooks/use-delete-task-with-confirm';
 import { SubtaskSection } from './subtask-section';
@@ -17,6 +18,7 @@ import {
     formFieldStyle,
     formLabelClass,
     NotesField,
+    ParentTaskField,
     PriorityField,
     ProjectField
 } from './task-form-fields';
@@ -56,10 +58,24 @@ export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
     const [scheduledDate, setScheduledDate] = useState(task.scheduled_date ?? '');
     const [scheduledTime, setScheduledTime] = useState(task.scheduled_time ?? '');
     const [projectId, setProjectId] = useState<number | null>(task.project_id ?? null);
+    const [parentId, setParentId] = useState<number | null>(task.parent_id ?? null);
     const [estimatedEffort, setEstimatedEffort] = useState<number | null>(
         task.estimated_effort ?? null
     );
     const [blockReason, setBlockReason] = useState(task.block_reason ?? '');
+
+    // Parent-task candidates for demote/re-parent: the profile's other
+    // top-level tasks. A task that itself has subtasks can't become a subtask
+    // (subtasks nest one level deep), so the field is hidden in that case.
+    const canReparent = (task.subtask_count ?? 0) === 0;
+    const tasksQuery = useTasks({
+        profileId: task.profile_id,
+        includeClosed: true,
+        queryConfig: { enabled: canReparent }
+    });
+    const parentOptions = (tasksQuery.data?.tasks ?? [])
+        .filter((t) => t.parent_id == null && t.id !== task.id)
+        .map((t) => ({ id: t.id, title: t.title }));
 
     // Actual tracked time for this task (sum of completed entries), shown beside
     // the estimate for a quick est-vs-actual read.
@@ -101,6 +117,8 @@ export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
 
         if (projectId !== (task.project_id ?? null)) patch.project_id = projectId;
 
+        if (parentId !== (task.parent_id ?? null)) patch.parent_id = parentId;
+
         if (estimatedEffort !== (task.estimated_effort ?? null))
             patch.estimated_effort = estimatedEffort;
 
@@ -137,12 +155,12 @@ export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
     // drops out of every band once the confirmation resolves.
     const handleDelete = () => deleteWithConfirm(task.id, { onSuccess: onDeleted ?? onClose });
 
-    // Enter saves the task. Skips the multiline notes textarea (Enter = newline);
-    // the subtask rapid-add input stops propagation on Enter (adds a subtask), so
-    // this bubble-phase handler never fires for it.
+    // Shift+Enter saves the task from anywhere in the editor — including the notes
+    // textarea, where plain Enter inserts a newline. Plain Enter keeps its native
+    // behavior everywhere; the subtask rapid-add input stops propagation on Enter
+    // to add a subtask, so that key never reaches this bubble-phase handler either.
     const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-        if (e.key !== 'Enter' || e.shiftKey || e.defaultPrevented) return;
-        if ((e.target as HTMLElement).tagName === 'TEXTAREA') return;
+        if (e.key !== 'Enter' || !e.shiftKey || e.defaultPrevented) return;
         e.preventDefault();
         handleSave();
     };
@@ -228,6 +246,17 @@ export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
                 value={projectId}
                 onChange={setProjectId}
             />
+
+            {/* Parent task — demote to a subtask (or detach) when this task has
+                no subtasks of its own. */}
+            {canReparent && (
+                <ParentTaskField
+                    id={`task-parent-${task.id}`}
+                    value={parentId}
+                    onChange={setParentId}
+                    options={parentOptions}
+                />
+            )}
 
             {/* Block reason — only when the task is blocked. */}
             {isBlocked && (

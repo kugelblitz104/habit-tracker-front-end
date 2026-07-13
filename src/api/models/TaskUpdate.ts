@@ -18,5 +18,6 @@ export type TaskUpdate = {
     estimated_effort?: (number | null);
     project_id?: (number | null);
     parent_id?: (number | null);
+    sort_order?: (number | null);
 };
 

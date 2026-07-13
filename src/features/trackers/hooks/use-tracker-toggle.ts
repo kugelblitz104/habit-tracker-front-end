@@ -10,7 +10,7 @@ import {
     getDisplayStatusForDate,
     getNextTrackerState
 } from '@/features/trackers/utils/tracker-utils';
-import type { DisplayStatus } from '@/types/types';
+import { TrackerStatus, type DisplayStatus } from '@/types/types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -70,27 +70,51 @@ export const useTrackerToggle = (habit: HabitRead, date: Date): UseTrackerToggle
 
     const toggle = () => {
         // Ignore rapid re-clicks while a mutation is in flight so a double-click
-        // before a create resolves can't fire two creates for the same date.
+        // before a create resolves can't fire two creates (or update an as-yet
+        // unpersisted optimistic row) for the same date.
         if (trackerCreate.isPending || trackerUpdate.isPending) return;
 
         const tracker = findTrackerByDate(trackers, date);
 
+        // Optimistic path: apply the change to local state up front so the
+        // checkbox reacts instantly, fire the request in the background, then
+        // reconcile with the server row on success or roll back on failure.
+        // (The hook-level onError toast still surfaces the failure.)
         if (!tracker) {
             const newTracker = createNewTracker(habit.id, date);
+            const tempId = -Date.now();
+            const optimistic: TrackerLite = {
+                id: tempId,
+                dated: newTracker.dated ?? '',
+                status: newTracker.status ?? TrackerStatus.COMPLETED,
+                has_note: !!newTracker.note
+            };
+            setTrackers((prev) => [...prev, optimistic]);
             trackerCreate.mutate(newTracker, {
-                onSuccess: (data) => setTrackers((prev) => [...prev, toTrackerLite(data)])
+                onSuccess: (data) =>
+                    setTrackers((prev) =>
+                        prev.map((t) => (t.id === tempId ? toTrackerLite(data) : t))
+                    ),
+                onError: () => setTrackers((prev) => prev.filter((t) => t.id !== tempId))
             });
             return;
         }
 
         const update = getNextTrackerState(tracker);
+        const previousTrackers = trackers;
+        setTrackers((prev) =>
+            prev.map((t) =>
+                t.id === tracker.id ? { ...t, status: update.status ?? t.status } : t
+            )
+        );
         trackerUpdate.mutate(
             { id: tracker.id, update },
             {
                 onSuccess: (data) =>
                     setTrackers((prev) =>
                         prev.map((t) => (t.id === tracker.id ? toTrackerLite(data) : t))
-                    )
+                    ),
+                onError: () => setTrackers(previousTrackers)
             }
         );
     };

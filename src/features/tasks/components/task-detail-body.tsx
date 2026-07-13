@@ -1,3 +1,4 @@
+import type { ProjectRead } from '@/api';
 import { useProjects } from '@/features/projects/api/get-projects';
 import { TaskTimeLog } from '@/features/time-entries/components/task-time-log';
 import { useAuth } from '@/lib/auth-context';
@@ -6,8 +7,10 @@ import { TaskStatus } from '@/types/types';
 import { Ban, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router';
-import { useTask } from '../api/get-tasks';
+import { toast } from 'react-toastify';
+import { useTask, useTasks } from '../api/get-tasks';
 import { useDeleteTaskWithConfirm } from '../hooks/use-delete-task-with-confirm';
+import { renderTaskMarkdown } from '../utils/task-markdown';
 import { TaskDetailHeader } from './task-detail-header';
 import { TaskDetailSubtasks } from './task-detail-subtasks';
 import { TaskEditor } from './task-editor';
@@ -53,7 +56,26 @@ export const TaskDetailBody = ({
         [task?.project_id, projectsQuery.data]
     );
 
+    // Subtasks for the Markdown copy (the profile's tasks filtered to this
+    // parent). Only meaningful for a top-level task; the query is shared with
+    // the rest of the app so it's already warm.
+    const subtasksQuery = useTasks({ profileId: task?.profile_id, includeClosed: true });
+
     const { deleteWithConfirm, isPending: isDeletePending } = useDeleteTaskWithConfirm();
+
+    const handleCopy = async () => {
+        if (!task) return;
+        const subtasks = (subtasksQuery.data?.tasks ?? []).filter((t) => t.parent_id === task.id);
+        const projectsById = new Map<number, ProjectRead>(
+            (projectsQuery.data?.projects ?? []).map((p) => [p.id, p])
+        );
+        try {
+            await navigator.clipboard.writeText(renderTaskMarkdown(task, subtasks, projectsById));
+            toast.success('Task copied as Markdown');
+        } catch {
+            toast.error('Failed to copy task');
+        }
+    };
 
     if (!task) {
         return (
@@ -105,6 +127,7 @@ export const TaskDetailBody = ({
                 showEstimatedEffort={showEstimatedEffort}
                 onEdit={() => setIsEditing(true)}
                 onClose={onClose}
+                onCopy={handleCopy}
             />
 
             {/* Block reason — only while the task is actually blocked, in a
