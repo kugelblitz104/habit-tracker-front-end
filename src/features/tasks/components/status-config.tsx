@@ -51,6 +51,20 @@ export const STATUS_META: Record<TaskStatus, StatusMeta> = {
         pillText: 'var(--status-needsinfo-pill-text)',
         pillBg: 'var(--status-needsinfo-pill-bg)'
     },
+    [TaskStatus.PENDING]: {
+        status: TaskStatus.PENDING,
+        label: 'Pending',
+        color: 'var(--color-status-pending)',
+        pillText: 'var(--status-pending-pill-text)',
+        pillBg: 'var(--status-pending-pill-bg)'
+    },
+    [TaskStatus.UNCLEAR]: {
+        status: TaskStatus.UNCLEAR,
+        label: 'Unclear',
+        color: 'var(--color-status-unclear)',
+        pillText: 'var(--status-unclear-pill-text)',
+        pillBg: 'var(--status-unclear-pill-bg)'
+    },
     [TaskStatus.DEFERRED]: {
         status: TaskStatus.DEFERRED,
         label: 'Deferred',
@@ -81,6 +95,8 @@ export const STATUS_ORDER: TaskStatus[] = [
     TaskStatus.SCHEDULED,
     TaskStatus.BLOCKED,
     TaskStatus.NEEDS_INFO,
+    TaskStatus.UNCLEAR,
+    TaskStatus.PENDING,
     TaskStatus.DEFERRED,
     TaskStatus.DONE,
     TaskStatus.CANCELLED

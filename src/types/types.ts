@@ -30,7 +30,9 @@ export enum TaskStatus {
     NEEDS_INFO = 4,
     DEFERRED = 5,
     DONE = 6,
-    CANCELLED = 7
+    CANCELLED = 7,
+    PENDING = 8,
+    UNCLEAR = 9
 }
 
 /**

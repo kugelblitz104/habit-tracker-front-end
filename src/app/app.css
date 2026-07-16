@@ -122,6 +122,8 @@
     --color-status-scheduled: #6fa8e5;
     --color-status-needsinfo: #b98fe6;
     --color-status-deferred: #6a6357;
+    --color-status-pending: #4fb0a3;
+    --color-status-unclear: #cbb04f;
     --color-status-cancelled: #57524a;
     --color-status-done: #3f6b4a;
     --color-status-done-check: #bfe6c9;
@@ -207,6 +209,10 @@
     --status-needsinfo-pill-text: #c6a6ec;
     --status-needsinfo-pill-bg: rgba(169, 127, 224, 0.14);
     --status-deferred-pill-text: #8a8177;
+    --status-pending-pill-text: #6fd0c2;
+    --status-pending-pill-bg: rgba(79, 176, 163, 0.14);
+    --status-unclear-pill-text: #e2c866;
+    --status-unclear-pill-bg: rgba(203, 176, 79, 0.14);
     --status-duetoday-bg: rgba(255, 90, 54, 0.14);
 
     /* ---- Habits (cool) container ---- */

@@ -132,8 +132,9 @@ export const TodayDashboard = () => {
     }, []);
     const subline = `${openCount} open`;
 
-    // Status roll-up shown under the header: in-progress (incl. scheduled),
-    // blocked (incl. needs-info) and completed today. Top-level tasks only.
+    // Status roll-up shown under the header: in-progress (incl. scheduled) and
+    // blocked (incl. needs-info) count top-level tasks only; "done today" counts
+    // every task and subtask completed today.
     const statusCounts = useMemo(() => {
         const topLevel = tasks.filter((t) => t.parent_id == null);
         const inProgress = topLevel.filter(
@@ -143,9 +144,10 @@ export const TodayDashboard = () => {
             (t) => t.status === TaskStatus.BLOCKED || t.status === TaskStatus.NEEDS_INFO
         ).length;
         const todayKey = toLocalDateString(new Date());
+        // Counts both top-level tasks and subtasks completed today — finishing a
+        // subtask is real progress and should show in the tally.
         const doneToday = (closedQuery.data?.tasks ?? []).filter(
             (t) =>
-                t.parent_id == null &&
                 t.status === TaskStatus.DONE &&
                 t.closed_date != null &&
                 toLocalDateString(parseServerDate(t.closed_date)) === todayKey

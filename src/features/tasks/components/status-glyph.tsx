@@ -1,5 +1,14 @@
 import { TaskStatus } from '@/types/types';
-import { Circle, CircleDot, CircleHelp, CircleMinus, CircleX, type LucideIcon } from 'lucide-react';
+import {
+    Circle,
+    CircleDashed,
+    CircleDot,
+    CircleEllipsis,
+    CircleHelp,
+    CircleMinus,
+    CircleX,
+    type LucideIcon
+} from 'lucide-react';
 
 type StatusGlyphProps = {
     status: TaskStatus;
@@ -15,6 +24,8 @@ const LUCIDE_GLYPH: Partial<Record<TaskStatus, LucideIcon>> = {
     [TaskStatus.SCHEDULED]: CircleDot, // ring + centre dot
     [TaskStatus.BLOCKED]: CircleMinus, // ring + horizontal bar
     [TaskStatus.NEEDS_INFO]: CircleHelp, // ring + "?"
+    [TaskStatus.PENDING]: CircleEllipsis, // ring + "…" — waiting on others
+    [TaskStatus.UNCLEAR]: CircleDashed, // dashed ring — requirements unclear
     [TaskStatus.CANCELLED]: CircleX // ring + "✕"
 };
 

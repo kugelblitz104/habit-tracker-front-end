@@ -18,7 +18,7 @@ import { getFrequencyString } from '@/lib/date-utils';
 import { useLongPress } from '@/lib/use-long-press';
 import { DisplayStatus } from '@/types/types';
 import { Button } from '@headlessui/react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Flame } from 'lucide-react';
 import type { MouseEvent } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -72,9 +72,16 @@ export const HabitListElement = ({
     const [trackers, setTrackers] = useState<TrackerLite[]>([]);
     const currentDateRef = useRef<Date | null>(null);
 
-    // Shared optimistic mutations; unlike the Today panel's use-tracker-toggle
-    // this surface intentionally skips cache invalidation and error toasts.
-    const { trackerCreate, trackerUpdate } = useTrackerMutations(habit.id);
+    const queryClient = useQueryClient();
+
+    // Shared optimistic mutations. The day cells patch in place instantly; on
+    // top of that we invalidate this habit's KPI cache so the streak flame in
+    // the Streak column re-fetches and updates immediately after a toggle
+    // (the streak is server-computed from full history, ['kpis', { habitId }]).
+    const { trackerCreate, trackerUpdate } = useTrackerMutations(habit.id, {
+        onSuccess: () =>
+            queryClient.invalidateQueries({ queryKey: ['kpis', { habitId: habit.id }] })
+    });
 
     const handleNoteClick = (date: Date) => {
         const tracker = findTrackerByDate(trackers, date);

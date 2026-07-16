@@ -1,6 +1,6 @@
 import type { TaskRead } from '@/api';
 import { ACTIVE_TASK_BANDS, type TaskBand } from '@/types/types';
-import { isBackburnerStatus } from './task-controls';
+import { compareSmart } from './task-controls';
 
 type BandGroup = {
     band: Exclude<TaskBand, 'hidden'>;
@@ -12,21 +12,17 @@ type BandGroup = {
  * or computes a band). Tasks with an unknown/hidden band land in no group.
  * Subtasks (`parent_id` set) are excluded entirely — their band value is
  * meaningless and they render nested under their parent in the task editor,
- * never as top-level cards. Within each band, back-burner statuses (blocked /
- * needs info / scheduled) sink to the bottom via a stable sort that otherwise
- * preserves the server's priority/due ordering. Shared by the Today and
- * Project band surfaces.
+ * never as top-level cards. Within each band, tasks follow the shared smart
+ * ranking (in progress → open → scheduled → pending → blocked → needs info →
+ * deferred), then priority + due date. Shared by the Today and Project band
+ * surfaces.
  */
 export const groupTasksByBand = (tasks: TaskRead[]): BandGroup[] =>
     ACTIVE_TASK_BANDS.map((band) => ({
         band,
         tasks: tasks
             .filter((task) => task.parent_id == null && task.band === band)
-            .sort(
-                (a, b) =>
-                    (isBackburnerStatus(a.status ?? 0) ? 1 : 0) -
-                    (isBackburnerStatus(b.status ?? 0) ? 1 : 0)
-            )
+            .sort(compareSmart)
     }));
 
 /**

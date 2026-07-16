@@ -6,7 +6,6 @@ import {
     calculateStreaks,
     getEffectiveStartDate
 } from './kpi-utils';
-import { isAutoSkipped } from './tracker-utils';
 
 /**
  * Bridge between the client-side KPI/streak compute (which uses ×100 percentages
@@ -21,7 +20,10 @@ import { isAutoSkipped } from './tracker-utils';
 /**
  * Completion rate (0.0–1.0) for each weekday, indexed by Python `date.weekday()`
  * (0 = Monday … 6 = Sunday) to match the backend's `weekday_completion_rates`.
- * A day counts as a completion when it is completed, skipped, or auto-skipped.
+ * Only days actually marked COMPLETED count — skipped and auto-skipped days do
+ * not — and the rate is `min(1, completed / expected)` where expected spreads
+ * the habit's goal evenly (`dayCount * frequency / range`), exactly as the
+ * server computes it (`_weekday_completion_rates`).
  */
 const computeWeekdayCompletionRates = (
     habit: HabitRead,
@@ -36,11 +38,6 @@ const computeWeekdayCompletionRates = (
             .filter((t) => t.status === TrackerStatus.COMPLETED && t.dated)
             .map((t) => t.dated as string)
     );
-    const skippedDates = new Set(
-        trackers
-            .filter((t) => t.status === TrackerStatus.SKIPPED && t.dated)
-            .map((t) => t.dated as string)
-    );
 
     const totals = new Array(7).fill(0);
     const completions = new Array(7).fill(0);
@@ -52,18 +49,17 @@ const computeWeekdayCompletionRates = (
         const pyWeekday = (current.getDay() + 6) % 7;
         totals[pyWeekday]++;
 
-        if (
-            completedDates.has(dateStr) ||
-            skippedDates.has(dateStr) ||
-            isAutoSkipped(current, trackers, habit.frequency, habit.range)
-        ) {
+        if (completedDates.has(dateStr)) {
             completions[pyWeekday]++;
         }
 
         current.setDate(current.getDate() + 1);
     }
 
-    return totals.map((total, i) => (total > 0 ? completions[i] / total : 0));
+    return totals.map((total, i) => {
+        const expected = (total * habit.frequency) / habit.range;
+        return expected > 0 ? Math.min(1, completions[i] / expected) : 0;
+    });
 };
 
 /**

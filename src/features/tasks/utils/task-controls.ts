@@ -41,12 +41,49 @@ export type TaskControlsState = {
 
 // Fixed section order for the priority / status groupings.
 const PRIORITY_ORDER = [3, 2, 1, 0];
+
+/**
+ * Inter-status sort rank (lower = higher up the list). Drives the "smart" sort
+ * on every task surface: what you're actively doing floats to the top, then the
+ * things you can act on, then the things parked on someone/something else, with
+ * deferred always last among active statuses and done/cancelled at the very
+ * bottom. Within a single rank, tasks fall back to priority + due date.
+ *
+ *   in progress → open → scheduled → pending → blocked → needs info → unclear
+ *   → deferred → done → cancelled
+ *
+ * "Pending" (work done on my end, waiting for others) sits above blocked/needs
+ * info: it's not actionable by me, but it's ahead of things I'm actively
+ * stuck on. "Unclear" (requirements need clarification) groups with the other
+ * waiting-on-something statuses. Done/cancelled only reach the ranking on
+ * surfaces that keep them inline (e.g. subtasks); the main list peels them into
+ * the Closed section.
+ */
+const STATUS_RANK: Record<number, number> = {
+    [TaskStatus.IN_PROGRESS]: 0,
+    [TaskStatus.OPEN]: 1,
+    [TaskStatus.SCHEDULED]: 2,
+    [TaskStatus.PENDING]: 3,
+    [TaskStatus.BLOCKED]: 4,
+    [TaskStatus.NEEDS_INFO]: 5,
+    [TaskStatus.UNCLEAR]: 6,
+    [TaskStatus.DEFERRED]: 7,
+    [TaskStatus.DONE]: 8,
+    [TaskStatus.CANCELLED]: 9
+};
+/** Rank for the smart sort; unknown statuses sort as OPEN (a safe middle). */
+export const statusRank = (status: number): number =>
+    STATUS_RANK[status] ?? STATUS_RANK[TaskStatus.OPEN]!;
+
+// Section header order for `groupBy: 'status'`, aligned with the smart-sort rank.
 const STATUS_ORDER = [
     TaskStatus.IN_PROGRESS,
-    TaskStatus.NEEDS_INFO,
-    TaskStatus.BLOCKED,
-    TaskStatus.SCHEDULED,
     TaskStatus.OPEN,
+    TaskStatus.SCHEDULED,
+    TaskStatus.PENDING,
+    TaskStatus.BLOCKED,
+    TaskStatus.NEEDS_INFO,
+    TaskStatus.UNCLEAR,
     TaskStatus.DEFERRED,
     TaskStatus.DONE,
     TaskStatus.CANCELLED
@@ -57,17 +94,6 @@ const STATUS_ORDER = [
 const CLOSED_STATUS_VALUES: number[] = [TaskStatus.DONE, TaskStatus.CANCELLED];
 export const isClosedStatus = (status: number): boolean =>
     CLOSED_STATUS_VALUES.includes(status);
-
-/** Not immediately actionable — blocked/needs-info are waiting on something and
- *  scheduled is slated for later, so these sink to the bottom of their band and
- *  of the "smart" sort, below the tasks you can actually act on now. */
-const BACKBURNER_STATUS_VALUES: number[] = [
-    TaskStatus.BLOCKED,
-    TaskStatus.NEEDS_INFO,
-    TaskStatus.SCHEDULED
-];
-export const isBackburnerStatus = (status: number): boolean =>
-    BACKBURNER_STATUS_VALUES.includes(status);
 
 /** Every status value, for a "select all" affordance in the filter UI. */
 export const ALL_STATUS_VALUES: number[] = [...STATUS_ORDER];
@@ -98,12 +124,13 @@ export type TaskSection = {
 
 export { PRIORITY_LABELS };
 
-const compareSmart = (a: TaskRead, b: TaskRead): number => {
-    // Back-burner statuses (blocked / needs info / scheduled) sink below the
-    // actionable ones regardless of priority or due date.
-    const ba = isBackburnerStatus(a.status ?? 0) ? 1 : 0;
-    const bb = isBackburnerStatus(b.status ?? 0) ? 1 : 0;
-    if (ba !== bb) return ba - bb;
+export const compareSmart = (a: TaskRead, b: TaskRead): number => {
+    // Status rank first (in progress → open → scheduled → pending → blocked →
+    // needs info → unclear → deferred → done → cancelled), then priority + due
+    // date within the same rank so every band is ordered by what's most pressing.
+    const ra = statusRank(a.status ?? 0);
+    const rb = statusRank(b.status ?? 0);
+    if (ra !== rb) return ra - rb;
     const pa = a.priority ?? 0;
     const pb = b.priority ?? 0;
     if (pa !== pb) return pb - pa; // priority desc

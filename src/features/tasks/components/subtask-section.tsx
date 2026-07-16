@@ -11,8 +11,8 @@ import {
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowUpFromLine, GripVertical, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { ArrowUpFromLine, FolderInput, GripVertical, Trash2 } from 'lucide-react';
+import { Fragment, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { toast } from 'react-toastify';
 import { useCreateTask } from '../api/create-tasks';
 import { useDeleteTask } from '../api/delete-tasks';
@@ -20,6 +20,7 @@ import { useTasks } from '../api/get-tasks';
 import { useSortTasks } from '../api/sort-tasks';
 import { useUpdateTask } from '../api/update-tasks';
 import { sortSubtasks } from '../utils/subtasks';
+import { ParentTaskAutocomplete } from './parent-task-autocomplete';
 import { SubtaskRow } from './subtask-row';
 import { formFieldClass, formFieldStyle, formLabelClass } from './task-form-fields';
 
@@ -32,6 +33,7 @@ type SortableSubtaskRowProps = {
     subtask: TaskRead;
     disabled: boolean;
     onStatusChange: (status: TaskStatus) => void;
+    onRename: (title: string) => void;
     actions: React.ReactNode;
 };
 
@@ -42,6 +44,7 @@ const SortableSubtaskRow = ({
     subtask,
     disabled,
     onStatusChange,
+    onRename,
     actions
 }: SortableSubtaskRowProps) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -64,6 +67,7 @@ const SortableSubtaskRow = ({
             subtask={subtask}
             variant='checklist'
             onStatusChange={onStatusChange}
+            onRename={onRename}
             disabled={disabled}
             actions={actions}
             handle={handle}
@@ -95,10 +99,21 @@ export const SubtaskSection = ({ parent }: SubtaskSectionProps) => {
 
     const [newTitle, setNewTitle] = useState('');
     const [hideDone, setHideDone] = useState(false);
+    const [movingId, setMovingId] = useState<number | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
     const allSubtasks = useMemo(
         () => (tasksQuery.data?.tasks ?? []).filter((task) => task.parent_id === parent.id),
+        [tasksQuery.data, parent.id]
+    );
+
+    // Candidate parents to move a subtask to: the profile's other top-level
+    // tasks (subtasks nest one level deep, so a subtask can't be a parent).
+    const parentOptions = useMemo(
+        () =>
+            (tasksQuery.data?.tasks ?? [])
+                .filter((t) => t.parent_id == null && t.id !== parent.id)
+                .map((t) => ({ id: t.id, title: t.title })),
         [tasksQuery.data, parent.id]
     );
     const doneCount = allSubtasks.filter((task) => task.status === TaskStatus.DONE).length;
@@ -142,6 +157,13 @@ export const SubtaskSection = ({ parent }: SubtaskSectionProps) => {
         );
     };
 
+    const handleRename = (subtaskId: number, title: string) => {
+        updateTask.mutate(
+            { taskId: subtaskId, data: { title } },
+            { onError: () => toast.error('Failed to rename subtask. Please try again.') }
+        );
+    };
+
     // No confirm: subtasks are lightweight (the shared delete mutation has no
     // built-in confirm either). The parent's detail query is refreshed here so
     // its subtask counts stay current — delete responses carry no parent_id.
@@ -151,6 +173,24 @@ export const SubtaskSection = ({ parent }: SubtaskSectionProps) => {
                 queryClient.invalidateQueries({ queryKey: ['task', { taskId: parent.id }] }),
             onError: () => toast.error('Failed to delete subtask. Please try again.')
         });
+    };
+
+    // Move a subtask under a different parent (or detach to top-level via null).
+    // The update hook refreshes the NEW parent + the list; this parent (the old
+    // one) is refreshed here so its subtask count updates.
+    const handleMove = (subtaskId: number, newParentId: number | null) => {
+        setMovingId(null);
+        if (newParentId === parent.id) return;
+        updateTask.mutate(
+            { taskId: subtaskId, data: { parent_id: newParentId } },
+            {
+                onSuccess: () => {
+                    queryClient.invalidateQueries({ queryKey: ['task', { taskId: parent.id }] });
+                    toast.success(newParentId == null ? 'Promoted to a task' : 'Subtask moved');
+                },
+                onError: () => toast.error('Failed to move subtask. Please try again.')
+            }
+        );
     };
 
     // Promote a subtask to a full top-level task (parent_id → null). The update
@@ -241,36 +281,65 @@ export const SubtaskSection = ({ parent }: SubtaskSectionProps) => {
                     >
                         <ul className='mb-1.5 flex flex-col'>
                             {ordered.map((subtask) => (
-                                <SortableSubtaskRow
-                                    key={subtask.id}
-                                    subtask={subtask}
-                                    disabled={updateTask.isPending}
-                                    onStatusChange={(status) => handleStatusChange(subtask, status)}
-                                    actions={
-                                        <>
-                                            <button
-                                                type='button'
-                                                onClick={() => handlePromote(subtask.id)}
-                                                disabled={updateTask.isPending}
-                                                aria-label={`Promote subtask "${subtask.title}" to a task`}
-                                                title='Promote to a task'
-                                                className='shrink-0 rounded-full p-1 text-text-faint transition-colors hover:text-text-secondary disabled:cursor-not-allowed disabled:opacity-50'
-                                            >
-                                                <ArrowUpFromLine size={12} />
-                                            </button>
-                                            <button
-                                                type='button'
-                                                onClick={() => handleDelete(subtask.id)}
-                                                disabled={deleteTask.isPending}
-                                                aria-label={`Delete subtask "${subtask.title}"`}
-                                                title='Delete subtask'
-                                                className='shrink-0 rounded-full p-1 text-text-faint transition-colors hover:text-[var(--color-danger)] disabled:cursor-not-allowed disabled:opacity-50'
-                                            >
-                                                <Trash2 size={12} />
-                                            </button>
-                                        </>
-                                    }
-                                />
+                                <Fragment key={subtask.id}>
+                                    <SortableSubtaskRow
+                                        subtask={subtask}
+                                        disabled={updateTask.isPending}
+                                        onStatusChange={(status) =>
+                                            handleStatusChange(subtask, status)
+                                        }
+                                        onRename={(title) => handleRename(subtask.id, title)}
+                                        actions={
+                                            <>
+                                                <button
+                                                    type='button'
+                                                    onClick={() =>
+                                                        setMovingId((id) =>
+                                                            id === subtask.id ? null : subtask.id
+                                                        )
+                                                    }
+                                                    aria-label={`Move subtask "${subtask.title}" to another task`}
+                                                    aria-expanded={movingId === subtask.id}
+                                                    title='Move to another task'
+                                                    className='shrink-0 rounded-full p-1 text-text-faint transition-colors hover:text-text-secondary'
+                                                >
+                                                    <FolderInput size={12} />
+                                                </button>
+                                                <button
+                                                    type='button'
+                                                    onClick={() => handlePromote(subtask.id)}
+                                                    disabled={updateTask.isPending}
+                                                    aria-label={`Promote subtask "${subtask.title}" to a task`}
+                                                    title='Promote to a task'
+                                                    className='shrink-0 rounded-full p-1 text-text-faint transition-colors hover:text-text-secondary disabled:cursor-not-allowed disabled:opacity-50'
+                                                >
+                                                    <ArrowUpFromLine size={12} />
+                                                </button>
+                                                <button
+                                                    type='button'
+                                                    onClick={() => handleDelete(subtask.id)}
+                                                    disabled={deleteTask.isPending}
+                                                    aria-label={`Delete subtask "${subtask.title}"`}
+                                                    title='Delete subtask'
+                                                    className='shrink-0 rounded-full p-1 text-text-faint transition-colors hover:text-[var(--color-danger)] disabled:cursor-not-allowed disabled:opacity-50'
+                                                >
+                                                    <Trash2 size={12} />
+                                                </button>
+                                            </>
+                                        }
+                                    />
+                                    {movingId === subtask.id && (
+                                        <li className='mb-1.5 ml-7 mr-1 list-none'>
+                                            <ParentTaskAutocomplete
+                                                value={parent.id}
+                                                options={parentOptions}
+                                                onChange={(newParentId) =>
+                                                    handleMove(subtask.id, newParentId)
+                                                }
+                                            />
+                                        </li>
+                                    )}
+                                </Fragment>
                             ))}
                         </ul>
                     </SortableContext>
