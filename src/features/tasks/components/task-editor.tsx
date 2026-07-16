@@ -189,6 +189,24 @@ export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
             {/* Notes / description */}
             <NotesField id={`task-notes-${task.id}`} value={notes} onChange={setNotes} />
 
+            {/* Block reason — only when the task is blocked. */}
+            {isBlocked && (
+                <div>
+                    <label className={formLabelClass} htmlFor={`task-block-${task.id}`}>
+                        Block reason
+                    </label>
+                    <input
+                        id={`task-block-${task.id}`}
+                        type='text'
+                        value={blockReason}
+                        onChange={(e) => setBlockReason(e.target.value)}
+                        placeholder='What is this blocked on?'
+                        className={`${formFieldClass} placeholder:text-text-faint`}
+                        style={formFieldStyle}
+                    />
+                </div>
+            )}
+
             {/* Subtasks — only on top-level tasks (one level deep); a subtask
                 being edited never shows its own nested section. */}
             {task.parent_id == null && <SubtaskSection parent={task} />}
@@ -256,24 +274,6 @@ export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
                     onChange={setParentId}
                     options={parentOptions}
                 />
-            )}
-
-            {/* Block reason — only when the task is blocked. */}
-            {isBlocked && (
-                <div>
-                    <label className={formLabelClass} htmlFor={`task-block-${task.id}`}>
-                        Block reason
-                    </label>
-                    <input
-                        id={`task-block-${task.id}`}
-                        type='text'
-                        value={blockReason}
-                        onChange={(e) => setBlockReason(e.target.value)}
-                        placeholder='What is this blocked on?'
-                        className={`${formFieldClass} placeholder:text-text-faint`}
-                        style={formFieldStyle}
-                    />
-                </div>
             )}
 
             {/* Footer: destructive Delete on the left (mirrors the habit detail
