@@ -1,0 +1,25 @@
+# Normalize line endings: store text as LF in the repo and check it out as LF
+# on every platform. Overrides a global core.autocrlf=true, which was checking
+# files out as CRLF and breaking WSL/Linux tooling. `text=auto` auto-detects
+# text vs binary; `eol=lf` forces LF on text files. Binaries are marked
+# explicitly so they are never touched.
+* text=auto eol=lf
+
+*.sh text eol=lf
+
+# Explicit binaries (never line-ending-converted).
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.avif binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.eot binary
+*.pdf binary
+*.zip binary
+*.gz binary

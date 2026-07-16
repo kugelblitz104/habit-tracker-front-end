@@ -8,6 +8,7 @@ import { Ban, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router';
 import { toast } from 'react-toastify';
+import { TaskIntegrationActions } from '@/features/integrations/components/task-integration-actions';
 import { useTask, useTasks } from '../api/get-tasks';
 import { useDeleteTaskWithConfirm } from '../hooks/use-delete-task-with-confirm';
 import { renderTaskMarkdown } from '../utils/task-markdown';
@@ -167,6 +168,10 @@ export const TaskDetailBody = ({
 
             {/* Editable time log */}
             <TaskTimeLog profileId={task.profile_id} taskId={task.id} />
+
+            {/* Publish/link this task to Azure DevOps or GitHub. Only top-level
+                tasks carry an external link (subtasks are managed in-app). */}
+            {task.parent_id == null && <TaskIntegrationActions task={task} />}
 
             {/* Footer: delete */}
             <div

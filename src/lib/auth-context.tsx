@@ -10,6 +10,7 @@ import React, {
     useState
 } from 'react';
 import { getUserIdFromToken, isTokenExpired } from './token-utils';
+import { Refresh } from '@/features/auth/api/refresh';
 
 const ACTIVE_PROFILE_STORAGE_KEY = 'active_profile';
 
@@ -125,33 +126,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         const initAuth = async () => {
             const storedToken = localStorage.getItem('access_token');
+            const storedRefreshToken = localStorage.getItem('refresh_token');
             const storedUser = localStorage.getItem('user');
 
-            if (storedToken && storedUser) {
-                // Check if token is expired
-                if (isTokenExpired(storedToken)) {
-                    console.log('Token expired, clearing auth state');
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('refresh_token');
-                    localStorage.removeItem('user');
+            const clearAuth = () => {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                localStorage.removeItem('user');
+            };
+
+            // Restore the stored user and prime the API client with the given
+            // access token. Returns false if the stored user is unparseable.
+            const applySession = (accessToken: string, rawUser: string): boolean => {
+                try {
+                    const parsedUser = JSON.parse(rawUser);
+                    setToken(accessToken);
+                    setUser(parsedUser);
+                    OpenAPI.TOKEN = accessToken;
+                    return true;
+                } catch (error) {
+                    console.error('Failed to parse stored user:', error);
+                    return false;
+                }
+            };
+
+            if (storedUser && storedToken && !isTokenExpired(storedToken)) {
+                // Stored access token is still valid — resume immediately.
+                if (applySession(storedToken, storedUser)) {
                     setIsLoading(false);
                     return;
                 }
-
+            } else if (storedUser && storedRefreshToken) {
+                // The 30-minute access token is missing/expired, but the 7-day
+                // refresh token may still be good. Exchange it for a fresh pair
+                // so reopening the app doesn't force a needless re-login. (The
+                // axios interceptor rejects a 401 on /auth/refresh without
+                // looping or redirecting, so a truly dead refresh token just
+                // lands us in the clear-and-login path below.)
                 try {
-                    const parsedUser = JSON.parse(storedUser);
-                    setToken(storedToken);
-                    setUser(parsedUser);
-                    // Set token in OpenAPI client for all requests
-                    OpenAPI.TOKEN = storedToken;
+                    const response = await Refresh({ refresh_token: storedRefreshToken });
+                    localStorage.setItem('access_token', response.access_token);
+                    localStorage.setItem('refresh_token', response.refresh_token);
+                    if (applySession(response.access_token, storedUser)) {
+                        setIsLoading(false);
+                        return;
+                    }
                 } catch (error) {
-                    console.error('Failed to parse stored user:', error);
-                    // Clear invalid data
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('refresh_token');
-                    localStorage.removeItem('user');
+                    console.error('Token refresh on startup failed:', error);
                 }
             }
+
+            // Nothing usable — clear any partial/expired state and fall back to login.
+            clearAuth();
             setIsLoading(false);
         };
 

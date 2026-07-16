@@ -7,6 +7,8 @@ export default [
     // Public routes
     route('login', 'routes/public/login.tsx'),
     route('register', 'routes/public/register.tsx'),
+    route('forgot-password', 'routes/public/forgot-password.tsx'),
+    route('reset-password', 'routes/public/reset-password.tsx'),
 
     // Protected routes
     index('routes/auth/today.tsx'),

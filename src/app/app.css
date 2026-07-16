@@ -135,6 +135,10 @@
     --color-azure: #4a90d9;
     --color-azure-text: #7fb0e6;
 
+    /* GitHub link */
+    --color-github: #a6a0f0;
+    --color-github-text: #b8b3f5;
+
     /* Controls */
     --color-danger: #d1889a;
     --color-danger-solid: #c2566a;
@@ -218,6 +222,10 @@
     --azure-bg: rgba(74, 144, 217, 0.1);
     --azure-border: rgba(74, 144, 217, 0.22);
 
+    /* ---- GitHub link surface ---- */
+    --github-bg: rgba(166, 160, 240, 0.1);
+    --github-border: rgba(166, 160, 240, 0.24);
+
     /* ---- Toggle / primary button / danger ---- */
     --toggle-on-track: linear-gradient(90deg, #c9663f, #e0884a);
     --toggle-off-track: rgba(255, 255, 255, 0.1);
@@ -280,10 +288,13 @@ body {
        identical whether a page scrolls (Today) or not (Projects, Settings…). */
     scrollbar-gutter: stable;
     /* Plain content shouldn't show the text (I-beam) cursor as if it were an
-       editable field; only real inputs do. Text stays selectable/copyable —
-       this changes the cursor, not user-select. Links/buttons keep their own
-       (pointer) cursor via the UA sheet / cursor-pointer utility classes. */
+       editable field, nor be selectable by a stray drag; only real inputs are.
+       Links/buttons keep their own (pointer) cursor via the UA sheet /
+       cursor-pointer utility classes. Selection is re-enabled below for the
+       fields where typing/copy actually makes sense. */
     cursor: default;
+    user-select: none;
+    -webkit-user-select: none; /* Safari/iOS */
 }
 
 input,
@@ -291,6 +302,8 @@ textarea,
 [contenteditable],
 [contenteditable] * {
     cursor: text;
+    user-select: text;
+    -webkit-user-select: text;
 }
 
 /*

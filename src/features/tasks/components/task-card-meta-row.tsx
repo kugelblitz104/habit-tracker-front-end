@@ -161,11 +161,19 @@ export const TaskCardMetaRow = ({
                     rel='noreferrer'
                     onClick={(e) => e.stopPropagation()}
                     className='rounded-chip px-2 py-0.5'
-                    style={{
-                        color: 'var(--color-azure-text)',
-                        backgroundColor: 'var(--azure-bg)',
-                        border: '1px solid var(--azure-border)'
-                    }}
+                    style={
+                        task.source === 'github'
+                            ? {
+                                  color: 'var(--color-github-text)',
+                                  backgroundColor: 'var(--github-bg)',
+                                  border: '1px solid var(--github-border)'
+                              }
+                            : {
+                                  color: 'var(--color-azure-text)',
+                                  backgroundColor: 'var(--azure-bg)',
+                                  border: '1px solid var(--azure-border)'
+                              }
+                    }
                 >
                     {task.external_ref} ↗
                 </a>

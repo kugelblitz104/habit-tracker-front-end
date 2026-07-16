@@ -9,7 +9,6 @@ import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
 import { Pencil, Plus, Trash2, TriangleAlert } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
-import { AzureDevOpsPlaceholderRow } from './azure-devops-placeholder-row';
 import { ConnectionForm, type ConnectionFormValues } from './connection-form';
 import { SettingsCard } from './settings-card';
 
@@ -26,12 +25,11 @@ type ConnectionsCardProps = {
 };
 
 /**
- * CONNECTIONS card. Two subgroups:
- * - Calendars (read-only, into Today's schedule) for the selected profile:
- *   enable toggle, inline edit, delete-with-confirm, last_error warning line,
- *   and a dashed "+ Connect a calendar" inline create form.
- * - Azure DevOps: STATIC PLACEHOLDER row (no ADO integration exists yet);
- *   rendered exactly per the design with a disabled Manage button.
+ * CONNECTIONS card: read-only calendar subscriptions (into Today's schedule)
+ * for the selected profile — enable toggle, inline edit, delete-with-confirm,
+ * last_error warning line, and a dashed "+ Connect a calendar" inline create
+ * form. Task-tracker integrations (Azure DevOps / GitHub) live in their own
+ * card, IntegrationConnectionsSection.
  */
 export const ConnectionsCard = ({ profile }: ConnectionsCardProps) => {
     const connectionsQuery = useCalendarConnections({ profileId: profile.id });
@@ -241,11 +239,6 @@ export const ConnectionsCard = ({ profile }: ConnectionsCardProps) => {
                     </button>
                 )}
             </div>
-
-            <div className='mb-2.5 text-[12px]' style={{ color: '#9a8f81' }}>
-                Azure DevOps — publish out
-            </div>
-            <AzureDevOpsPlaceholderRow />
         </SettingsCard>
     );
 };

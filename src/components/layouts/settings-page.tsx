@@ -1,6 +1,8 @@
 import { AppHeader } from '@/components/layouts/app-header';
 import { AccountCard } from '@/features/settings/components/account-card';
+import { ChangePasswordCard } from '@/features/settings/components/change-password-card';
 import { ConnectionsCard } from '@/features/settings/components/connections-card';
+import { IntegrationConnectionsSection } from '@/features/settings/components/integration-connections-section';
 import { DangerZoneCard } from '@/features/settings/components/danger-zone-card';
 import { ManageDataCard } from '@/features/settings/components/manage-data-card';
 import { ProfilePreferencesCard } from '@/features/settings/components/profile-preferences-card';
@@ -57,7 +59,11 @@ export const SettingsPage = () => {
                             />
                         )}
                         <AccountCard />
+                        <ChangePasswordCard />
                         {editingProfile && <ConnectionsCard profile={editingProfile} />}
+                        {editingProfile && (
+                            <IntegrationConnectionsSection profile={editingProfile} />
+                        )}
                         <ManageDataCard />
                         <DangerZoneCard />
                     </div>

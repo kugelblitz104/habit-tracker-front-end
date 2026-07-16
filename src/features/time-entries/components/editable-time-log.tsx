@@ -278,7 +278,7 @@ const EntryEditor = ({ entry }: { entry: TimeEntryRead }) => {
                     <Trash2 size={14} />
                 </button>
             </div>
-            <div className='flex items-center gap-3'>
+            <div className='flex flex-wrap items-start gap-x-3 gap-y-2'>
                 <div className='flex flex-col gap-2'>
                     <label className='flex items-center gap-2'>
                         <span className={fieldLabelClass}>Start</span>
