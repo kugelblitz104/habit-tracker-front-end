@@ -95,7 +95,9 @@ export const AllTasksDashboard = () => {
                 onSuccess: () => {
                     if (status === TaskStatus.DONE) toast.success('Task completed');
                     else if (status === TaskStatus.CANCELLED) toast.success('Task cancelled');
-                }
+                },
+                onError: (error) =>
+                    toast.error(apiErrorMessage(error, 'Failed to update task status'))
             }
         );
     };

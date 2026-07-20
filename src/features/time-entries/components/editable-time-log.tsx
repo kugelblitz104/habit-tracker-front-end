@@ -309,9 +309,7 @@ const EntryEditor = ({ entry }: { entry: TimeEntryRead }) => {
                 </div>
                 {!entry.is_running && (
                     <label className='flex shrink-0 items-center gap-2'>
-                        <span className='shrink-0 font-mono text-[10px] uppercase tracking-[0.1em] text-text-faint'>
-                            Duration
-                        </span>
+                        <span className={fieldLabelClass}>Duration</span>
                         <input
                             type='number'
                             min={0}
