@@ -5,6 +5,7 @@ import { useDeleteProject } from '@/features/projects/api/delete-projects';
 import { useProject } from '@/features/projects/api/get-projects';
 import { useUpdateProject } from '@/features/projects/api/update-projects';
 import { DeleteProjectModal } from '@/features/projects/components/delete-project-modal';
+import { ProjectAnalytics } from '@/features/projects/components/project-analytics';
 import { ProjectDangerZone } from '@/features/projects/components/project-danger-zone';
 import { ProjectEditor } from '@/features/projects/components/project-editor';
 import { ProjectHeader } from '@/features/projects/components/project-header';
@@ -315,6 +316,10 @@ function ProjectContent({ projectId }: { projectId: number }) {
                                             />
                                         )}
                                     </>
+                                )}
+
+                                {project && !tasksQuery.isLoading && (
+                                    <ProjectAnalytics project={project} tasks={allLoadedTasks} />
                                 )}
 
                                 <div className='mt-[30px]'>
