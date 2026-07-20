@@ -9,11 +9,14 @@ import {
 } from '@/features/tasks/components/task-capture-bar';
 import { TaskCaptureForm } from '@/features/tasks/components/task-capture-form';
 import { CompletedSection } from '@/features/tasks/components/completed-section';
+import { BulkActionBar } from '@/features/tasks/components/bulk-action-bar';
 import { TaskControlsBar } from '@/features/tasks/components/task-controls-bar';
 import { TaskDetailPane } from '@/features/tasks/components/task-detail-pane';
 import { TaskListView } from '@/features/tasks/components/task-list-view';
+import { useBulkTaskActions } from '@/features/tasks/hooks/use-bulk-task-actions';
 import { useTaskControls } from '@/features/tasks/hooks/use-task-controls';
 import { useTaskDetailPane } from '@/features/tasks/hooks/use-task-detail-pane';
+import { useTaskSelection } from '@/features/tasks/hooks/use-task-selection';
 import {
     buildTaskSections,
     passesDateFilter,
@@ -50,6 +53,8 @@ export const AllTasksDashboard = () => {
 
     const [controls, setControls] = useTaskControls('all_tasks_controls');
     const [captureDraft, setCaptureDraft] = useState<TaskCaptureDraft | null>(null);
+    const selection = useTaskSelection();
+    const bulk = useBulkTaskActions();
 
     const {
         isWide,
@@ -148,6 +153,16 @@ export const AllTasksDashboard = () => {
         downloadMarkdownFile(`tasks-${profileSlug}-${toLocalDateString(new Date())}.md`, markdown);
     }, [tasks, controls, projectsById, showClosed, allLoadedTasks, activeProfile]);
 
+    // Ids currently visible under the active filters — the target of "Select all".
+    const visibleIds = useMemo(
+        () =>
+            buildTaskSections(tasks, controls, projectsById).flatMap((s) =>
+                s.tasks.map((t) => t.id)
+            ),
+        [tasks, controls, projectsById]
+    );
+    const selectedIdArray = [...selection.selectedIds];
+
     return (
         <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
             <AppHeader maxWidthClass={showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH} />
@@ -186,6 +201,8 @@ export const AllTasksDashboard = () => {
                             onChange={setControls}
                             projects={projects}
                             onExport={handleExport}
+                            onToggleSelection={selection.toggleMode}
+                            selectionActive={selection.selectionMode}
                         />
 
                         {tasksQuery.isError ? (
@@ -210,6 +227,9 @@ export const AllTasksDashboard = () => {
                                     onStartTimer={handleStartTimer}
                                     emptyHint='No tasks yet. Add one above.'
                                     noMatchesHint='No tasks match these filters. Try Reset or loosen a filter.'
+                                    selectionMode={selection.selectionMode}
+                                    selectedIds={selection.selectedIds}
+                                    onToggleSelect={selection.toggle}
                                 />
 
                                 {showClosed && (
@@ -232,6 +252,20 @@ export const AllTasksDashboard = () => {
                     />
                 </div>
             </div>
+
+            {selection.selectionMode && (
+                <BulkActionBar
+                    count={selection.selectedIds.size}
+                    projects={projects}
+                    onSetStatus={(status) => bulk.updateMany(selectedIdArray, { status })}
+                    onSetPriority={(priority) => bulk.updateMany(selectedIdArray, { priority })}
+                    onSetProject={(project_id) => bulk.updateMany(selectedIdArray, { project_id })}
+                    onDelete={() => bulk.deleteMany(selectedIdArray)?.then(() => selection.exit())}
+                    onSelectAll={() => selection.selectMany(visibleIds)}
+                    onClose={selection.exit}
+                    isPending={bulk.isPending}
+                />
+            )}
         </div>
     );
 };

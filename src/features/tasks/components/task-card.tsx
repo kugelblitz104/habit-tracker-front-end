@@ -40,6 +40,12 @@ export type TaskCardProps = {
     onStartTimer?: () => void;
     /** Prefer opening the status picker upward (last rows of a band). */
     openUpward?: boolean;
+    /** Multi-select mode: show a selection checkbox to the left of the card. */
+    selectable?: boolean;
+    /** Whether this card is currently selected (only meaningful when selectable). */
+    selected?: boolean;
+    /** Toggle this card's selection (only meaningful when selectable). */
+    onToggleSelect?: () => void;
 };
 
 type BandStyle = {
@@ -101,7 +107,10 @@ export const TaskCard = ({
     subtasksOpen,
     onToggleSubtasks,
     onStartTimer,
-    openUpward
+    openUpward,
+    selectable = false,
+    selected = false,
+    onToggleSelect
 }: TaskCardProps) => {
     const { pathname } = useLocation();
     const style = BAND_STYLE[band];
@@ -225,6 +234,17 @@ export const TaskCard = ({
             onTouchEnd={longPressHandlers.onTouchEnd}
         >
             <div className='flex items-start gap-3'>
+                {selectable && (
+                    <div className='pt-1'>
+                        <input
+                            type='checkbox'
+                            checked={selected}
+                            onChange={onToggleSelect}
+                            aria-label={`Select task: ${task.title}`}
+                            className='h-4 w-4 cursor-pointer accent-[var(--color-now-accent)]'
+                        />
+                    </div>
+                )}
                 <div className='pt-0.5'>
                     <StatusControl
                         status={status}

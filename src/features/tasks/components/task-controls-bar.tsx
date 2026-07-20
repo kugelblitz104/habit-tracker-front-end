@@ -2,7 +2,7 @@ import type { ProjectRead } from '@/api';
 import { POPOVER_PANEL_CLASS, popoverPanelStyle } from '@/components/ui/menu';
 import { toLocalDateString } from '@/lib/date-utils';
 import { Checkbox, Field, Label as HeadlessLabel, Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
-import { ArrowDown, ArrowUp, Check, ChevronDown, Download } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, ChevronDown, Download, ListChecks } from 'lucide-react';
 import { STATUS_ORDER, STATUS_META } from './status-config';
 import { selectOptionStyle } from './task-form-fields';
 import {
@@ -27,6 +27,10 @@ type TaskControlsBarProps = {
     /** Export the currently filtered/grouped/sorted view as Markdown. Omit to
      *  hide the Export button. */
     onExport?: () => void;
+    /** Enter/exit multi-select mode. Omit to hide the Select button. */
+    onToggleSelection?: () => void;
+    /** Whether multi-select mode is currently active (flips Select ⇄ Done). */
+    selectionActive?: boolean;
 };
 
 const selectClass =
@@ -288,7 +292,9 @@ export const TaskControlsBar = ({
     onChange,
     projects,
     showProjectOptions = true,
-    onExport
+    onExport,
+    onToggleSelection,
+    selectionActive = false
 }: TaskControlsBarProps) => {
     const set = (patch: Partial<TaskControlsState>) => onChange({ ...controls, ...patch });
 
@@ -436,8 +442,20 @@ export const TaskControlsBar = ({
                 <DateFilterPopover controls={controls} onChange={set} />
             </div>
 
-            {/* Trailing actions: Reset (only when something's changed) + Export. */}
+            {/* Trailing actions: Select + Reset (only when something's changed) + Export. */}
             <div className='ml-auto flex items-end gap-3'>
+                {onToggleSelection && (
+                    <button
+                        type='button'
+                        onClick={onToggleSelection}
+                        className={filterButtonClass}
+                        style={selectStyle}
+                        title={selectionActive ? 'Exit multi-select' : 'Select multiple tasks'}
+                    >
+                        <ListChecks size={12} />
+                        {selectionActive ? 'Done' : 'Select'}
+                    </button>
+                )}
                 {!isDefaultControls(controls) && (
                     <button
                         type='button'

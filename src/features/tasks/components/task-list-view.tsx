@@ -25,6 +25,12 @@ type TaskListViewProps = {
     /** Whether to render each card's project pip. Default true; the project
      *  view passes false since every card already shares that one project. */
     showProject?: boolean;
+    /** Multi-select mode: render per-card selection checkboxes. */
+    selectionMode?: boolean;
+    /** The currently-selected task ids (only meaningful in selection mode). */
+    selectedIds?: Set<number>;
+    /** Toggle a task's selection. */
+    onToggleSelect?: (taskId: number) => void;
 };
 
 /**
@@ -46,7 +52,10 @@ export const TaskListView = ({
     onStartTimer,
     emptyHint = 'No tasks yet.',
     noMatchesHint = 'No tasks match these filters.',
-    showProject = true
+    showProject = true,
+    selectionMode = false,
+    selectedIds,
+    onToggleSelect
 }: TaskListViewProps) => {
     const sections = useMemo(
         () => buildTaskSections(tasks, controls, projectsById),
@@ -109,6 +118,11 @@ export const TaskListView = ({
                                         onStartTimer ? () => onStartTimer(task.id) : undefined
                                     }
                                     openUpward={i >= upwardIdx}
+                                    selectable={selectionMode}
+                                    selected={selectedIds?.has(task.id) ?? false}
+                                    onToggleSelect={
+                                        onToggleSelect ? () => onToggleSelect(task.id) : undefined
+                                    }
                                 />
                             ))}
                         </div>

@@ -2,7 +2,7 @@ import type { ProjectRead } from '@/api';
 import { ErrorPage } from '@/components/layouts/error-page';
 import { ProtectedRoute } from '@/features/auth/components/protected-route';
 import { useDeleteProject } from '@/features/projects/api/delete-projects';
-import { useProject } from '@/features/projects/api/get-projects';
+import { useProject, useProjects } from '@/features/projects/api/get-projects';
 import { useUpdateProject } from '@/features/projects/api/update-projects';
 import { DeleteProjectModal } from '@/features/projects/components/delete-project-modal';
 import { ProjectAnalytics } from '@/features/projects/components/project-analytics';
@@ -16,12 +16,15 @@ import {
     type TaskCaptureDraft
 } from '@/features/tasks/components/task-capture-bar';
 import { TaskCaptureForm } from '@/features/tasks/components/task-capture-form';
+import { BulkActionBar } from '@/features/tasks/components/bulk-action-bar';
 import { CompletedSection } from '@/features/tasks/components/completed-section';
 import { TaskControlsBar } from '@/features/tasks/components/task-controls-bar';
 import { TaskDetailPane } from '@/features/tasks/components/task-detail-pane';
 import { TaskListView } from '@/features/tasks/components/task-list-view';
+import { useBulkTaskActions } from '@/features/tasks/hooks/use-bulk-task-actions';
 import { useTaskControls } from '@/features/tasks/hooks/use-task-controls';
 import { useTaskDetailPane } from '@/features/tasks/hooks/use-task-detail-pane';
+import { useTaskSelection } from '@/features/tasks/hooks/use-task-selection';
 import {
     buildTaskSections,
     passesDateFilter,
@@ -74,6 +77,8 @@ function ProjectContent({ projectId }: { projectId: number }) {
     const projectQuery = useProject({ projectId });
     // Include closed so the Status filter/group can reach done/cancelled tasks.
     const tasksQuery = useTasks({ profileId, projectId, includeClosed: true });
+    // All projects (archived-aware) for the bulk "move to project" action.
+    const allProjectsQuery = useProjects({ profileId, includeArchived: true });
     const updateTask = useUpdateTask();
     const updateProject = useUpdateProject();
     const deleteProject = useDeleteProject();
@@ -84,6 +89,8 @@ function ProjectContent({ projectId }: { projectId: number }) {
     // Quick-add draft carried into the expanded capture form (see Today).
     const [captureDraft, setCaptureDraft] = useState<TaskCaptureDraft | null>(null);
     const [controls, setControls] = useTaskControls(`project_tasks_controls`);
+    const selection = useTaskSelection();
+    const bulk = useBulkTaskActions();
 
     const {
         isWide,
@@ -150,6 +157,17 @@ function ProjectContent({ projectId }: { projectId: number }) {
         const projectSlug = slugify(project?.name ?? 'project');
         downloadMarkdownFile(`tasks-${projectSlug}-${toLocalDateString(new Date())}.md`, markdown);
     }, [tasks, controls, projectsById, showClosed, allLoadedTasks, project]);
+
+    // Ids currently visible under the active filters — the target of "Select all".
+    const visibleIds = useMemo(
+        () =>
+            buildTaskSections(tasks, controls, projectsById).flatMap((s) =>
+                s.tasks.map((t) => t.id)
+            ),
+        [tasks, controls, projectsById]
+    );
+    const selectedIdArray = [...selection.selectedIds];
+    const allProjects = allProjectsQuery.data?.projects ?? [];
 
     const handleStatusChange = (taskId: number, status: TaskStatus) => {
         updateTask.mutate({ taskId, data: { status } });
@@ -282,6 +300,8 @@ function ProjectContent({ projectId }: { projectId: number }) {
                                     projects={[]}
                                     showProjectOptions={false}
                                     onExport={handleExport}
+                                    onToggleSelection={selection.toggleMode}
+                                    selectionActive={selection.selectionMode}
                                 />
 
                                 {tasksQuery.isLoading ? (
@@ -304,6 +324,9 @@ function ProjectContent({ projectId }: { projectId: number }) {
                                             onStartTimer={handleStartTimer}
                                             emptyHint='No tasks in this project yet.'
                                             showProject={false}
+                                            selectionMode={selection.selectionMode}
+                                            selectedIds={selection.selectedIds}
+                                            onToggleSelect={selection.toggle}
                                         />
 
                                         {showClosed && (
@@ -349,6 +372,20 @@ function ProjectContent({ projectId }: { projectId: number }) {
                     />
                 </div>
             </div>
+
+            {selection.selectionMode && (
+                <BulkActionBar
+                    count={selection.selectedIds.size}
+                    projects={allProjects}
+                    onSetStatus={(status) => bulk.updateMany(selectedIdArray, { status })}
+                    onSetPriority={(priority) => bulk.updateMany(selectedIdArray, { priority })}
+                    onSetProject={(project_id) => bulk.updateMany(selectedIdArray, { project_id })}
+                    onDelete={() => bulk.deleteMany(selectedIdArray)?.then(() => selection.exit())}
+                    onSelectAll={() => selection.selectMany(visibleIds)}
+                    onClose={selection.exit}
+                    isPending={bulk.isPending}
+                />
+            )}
 
             {/* Mounted outside the edit/read swap so the confirm is reachable from
                 both the footer Delete and the editor's in-form Delete. */}
