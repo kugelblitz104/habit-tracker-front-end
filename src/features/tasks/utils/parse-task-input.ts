@@ -6,8 +6,9 @@
  *
  * Tokens (each a whitespace-delimited word, except notes which runs to EOL):
  *   `!low` `!med`/`!medium` `!high` `!none`/`!` → priority (0–3)
- *   `*M-D`  → scheduled date  (M/D and M-D-YYYY / M-D-YY also accepted)
- *   `>M-D`  → due date
+ *   `*M-D`  → scheduled date  (M/D and M-D-YYYY / M-D-YY also accepted, plus
+ *              the relative forms `today`, `tom`, weekday names, `+3d`)
+ *   `>M-D`  → due date        (same date forms as scheduled)
  *   `@name` → project (matched by name elsewhere; no spaces)
  *   `~N`    → estimated effort in minutes
  *   `-…`    → notes (everything after the leading dash, to end of line)
@@ -55,6 +56,50 @@ const PRIORITY_WORDS: Record<string, number> = {
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
+const toISODate = (d: Date): string =>
+    `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+
+// Weekday names + common abbreviations → 0(Sun)–6(Sat).
+const WEEKDAY_INDEX: Record<string, number> = {
+    sun: 0, sunday: 0,
+    mon: 1, monday: 1,
+    tue: 2, tues: 2, tuesday: 2,
+    wed: 3, weds: 3, wednesday: 3,
+    thu: 4, thur: 4, thurs: 4, thursday: 4,
+    fri: 5, friday: 5,
+    sat: 6, saturday: 6
+};
+
+/**
+ * Parse a *relative* date token into YYYY-MM-DD, or null when it isn't one.
+ * Accepts `today`/`tod`, `tom`/`tomorrow`, `+Nd` (N days out) and weekday
+ * names/abbreviations (`fri`, `friday`). Weekdays always resolve to the next
+ * such day in the future — a token matching today's weekday means next week.
+ * Resolved against `now` so "today" tracks the wall clock.
+ */
+const parseRelativeDate = (raw: string, now: Date): string | null => {
+    const key = raw.toLowerCase();
+    // Midnight-anchored copy so day arithmetic can't be skewed by the time.
+    const base = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    if (key === 'today' || key === 'tod') return toISODate(base);
+    if (key === 'tomorrow' || key === 'tom') {
+        base.setDate(base.getDate() + 1);
+        return toISODate(base);
+    }
+    const rel = /^\+(\d+)d$/.exec(key);
+    if (rel) {
+        base.setDate(base.getDate() + Number(rel[1]));
+        return toISODate(base);
+    }
+    if (key in WEEKDAY_INDEX) {
+        const delta = ((WEEKDAY_INDEX[key]! - base.getDay() + 7) % 7) || 7;
+        base.setDate(base.getDate() + delta);
+        return toISODate(base);
+    }
+    return null;
+};
+
 /**
  * Parse a flexible short date into YYYY-MM-DD, or null if it doesn't look like a
  * date. Accepts `M-D`, `M/D`, `M-D-YY`, `M-D-YYYY` (and `/` variants). A missing
@@ -82,9 +127,13 @@ const parseFlexibleDate = (raw: string, fallbackYear: number): string | null => 
 
 type Classified = { type: TaskTokenType; value: number | string } | null;
 
-const classifyWord = (word: string, fallbackYear: number): Classified => {
+const classifyWord = (word: string, now: Date): Classified => {
     const marker = word[0];
     const body = word.slice(1);
+    // A date token accepts either a relative form (today/tom/fri/+3d) or a
+    // flexible numeric date; relative is tried first since the two never overlap.
+    const asDate = (): string | null =>
+        parseRelativeDate(body, now) ?? parseFlexibleDate(body, now.getFullYear());
     switch (marker) {
         case '!': {
             const key = body.toLowerCase();
@@ -92,11 +141,11 @@ const classifyWord = (word: string, fallbackYear: number): Classified => {
             return null;
         }
         case '*': {
-            const date = parseFlexibleDate(body, fallbackYear);
+            const date = asDate();
             return date ? { type: 'scheduled', value: date } : null;
         }
         case '>': {
-            const date = parseFlexibleDate(body, fallbackYear);
+            const date = asDate();
             return date ? { type: 'due', value: date } : null;
         }
         case '@':
@@ -108,7 +157,7 @@ const classifyWord = (word: string, fallbackYear: number): Classified => {
     }
 };
 
-export const parseTaskInput = (raw: string, fallbackYear: number): ParsedTaskInput => {
+export const parseTaskInput = (raw: string, now: Date): ParsedTaskInput => {
     const segments: TaskInputSegment[] = [];
     const titleWords: string[] = [];
     const result: ParsedTaskInput = { cleanTitle: '', segments, hasTokens: false };
@@ -162,7 +211,7 @@ export const parseTaskInput = (raw: string, fallbackYear: number): ParsedTaskInp
         let j = i;
         while (j < raw.length && !/\s/.test(raw[j]!)) j++;
         const word = raw.slice(i, j);
-        const classified = classifyWord(word, fallbackYear);
+        const classified = classifyWord(word, now);
         if (classified) {
             segments.push({ text: word, type: classified.type });
             result.hasTokens = true;

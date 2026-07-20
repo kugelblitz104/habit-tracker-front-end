@@ -174,10 +174,39 @@ export const TaskCard = ({
         }
     });
 
+    // Keyboard shortcuts while focus is anywhere on the card (e.g. the title
+    // button): e = edit, x = toggle done, s = start timer. Ignored when typing
+    // in a field within the card or with a modifier held, so it never eats real
+    // input or browser shortcuts.
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        const target = e.target as HTMLElement;
+        if (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) {
+            return;
+        }
+        switch (e.key.toLowerCase()) {
+            case 'e':
+                e.preventDefault();
+                onSelectEdit(true);
+                break;
+            case 'x':
+                e.preventDefault();
+                onStatusChange(status === TaskStatus.DONE ? TaskStatus.OPEN : TaskStatus.DONE);
+                break;
+            case 's':
+                if (onStartTimer) {
+                    e.preventDefault();
+                    onStartTimer();
+                }
+                break;
+        }
+    };
+
     return (
         <div
             className={style.container}
             style={containerStyle}
+            onKeyDown={handleKeyDown}
             // Suppress the BROWSER context menu on task cards only, showing ours
             // instead. (Android also routes native long-press through here.)
             onContextMenu={(e) => {

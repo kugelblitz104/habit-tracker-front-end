@@ -61,13 +61,13 @@ export const TaskCaptureForm = ({ profileId, initial, onClose }: TaskCaptureForm
         estimatedMinutes: initial.estimatedMinutes
     });
 
-    const parsed = useMemo(() => parseTaskInput(title, new Date().getFullYear()), [title]);
+    const parsed = useMemo(() => parseTaskInput(title, new Date()), [title]);
 
     // Live token → field population as the title is edited (priority/dates/est).
     // Notes and project stay in their own fields to avoid double-editing surfaces.
     const handleTitleChange = (next: string) => {
         setTitle(next);
-        const p = parseTaskInput(next, new Date().getFullYear());
+        const p = parseTaskInput(next, new Date());
         if (p.priority !== applied.current.priority) {
             setPriority(p.priority ?? 0);
             applied.current.priority = p.priority;

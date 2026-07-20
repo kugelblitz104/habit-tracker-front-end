@@ -18,8 +18,10 @@ type TaskListViewProps = {
     subtasksTaskId?: number | null;
     onToggleSubtasks?: (taskId: number) => void;
     onStartTimer?: (taskId: number) => void;
-    /** Shown when the (filtered) list is empty. */
+    /** Shown when the surface has no tasks at all (nothing to filter). */
     emptyHint?: string;
+    /** Shown when there ARE tasks but the current filters exclude them all. */
+    noMatchesHint?: string;
     /** Whether to render each card's project pip. Default true; the project
      *  view passes false since every card already shares that one project. */
     showProject?: boolean;
@@ -42,7 +44,8 @@ export const TaskListView = ({
     subtasksTaskId,
     onToggleSubtasks,
     onStartTimer,
-    emptyHint = 'No tasks match these filters.',
+    emptyHint = 'No tasks yet.',
+    noMatchesHint = 'No tasks match these filters.',
     showProject = true
 }: TaskListViewProps) => {
     const sections = useMemo(
@@ -57,7 +60,10 @@ export const TaskListView = ({
 
     const total = sections.reduce((sum, section) => sum + section.tasks.length, 0);
     if (total === 0) {
-        return <p className='font-mono text-[12px] text-text-faint'>{emptyHint}</p>;
+        // Distinguish a genuinely empty surface from one whose tasks are all
+        // filtered out — the fix is different (add one vs. loosen filters).
+        const hint = tasks.length === 0 ? emptyHint : noMatchesHint;
+        return <p className='font-mono text-[12px] text-text-faint'>{hint}</p>;
     }
 
     return (

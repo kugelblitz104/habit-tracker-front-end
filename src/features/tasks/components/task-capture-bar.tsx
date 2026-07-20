@@ -1,13 +1,28 @@
 import { TaskStatus } from '@/types/types';
 import type { ProjectRead, TaskCreate } from '@/api';
-import { Plus } from 'lucide-react';
+import { POPOVER_PANEL_CLASS, popoverPanelStyle } from '@/components/ui/menu';
+import { formatShortDate } from '../utils/task-format';
+import { parseLocalDate } from '@/lib/date-utils';
+import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
+import { HelpCircle, Plus, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { toast } from 'react-toastify';
 import { useProjects } from '@/features/projects/api/get-projects';
 import { useCreateTask } from '../api/create-tasks';
-import { parseTaskInput } from '../utils/parse-task-input';
+import { parseTaskInput, type TaskTokenType } from '../utils/parse-task-input';
+import { PRIORITY_LABELS } from '../utils/priority-config';
 import { HighlightedTaskInput } from './highlighted-task-input';
 import { ProjectAutocomplete } from './project-autocomplete';
+
+/** The quick-add token reference shown in the capture bar's `?` popover. */
+const TOKEN_CHEATSHEET: { token: string; label: string }[] = [
+    { token: '!high', label: 'Priority — low / med / high / none' },
+    { token: '*fri', label: 'Scheduled date' },
+    { token: '>8-16', label: 'Due date' },
+    { token: '@project', label: 'Project (@"two words" for spaces)' },
+    { token: '~30', label: 'Estimate in minutes' },
+    { token: '-notes', label: 'Notes (runs to end of line)' }
+];
 
 /** The `@`-token the caret is currently positioned inside, if any. */
 type ActiveAtToken = {
@@ -97,7 +112,7 @@ export const TaskCaptureBar = ({
     const projectsQuery = useProjects({ profileId, includeArchived: false });
     const projects = projectsQuery.data?.projects ?? [];
 
-    const parsed = useMemo(() => parseTaskInput(value, new Date().getFullYear()), [value]);
+    const parsed = useMemo(() => parseTaskInput(value, new Date()), [value]);
 
     const matchProject = (name: string): number | null => {
         const lower = name.toLowerCase();
@@ -163,6 +178,45 @@ export const TaskCaptureBar = ({
         setValue(newValue);
         setCaretPos(newCaret);
         pendingCaretRef.current = newCaret;
+    };
+
+    // Removable pills for the tokens parsed so far (priority / dates / project /
+    // estimate) — a mistaken token is easy to spot and clear before Enter.
+    const tokenPills = useMemo<{ type: TaskTokenType; label: string }[]>(() => {
+        const pills: { type: TaskTokenType; label: string }[] = [];
+        if (parsed.priority != null)
+            pills.push({ type: 'priority', label: PRIORITY_LABELS[parsed.priority] ?? 'Priority' });
+        if (parsed.scheduledDate)
+            pills.push({
+                type: 'scheduled',
+                label: `Scheduled ${formatShortDate(parseLocalDate(parsed.scheduledDate))}`
+            });
+        if (parsed.dueDate)
+            pills.push({ type: 'due', label: `Due ${formatShortDate(parseLocalDate(parsed.dueDate))}` });
+        if (parsed.projectName) pills.push({ type: 'project', label: `@${parsed.projectName}` });
+        if (parsed.estimatedMinutes != null)
+            pills.push({ type: 'estimate', label: `~${parsed.estimatedMinutes}m` });
+        return pills;
+    }, [parsed]);
+
+    // Strip a token from the raw text by dropping its segment (plus one adjacent
+    // whitespace run so no double space is left) and re-flowing the rest.
+    const removeToken = (type: TaskTokenType) => {
+        const segs = [...parsed.segments];
+        const idx = segs.findIndex((s) => s.type === type);
+        if (idx === -1) return;
+        const isWs = (s?: { text: string; type: string }) =>
+            !!s && s.type === 'text' && /^\s+$/.test(s.text);
+        let start = idx;
+        let count = 1;
+        if (isWs(segs[idx + 1])) count = 2; // token + trailing space
+        else if (isWs(segs[idx - 1])) {
+            start = idx - 1; // leading space + token
+            count = 2;
+        }
+        segs.splice(start, count);
+        setValue(segs.map((s) => s.text).join('').replace(/^\s+/, ''));
+        inputRef.current?.focus();
     };
 
     const buildDraft = (): TaskCaptureDraft => {
@@ -264,49 +318,112 @@ export const TaskCaptureBar = ({
     };
 
     return (
-        <div
-            className='mb-[30px] flex items-center gap-2 rounded-button border px-3 py-2.5'
-            style={{
-                backgroundColor: 'var(--surface-input-bg)',
-                borderColor: 'var(--surface-input-border)',
-                opacity: disabled ? 0.5 : 1
-            }}
-        >
-            <button
-                type='button'
-                onClick={expand}
-                disabled={!canAct}
-                aria-label='Add details'
-                title='Add details'
-                className='shrink-0 rounded-full p-0.5 text-text-muted transition-colors hover:text-text-primary disabled:cursor-not-allowed'
+        <div className='mb-[30px]'>
+            <div
+                className='flex items-center gap-2 rounded-button border px-3 py-2.5'
+                style={{
+                    backgroundColor: 'var(--surface-input-bg)',
+                    borderColor: 'var(--surface-input-border)',
+                    opacity: disabled ? 0.5 : 1
+                }}
             >
-                <Plus size={18} />
-            </button>
-            <div className='relative min-w-0 flex-1'>
-                <HighlightedTaskInput
-                    value={value}
-                    segments={parsed.segments}
-                    onChange={setValue}
-                    onKeyDown={handleKeyDown}
-                    onCaretChange={setCaretPos}
-                    placeholder={placeholder}
-                    disabled={disabled || isPending}
-                    ariaLabel='Add a task'
-                    inputRef={inputRef}
-                />
-                {dropdownOpen && (
-                    <ProjectAutocomplete
-                        items={matches}
-                        highlightedIndex={highlightedIndex}
-                        onHover={setHighlightedIndex}
-                        onSelect={acceptProject}
+                <button
+                    type='button'
+                    onClick={expand}
+                    disabled={!canAct}
+                    aria-label='Add details'
+                    title='Add details'
+                    className='shrink-0 rounded-full p-0.5 text-text-muted transition-colors hover:text-text-primary disabled:cursor-not-allowed'
+                >
+                    <Plus size={18} />
+                </button>
+                <div className='relative min-w-0 flex-1'>
+                    <HighlightedTaskInput
+                        value={value}
+                        segments={parsed.segments}
+                        onChange={setValue}
+                        onKeyDown={handleKeyDown}
+                        onCaretChange={setCaretPos}
+                        placeholder={placeholder}
+                        disabled={disabled || isPending}
+                        ariaLabel='Add a task'
+                        inputRef={inputRef}
                     />
-                )}
+                    {dropdownOpen && (
+                        <ProjectAutocomplete
+                            items={matches}
+                            highlightedIndex={highlightedIndex}
+                            onHover={setHighlightedIndex}
+                            onSelect={acceptProject}
+                        />
+                    )}
+                </div>
+                <span className='hidden shrink-0 items-center gap-2 font-mono text-[10px] text-text-faint sm:flex'>
+                    <span>↵ add</span>
+                    <span>⇧↵ details</span>
+                </span>
+                {/* Token cheatsheet — mirrors the placeholder examples. */}
+                <Popover className='relative shrink-0'>
+                    <PopoverButton
+                        className='rounded-full p-0.5 text-text-faint outline-none transition-colors hover:text-text-secondary focus-visible:ring-1 focus-visible:ring-now-accent'
+                        aria-label='Quick-add token help'
+                        title='Quick-add tokens'
+                    >
+                        <HelpCircle size={15} />
+                    </PopoverButton>
+                    <PopoverPanel
+                        anchor='bottom end'
+                        className={`${POPOVER_PANEL_CLASS} mt-1 w-72`}
+                        style={popoverPanelStyle}
+                    >
+                        <div className='flex flex-col gap-1.5 p-1'>
+                            <p className='px-1 pb-1 font-mono text-[10px] uppercase tracking-[0.12em] text-text-faint'>
+                                Quick-add tokens
+                            </p>
+                            {TOKEN_CHEATSHEET.map((t) => (
+                                <div key={t.token} className='flex items-baseline gap-2 px-1'>
+                                    <code
+                                        className='shrink-0 rounded-[4px] px-1.5 py-0.5 font-mono text-[11px] text-text-secondary'
+                                        style={{ backgroundColor: 'rgba(255,255,255,.06)' }}
+                                    >
+                                        {t.token}
+                                    </code>
+                                    <span className='font-display text-[12px] text-text-muted'>
+                                        {t.label}
+                                    </span>
+                                </div>
+                            ))}
+                            <p className='px-1 pt-1 font-mono text-[10px] leading-relaxed text-text-faint'>
+                                Dates also take today, tom, weekday names (fri), +3d.
+                            </p>
+                        </div>
+                    </PopoverPanel>
+                </Popover>
             </div>
-            <span className='hidden shrink-0 items-center gap-2 font-mono text-[10px] text-text-faint sm:flex'>
-                <span>↵ add</span>
-                <span>⇧↵ details</span>
-            </span>
+            {tokenPills.length > 0 && (
+                <div className='mt-2 flex flex-wrap items-center gap-1.5'>
+                    {tokenPills.map((pill) => (
+                        <span
+                            key={pill.type}
+                            className='inline-flex items-center gap-1 rounded-chip border py-0.5 pl-2 pr-1 font-mono text-[10.5px] text-text-secondary'
+                            style={{
+                                backgroundColor: 'var(--surface-input-bg)',
+                                borderColor: 'var(--surface-input-border)'
+                            }}
+                        >
+                            {pill.label}
+                            <button
+                                type='button'
+                                onClick={() => removeToken(pill.type)}
+                                aria-label={`Remove ${pill.label}`}
+                                className='rounded-full p-0.5 text-text-faint transition-colors hover:text-text-primary'
+                            >
+                                <X size={11} />
+                            </button>
+                        </span>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

@@ -24,6 +24,7 @@ import { useCreateTimeEntry } from '@/features/time-entries/api/create-time-entr
 import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
 import { useAuth } from '@/lib/auth-context';
 import { toLocalDateString } from '@/lib/date-utils';
+import { useScrollRestoration } from '@/lib/use-scroll-restoration';
 import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE } from '@/lib/layout';
 import { TaskStatus, TimeEntryKind } from '@/types/types';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -75,6 +76,10 @@ export const AllTasksDashboard = () => {
     }, [location.key]);
 
     const showPane = isWide && selectedEditTaskId !== null;
+
+    // Land back where you left off when returning to this view (restores once
+    // the task list has loaded so the saved offset isn't clamped short).
+    useScrollRestoration('all_tasks_scroll', !tasksQuery.isLoading);
 
     const tasks = useMemo(
         () => (tasksQuery.data?.tasks ?? []).filter((t) => t.parent_id == null),
@@ -204,6 +209,7 @@ export const AllTasksDashboard = () => {
                                     onToggleSubtasks={toggleSubtasks}
                                     onStartTimer={handleStartTimer}
                                     emptyHint='No tasks yet. Add one above.'
+                                    noMatchesHint='No tasks match these filters. Try Reset or loosen a filter.'
                                 />
 
                                 {showClosed && (

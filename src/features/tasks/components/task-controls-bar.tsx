@@ -8,8 +8,10 @@ import { selectOptionStyle } from './task-form-fields';
 import {
     ALL_PRIORITY_VALUES,
     ALL_STATUS_VALUES,
+    DEFAULT_TASK_CONTROLS,
     PRIORITY_LABELS,
     TASK_DATE_FIELD_LABELS,
+    isDefaultControls,
     type TaskControlsState,
     type TaskDateField,
     type TaskGroupBy,
@@ -434,19 +436,31 @@ export const TaskControlsBar = ({
                 <DateFilterPopover controls={controls} onChange={set} />
             </div>
 
-            {/* Export the current (filtered/grouped/sorted) view as Markdown. */}
-            {onExport && (
-                <button
-                    type='button'
-                    onClick={onExport}
-                    className={`${filterButtonClass} ml-auto`}
-                    style={selectStyle}
-                    title='Export this view as Markdown'
-                >
-                    <Download size={12} />
-                    Export
-                </button>
-            )}
+            {/* Trailing actions: Reset (only when something's changed) + Export. */}
+            <div className='ml-auto flex items-end gap-3'>
+                {!isDefaultControls(controls) && (
+                    <button
+                        type='button'
+                        onClick={() => onChange(DEFAULT_TASK_CONTROLS)}
+                        className={`${quickActionClass} pb-1.5`}
+                        title='Reset grouping, sort and filters to defaults'
+                    >
+                        Reset
+                    </button>
+                )}
+                {onExport && (
+                    <button
+                        type='button'
+                        onClick={onExport}
+                        className={filterButtonClass}
+                        style={selectStyle}
+                        title='Export this view as Markdown'
+                    >
+                        <Download size={12} />
+                        Export
+                    </button>
+                )}
+            </div>
         </div>
     );
 };

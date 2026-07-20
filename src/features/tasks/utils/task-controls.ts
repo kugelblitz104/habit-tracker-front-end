@@ -114,6 +114,26 @@ export const DEFAULT_TASK_CONTROLS: TaskControlsState = {
     dateTo: ''
 };
 
+const sameSet = (a: number[], b: number[]): boolean =>
+    a.length === b.length && a.every((v) => b.includes(v));
+
+/**
+ * Whether the controls are still at their defaults (nothing grouped, smart
+ * sort, all priorities/active statuses, no project or date filter). Gates the
+ * Reset affordance so it only shows once the user has actually changed
+ * something.
+ */
+export const isDefaultControls = (c: TaskControlsState): boolean =>
+    c.groupBy === DEFAULT_TASK_CONTROLS.groupBy &&
+    c.sortBy === DEFAULT_TASK_CONTROLS.sortBy &&
+    c.sortDir === DEFAULT_TASK_CONTROLS.sortDir &&
+    c.filterProjectId === DEFAULT_TASK_CONTROLS.filterProjectId &&
+    sameSet(c.filterPriorities, DEFAULT_TASK_CONTROLS.filterPriorities) &&
+    sameSet(c.filterStatuses, DEFAULT_TASK_CONTROLS.filterStatuses) &&
+    c.dateField === DEFAULT_TASK_CONTROLS.dateField &&
+    c.dateFrom === DEFAULT_TASK_CONTROLS.dateFrom &&
+    c.dateTo === DEFAULT_TASK_CONTROLS.dateTo;
+
 export type TaskSection = {
     key: string;
     /** Section header; null renders no header (flat list). */
