@@ -4,6 +4,7 @@ import { TaskStatus } from '@/types/types';
 import { ClipboardCopy, Pencil, X } from 'lucide-react';
 import { Link } from 'react-router';
 import { toActiveBand } from '../utils/task-bands';
+import { getCountdown, URGENCY_META } from '../utils/countdown';
 import { formatShortDate } from '../utils/task-format';
 import { PRIORITY_LABELS } from '../utils/priority-config';
 import { PriorityMeter } from './priority-meter';
@@ -111,9 +112,23 @@ export const TaskDetailHeader = ({
                             {project.name}
                         </Link>
                     )}
-                    {task.due_date && (
-                        <span>Due {formatShortDate(parseLocalDate(task.due_date))}</span>
-                    )}
+                    {task.due_date &&
+                        (() => {
+                            const cd = getCountdown(task.due_date, task.due_time);
+                            return (
+                                <span>
+                                    Due {formatShortDate(parseLocalDate(task.due_date))}
+                                    {cd && (
+                                        <span
+                                            className='ml-1.5 font-semibold'
+                                            style={{ color: URGENCY_META[cd.urgency].color }}
+                                        >
+                                            · {cd.label}
+                                        </span>
+                                    )}
+                                </span>
+                            );
+                        })()}
                     {task.scheduled_date && (
                         <span>
                             Scheduled {formatShortDate(parseLocalDate(task.scheduled_date))}

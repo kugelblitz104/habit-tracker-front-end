@@ -1,9 +1,10 @@
 import type { TaskRead, TaskUpdate } from '@/api';
 import { POPOVER_PANEL_CLASS, popoverPanelStyle } from '@/components/ui/menu';
 import { useProjects } from '@/features/projects/api/get-projects';
-import { parseLocalDate } from '@/lib/date-utils';
+import { parseLocalDate, toLocalDateString } from '@/lib/date-utils';
 import { TaskStatus } from '@/types/types';
-import { ListPlus, Pencil, Timer, Trash2 } from 'lucide-react';
+import { useCreateCountdown } from '@/features/countdowns/api/create-countdowns';
+import { AlarmClock, ListPlus, Pencil, Timer, Trash2 } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router';
@@ -70,6 +71,7 @@ export const TaskContextMenu = ({
     onAddSubtask
 }: TaskContextMenuProps) => {
     const updateTask = useUpdateTask();
+    const createCountdown = useCreateCountdown();
     const { deleteWithConfirm } = useDeleteTaskWithConfirm();
 
     // Archived-aware project options — same rules as the editor's ProjectField:
@@ -159,6 +161,28 @@ export const TaskContextMenu = ({
         onStartTimer?.();
     };
 
+    // Create a countdown linked to this task, prefilling the target from the
+    // task's due date (then scheduled date, else today) — the countdown keeps
+    // its own copy from here on.
+    const handleAddCountdown = () => {
+        onClose();
+        const target_date =
+            task.due_date ?? task.scheduled_date ?? toLocalDateString(new Date());
+        createCountdown.mutate(
+            {
+                profile_id: task.profile_id,
+                title: task.title,
+                target_date,
+                target_time: task.due_time ?? null,
+                task_id: task.id
+            },
+            {
+                onSuccess: () => toast.success('Countdown added'),
+                onError: () => toast.error('Failed to add countdown.')
+            }
+        );
+    };
+
     const handleAddSubtask = () => {
         // Prefer the inline quick-add popover; fall back to the editor.
         if (onAddSubtask) onAddSubtask();
@@ -228,6 +252,14 @@ export const TaskContextMenu = ({
                             Start timer
                         </button>
                     )}
+                    <button
+                        type='button'
+                        onClick={handleAddCountdown}
+                        className={`${itemClass} text-text-secondary`}
+                    >
+                        <AlarmClock size={14} className='text-text-muted' />
+                        Add countdown
+                    </button>
                     {task.parent_id == null && (
                         <button
                             type='button'

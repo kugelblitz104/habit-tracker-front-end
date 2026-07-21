@@ -16,6 +16,7 @@ const menuItemClass =
 type ToggleRowConfig = {
     key:
         | 'habits_enabled'
+        | 'countdowns_enabled'
         | 'calendar_enabled'
         | 'publish_to_azure'
         | 'week_start_monday'
@@ -32,6 +33,12 @@ const TOGGLE_ROWS: ToggleRowConfig[] = [
         key: 'habits_enabled',
         title: 'Habits',
         description: 'Show the daily habits section & habit tracking on this profile'
+    },
+    {
+        key: 'countdowns_enabled',
+        title: 'Countdowns',
+        description: 'Show the Countdown tab & the deadlines section on Today',
+        defaultOn: true
     },
     {
         key: 'calendar_enabled',

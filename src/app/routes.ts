@@ -13,6 +13,7 @@ export default [
     // Protected routes
     index('routes/auth/today.tsx'),
     route('tasks', 'routes/auth/tasks.tsx'),
+    route('countdown', 'routes/auth/countdown.tsx'),
     route('habits', 'routes/auth/habits.tsx'),
     route('projects', 'routes/auth/projects.tsx'),
     route('projects/:projectId', 'routes/auth/project.tsx'),

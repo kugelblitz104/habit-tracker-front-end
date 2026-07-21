@@ -4,7 +4,8 @@ import { useLongPress } from '@/lib/use-long-press';
 import { TaskStatus, type TaskBand } from '@/types/types';
 import { useCallback, useRef, useState } from 'react';
 import { useLocation } from 'react-router';
-import { getDueInfo, getScheduledLabel } from '../utils/task-format';
+import { getScheduledLabel } from '../utils/task-format';
+import { getCountdown } from '../utils/countdown';
 import { CardSubtaskChecklist } from './card-subtask-checklist';
 import { PriorityMeter } from './priority-meter';
 import { SubtaskQuickAdd } from './subtask-quick-add';
@@ -117,7 +118,7 @@ export const TaskCard = ({
     const status = (task.status ?? TaskStatus.OPEN) as TaskStatus;
     const statusMeta = STATUS_META[status];
     const isCancelled = status === TaskStatus.CANCELLED;
-    const due = getDueInfo(task.due_date);
+    const countdown = getCountdown(task.due_date, task.due_time);
     const scheduledLabel = getScheduledLabel(task.scheduled_date, task.scheduled_time);
     const hasNotes = !!task.notes && task.notes.trim().length > 0;
 
@@ -276,7 +277,7 @@ export const TaskCard = ({
                         statusMeta={statusMeta}
                         status={status}
                         pillLabel={pillLabel}
-                        due={due}
+                        countdown={countdown}
                         subtaskCount={subtaskCount}
                         subtaskDoneCount={subtaskDoneCount}
                         allSubtasksDone={allSubtasksDone}

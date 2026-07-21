@@ -2,6 +2,7 @@ import type { ProjectRead } from '@/api';
 import { AppHeader } from '@/components/layouts/app-header';
 import { TodaySchedule } from '@/features/calendar/components/today-schedule';
 import { ActiveTimerPanel } from '@/features/time-entries/components/active-timer-panel';
+import { CountdownSection } from '@/features/countdowns/components/countdown-section';
 import { HabitDetailPane } from '@/features/habits/components/details/habit-detail-pane';
 import { TodayHabitsPanel } from '@/features/habits/components/today/today-habits-panel';
 import { useHabitDetailPane } from '@/features/habits/hooks/use-habit-detail-pane';
@@ -262,6 +263,8 @@ export const TodayDashboard = () => {
                         />
 
                         <TodaySchedule />
+
+                        <CountdownSection profileId={activeProfileId} />
 
                         <CompletedSection
                             profileId={activeProfileId}

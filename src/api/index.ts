@@ -15,6 +15,10 @@ export type { CalendarConnectionRead } from './models/CalendarConnectionRead';
 export type { CalendarConnectionUpdate } from './models/CalendarConnectionUpdate';
 export type { CalendarEventList } from './models/CalendarEventList';
 export type { CalendarEventRead } from './models/CalendarEventRead';
+export type { CountdownCreate } from './models/CountdownCreate';
+export type { CountdownList } from './models/CountdownList';
+export type { CountdownRead } from './models/CountdownRead';
+export type { CountdownUpdate } from './models/CountdownUpdate';
 export type { ExportResult } from './models/ExportResult';
 export type { ForgotPasswordRequest } from './models/ForgotPasswordRequest';
 export type { HabitCreate } from './models/HabitCreate';
@@ -70,6 +74,7 @@ export type { ValidationError } from './models/ValidationError';
 
 export { AuthenticationService } from './services/AuthenticationService';
 export { CalendarConnectionsService } from './services/CalendarConnectionsService';
+export { CountdownsService } from './services/CountdownsService';
 export { HabitsService } from './services/HabitsService';
 export { ImportService } from './services/ImportService';
 export { IntegrationsService } from './services/IntegrationsService';

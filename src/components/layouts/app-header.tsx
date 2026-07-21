@@ -32,7 +32,8 @@ const TABS: NavTab[] = [
     { label: 'Tasks', to: '/tasks' },
     { label: 'Habits', to: '/habits' },
     { label: 'Projects', to: '/projects' },
-    { label: 'Timer', to: '/timer' }
+    { label: 'Timer', to: '/timer' },
+    { label: 'Countdown', to: '/countdown' }
 ];
 
 /**
@@ -44,6 +45,7 @@ function activeTabKey(pathname: string): string | null {
     if (pathname === '/') return '/';
     // Full-page task detail (/tasks/:id) and the All-tasks list both light Tasks.
     if (pathname === '/tasks' || pathname.startsWith('/tasks/')) return '/tasks';
+    if (pathname.startsWith('/countdown')) return '/countdown';
     if (pathname.startsWith('/habits') || pathname.startsWith('/details')) return '/habits';
     if (pathname.startsWith('/projects')) return '/projects';
     if (pathname.startsWith('/timer')) return '/timer';
@@ -75,11 +77,13 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
         window.addEventListener('keydown', onKeyDown);
         return () => window.removeEventListener('keydown', onKeyDown);
     }, []);
-    // When a profile has habits disabled the feature is hidden wholesale — the
-    // Habits tab disappears as if it were never added (the /habits route itself
-    // redirects to Today).
-    const tabs =
-        activeProfile?.habits_enabled === false ? TABS.filter((tab) => tab.to !== '/habits') : TABS;
+    // When a profile has habits/countdowns disabled the feature is hidden
+    // wholesale — its tab disappears as if it were never added.
+    const tabs = TABS.filter(
+        (tab) =>
+            !(tab.to === '/habits' && activeProfile?.habits_enabled === false) &&
+            !(tab.to === '/countdown' && activeProfile?.countdowns_enabled === false)
+    );
     const activeTab = tabs.find((tab) => tab.to === activeKey) ?? null;
 
     return (

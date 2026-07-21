@@ -2,8 +2,20 @@ import type { ProjectRead, TaskRead } from '@/api';
 import { TaskStatus } from '@/types/types';
 import { ChevronRight, ListChecks } from 'lucide-react';
 import { Link } from 'react-router';
-import type { DueInfo } from '../utils/task-format';
+import type { Countdown, CountdownUrgency } from '../utils/countdown';
 import { STATUS_META, type StatusMeta } from './status-config';
+
+/** Due-chip styling per urgency: overdue + due-now get a filled chip; the
+ *  calmer buckets are colored text only, so urgency reads at a glance. */
+const DUE_CHIP_STYLE: Record<CountdownUrgency, React.CSSProperties> = {
+    overdue: { color: 'var(--color-danger)', backgroundColor: 'rgba(193,78,106,0.14)' },
+    now: {
+        color: 'var(--color-status-duetoday)',
+        backgroundColor: 'var(--status-duetoday-bg)'
+    },
+    soon: { color: 'var(--color-soon-label)' },
+    later: { color: 'var(--color-text-muted)' }
+};
 
 type TaskCardMetaRowProps = {
     task: TaskRead;
@@ -17,7 +29,8 @@ type TaskCardMetaRowProps = {
     status: TaskStatus;
     /** Pre-merged status pill text (folds in block reason / scheduled date). */
     pillLabel: string;
-    due: DueInfo | null;
+    /** Live time-to-due for the due chip; null when the task has no due date. */
+    countdown: Countdown | null;
     subtaskCount: number;
     subtaskDoneCount: number;
     allSubtasksDone: boolean;
@@ -44,7 +57,7 @@ export const TaskCardMetaRow = ({
     statusMeta,
     status,
     pillLabel,
-    due,
+    countdown,
     subtaskCount,
     subtaskDoneCount,
     allSubtasksDone,
@@ -93,19 +106,13 @@ export const TaskCardMetaRow = ({
                 </span>
             )}
 
-            {due && (
+            {countdown && (
                 <span
                     className='rounded-chip px-2 py-0.5'
-                    style={
-                        due.hot
-                            ? {
-                                  color: 'var(--color-status-duetoday)',
-                                  backgroundColor: 'var(--status-duetoday-bg)'
-                              }
-                            : { color: 'var(--color-text-muted)' }
-                    }
+                    style={DUE_CHIP_STYLE[countdown.urgency]}
+                    title={`due ${countdown.label}`}
                 >
-                    {due.label}
+                    {countdown.label}
                 </span>
             )}
 
