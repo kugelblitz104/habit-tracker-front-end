@@ -18,6 +18,8 @@ export type IntegrationFormValues = {
     organization: string;
     project: string;
     workItemType: string;
+    /** On-prem Azure DevOps Server / TFS host; blank = the dev.azure.com cloud. */
+    baseUrl: string;
     defaultRepo: string;
 };
 
@@ -28,6 +30,7 @@ export type IntegrationSubmitValues = {
     organization?: string;
     project?: string;
     work_item_type?: string;
+    base_url?: string;
     default_repo?: string;
 };
 
@@ -44,6 +47,13 @@ type IntegrationFormProps = {
 const isRepo = (value: string): boolean => {
     const parts = value.trim().split('/');
     return parts.length === 2 && parts.every((p) => p.length > 0);
+};
+
+// A base URL, when given, must carry an http(s) scheme (the backend joins it
+// with the org/project path segments). Blank is allowed — it means the cloud.
+const isBaseUrl = (value: string): boolean => {
+    const v = value.trim();
+    return !v || v.startsWith('http://') || v.startsWith('https://');
 };
 
 const labelClass = 'mb-1.5 block text-[11.5px]';
@@ -73,9 +83,16 @@ export const IntegrationForm = ({
     const tokenValid = isEdit || values.token.trim().length > 0;
     const orgValid = !isAzure || values.organization.trim().length > 0;
     const projectValid = !isAzure || values.project.trim().length > 0;
+    const baseUrlValid = !isAzure || isBaseUrl(values.baseUrl);
     const repoValid = isAzure || !values.defaultRepo.trim() || isRepo(values.defaultRepo);
     const canSubmit =
-        nameValid && tokenValid && orgValid && projectValid && repoValid && !pending;
+        nameValid &&
+        tokenValid &&
+        orgValid &&
+        projectValid &&
+        baseUrlValid &&
+        repoValid &&
+        !pending;
 
     const handleSubmit = () => {
         setTouched(true);
@@ -92,6 +109,7 @@ export const IntegrationForm = ({
             out.organization = values.organization.trim();
             out.project = values.project.trim();
             out.work_item_type = values.workItemType.trim() || undefined;
+            out.base_url = values.baseUrl.trim() || undefined;
         } else {
             out.default_repo = values.defaultRepo.trim() || undefined;
         }
@@ -181,7 +199,7 @@ export const IntegrationForm = ({
                     <>
                         <label>
                             <span className={labelClass} style={labelStyle}>
-                                Organization
+                                Organization / collection
                             </span>
                             <input
                                 type='text'
@@ -227,6 +245,29 @@ export const IntegrationForm = ({
                                 className={settingsInputClass}
                                 style={settingsInputStyle}
                             />
+                        </label>
+                        <label className='md:col-span-2'>
+                            <span className={labelClass} style={labelStyle}>
+                                Server URL (on-prem only)
+                            </span>
+                            <input
+                                type='text'
+                                value={values.baseUrl}
+                                onChange={(e) => set({ baseUrl: e.target.value })}
+                                placeholder='https://dev.azure.com'
+                                className={`${settingsInputClass} font-mono text-[12.5px]`}
+                                style={settingsInputStyle}
+                            />
+                            <span className='mt-1 block text-[11px] text-text-faint'>
+                                Host of an on-prem Azure DevOps Server / TFS, e.g.{' '}
+                                <span className='font-mono'>https://tfs.example.com</span>. Leave
+                                blank for the dev.azure.com cloud.
+                            </span>
+                            {touched && !baseUrlValid && (
+                                <span className='mt-1 block text-[11px] text-danger'>
+                                    Must start with http:// or https://
+                                </span>
+                            )}
                         </label>
                     </>
                 ) : (

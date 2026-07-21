@@ -32,7 +32,14 @@ const providerColor = (provider: string): string =>
 
 const providerSubline = (c: IntegrationConnectionRead): string => {
     if (c.provider === 'azure_devops') {
-        return [c.organization, c.project].filter(Boolean).join(' / ') || 'Azure DevOps';
+        const path = [c.organization, c.project].filter(Boolean).join(' / ') || 'Azure DevOps';
+        // Show the host for on-prem Azure DevOps Server / TFS so it's clear the
+        // connection isn't pointed at the cloud.
+        if (c.base_url) {
+            const host = c.base_url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+            return `${path} · ${host}`;
+        }
+        return path;
     }
     return c.default_repo ? `publishes to ${c.default_repo}` : 'issues assigned to you';
 };
@@ -44,6 +51,7 @@ const EMPTY_FORM: IntegrationFormValues = {
     organization: '',
     project: '',
     workItemType: '',
+    baseUrl: '',
     defaultRepo: ''
 };
 
@@ -130,6 +138,7 @@ export const IntegrationConnectionsSection = ({ profile }: Props) => {
             organization: values.organization ?? null,
             project: values.project ?? null,
             work_item_type: values.work_item_type ?? null,
+            base_url: values.base_url ?? null,
             default_repo: values.default_repo ?? null,
             profile_id: profile.id
         });
@@ -144,6 +153,7 @@ export const IntegrationConnectionsSection = ({ profile }: Props) => {
                 organization: values.organization ?? null,
                 project: values.project ?? null,
                 work_item_type: values.work_item_type ?? null,
+                base_url: values.base_url ?? null,
                 default_repo: values.default_repo ?? null
             }
         });
@@ -185,6 +195,7 @@ export const IntegrationConnectionsSection = ({ profile }: Props) => {
                                 organization: connection.organization ?? '',
                                 project: connection.project ?? '',
                                 workItemType: connection.work_item_type ?? '',
+                                baseUrl: connection.base_url ?? '',
                                 defaultRepo: connection.default_repo ?? ''
                             }}
                             submitLabel='Save'

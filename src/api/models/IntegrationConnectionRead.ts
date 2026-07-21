@@ -8,6 +8,7 @@ export type IntegrationConnectionRead = {
     organization?: (string | null);
     project?: (string | null);
     work_item_type?: (string | null);
+    base_url?: (string | null);
     default_repo?: (string | null);
     enabled?: boolean;
     id: number;
