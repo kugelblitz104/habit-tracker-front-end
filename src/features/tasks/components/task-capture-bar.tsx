@@ -105,7 +105,7 @@ export const TaskCaptureBar = ({
     defaultProjectId = null,
     onExpand,
     disabled = false,
-    placeholder = 'Add a task…  (!high  *8-16  >8-19  @project  @"two words"  ~30  -notes)'
+    placeholder = 'Add a task...'
 }: TaskCaptureBarProps) => {
     const [value, setValue] = useState('');
     const createTask = useCreateTask();
