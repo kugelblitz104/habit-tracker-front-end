@@ -16,7 +16,7 @@ import {
 } from '@/features/tasks/utils/countdown';
 import { TaskSelect } from '@/features/time-entries/components/task-select';
 import { useAuth } from '@/lib/auth-context';
-import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE } from '@/lib/layout';
+import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE, PAGE_WIDTH_TRANSITION, paneRowClass } from '@/lib/layout';
 import { useNow } from '@/lib/use-now';
 import { useResponsiveLayout } from '@/lib/use-responsive-layout';
 import { Pencil, Plus, Trash2, X } from 'lucide-react';
@@ -366,9 +366,9 @@ export const CountdownDashboard = () => {
         <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
             <AppHeader maxWidthClass={showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH} />
             <div
-                className={`mx-auto px-5 py-7 md:px-7 ${showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH}`}
+                className={`mx-auto px-5 py-7 md:px-7 ${PAGE_WIDTH_TRANSITION} ${showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH}`}
             >
-                <div className={isWide ? 'flex items-start gap-6' : undefined}>
+                <div className={paneRowClass(isWide, showPane, 400)}>
                     <div className='min-w-0 flex-1'>
                 <header className='mb-[24px] flex items-start justify-between gap-3'>
                     <div>
@@ -490,27 +490,37 @@ export const CountdownDashboard = () => {
                     </div>
 
                     {showPane && (
+                        // Fills (and clips) the grid pane track that animates
+                        // 0 -> 400px; the fixed-width card inner keeps its layout
+                        // steady. `pane-rise` (on the scroll container, so its
+                        // transform doesn't flash a scrollbar) floats it up into
+                        // place, and the key replays that on switching targets.
                         <aside
-                            className='sticky top-7 max-h-[calc(100vh-3.5rem)] w-[400px] shrink-0 overflow-y-auto rounded-card border p-4'
-                            style={{
-                                backgroundColor: 'var(--surface-card-bg)',
-                                borderColor: 'var(--surface-card-border)'
-                            }}
+                            key={editing?.id ?? 'new'}
+                            className='pane-rise sticky top-7 max-h-[calc(100vh-3.5rem)] w-full min-w-0 overflow-x-hidden overflow-y-auto'
                         >
-                            <div className='mb-3 flex items-center justify-between'>
-                                <h2 className='font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-habit-label'>
-                                    {paneTitle}
-                                </h2>
-                                <button
-                                    type='button'
-                                    onClick={closePane}
-                                    aria-label='Close'
-                                    className='text-text-faint transition-colors hover:text-text-secondary'
-                                >
-                                    <X size={15} />
-                                </button>
+                            <div
+                                className='w-[400px] rounded-card border p-4'
+                                style={{
+                                    backgroundColor: 'var(--surface-card-bg)',
+                                    borderColor: 'var(--surface-card-border)'
+                                }}
+                            >
+                                <div className='mb-3 flex items-center justify-between'>
+                                    <h2 className='font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-habit-label'>
+                                        {paneTitle}
+                                    </h2>
+                                    <button
+                                        type='button'
+                                        onClick={closePane}
+                                        aria-label='Close'
+                                        className='text-text-faint transition-colors hover:text-text-secondary'
+                                    >
+                                        <X size={15} />
+                                    </button>
+                                </div>
+                                {formEl}
                             </div>
-                            {formEl}
                         </aside>
                     )}
                 </div>

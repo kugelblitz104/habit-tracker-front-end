@@ -2,11 +2,12 @@ import { MENU_ITEM_CLASS, ThemedMenuItems } from '@/components/ui/menu';
 import { ProfileSwitcher } from '@/features/profiles/components/profile-switcher';
 import { SearchPalette } from '@/features/search/components/search-palette';
 import { useAuth } from '@/lib/auth-context';
-import { PAGE_MAX_WIDTH } from '@/lib/layout';
+import { PAGE_MAX_WIDTH, PAGE_WIDTH_TRANSITION } from '@/lib/layout';
+import { anyDetailPaneOpen, closeAllDetailPanes } from '@/lib/detail-pane-registry';
 import { Menu, MenuButton, MenuItem } from '@headlessui/react';
 import { Check, Menu as MenuIcon, Search } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router';
 
 // DEV-ONLY debug menu. `import.meta.env.DEV` compiles to `false` in prod, the
 // dynamic import becomes unreachable dead code, and Rollup drops the module —
@@ -85,10 +86,37 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
             !(tab.to === '/countdown' && activeProfile?.countdowns_enabled === false)
     );
     const activeTab = tabs.find((tab) => tab.to === activeKey) ?? null;
+    const navigate = useNavigate();
+
+    // Runs just before a tab navigation (React Router fires Link onClick before
+    // it navigates). When no detail pane is open we let the Link do its normal
+    // view-transition slide. When one IS open we sequence the two motions: cancel
+    // the immediate nav, animate the pane closed (quick — see `data-vt-nav` in
+    // app.css), then run the page slide. That avoids the page morphing/
+    // cross-fading down from the wider pane-open layout.
+    const handleNavClick = useCallback(
+        (e: React.MouseEvent<HTMLAnchorElement>, to: string) => {
+            if (typeof document === 'undefined' || !anyDetailPaneOpen()) return;
+            e.preventDefault();
+            const root = document.documentElement;
+            root.setAttribute('data-vt-nav', '');
+            closeAllDetailPanes();
+            // Let the close animation play, then slide to the new page.
+            window.setTimeout(() => {
+                root.removeAttribute('data-vt-nav');
+                navigate(to, { viewTransition: true });
+            }, 180);
+        },
+        [navigate]
+    );
 
     return (
         <header
-            className='sticky top-0 z-40 border-b'
+            // Own view-transition name so the bar is captured as its own group
+            // instead of sliding with the page during a route view transition —
+            // the full-width bar is identical across pages, so it stays put while
+            // only the content beneath pans.
+            className='sticky top-0 z-40 border-b [view-transition-name:app-header]'
             style={{
                 borderColor: 'var(--surface-card-border)',
                 // Solid base so scrolled content doesn't bleed through the sticky
@@ -97,7 +125,7 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
             }}
         >
             <div
-                className={`mx-auto flex items-stretch justify-between gap-3 px-5 md:px-7 ${maxWidthClass}`}
+                className={`mx-auto flex items-stretch justify-between gap-3 px-5 md:px-7 ${PAGE_WIDTH_TRANSITION} ${maxWidthClass}`}
             >
                 {/* Inline tabs (md and up) */}
                 <nav className='hidden items-center gap-1 sm:gap-1.5 md:flex'>
@@ -110,6 +138,9 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
                                 <Link
                                     key={tab.to}
                                     to={tab.to}
+                                    viewTransition
+                                    prefetch='render'
+                                    onClick={(e) => handleNavClick(e, tab.to)}
                                     aria-current={active ? 'page' : undefined}
                                     className='my-2 rounded-chip px-3.5 py-1.5 font-display text-[13.5px] font-semibold transition-opacity hover:opacity-90'
                                     style={
@@ -132,6 +163,9 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
                             <Link
                                 key={tab.to}
                                 to={tab.to}
+                                viewTransition
+                                prefetch='render'
+                                onClick={(e) => handleNavClick(e, tab.to)}
                                 aria-current={active ? 'page' : undefined}
                                 className={`-mb-px flex items-center gap-1.5 self-stretch border-b-2 px-2 py-3.5 font-display text-[14px] transition-colors sm:px-2.5 ${
                                     active
@@ -162,7 +196,13 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
                             const active = tab.to === activeKey;
                             return (
                                 <MenuItem key={tab.to}>
-                                    <Link to={tab.to} className={MENU_ITEM_CLASS}>
+                                    <Link
+                                        to={tab.to}
+                                        viewTransition
+                                        prefetch='intent'
+                                        onClick={(e) => handleNavClick(e, tab.to)}
+                                        className={MENU_ITEM_CLASS}
+                                    >
                                         {tab.label}
                                         {active && (
                                             <Check

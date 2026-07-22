@@ -82,13 +82,20 @@ export const CompletedSection = ({
                                 className={`transition-transform ${open ? 'rotate-90' : ''}`}
                             />
                         </DisclosureButton>
-                        <DisclosurePanel className='mt-3'>
+                        {/* Animate open/close by sliding grid rows (0fr <-> 1fr)
+                            instead of popping; `transition` keeps the panel
+                            mounted through the leave so it can glide shut. */}
+                        <DisclosurePanel
+                            transition
+                            className='grid grid-rows-[1fr] transition-all duration-300 ease-out data-closed:grid-rows-[0fr] data-closed:opacity-0'
+                        >
+                            <div className='overflow-hidden'>
                             {tasks.length === 0 ? (
-                                <p className='font-mono text-[12px] text-text-faint'>
+                                <p className='mt-3 font-mono text-[12px] text-text-faint'>
                                     Nothing closed yet.
                                 </p>
                             ) : (
-                                <ul className='flex flex-col'>
+                                <ul className='mt-3 flex flex-col'>
                                     {tasks.map((task) => {
                                         const status = (task.status ??
                                             TaskStatus.DONE) as TaskStatus;
@@ -141,6 +148,7 @@ export const CompletedSection = ({
                                     })}
                                 </ul>
                             )}
+                            </div>
                         </DisclosurePanel>
                     </>
                 )}

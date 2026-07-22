@@ -20,11 +20,12 @@ import { TaskDetailPane } from '@/features/tasks/components/task-detail-pane';
 import { useTaskDetailPane } from '@/features/tasks/hooks/use-task-detail-pane';
 import { countGroupedTasks, groupTasksByBand } from '@/features/tasks/utils/task-bands';
 import { formatShortDate } from '@/features/tasks/utils/task-format';
+import { toastTaskClosed } from '@/features/tasks/utils/task-status-toast';
 import { useCreateTimeEntry } from '@/features/time-entries/api/create-time-entries';
 import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
 import { parseServerDate, toLocalDateString } from '@/lib/date-utils';
 import { useAuth } from '@/lib/auth-context';
-import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE } from '@/lib/layout';
+import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE, PAGE_WIDTH_TRANSITION, paneRowClass } from '@/lib/layout';
 import { TaskStatus, TimeEntryKind } from '@/types/types';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -47,9 +48,11 @@ export const TodayDashboard = () => {
     const [captureDraft, setCaptureDraft] = useState<TaskCaptureDraft | null>(null);
 
     // Collapse state for the (hidable) Whenever band, persisted per browser.
-    const [hideWhenever, setHideWhenever] = useState(false);
+    // Collapsed by default (starts as `true`, matching the SSR render so there's
+    // no open->shut flash); only expanded if the user explicitly un-hid it ('0').
+    const [hideWhenever, setHideWhenever] = useState(true);
     useEffect(() => {
-        setHideWhenever(localStorage.getItem('today_hide_whenever') === '1');
+        setHideWhenever(localStorage.getItem('today_hide_whenever') !== '0');
     }, []);
     const toggleHideWhenever = useCallback(() => {
         setHideWhenever((prev) => {
@@ -157,14 +160,23 @@ export const TodayDashboard = () => {
     }, [tasks, closedQuery.data]);
 
     const handleStatusChange = (taskId: number, status: TaskStatus) => {
+        // Remember where the task was so the toast can put it back on undo.
+        const previous = tasks.find((t) => t.id === taskId)?.status;
         updateTask.mutate(
             { taskId, data: { status } },
             {
                 // Only toast discrete, intentional completions — not every status
-                // shuffle — so feedback stays meaningful rather than noisy.
+                // shuffle — so feedback stays meaningful rather than noisy. The
+                // toast doubles as a tap-to-undo for a few seconds.
                 onSuccess: () => {
-                    if (status === TaskStatus.DONE) toast.success('Task completed');
-                    else if (status === TaskStatus.CANCELLED) toast.success('Task cancelled');
+                    if (status === TaskStatus.DONE || status === TaskStatus.CANCELLED) {
+                        toastTaskClosed(
+                            status === TaskStatus.DONE ? 'done' : 'cancelled',
+                            previous != null && previous !== status
+                                ? () => updateTask.mutate({ taskId, data: { status: previous } })
+                                : undefined
+                        );
+                    }
                 },
                 onError: (error) =>
                     toast.error(apiErrorMessage(error, 'Failed to update task status'))
@@ -176,11 +188,11 @@ export const TodayDashboard = () => {
         <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
             <AppHeader maxWidthClass={showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH} />
             <div
-                className={`mx-auto px-5 py-7 md:px-7 ${
+                className={`mx-auto px-5 py-7 md:px-7 ${PAGE_WIDTH_TRANSITION} ${
                     showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH
                 }`}
             >
-                <div className={isWide ? 'flex items-start gap-6' : undefined}>
+                <div className={paneRowClass(isWide, showPane)}>
                     <div className='min-w-0 flex-1'>
                         {/* Header */}
                         <header className='mb-[30px]'>

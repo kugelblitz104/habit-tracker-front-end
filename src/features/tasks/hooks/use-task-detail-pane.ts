@@ -1,6 +1,7 @@
 import { useAuth } from '@/lib/auth-context';
+import { registerDetailPane } from '@/lib/detail-pane-registry';
 import { useResponsiveLayout } from '@/lib/use-responsive-layout';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
 /**
@@ -71,6 +72,16 @@ export const useTaskDetailPane = () => {
         setSelectedEditTaskId(null);
         setEditIntent(false);
     }, []);
+
+    // Let the top nav animate this pane closed before a route change (so the
+    // view transition doesn't morph from the pane-open layout). A ref keeps the
+    // registered `isOpen` reading the latest value without re-registering.
+    const openRef = useRef(false);
+    openRef.current = selectedEditTaskId !== null;
+    useEffect(
+        () => registerDetailPane({ isOpen: () => openRef.current, close: closeEdit }),
+        [closeEdit]
+    );
 
     return {
         isWide,

@@ -81,6 +81,43 @@ export const BandSection = ({
         <SectionHeader label={meta.label} color={meta.labelColor} count={tasks.length} />
     );
 
+    // The band body (tasks, or the empty hint). Only collapsible bands wrap this
+    // in the animated overflow-hidden container — non-collapsible bands (Now /
+    // Soon) must NOT sit inside overflow-hidden or it clips their cards' glow.
+    const content =
+        tasks.length === 0 ? (
+            <p className='font-mono text-[12px] text-text-faint'>{emptyHint}</p>
+        ) : (
+            <div
+                className={band === 'whenever' ? '' : 'flex flex-col'}
+                style={band === 'whenever' ? undefined : { gap: 'var(--space-band-gap)' }}
+            >
+                {tasks.map((task, i) => (
+                    <TaskCard
+                        key={task.id}
+                        task={task}
+                        band={band}
+                        project={
+                            task.project_id != null
+                                ? projectsById.get(task.project_id)
+                                : undefined
+                        }
+                        onStatusChange={(status) => onStatusChange(task.id, status)}
+                        notesOpen={notesTaskId === task.id}
+                        editing={selectedEditTaskId === task.id}
+                        onToggleNotes={() => onToggleNotes(task.id)}
+                        onSelectEdit={(editing) => onSelectEdit(task.id, editing)}
+                        subtasksOpen={subtasksTaskId === task.id}
+                        onToggleSubtasks={
+                            onToggleSubtasks ? () => onToggleSubtasks(task.id) : undefined
+                        }
+                        onStartTimer={onStartTimer ? () => onStartTimer(task.id) : undefined}
+                        openUpward={i >= upwardIdx}
+                    />
+                ))}
+            </div>
+        );
+
     return (
         <section className='mb-[30px]' style={isQuiet ? { opacity: 'var(--quiet)' } : undefined}>
             <div className='mb-2.5 flex items-center gap-2'>
@@ -105,37 +142,19 @@ export const BandSection = ({
                 {headerAccessory}
             </div>
 
-            {collapsed ? null : tasks.length === 0 ? (
-                <p className='font-mono text-[12px] text-text-faint'>{emptyHint}</p>
-            ) : (
+            {collapsible ? (
+                // Whenever collapse: animate grid rows (0fr <-> 1fr) so it glides
+                // shut/open; the inner overflow-hidden clips the sliding content.
+                // Portaled status/context popovers escape the clip.
                 <div
-                    className={band === 'whenever' ? '' : 'flex flex-col'}
-                    style={band === 'whenever' ? undefined : { gap: 'var(--space-band-gap)' }}
+                    className={`grid transition-[grid-template-rows] duration-300 ease-out ${
+                        collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'
+                    }`}
                 >
-                    {tasks.map((task, i) => (
-                        <TaskCard
-                            key={task.id}
-                            task={task}
-                            band={band}
-                            project={
-                                task.project_id != null
-                                    ? projectsById.get(task.project_id)
-                                    : undefined
-                            }
-                            onStatusChange={(status) => onStatusChange(task.id, status)}
-                            notesOpen={notesTaskId === task.id}
-                            editing={selectedEditTaskId === task.id}
-                            onToggleNotes={() => onToggleNotes(task.id)}
-                            onSelectEdit={(editing) => onSelectEdit(task.id, editing)}
-                            subtasksOpen={subtasksTaskId === task.id}
-                            onToggleSubtasks={
-                                onToggleSubtasks ? () => onToggleSubtasks(task.id) : undefined
-                            }
-                            onStartTimer={onStartTimer ? () => onStartTimer(task.id) : undefined}
-                            openUpward={i >= upwardIdx}
-                        />
-                    ))}
+                    <div className='overflow-hidden'>{content}</div>
                 </div>
+            ) : (
+                content
             )}
         </section>
     );

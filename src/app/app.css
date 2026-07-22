@@ -360,3 +360,80 @@ textarea,
 .Toastify__close-button {
     color: var(--color-text-muted);
 }
+
+/*
+ * Detail-pane entrance. The master-detail row (see lib/layout.ts) animates its
+ * grid track so the content reflows smoothly; this makes the pane's own content
+ * "flow up" from just below its resting spot as it fades in, rather than popping
+ * in fully formed. Applied to the fixed-width inner wrapper of each pane so the
+ * rise is independent of the track-width reveal happening around it.
+ */
+@keyframes pane-rise {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.pane-rise {
+    animation: pane-rise 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+    /* Promote to its own layer for the duration — keeps the rise buttery even
+       while the surrounding grid track is animating width. */
+    will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pane-rise {
+        animation: none;
+    }
+}
+
+/*
+ * Directional page slide on top-nav navigation (View Transitions API, opted in
+ * per-link via React Router's `viewTransition`). The outgoing view drifts left
+ * as the incoming one slides in from the right, so switching tabs reads as
+ * panning across one continuous surface rather than a hard cut. Browsers
+ * without the API simply switch instantly.
+ */
+@keyframes vt-page-out {
+    to {
+        opacity: 0;
+        transform: translateX(-3%);
+    }
+}
+
+@keyframes vt-page-in {
+    from {
+        opacity: 0;
+        transform: translateX(3%);
+    }
+}
+
+/*
+ * When a tab is clicked with a detail pane open (AppHeader sets this on <html>),
+ * speed up the pane-close transition so the "close, then slide" sequence stays
+ * snappy: the pane animates shut a touch faster than usual, the page slide
+ * follows, and by then the layout is back at base width so nothing morphs.
+ */
+html[data-vt-nav] * {
+    transition-duration: 150ms !important;
+}
+
+::view-transition-old(root) {
+    animation: vt-page-out 220ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+::view-transition-new(root) {
+    animation: vt-page-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation: none;
+    }
+}

@@ -7,7 +7,7 @@ import { SortHabitModal } from '@/features/habits/components/modals/sort-habit-m
 import { useHabitDetailPane } from '@/features/habits/hooks/use-habit-detail-pane';
 import { CaptureBar } from '@/features/tasks/components/capture-bar';
 import { AppHeader } from '@/components/layouts/app-header';
-import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE } from '@/lib/layout';
+import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE, PAGE_WIDTH_TRANSITION, paneRowClass } from '@/lib/layout';
 import { useAuth } from '@/lib/auth-context';
 import { useResponsiveLayout, DASHBOARD_DAYS_BY_SIZE } from '@/lib/use-responsive-layout';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -153,11 +153,11 @@ export const HabitsDashboard = () => {
         <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
             <AppHeader maxWidthClass={showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH} />
             <div
-                className={`mx-auto px-5 py-7 md:px-7 ${
+                className={`mx-auto px-5 py-7 md:px-7 ${PAGE_WIDTH_TRANSITION} ${
                     showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH
                 }`}
             >
-                <div className={isWide ? 'flex items-start gap-6' : undefined}>
+                <div className={paneRowClass(isWide, showPane)}>
                     <div className='min-w-0 flex-1'>
                         {/* Header */}
                         <header className='mb-[30px] flex items-start justify-between gap-4'>

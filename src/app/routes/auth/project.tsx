@@ -37,9 +37,10 @@ import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
 import { AppHeader } from '@/components/layouts/app-header';
 import { sanitizeText } from '@/lib/input-sanitization';
 import { toLocalDateString } from '@/lib/date-utils';
-import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE } from '@/lib/layout';
+import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE, PAGE_WIDTH_TRANSITION, paneRowClass } from '@/lib/layout';
+import { toastTaskClosed } from '@/features/tasks/utils/task-status-toast';
 import { useAuth } from '@/lib/auth-context';
-import { TimeEntryKind, type TaskStatus } from '@/types/types';
+import { TaskStatus, TimeEntryKind } from '@/types/types';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
@@ -170,7 +171,22 @@ function ProjectContent({ projectId }: { projectId: number }) {
     const allProjects = allProjectsQuery.data?.projects ?? [];
 
     const handleStatusChange = (taskId: number, status: TaskStatus) => {
-        updateTask.mutate({ taskId, data: { status } });
+        const previous = tasks.find((t) => t.id === taskId)?.status;
+        updateTask.mutate(
+            { taskId, data: { status } },
+            {
+                onSuccess: () => {
+                    if (status === TaskStatus.DONE || status === TaskStatus.CANCELLED) {
+                        toastTaskClosed(
+                            status === TaskStatus.DONE ? 'done' : 'cancelled',
+                            previous != null && previous !== status
+                                ? () => updateTask.mutate({ taskId, data: { status: previous } })
+                                : undefined
+                        );
+                    }
+                }
+            }
+        );
     };
 
     const handleToggleArchive = () => {
@@ -211,11 +227,11 @@ function ProjectContent({ projectId }: { projectId: number }) {
         <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
             <AppHeader maxWidthClass={showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH} />
             <div
-                className={`mx-auto px-5 py-7 md:px-7 ${
+                className={`mx-auto px-5 py-7 md:px-7 ${PAGE_WIDTH_TRANSITION} ${
                     showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH
                 }`}
             >
-                <div className={isWide ? 'flex items-start gap-6' : undefined}>
+                <div className={paneRowClass(isWide, showPane)}>
                     <div className='min-w-0 flex-1'>
                         {/* Inline edit surface replaces the read view (mirrors the
                             habit detail pattern). */}

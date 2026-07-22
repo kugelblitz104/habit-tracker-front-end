@@ -34,7 +34,8 @@ export const BaseModal = ({
             <DialogBackdrop className='fixed inset-0 bg-black/60' />
             <div className='fixed inset-0 flex items-center justify-center p-4'>
                 <DialogPanel
-                    className={`max-h-full w-full space-y-4 overflow-y-auto rounded-card border p-5 shadow-popover ${panelClassName}`}
+                    transition
+                    className={`max-h-full w-full space-y-4 overflow-y-auto rounded-card border p-5 shadow-popover transition duration-300 ease-out data-closed:translate-y-3 data-closed:scale-[0.98] data-closed:opacity-0 ${panelClassName}`}
                     style={{
                         backgroundColor: 'var(--bg)',
                         borderColor: 'var(--surface-card-border)'

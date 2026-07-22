@@ -2,7 +2,7 @@ import type { ProjectRead, TaskRead } from '@/api';
 import { sanitizeText } from '@/lib/input-sanitization';
 import { useLongPress } from '@/lib/use-long-press';
 import { TaskStatus, type TaskBand } from '@/types/types';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router';
 import { getScheduledLabel } from '../utils/task-format';
 import { getCountdown } from '../utils/countdown';
@@ -158,6 +158,34 @@ export const TaskCard = ({
     // the same cursor point.
     const [subtaskAddPoint, setSubtaskAddPoint] = useState<MenuPoint | null>(null);
 
+    // Completing / cancelling from the list "ejects" the row like a jenga block:
+    // it slides out sideways while its height collapses so the rows below settle
+    // up, THEN the real status change fires (which drops it from the active list
+    // on refetch). Any other status change applies immediately.
+    const [exiting, setExiting] = useState(false);
+    const exitTimerRef = useRef<number | null>(null);
+    useEffect(
+        () => () => {
+            if (exitTimerRef.current) window.clearTimeout(exitTimerRef.current);
+        },
+        []
+    );
+    const handleStatusSelect = useCallback(
+        (next: TaskStatus) => {
+            const closing = next === TaskStatus.DONE || next === TaskStatus.CANCELLED;
+            const reduceMotion =
+                typeof window !== 'undefined' &&
+                window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (!closing || exiting || reduceMotion) {
+                onStatusChange(next);
+                return;
+            }
+            setExiting(true);
+            exitTimerRef.current = window.setTimeout(() => onStatusChange(next), 320);
+        },
+        [exiting, onStatusChange]
+    );
+
     // Swallow the click that trails a long-press so it can't also fire the
     // title's edit action (or a menu item that lands under the finger).
     const swallowNextClick = () => {
@@ -201,7 +229,7 @@ export const TaskCard = ({
                 break;
             case 'x':
                 e.preventDefault();
-                onStatusChange(status === TaskStatus.DONE ? TaskStatus.OPEN : TaskStatus.DONE);
+                handleStatusSelect(status === TaskStatus.DONE ? TaskStatus.OPEN : TaskStatus.DONE);
                 break;
             case 's':
                 if (onStartTimer) {
@@ -213,10 +241,24 @@ export const TaskCard = ({
     };
 
     return (
+        // Eject wrapper: the grid row collapses 1fr -> 0fr (rows below settle up)
+        // while the inner slides out sideways. `overflow-hidden` is only applied
+        // mid-eject so it never clips the Now-band glow / edit outline at rest.
         <div
-            className={style.container}
-            style={containerStyle}
-            onKeyDown={handleKeyDown}
+            className={`grid transition-[grid-template-rows] duration-300 ease-out ${
+                exiting ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'
+            }`}
+        >
+            <div className={exiting ? 'overflow-hidden' : undefined}>
+                <div
+                    className={`transition duration-300 ease-in ${
+                        exiting ? 'translate-x-[110%] opacity-0' : ''
+                    }`}
+                >
+                    <div
+                        className={style.container}
+                        style={containerStyle}
+                        onKeyDown={handleKeyDown}
             // Suppress the BROWSER context menu on task cards only, showing ours
             // instead. (Android also routes native long-press through here.)
             onContextMenu={(e) => {
@@ -249,7 +291,7 @@ export const TaskCard = ({
                 <div className='pt-0.5'>
                     <StatusControl
                         status={status}
-                        onSelect={onStatusChange}
+                        onSelect={handleStatusSelect}
                         band={band}
                         openUpward={openUpward}
                     />
@@ -318,7 +360,7 @@ export const TaskCard = ({
                     task={task}
                     point={menuPoint}
                     onClose={closeMenu}
-                    onStatusChange={onStatusChange}
+                    onStatusChange={handleStatusSelect}
                     onSelectEdit={onSelectEdit}
                     editing={editing}
                     onStartTimer={onStartTimer}
@@ -336,6 +378,9 @@ export const TaskCard = ({
                     onClose={() => setSubtaskAddPoint(null)}
                 />
             )}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

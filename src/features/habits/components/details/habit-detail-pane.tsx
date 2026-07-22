@@ -26,7 +26,17 @@ export const HabitDetailPane = ({ habitId, isWide, onClose }: HabitDetailPanePro
     if (habitId == null || !isWide) return null;
 
     return (
-        <aside className='sticky top-7 max-h-[calc(100vh-3.5rem)] w-[480px] shrink-0 overflow-y-auto'>
+        // Fills (and clips) the grid pane track that animates 0 -> 480px while
+        // opening; the fixed-width inner keeps the content laid out at its final
+        // 480px throughout. `pane-rise` floats it up into place — it lives on the
+        // scroll container itself (not the inner) so the transform doesn't inflate
+        // scrollHeight and flash a scrollbar mid-rise. Keyed by habitId so picking
+        // a different habit while the pane is open remounts it and replays the rise.
+        <aside
+            key={habitId}
+            className='pane-rise sticky top-7 max-h-[calc(100vh-3.5rem)] w-full min-w-0 overflow-x-hidden overflow-y-auto'
+        >
+            <div className='w-[480px]'>
             <div
                 className={editing ? 'relative p-4' : 'relative rounded-card border p-4'}
                 style={
@@ -60,6 +70,7 @@ export const HabitDetailPane = ({ habitId, isWide, onClose }: HabitDetailPanePro
                     onDeleted={onClose}
                     onEditingChange={setEditing}
                 />
+            </div>
             </div>
         </aside>
     );

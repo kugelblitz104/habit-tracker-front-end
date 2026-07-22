@@ -28,7 +28,8 @@ import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
 import { useAuth } from '@/lib/auth-context';
 import { toLocalDateString } from '@/lib/date-utils';
 import { useScrollRestoration } from '@/lib/use-scroll-restoration';
-import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE } from '@/lib/layout';
+import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE, PAGE_WIDTH_TRANSITION, paneRowClass } from '@/lib/layout';
+import { toastTaskClosed } from '@/features/tasks/utils/task-status-toast';
 import { TaskStatus, TimeEntryKind } from '@/types/types';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router';
@@ -99,12 +100,19 @@ export const AllTasksDashboard = () => {
     }, [projects]);
 
     const handleStatusChange = (taskId: number, status: TaskStatus) => {
+        const previous = tasks.find((t) => t.id === taskId)?.status;
         updateTask.mutate(
             { taskId, data: { status } },
             {
                 onSuccess: () => {
-                    if (status === TaskStatus.DONE) toast.success('Task completed');
-                    else if (status === TaskStatus.CANCELLED) toast.success('Task cancelled');
+                    if (status === TaskStatus.DONE || status === TaskStatus.CANCELLED) {
+                        toastTaskClosed(
+                            status === TaskStatus.DONE ? 'done' : 'cancelled',
+                            previous != null && previous !== status
+                                ? () => updateTask.mutate({ taskId, data: { status: previous } })
+                                : undefined
+                        );
+                    }
                 },
                 onError: (error) =>
                     toast.error(apiErrorMessage(error, 'Failed to update task status'))
@@ -167,11 +175,11 @@ export const AllTasksDashboard = () => {
         <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
             <AppHeader maxWidthClass={showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH} />
             <div
-                className={`mx-auto px-5 py-7 md:px-7 ${
+                className={`mx-auto px-5 py-7 md:px-7 ${PAGE_WIDTH_TRANSITION} ${
                     showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH
                 }`}
             >
-                <div className={isWide ? 'flex items-start gap-6' : undefined}>
+                <div className={paneRowClass(isWide, showPane)}>
                     <div className='min-w-0 flex-1'>
                         <header className='mb-[30px]'>
                             <h1 className='font-display text-[23px] font-bold tracking-[-0.01em] text-text-primary'>
