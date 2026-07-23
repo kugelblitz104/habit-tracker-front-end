@@ -17,6 +17,7 @@ type ToggleRowConfig = {
     key:
         | 'habits_enabled'
         | 'countdowns_enabled'
+        | 'insights_enabled'
         | 'calendar_enabled'
         | 'publish_to_azure'
         | 'week_start_monday'
@@ -38,6 +39,12 @@ const TOGGLE_ROWS: ToggleRowConfig[] = [
         key: 'countdowns_enabled',
         title: 'Countdowns',
         description: 'Show the Countdown tab & the deadlines section on Today',
+        defaultOn: true
+    },
+    {
+        key: 'insights_enabled',
+        title: 'Insights',
+        description: 'Show the Insights tab with task, time & habit trends',
         defaultOn: true
     },
     {

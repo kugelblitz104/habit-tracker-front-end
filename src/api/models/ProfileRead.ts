@@ -8,6 +8,7 @@ export type ProfileRead = {
     color_end?: string;
     habits_enabled?: boolean;
     countdowns_enabled?: boolean;
+    insights_enabled?: boolean;
     calendar_enabled?: boolean;
     publish_to_azure?: boolean;
     default_landing?: string;

@@ -151,7 +151,7 @@ const getLongestStreakLength = (streaks: Streak[]): number => {
  * Otherwise, calculates the overall rate since habit creation.
  * Auto-skipped dates count as completions.
  */
-const calculateCompletionRate = (
+export const calculateCompletionRate = (
     trackers: (TrackerRead | TrackerLite)[],
     frequency: number,
     range: number,

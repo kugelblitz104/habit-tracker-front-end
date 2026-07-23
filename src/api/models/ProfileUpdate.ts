@@ -8,6 +8,7 @@ export type ProfileUpdate = {
     color_end?: (string | null);
     habits_enabled?: (boolean | null);
     countdowns_enabled?: (boolean | null);
+    insights_enabled?: (boolean | null);
     calendar_enabled?: (boolean | null);
     publish_to_azure?: (boolean | null);
     default_landing?: (string | null);

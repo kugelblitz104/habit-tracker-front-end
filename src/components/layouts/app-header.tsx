@@ -34,7 +34,8 @@ const TABS: NavTab[] = [
     { label: 'Habits', to: '/habits' },
     { label: 'Projects', to: '/projects' },
     { label: 'Timer', to: '/timer' },
-    { label: 'Countdown', to: '/countdown' }
+    { label: 'Countdown', to: '/countdown' },
+    { label: 'Insights', to: '/insights' }
 ];
 
 /**
@@ -50,6 +51,7 @@ function activeTabKey(pathname: string): string | null {
     if (pathname.startsWith('/habits') || pathname.startsWith('/details')) return '/habits';
     if (pathname.startsWith('/projects')) return '/projects';
     if (pathname.startsWith('/timer')) return '/timer';
+    if (pathname.startsWith('/insights')) return '/insights';
     return null;
 }
 
@@ -83,7 +85,8 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
     const tabs = TABS.filter(
         (tab) =>
             !(tab.to === '/habits' && activeProfile?.habits_enabled === false) &&
-            !(tab.to === '/countdown' && activeProfile?.countdowns_enabled === false)
+            !(tab.to === '/countdown' && activeProfile?.countdowns_enabled === false) &&
+            !(tab.to === '/insights' && activeProfile?.insights_enabled === false)
     );
     const activeTab = tabs.find((tab) => tab.to === activeKey) ?? null;
     const navigate = useNavigate();
