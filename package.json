@@ -7,7 +7,8 @@
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
-    "generate-api": "npx openapi-typescript-codegen --input http://localhost:8080/openapi.json --output ./src/api --client axios"
+    "generate-api": "npx openapi-typescript-codegen --input http://localhost:8080/openapi.json --output ./src/api --client axios",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@dnd-kit/sortable": "^10.0.0",
@@ -32,6 +33,7 @@
     "recharts": "^3.6.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@react-router/dev": "^7.5.3",
     "@tailwindcss/vite": "^4.1.8",
     "@types/dompurify": "^3.0.5",

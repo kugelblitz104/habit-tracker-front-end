@@ -12,3 +12,10 @@
 .env.local
 .env.development
 .env.production
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+.last-run.json

@@ -1,7 +1,14 @@
 import type { ProjectRead } from '@/api';
 import { POPOVER_PANEL_CLASS, popoverPanelStyle } from '@/components/ui/menu';
 import { toLocalDateString } from '@/lib/date-utils';
-import { Checkbox, Field, Label as HeadlessLabel, Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
+import {
+    Checkbox,
+    Field,
+    Label as HeadlessLabel,
+    Popover,
+    PopoverButton,
+    PopoverPanel
+} from '@headlessui/react';
 import { ArrowDown, ArrowUp, Check, ChevronDown, Download, ListChecks } from 'lucide-react';
 import { STATUS_ORDER, STATUS_META } from './status-config';
 import { selectOptionStyle } from './task-form-fields';
@@ -107,11 +114,7 @@ const CheckboxFilterPopover = ({
                     >
                         All
                     </button>
-                    <button
-                        type='button'
-                        className={quickActionClass}
-                        onClick={() => onChange([])}
-                    >
+                    <button type='button' className={quickActionClass} onClick={() => onChange([])}>
                         None
                     </button>
                 </div>
@@ -162,11 +165,26 @@ const startOfThisMonth = (): string => {
 // Quick presets, all ending "today". Ranges are computed on click so "today"
 // is always current (no stale bound baked in at render).
 const DATE_PRESETS: { label: string; range: () => { dateFrom: string; dateTo: string } }[] = [
-    { label: '7 days', range: () => ({ dateFrom: daysAgo(6), dateTo: toLocalDateString(new Date()) }) },
-    { label: '2 weeks', range: () => ({ dateFrom: daysAgo(13), dateTo: toLocalDateString(new Date()) }) },
-    { label: '3 weeks', range: () => ({ dateFrom: daysAgo(20), dateTo: toLocalDateString(new Date()) }) },
-    { label: '30 days', range: () => ({ dateFrom: daysAgo(29), dateTo: toLocalDateString(new Date()) }) },
-    { label: 'This month', range: () => ({ dateFrom: startOfThisMonth(), dateTo: toLocalDateString(new Date()) }) }
+    {
+        label: '7 days',
+        range: () => ({ dateFrom: daysAgo(6), dateTo: toLocalDateString(new Date()) })
+    },
+    {
+        label: '2 weeks',
+        range: () => ({ dateFrom: daysAgo(13), dateTo: toLocalDateString(new Date()) })
+    },
+    {
+        label: '3 weeks',
+        range: () => ({ dateFrom: daysAgo(20), dateTo: toLocalDateString(new Date()) })
+    },
+    {
+        label: '30 days',
+        range: () => ({ dateFrom: daysAgo(29), dateTo: toLocalDateString(new Date()) })
+    },
+    {
+        label: 'This month',
+        range: () => ({ dateFrom: startOfThisMonth(), dateTo: toLocalDateString(new Date()) })
+    }
 ];
 
 const presetButtonClass =
@@ -444,6 +462,16 @@ export const TaskControlsBar = ({
 
             {/* Trailing actions: Select + Reset (only when something's changed) + Export. */}
             <div className='ml-auto flex items-end gap-3'>
+                {!isDefaultControls(controls) && (
+                    <button
+                        type='button'
+                        onClick={() => onChange(DEFAULT_TASK_CONTROLS)}
+                        className={`${quickActionClass} pb-1.5`}
+                        title='Reset grouping, sort and filters to defaults'
+                    >
+                        Reset
+                    </button>
+                )}
                 {onToggleSelection && (
                     <button
                         type='button'
@@ -454,16 +482,6 @@ export const TaskControlsBar = ({
                     >
                         <ListChecks size={12} />
                         {selectionActive ? 'Done' : 'Select'}
-                    </button>
-                )}
-                {!isDefaultControls(controls) && (
-                    <button
-                        type='button'
-                        onClick={() => onChange(DEFAULT_TASK_CONTROLS)}
-                        className={`${quickActionClass} pb-1.5`}
-                        title='Reset grouping, sort and filters to defaults'
-                    >
-                        Reset
                     </button>
                 )}
                 {onExport && (
