@@ -1,4 +1,8 @@
 import { exportHabits, importHabits } from '@/features/habits/api/import-export-habits';
+import {
+    exportProfileEntity,
+    type BackupEntity
+} from '@/features/settings/api/profile-backup';
 import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
 import { exportTasksMarkdown } from '@/features/tasks/api/export-tasks';
 import { useAuth } from '@/lib/auth-context';
@@ -7,6 +11,22 @@ import { Download, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { SettingsCard } from './settings-card';
+
+/**
+ * Per-type JSON exports, one button each. These slice the full-profile backup
+ * (so no 100-row list cap) — a snapshot for portability/inspection. Whole-
+ * profile round-trip import stays on the Full Backup card.
+ */
+const JSON_EXPORTS: { entity: BackupEntity; label: string }[] = [
+    { entity: 'projects', label: 'Projects' },
+    { entity: 'tasks', label: 'Tasks' },
+    { entity: 'countdowns', label: 'Countdowns' },
+    { entity: 'time_entries', label: 'Time entries' },
+    { entity: 'habits', label: 'Habits' },
+    { entity: 'trackers', label: 'Trackers' },
+    { entity: 'calendar_connections', label: 'Calendars' },
+    { entity: 'integration_connections', label: 'Integrations' }
+];
 
 const dataButtonClass =
     'inline-flex items-center gap-2 rounded-[9px] border px-[15px] py-[9px] text-[13px] ' +
@@ -30,6 +50,7 @@ export const ManageDataCard = () => {
     const [isExporting, setIsExporting] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const [isExportingTasks, setIsExportingTasks] = useState(false);
+    const [exportingEntity, setExportingEntity] = useState<BackupEntity | null>(null);
 
     const handleExportHabits = async () => {
         if (!activeProfile) return;
@@ -54,6 +75,23 @@ export const ManageDataCard = () => {
             toast.error(apiErrorMessage(error, 'Failed to export tasks'));
         } finally {
             setIsExportingTasks(false);
+        }
+    };
+
+    const handleExportEntity = async (entity: BackupEntity, label: string) => {
+        if (!activeProfile) return;
+        setExportingEntity(entity);
+        try {
+            const count = await exportProfileEntity(
+                activeProfile.id,
+                activeProfile.name,
+                entity
+            );
+            toast.success(`Exported ${count} ${label.toLowerCase()}`);
+        } catch (error) {
+            toast.error(apiErrorMessage(error, `Failed to export ${label.toLowerCase()}`));
+        } finally {
+            setExportingEntity(null);
         }
     };
 
@@ -133,6 +171,30 @@ export const ManageDataCard = () => {
                     <Download size={14} />
                     Export tasks
                 </button>
+            </div>
+            <div className='mt-5'>
+                <div className='mb-1 text-[12px]' style={{ color: '#9a8f81' }}>
+                    Export by type (JSON) &mdash; one entity of this profile at a time
+                </div>
+                <div className='mb-2.5 text-[11px]' style={{ color: '#7d7369' }}>
+                    A snapshot for portability. For a full, re-importable backup use the Full
+                    backup card below. Integration tokens are never included.
+                </div>
+                <div className='flex flex-wrap gap-2.5'>
+                    {JSON_EXPORTS.map(({ entity, label }) => (
+                        <button
+                            key={entity}
+                            type='button'
+                            onClick={() => handleExportEntity(entity, label)}
+                            disabled={exportingEntity !== null || !activeProfile}
+                            className={dataButtonClass}
+                            style={dataButtonStyle}
+                        >
+                            <Download size={14} />
+                            {label}
+                        </button>
+                    ))}
+                </div>
             </div>
             <input
                 ref={fileInputRef}

@@ -49,6 +49,33 @@ export class HabitsService {
         });
     }
     /**
+     * Delete all habits in a profile
+     * Delete every habit (and its trackers) in a profile.
+     *
+     * - **profile_id**: The profile whose habits to delete (required)
+     *
+     * This action cannot be undone. Each habit's tracker history is deleted
+     * with it (ON DELETE CASCADE).
+     * @param profileId The profile whose habits to delete
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static deleteAllHabitsHabitsDelete(
+        profileId: number,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/habits/',
+            query: {
+                'profile_id': profileId,
+            },
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Reorder habits
      * Reorder habits by providing their IDs in the desired display order.
      *

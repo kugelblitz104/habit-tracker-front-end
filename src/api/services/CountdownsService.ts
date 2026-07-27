@@ -61,6 +61,32 @@ export class CountdownsService {
         });
     }
     /**
+     * Delete all countdowns in a profile
+     * Delete every countdown in a profile.
+     *
+     * - **profile_id**: The profile whose countdowns to delete (required)
+     *
+     * This action cannot be undone. Linked tasks are not affected.
+     * @param profileId The profile whose countdowns to delete
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static deleteAllCountdownsCountdownsDelete(
+        profileId: number,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/countdowns/',
+            query: {
+                'profile_id': profileId,
+            },
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Get a countdown by ID
      * @param countdownId
      * @returns CountdownRead Successful Response

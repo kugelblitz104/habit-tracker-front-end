@@ -77,6 +77,34 @@ export class ProjectsService {
         });
     }
     /**
+     * Delete all projects in a profile
+     * Delete every project in a profile.
+     *
+     * - **profile_id**: The profile whose projects to delete (required)
+     *
+     * This action cannot be undone. As with single-project delete, tasks are
+     * NOT deleted - they are kept and their project association is cleared
+     * (the DB sets task.project_id to NULL).
+     * @param profileId The profile whose projects to delete
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static deleteAllProjectsProjectsDelete(
+        profileId: number,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/projects/',
+            query: {
+                'profile_id': profileId,
+            },
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Get a project by ID
      * Retrieve a specific project by its ID, including its task counts
      * (**open_count** and **done_count**).

@@ -102,6 +102,33 @@ export class TimeEntriesService {
         });
     }
     /**
+     * Delete all time entries in a profile
+     * Delete every time entry in a profile.
+     *
+     * - **profile_id**: The profile whose time entries to delete (required)
+     *
+     * This action cannot be undone. Any running (unstopped) entry is deleted
+     * too. Linked tasks and projects are not affected.
+     * @param profileId The profile whose time entries to delete
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static deleteAllTimeEntriesTimeEntriesDelete(
+        profileId: number,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/time-entries/',
+            query: {
+                'profile_id': profileId,
+            },
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Get the running time entry for a profile
      * Return the profile's currently-running time entry (the one with no
      * ended_at), or null when nothing is running. Powers the Today view's

@@ -117,6 +117,34 @@ export class TasksService {
         });
     }
     /**
+     * Delete all tasks in a profile
+     * Delete every task (and its subtasks) in a profile.
+     *
+     * - **profile_id**: The profile whose tasks to delete (required)
+     *
+     * This action cannot be undone. Time entries attached to a deleted task
+     * are removed with it (ON DELETE CASCADE); countdowns that link a task are
+     * kept and unlinked (ON DELETE SET NULL), matching single-task delete.
+     * @param profileId The profile whose tasks to delete
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static deleteAllTasksTasksDelete(
+        profileId: number,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/tasks/',
+            query: {
+                'profile_id': profileId,
+            },
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Export a profile's tasks as Markdown
      * Export all of a profile's tasks as a Markdown document (`text/markdown`).
      * The response body is the raw document - not JSON-wrapped - so the client

@@ -15,6 +15,21 @@ const slugify = (name: string): string =>
         .replace(/^-+|-+$/g, '')
         .toLowerCase() || 'profile';
 
+/** Stringify a plain JSON object and trigger a browser download. */
+const downloadJson = (data: unknown, filename: string): void => {
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: 'application/json'
+    });
+    const objectUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(objectUrl);
+};
+
 /**
  * Export a profile as JSON and trigger a browser download. The document is a
  * plain JSON object (no base64), so it's stringified and downloaded directly.
@@ -26,18 +41,49 @@ export const exportProfileBackup = async (
     const backup = await BackupService.exportProfileBackupBackupProfilesProfileIdGet(
         profileId
     );
-    const blob = new Blob([JSON.stringify(backup, null, 2)], {
-        type: 'application/json'
-    });
-    const objectUrl = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
     const stamp = new Date().toISOString().slice(0, 10);
-    link.href = objectUrl;
-    link.download = `habit-tracker-${slugify(profileName)}-${stamp}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(objectUrl);
+    downloadJson(backup, `habit-tracker-${slugify(profileName)}-${stamp}.json`);
+};
+
+/** The per-entity arrays a profile backup carries, keyed for slicing. */
+export type BackupEntity =
+    | 'projects'
+    | 'tasks'
+    | 'countdowns'
+    | 'time_entries'
+    | 'habits'
+    | 'trackers'
+    | 'calendar_connections'
+    | 'integration_connections';
+
+/**
+ * Export a single entity type of a profile as JSON. Reuses the full-backup
+ * endpoint (one source of truth, and — unlike the paged list endpoints — no
+ * 100-row cap) and slices out the requested array. The result is a snapshot
+ * for portability/inspection; whole-profile round-trip import stays on the
+ * Full Backup card. Returns the row count for the caller's toast.
+ */
+export const exportProfileEntity = async (
+    profileId: number,
+    profileName: string,
+    entity: BackupEntity
+): Promise<number> => {
+    const backup = await BackupService.exportProfileBackupBackupProfilesProfileIdGet(
+        profileId
+    );
+    const rows = (backup[entity] ?? []) as unknown[];
+    const stamp = new Date().toISOString().slice(0, 10);
+    downloadJson(
+        {
+            format: `habit-tracker-${entity.replace(/_/g, '-')}-export`,
+            exported_at: backup.exported_at,
+            profile: backup.profile.name,
+            count: rows.length,
+            [entity]: rows
+        },
+        `habit-tracker-${slugify(profileName)}-${entity.replace(/_/g, '-')}-${stamp}.json`
+    );
+    return rows.length;
 };
 
 /**

@@ -4,14 +4,14 @@ import os from 'node:os';
 import path from 'node:path';
 
 /**
- * End-to-end round trip for the Full backup settings card:
- *   register a fresh account + seed data via the API  ->  log in through the UI
- *   ->  export the profile (download + validate the JSON)  ->  import that file
- *   ->  assert it lands as a new "(imported)" profile.
+ * Click-tests the extended Manage data + Danger zone settings: per-entity JSON
+ * export and profile-scoped bulk delete for entity types beyond habits.
+ *   register + seed (project, task, countdown) via the API  ->  log in
+ *   ->  export "Countdowns" (download + validate the sliced JSON)
+ *   ->  "Delete all countdowns" through the confirm modal, assert the toast.
  *
- * Self-contained: it creates its own user each run, so it needs no fixture
- * account. Requires the backend up at API_BASE (podman compose); the frontend
- * dev server is started by playwright.config's webServer.
+ * Self-contained: creates its own user each run. Requires the backend at
+ * API_BASE; the frontend dev server comes from playwright.config's webServer.
  */
 
 const API_BASE = process.env.E2E_API_BASE || 'http://localhost:8080';
@@ -51,18 +51,11 @@ async function seedAccount(api: APIRequestContext): Promise<Seeded> {
     });
     expect(task.ok()).toBeTruthy();
 
-    const habit = await api.post('/habits/', {
+    const countdown = await api.post('/countdowns/', {
         headers,
-        data: {
-            profile_id: profileId,
-            name: 'E2E habit',
-            question: 'Did you test today?',
-            color: '#e0763f',
-            frequency: 1,
-            range: 1
-        }
+        data: { profile_id: profileId, title: 'E2E countdown', target_date: '2030-01-01' }
     });
-    expect(habit.ok()).toBeTruthy();
+    expect(countdown.ok(), `countdown seed failed: ${countdown.status()}`).toBeTruthy();
 
     return { username, password };
 }
@@ -72,41 +65,47 @@ async function login(page: import('@playwright/test').Page, seed: Seeded) {
     await page.getByLabel('Username').fill(seed.username);
     await page.getByLabel('Password').fill(seed.password);
     await page.getByRole('button', { name: /sign in/i }).click();
-    // Lands on the app; wait until we're off the login route.
     await expect(page).not.toHaveURL(/\/login/, { timeout: 15_000 });
 }
 
-test('export a profile and import it back as a new profile', async ({ page }) => {
+test('per-entity export and profile-scoped bulk delete in settings', async ({ page }) => {
     const api = await pwRequest.newContext({ baseURL: API_BASE });
     const seed = await seedAccount(api);
     await api.dispose();
 
     await login(page, seed);
-
     await page.goto('/settings');
-    await expect(page.getByText('Full backup', { exact: true })).toBeVisible();
 
-    // Export: capture the download and validate the JSON document.
+    // Every entity's profile-scoped bulk-delete button renders under "This profile".
+    for (const name of [
+        'Delete all tasks',
+        'Delete all projects',
+        'Delete all countdowns',
+        'Delete all time entries',
+        'Delete all habits',
+        'Delete all trackers'
+    ]) {
+        await expect(page.getByRole('button', { name })).toBeVisible();
+    }
+
+    // Per-entity JSON export: download and validate the sliced document.
     const [download] = await Promise.all([
         page.waitForEvent('download'),
-        page.getByRole('button', { name: 'Export backup' }).click()
+        page.getByRole('button', { name: 'Countdowns', exact: true }).click()
     ]);
     const savePath = path.join(os.tmpdir(), `e2e-${download.suggestedFilename()}`);
     await download.saveAs(savePath);
+    const doc = JSON.parse(fs.readFileSync(savePath, 'utf-8'));
+    expect(doc.format).toBe('habit-tracker-countdowns-export');
+    expect(doc.count).toBe(1);
+    expect(doc.countdowns.length).toBe(1);
+    expect(doc.countdowns[0].title).toBe('E2E countdown');
 
-    const backup = JSON.parse(fs.readFileSync(savePath, 'utf-8'));
-    expect(backup.format).toBe('habit-tracker-profile-backup');
-    expect(backup.profile.name).toBe('Personal');
-    expect(backup.tasks.length).toBeGreaterThan(0);
-    expect(backup.habits.length).toBeGreaterThan(0);
-    expect(backup.projects.length).toBeGreaterThan(0);
-
-    // Import the exported file back in; it should become a new "(imported)"
-    // profile and the success toast reports that name.
-    await page
-        .getByLabel('Import profile backup JSON file')
-        .setInputFiles(savePath);
-    await expect(
-        page.getByText(/Imported "Personal \(imported\)"/)
-    ).toBeVisible({ timeout: 15_000 });
+    // Bulk delete: open the confirm modal, confirm, assert the count toast.
+    await page.getByRole('button', { name: 'Delete all countdowns' }).click();
+    await expect(page.getByText(/Delete all countdowns in/i)).toBeVisible();
+    await page.getByRole('button', { name: 'Delete', exact: true }).click();
+    await expect(page.getByText(/Deleted 1 countdowns/)).toBeVisible({
+        timeout: 15_000
+    });
 });

@@ -36,6 +36,33 @@ export class TrackersService {
         });
     }
     /**
+     * Delete all trackers in a profile
+     * Delete every tracker entry belonging to a profile's habits, keeping the
+     * habits themselves.
+     *
+     * - **profile_id**: The profile whose trackers to delete (required)
+     *
+     * This action cannot be undone.
+     * @param profileId The profile whose trackers to delete
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static deleteAllTrackersTrackersDelete(
+        profileId: number,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/trackers/',
+            query: {
+                'profile_id': profileId,
+            },
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Get a tracker entry by ID
      * Retrieve a specific tracker entry by its ID.
      *
