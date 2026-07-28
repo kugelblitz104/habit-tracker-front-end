@@ -94,11 +94,22 @@ export const HabitListElement = ({
         }
     });
 
+    // Fetches exactly the rendered columns. Auto-skip needs completions from up
+    // to `range - 1` days earlier, but the server evaluates that against full
+    // history and hands back `auto_skipped_dates`, so no lookback is fetched here.
     const trackersQuery = useQuery({
         queryKey: ['trackers-lite', { habitId: habit.id }, days],
         queryFn: () => getTrackersLite(habit.id, undefined, days),
         staleTime: 1000 * 60 // 1 minute
     });
+
+    // undefined (not an empty Set) when the server didn't send the field, so
+    // getDisplayStatusForDate falls back to computing locally. An empty Set is
+    // truthy and would silently suppress auto-skip against an older backend.
+    const autoSkippedDates = useMemo(() => {
+        const dates = trackersQuery.data?.auto_skipped_dates;
+        return dates ? new Set(dates) : undefined;
+    }, [trackersQuery.data]);
 
     // Streak comes from the server KPI (full-history, source of truth) so the
     // dashboard matches the detail view's KPI board exactly. The limited
@@ -119,7 +130,8 @@ export const HabitListElement = ({
     }, [habit.id, currentStreak, onStreakChange]);
 
     // functions
-    const getStatus = (date: Date): DisplayStatus => getDisplayStatusForDate(trackers, date, habit);
+    const getStatus = (date: Date): DisplayStatus =>
+        getDisplayStatusForDate(trackers, date, habit, autoSkippedDates);
 
     const handleCheckboxClick = (date: Date) => {
         const tracker = findTrackerByDate(trackers, date);

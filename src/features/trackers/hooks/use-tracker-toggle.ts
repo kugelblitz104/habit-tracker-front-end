@@ -12,7 +12,7 @@ import {
 } from '@/features/trackers/utils/tracker-utils';
 import { TrackerStatus, type DisplayStatus } from '@/types/types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
 export type UseTrackerToggleResult = {
@@ -35,14 +35,25 @@ export const useTrackerToggle = (habit: HabitRead, date: Date): UseTrackerToggle
     const queryClient = useQueryClient();
     const [trackers, setTrackers] = useState<TrackerLite[]>([]);
 
-    // Fetch a window wide enough to evaluate auto-skip against the habit's range.
-    const days = Math.max(habit.range + 1, 2);
+    // Only `date` is rendered, so only `date` needs a row. Auto-skip used to
+    // force a `range + 1` window here; the server now evaluates it against full
+    // history and returns `auto_skipped_dates`. Two days, not one, so a session
+    // sitting across midnight still has yesterday's row on hand.
+    const days = 2;
 
     const trackersQuery = useQuery({
         queryKey: ['trackers-lite', { habitId: habit.id }, days],
         queryFn: () => getTrackersLite(habit.id, undefined, days),
         staleTime: 1000 * 60
     });
+
+    // undefined (not an empty Set) when the server didn't send the field, so
+    // getDisplayStatusForDate falls back to computing locally. An empty Set is
+    // truthy and would silently suppress auto-skip against an older backend.
+    const autoSkippedDates = useMemo(() => {
+        const dates = trackersQuery.data?.auto_skipped_dates;
+        return dates ? new Set(dates) : undefined;
+    }, [trackersQuery.data]);
 
     useEffect(() => {
         if (trackersQuery.data?.trackers) {
@@ -119,7 +130,7 @@ export const useTrackerToggle = (habit: HabitRead, date: Date): UseTrackerToggle
         );
     };
 
-    const status = getDisplayStatusForDate(trackers, date, habit);
+    const status = getDisplayStatusForDate(trackers, date, habit, autoSkippedDates);
 
     return {
         status,

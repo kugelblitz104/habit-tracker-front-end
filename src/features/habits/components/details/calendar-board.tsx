@@ -111,6 +111,11 @@ const DayCell = ({
     onNoteClick
 }: DayCellProps) => {
     const tracker = findTrackerByDate(trackers, date);
+    // Deliberately NOT passing the server's `auto_skipped_dates` here, unlike the
+    // dashboard row and Today toggle: this view holds the habit's FULL tracker
+    // history, so the local computation has everything it needs — and backdating
+    // is this view's main interaction, where re-deriving auto-skip instantly from
+    // the patched list beats waiting for a refetch.
     const status = getDisplayStatusForDate(trackers, date, habit);
     const longPressHandlers = useLongPress(() => {
         if (!isFuture) onNoteClick(date, tracker);

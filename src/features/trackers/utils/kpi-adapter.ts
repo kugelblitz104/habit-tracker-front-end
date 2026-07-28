@@ -21,9 +21,12 @@ import {
  * Completion rate (0.0–1.0) for each weekday, indexed by Python `date.weekday()`
  * (0 = Monday … 6 = Sunday) to match the backend's `weekday_completion_rates`.
  * Only days actually marked COMPLETED count — skipped and auto-skipped days do
- * not — and the rate is `min(1, completed / expected)` where expected spreads
- * the habit's goal evenly (`dayCount * frequency / range`), exactly as the
- * server computes it (`_weekday_completion_rates`).
+ * not — and the rate is that weekday's completed share (`completed / total`),
+ * exactly as the server computes it (`_weekday_completion_rates`).
+ *
+ * NOT normalized by `frequency / range`: that scales every bar by
+ * `range / frequency` and saturates at 1.0 on the slightest activity, so a
+ * weekday touched a handful of times reads as tall as one completed every week.
  */
 const computeWeekdayCompletionRates = (
     habit: HabitRead,
@@ -56,10 +59,7 @@ const computeWeekdayCompletionRates = (
         current.setDate(current.getDate() + 1);
     }
 
-    return totals.map((total, i) => {
-        const expected = (total * habit.frequency) / habit.range;
-        return expected > 0 ? Math.min(1, completions[i] / expected) : 0;
-    });
+    return totals.map((total, i) => (total > 0 ? completions[i] / total : 0));
 };
 
 /**

@@ -51,8 +51,10 @@ export const NotePip = ({ className, color }: { className: string; color?: strin
 /**
  * Get the status of a tracker, optionally considering auto-skip eligibility.
  *
- * When autoSkipParams are provided, checks if the date qualifies for auto-skip
- * based on the habit's frequency/range settings (using the same logic as the backend).
+ * When autoSkipParams are provided, checks if the date qualifies for auto-skip.
+ * Prefers `autoSkippedDates` — the server's `auto_skipped_dates`, computed against
+ * full history — and only falls back to the local `isAutoSkipped` when that isn't
+ * available, since the local version can only see the trackers it was handed.
  */
 export const getTrackerDisplayStatus = (
     tracker: TrackerRead | TrackerLite | undefined,
@@ -61,6 +63,8 @@ export const getTrackerDisplayStatus = (
         trackers: (TrackerRead | TrackerLite)[];
         frequency: number;
         range: number;
+        /** Local date strings from the server's `auto_skipped_dates`. */
+        autoSkippedDates?: Set<string>;
     }
 ): DisplayStatus => {
     // If tracker exists with explicit state, use that
@@ -71,8 +75,11 @@ export const getTrackerDisplayStatus = (
 
     // Check if this date qualifies for auto-skip
     if (autoSkipParams) {
-        const { date, trackers, frequency, range } = autoSkipParams;
-        if (isAutoSkipped(date, trackers, frequency, range)) {
+        const { date, trackers, frequency, range, autoSkippedDates } = autoSkipParams;
+        const autoSkipped = autoSkippedDates
+            ? autoSkippedDates.has(toLocalDateString(date))
+            : isAutoSkipped(date, trackers, frequency, range);
+        if (autoSkipped) {
             return DisplayStatus.AUTO_SKIPPED;
         }
     }
@@ -82,22 +89,30 @@ export const getTrackerDisplayStatus = (
 
 /**
  * Resolve the display status for `date` from a tracker list: finds the tracker
- * for that date (if any) and folds in auto-skip eligibility from the habit's
- * frequency/range. Shared by the dashboard row, the detail calendar's day
- * cells, and the Today panel's toggle so all three read a date's status the
- * same way.
+ * for that date (if any) and folds in auto-skip eligibility. Shared by the
+ * dashboard row, the detail calendar's day cells, and the Today panel's toggle
+ * so all three read a date's status the same way.
+ *
+ * Pass `autoSkippedDates` (the `auto_skipped_dates` from the same trackers-lite
+ * response) whenever it's available. Auto-skip depends on completions up to
+ * `range - 1` days before the earliest rendered day, which a caller's own
+ * tracker window generally doesn't contain — the server computes it against
+ * full history instead. Note it reflects the last fetch, so an optimistic
+ * toggle won't move auto-skip on *other* days until invalidation lands.
  */
 export const getDisplayStatusForDate = (
     trackers: TrackerLite[],
     date: Date,
-    habit: Pick<HabitRead, 'frequency' | 'range'>
+    habit: Pick<HabitRead, 'frequency' | 'range'>,
+    autoSkippedDates?: Set<string>
 ): DisplayStatus => {
     const tracker = findTrackerByDate(trackers, date);
     return getTrackerDisplayStatus(tracker, {
         date,
         trackers,
         frequency: habit.frequency,
-        range: habit.range
+        range: habit.range,
+        autoSkippedDates
     });
 };
 

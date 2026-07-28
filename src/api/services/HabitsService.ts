@@ -278,6 +278,10 @@ export class HabitsService {
      * Use this for calendar views and streak calculations. Use the full trackers
      * endpoint or fetch individual trackers when you need notes or timestamps.
      *
+     * Also returns **auto_skipped_dates** for the range, so callers can render a
+     * day's status without fetching extra history to evaluate auto-skip
+     * themselves.
+     *
      * - **habit_id**: The unique identifier of the habit
      * - **end_date**: End date for the range (defaults to today)
      * - **days**: Number of days to fetch (1-3660, default: 42 = 6 weeks)
