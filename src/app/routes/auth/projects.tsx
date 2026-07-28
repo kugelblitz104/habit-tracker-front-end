@@ -143,7 +143,11 @@ function ProjectsContent() {
                 )}
 
                 {projects.length > 0 && (
-                    <div className='grid gap-2.5 sm:grid-cols-2'>
+                    // grid-cols-[minmax(0,1fr)]: the one-column (phone) case must
+                    // declare a 0-min track, or a card's truncated name floors the
+                    // implicit `auto` column at its full text width and the page
+                    // scrolls sideways.
+                    <div className='grid grid-cols-[minmax(0,1fr)] gap-2.5 sm:grid-cols-2'>
                         {projects.map((project) => (
                             <ProjectCard key={project.id} project={project} />
                         ))}
@@ -155,7 +159,7 @@ function ProjectsContent() {
                         <h2 className='mb-2.5 font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-text-muted'>
                             Archived
                         </h2>
-                        <div className='grid gap-2.5 sm:grid-cols-2'>
+                        <div className='grid grid-cols-[minmax(0,1fr)] gap-2.5 sm:grid-cols-2'>
                             {archivedProjects.map((project) => (
                                 <ProjectCard key={project.id} project={project} />
                             ))}

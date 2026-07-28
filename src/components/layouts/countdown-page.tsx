@@ -370,8 +370,11 @@ export const CountdownDashboard = () => {
             >
                 <div className={paneRowClass(isWide, showPane, 400)}>
                     <div className='min-w-0 flex-1'>
-                <header className='mb-[24px] flex items-start justify-between gap-3'>
-                    <div>
+                {/* flex-wrap: the grouping toggle + "New countdown" are shrink-0
+                    and together outgrow a phone-width row, so they drop to their
+                    own line instead of pushing the page sideways. */}
+                <header className='mb-[24px] flex flex-wrap items-start justify-between gap-3'>
+                    <div className='min-w-0'>
                         <h1 className='font-display text-[23px] font-bold tracking-[-0.01em] text-text-primary'>
                             Countdown
                         </h1>

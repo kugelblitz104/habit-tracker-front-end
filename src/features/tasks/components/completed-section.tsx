@@ -84,10 +84,12 @@ export const CompletedSection = ({
                         </DisclosureButton>
                         {/* Animate open/close by sliding grid rows (0fr <-> 1fr)
                             instead of popping; `transition` keeps the panel
-                            mounted through the leave so it can glide shut. */}
+                            mounted through the leave so it can glide shut. The
+                            explicit minmax(0,1fr) column stops a nowrap row title
+                            from widening the track (see note in task-card.tsx). */}
                         <DisclosurePanel
                             transition
-                            className='grid grid-rows-[1fr] transition-all duration-300 ease-out data-closed:grid-rows-[0fr] data-closed:opacity-0'
+                            className='grid grid-cols-[minmax(0,1fr)] grid-rows-[1fr] transition-all duration-300 ease-out data-closed:grid-rows-[0fr] data-closed:opacity-0'
                         >
                             <div className='overflow-hidden'>
                             {tasks.length === 0 ? (

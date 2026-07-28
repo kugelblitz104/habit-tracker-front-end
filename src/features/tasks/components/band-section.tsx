@@ -145,9 +145,11 @@ export const BandSection = ({
             {collapsible ? (
                 // Whenever collapse: animate grid rows (0fr <-> 1fr) so it glides
                 // shut/open; the inner overflow-hidden clips the sliding content.
-                // Portaled status/context popovers escape the clip.
+                // Portaled status/context popovers escape the clip. The explicit
+                // minmax(0,1fr) column keeps rows from widening the track to a
+                // nowrap title's full width (see the note in task-card.tsx).
                 <div
-                    className={`grid transition-[grid-template-rows] duration-300 ease-out ${
+                    className={`grid grid-cols-[minmax(0,1fr)] transition-[grid-template-rows] duration-300 ease-out ${
                         collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'
                     }`}
                 >

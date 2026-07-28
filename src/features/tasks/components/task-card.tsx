@@ -244,8 +244,13 @@ export const TaskCard = ({
         // Eject wrapper: the grid row collapses 1fr -> 0fr (rows below settle up)
         // while the inner slides out sideways. `overflow-hidden` is only applied
         // mid-eject so it never clips the Now-band glow / edit outline at rest.
+        // The explicit minmax(0,1fr) column is load-bearing: an implicit `auto`
+        // track floors at the card's min-content width, which for a nowrap
+        // (truncate) title is the WHOLE title — the card would then overhang the
+        // content column and scroll the page sideways on mobile instead of the
+        // title truncating.
         <div
-            className={`grid transition-[grid-template-rows] duration-300 ease-out ${
+            className={`grid grid-cols-[minmax(0,1fr)] transition-[grid-template-rows] duration-300 ease-out ${
                 exiting ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'
             }`}
         >
