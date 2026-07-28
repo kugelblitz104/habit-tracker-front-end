@@ -71,89 +71,94 @@ export const CompletedSection = ({
 
     return (
         <section className='mb-[30px]' style={{ opacity: 'var(--quiet)' }}>
+            {/* `open` comes off DisclosureButton, not Disclosure: Disclosure
+                renders a Fragment, and a render-prop child of a Fragment-rendering
+                Headless UI component gets cloned with `data-headlessui-state` —
+                which React rejects on a fragment ("Invalid prop supplied to
+                React.Fragment"). DisclosureButton renders a real <button>, so the
+                same state is available there without the warning. */}
             <Disclosure>
-                {({ open }) => (
-                    <>
-                        <DisclosureButton className='flex w-full items-center gap-2 font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-whenever-label outline-none'>
+                <DisclosureButton className='flex w-full items-center gap-2 font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-whenever-label outline-none'>
+                    {({ open }) => (
+                        <>
                             Closed
                             <span className='font-normal text-text-faint'>{tasks.length}</span>
                             <ChevronRight
                                 size={14}
                                 className={`transition-transform ${open ? 'rotate-90' : ''}`}
                             />
-                        </DisclosureButton>
-                        {/* Animate open/close by sliding grid rows (0fr <-> 1fr)
-                            instead of popping; `transition` keeps the panel
-                            mounted through the leave so it can glide shut. The
-                            explicit minmax(0,1fr) column stops a nowrap row title
-                            from widening the track (see note in task-card.tsx). */}
-                        <DisclosurePanel
-                            transition
-                            className='grid grid-cols-[minmax(0,1fr)] grid-rows-[1fr] transition-all duration-300 ease-out data-closed:grid-rows-[0fr] data-closed:opacity-0'
-                        >
-                            <div className='overflow-hidden'>
-                            {tasks.length === 0 ? (
-                                <p className='mt-3 font-mono text-[12px] text-text-faint'>
-                                    Nothing closed yet.
-                                </p>
-                            ) : (
-                                <ul className='mt-3 flex flex-col'>
-                                    {tasks.map((task) => {
-                                        const status = (task.status ??
-                                            TaskStatus.DONE) as TaskStatus;
-                                        const cancelled = status === TaskStatus.CANCELLED;
-                                        const closed = formatClosed(task.closed_date);
-                                        return (
-                                            <li
-                                                key={task.id}
-                                                className='flex items-center gap-2 border-b py-2'
-                                                style={{
-                                                    borderColor: 'var(--color-whenever-ring)'
-                                                }}
-                                            >
-                                                <StatusControl
-                                                    status={status}
-                                                    onSelect={(next) =>
-                                                        handleStatusChange(task.id, next)
-                                                    }
-                                                    band='whenever'
-                                                    openUpward
-                                                />
-                                                {onSelectTask ? (
-                                                    <button
-                                                        type='button'
-                                                        onClick={() => onSelectTask(task.id)}
-                                                        aria-pressed={selectedTaskId === task.id}
-                                                        className={`min-w-0 flex-1 truncate text-left font-display text-[13.5px] text-text-muted transition-colors hover:text-text-secondary ${
-                                                            cancelled ? 'line-through' : ''
-                                                        }`}
-                                                        title={task.title}
-                                                    >
-                                                        {task.title}
-                                                    </button>
-                                                ) : (
-                                                    <span
-                                                        className={`min-w-0 flex-1 truncate font-display text-[13.5px] text-text-muted ${
-                                                            cancelled ? 'line-through' : ''
-                                                        }`}
-                                                    >
-                                                        {task.title}
-                                                    </span>
-                                                )}
-                                                {closed && (
-                                                    <span className='shrink-0 font-mono text-[10px] text-text-faint'>
-                                                        {closed}
-                                                    </span>
-                                                )}
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-                            )}
-                            </div>
-                        </DisclosurePanel>
-                    </>
-                )}
+                        </>
+                    )}
+                </DisclosureButton>
+                {/* Animate open/close by sliding grid rows (0fr <-> 1fr)
+                    instead of popping; `transition` keeps the panel
+                    mounted through the leave so it can glide shut. The
+                    explicit minmax(0,1fr) column stops a nowrap row title
+                    from widening the track (see note in task-card.tsx). */}
+                <DisclosurePanel
+                    transition
+                    className='grid grid-cols-[minmax(0,1fr)] grid-rows-[1fr] transition-all duration-300 ease-out data-closed:grid-rows-[0fr] data-closed:opacity-0'
+                >
+                    <div className='overflow-hidden'>
+                        {tasks.length === 0 ? (
+                            <p className='mt-3 font-mono text-[12px] text-text-faint'>
+                                Nothing closed yet.
+                            </p>
+                        ) : (
+                            <ul className='mt-3 flex flex-col'>
+                                {tasks.map((task) => {
+                                    const status = (task.status ?? TaskStatus.DONE) as TaskStatus;
+                                    const cancelled = status === TaskStatus.CANCELLED;
+                                    const closed = formatClosed(task.closed_date);
+                                    return (
+                                        <li
+                                            key={task.id}
+                                            className='flex items-center gap-2 border-b py-2'
+                                            style={{
+                                                borderColor: 'var(--color-whenever-ring)'
+                                            }}
+                                        >
+                                            <StatusControl
+                                                status={status}
+                                                onSelect={(next) =>
+                                                    handleStatusChange(task.id, next)
+                                                }
+                                                band='whenever'
+                                                openUpward
+                                            />
+                                            {onSelectTask ? (
+                                                <button
+                                                    type='button'
+                                                    onClick={() => onSelectTask(task.id)}
+                                                    aria-pressed={selectedTaskId === task.id}
+                                                    className={`min-w-0 flex-1 truncate text-left font-display text-[13.5px] text-text-muted transition-colors hover:text-text-secondary ${
+                                                        cancelled ? 'line-through' : ''
+                                                    }`}
+                                                    title={task.title}
+                                                >
+                                                    {task.title}
+                                                </button>
+                                            ) : (
+                                                <span
+                                                    className={`min-w-0 flex-1 truncate font-display text-[13.5px] text-text-muted ${
+                                                        cancelled ? 'line-through' : ''
+                                                    }`}
+                                                >
+                                                    {task.title}
+                                                </span>
+                                            )}
+                                            {closed && (
+                                                <span className='shrink-0 font-mono text-[10px] text-text-faint'>
+                                                    {closed}
+                                                </span>
+                                            )}
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        )}
+                    </div>
+                </DisclosurePanel>
             </Disclosure>
         </section>
     );
