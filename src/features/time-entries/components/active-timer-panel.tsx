@@ -1,3 +1,4 @@
+import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
 import { useAuth } from '@/lib/auth-context';
 import { Pause, Timer } from 'lucide-react';
 import { Link } from 'react-router';
@@ -109,10 +110,7 @@ export const ActiveTimerPanel = () => {
                 <Link
                     to='/timer'
                     className='flex items-center gap-2 rounded-card border px-4 py-3 font-mono text-[12px] text-text-faint transition-colors hover:text-text-muted'
-                    style={{
-                        backgroundColor: 'var(--surface-card-bg)',
-                        borderColor: 'var(--surface-card-border)'
-                    }}
+                    style={CARD_SURFACE_STYLE}
                 >
                     <Timer size={14} />
                     No timer running — start one

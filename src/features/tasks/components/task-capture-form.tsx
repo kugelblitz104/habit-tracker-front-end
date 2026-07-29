@@ -1,4 +1,6 @@
 import type { TaskCreate } from '@/api';
+import { formLabelClass } from '@/components/ui/forms/form-field-styles';
+import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
 import { useAuth } from '@/lib/auth-context';
 import { sanitizeMultilineText } from '@/lib/input-sanitization';
 import { TaskStatus } from '@/types/types';
@@ -11,7 +13,6 @@ import { HighlightedTaskInput } from './highlighted-task-input';
 import {
     DateTimeField,
     EstimatedEffortField,
-    formLabelClass,
     NotesField,
     PriorityField,
     ProjectField
@@ -139,10 +140,7 @@ export const TaskCaptureForm = ({ profileId, initial, onClose }: TaskCaptureForm
     return (
         <div
             className='mb-[30px] flex flex-col gap-3 rounded-button border p-4'
-            style={{
-                backgroundColor: 'var(--surface-card-bg)',
-                borderColor: 'var(--surface-card-border)'
-            }}
+            style={CARD_SURFACE_STYLE}
             onKeyDown={handleFormKeyDown}
         >
             {/* Title (keeps highlighting/parsing tokens live) */}

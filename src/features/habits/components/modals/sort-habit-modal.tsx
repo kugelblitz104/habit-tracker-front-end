@@ -1,7 +1,7 @@
 import type { HabitRead } from '@/api';
 import { BaseModal } from '@/components/ui/modals/base-modal';
 import { Label } from '@/components/ui/label';
-import { getFrequencyString } from '@/lib/date-utils';
+import { getFrequencyString } from '@/features/habits/utils/frequency-label';
 import { GripVertical } from 'lucide-react';
 import { useState } from 'react';
 import {

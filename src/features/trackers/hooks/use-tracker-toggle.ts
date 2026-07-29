@@ -1,5 +1,6 @@
 import type { HabitRead, TrackerLite } from '@/api';
 import { getTrackersLite } from '@/features/trackers/api/get-trackers';
+import { invalidateHabitTrackers } from '@/features/trackers/api/query-keys';
 import {
     toTrackerLite,
     useTrackerMutations
@@ -64,18 +65,10 @@ export const useTrackerToggle = (habit: HabitRead, date: Date): UseTrackerToggle
     // Keep every consumer of this habit's trackers in sync. `habit-list-element`
     // /`habit-detail-page` read `['trackers', {habitId}]`, while the Today panel
     // and dashboard calendars read `['trackers-lite', {habitId}, days]`, so both
-    // key families are invalidated (broad match on habitId).
-    const invalidateTrackerCaches = () => {
-        queryClient.invalidateQueries({ queryKey: ['trackers', { habitId: habit.id }] });
-        queryClient.invalidateQueries({ queryKey: ['trackers-lite', { habitId: habit.id }] });
-        // Server-computed KPIs/streaks depend on trackers; reconcile them too so any
-        // tracker change (Today panel, dashboard, detail) never leaves them stale.
-        queryClient.invalidateQueries({ queryKey: ['kpis', { habitId: habit.id }] });
-        queryClient.invalidateQueries({ queryKey: ['streaks', { habitId: habit.id }] });
-    };
-
+    // key families are invalidated (broad match on habitId) — along with the
+    // server-computed KPI/streak caches, which depend on trackers.
     const { trackerCreate, trackerUpdate } = useTrackerMutations(habit.id, {
-        onSuccess: invalidateTrackerCaches,
+        onSuccess: () => invalidateHabitTrackers(queryClient, habit.id),
         onError: () => toast.error('Failed to update habit. Please try again.')
     });
 

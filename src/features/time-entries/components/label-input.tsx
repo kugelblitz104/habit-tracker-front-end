@@ -1,4 +1,4 @@
-import { formFieldClass, formFieldStyle } from '@/features/tasks/components/task-form-fields';
+import { formFieldClass, formFieldStyle } from '@/components/ui/forms/form-field-styles';
 import { useId, useMemo } from 'react';
 import { useTimeEntries } from '../api/get-time-entries';
 

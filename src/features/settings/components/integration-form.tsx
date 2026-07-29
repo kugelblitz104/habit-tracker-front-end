@@ -1,12 +1,11 @@
-import { useState } from 'react';
 import {
-    settingsGhostBorder,
-    settingsGhostButtonClass,
-    settingsInputClass,
-    settingsInputStyle,
-    settingsPrimaryButtonClass,
-    settingsPrimaryButtonStyle
-} from './settings-card';
+    ghostButtonBorder,
+    ghostButtonClass,
+    primaryButtonClass,
+    primaryButtonStyle
+} from '@/components/ui/buttons/button-styles';
+import { themedInputClass, themedInputStyle } from '@/components/ui/forms/input-styles';
+import { useState } from 'react';
 
 export type IntegrationProviderValue = 'azure_devops' | 'github';
 
@@ -166,8 +165,8 @@ export const IntegrationForm = ({
                         onChange={(e) => set({ name: e.target.value })}
                         placeholder={isAzure ? 'e.g. Contoso ADO' : 'e.g. My GitHub'}
                         autoFocus
-                        className={settingsInputClass}
-                        style={settingsInputStyle}
+                        className={themedInputClass}
+                        style={themedInputStyle}
                     />
                     {touched && !nameValid && (
                         <span className='mt-1 block text-[11px] text-danger'>
@@ -185,8 +184,8 @@ export const IntegrationForm = ({
                         onChange={(e) => set({ token: e.target.value })}
                         placeholder={isEdit ? '••••••••' : 'Paste your PAT'}
                         autoComplete='off'
-                        className={`${settingsInputClass} font-mono text-[12.5px]`}
-                        style={settingsInputStyle}
+                        className={`${themedInputClass} font-mono text-[12.5px]`}
+                        style={themedInputStyle}
                     />
                     {touched && !tokenValid && (
                         <span className='mt-1 block text-[11px] text-danger'>
@@ -206,8 +205,8 @@ export const IntegrationForm = ({
                                 value={values.organization}
                                 onChange={(e) => set({ organization: e.target.value })}
                                 placeholder='e.g. contoso'
-                                className={settingsInputClass}
-                                style={settingsInputStyle}
+                                className={themedInputClass}
+                                style={themedInputStyle}
                             />
                             {touched && !orgValid && (
                                 <span className='mt-1 block text-[11px] text-danger'>
@@ -224,8 +223,8 @@ export const IntegrationForm = ({
                                 value={values.project}
                                 onChange={(e) => set({ project: e.target.value })}
                                 placeholder='e.g. Payments'
-                                className={settingsInputClass}
-                                style={settingsInputStyle}
+                                className={themedInputClass}
+                                style={themedInputStyle}
                             />
                             {touched && !projectValid && (
                                 <span className='mt-1 block text-[11px] text-danger'>
@@ -242,8 +241,8 @@ export const IntegrationForm = ({
                                 value={values.workItemType}
                                 onChange={(e) => set({ workItemType: e.target.value })}
                                 placeholder='Task'
-                                className={settingsInputClass}
-                                style={settingsInputStyle}
+                                className={themedInputClass}
+                                style={themedInputStyle}
                             />
                         </label>
                         <label className='md:col-span-2'>
@@ -255,8 +254,8 @@ export const IntegrationForm = ({
                                 value={values.baseUrl}
                                 onChange={(e) => set({ baseUrl: e.target.value })}
                                 placeholder='https://dev.azure.com'
-                                className={`${settingsInputClass} font-mono text-[12.5px]`}
-                                style={settingsInputStyle}
+                                className={`${themedInputClass} font-mono text-[12.5px]`}
+                                style={themedInputStyle}
                             />
                             <span className='mt-1 block text-[11px] text-text-faint'>
                                 Host of an on-prem Azure DevOps Server / TFS, e.g.{' '}
@@ -280,8 +279,8 @@ export const IntegrationForm = ({
                             value={values.defaultRepo}
                             onChange={(e) => set({ defaultRepo: e.target.value })}
                             placeholder='owner/repo'
-                            className={`${settingsInputClass} font-mono text-[12.5px]`}
-                            style={settingsInputStyle}
+                            className={`${themedInputClass} font-mono text-[12.5px]`}
+                            style={themedInputStyle}
                         />
                         {touched && !repoValid && (
                             <span className='mt-1 block text-[11px] text-danger'>
@@ -297,16 +296,16 @@ export const IntegrationForm = ({
                     type='button'
                     onClick={handleSubmit}
                     disabled={pending}
-                    className={settingsPrimaryButtonClass}
-                    style={settingsPrimaryButtonStyle}
+                    className={primaryButtonClass}
+                    style={primaryButtonStyle}
                 >
                     {submitLabel}
                 </button>
                 <button
                     type='button'
                     onClick={onCancel}
-                    className={settingsGhostButtonClass}
-                    style={{ borderColor: settingsGhostBorder }}
+                    className={ghostButtonClass}
+                    style={{ borderColor: ghostButtonBorder }}
                 >
                     Cancel
                 </button>

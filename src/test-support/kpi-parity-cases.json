@@ -1,0 +1,960 @@
+{
+    "_comment": [
+        "SHARED FIXTURE - consumed by BOTH repos. Edits must keep both suites green.",
+        "  frontend: src/features/trackers/utils/kpi-parity.test.ts  (kpi-utils.ts + kpi-adapter.ts)",
+        "  backend:  tests/test_habit_stats.py                       (services/habit_stats.py)",
+        "The backend locates this file via the KPI_PARITY_CASES env var, defaulting to",
+        "../habit-tracker-front-end/src/test-support/kpi-parity-cases.json relative to the backend repo root.",
+        "",
+        "Every case carries an explicit anchor_date (the 'today' the math is relative to).",
+        "Neither suite may read the real clock: the backend passes anchor_date as `today`,",
+        "the frontend pins it with vi.setSystemTime because kpi-utils calls new Date() internally.",
+        "",
+        "`expected` holds quantities the two implementations AGREE on - assert on both sides.",
+        "`divergent` holds quantities where they currently DISAGREE. Each side asserts its own",
+        "recorded value so drift still fails, and `bugs` names the defect (see _divergences).",
+        "When a divergence is fixed, move the quantity from `divergent` into `expected`.",
+        "",
+        "Values were derived by running each implementation, not written by hand.",
+        "habit.created_date is an ISO datetime; tracker.status is TrackerStatus",
+        "(0 = not completed, 1 = skipped, 2 = completed)."
+    ],
+    "_divergences": {
+        "longest-streak-end-date-tie-break": "longest_streak_end_date breaks a tie between equal-length streaks in opposite directions. Backend calculate_kpis uses `>=` so the MOST RECENT streak wins ('better for a recency label', per its comment). Frontend kpi-adapter's reduce uses `s.length > max.length` so the EARLIEST wins. The backend is right: the field feeds a recency sublabel ('N days - Mon'), so an optimistic toggle currently jumps that date backwards in time and snaps forward on refetch."
+    },
+    "cases": [
+        {
+            "name": "empty tracker list zeroes every KPI",
+            "anchor_date": "2026-01-05",
+            "habit": {
+                "id": 1,
+                "frequency": 1,
+                "range": 1,
+                "created_date": "2026-01-05T00:00:00"
+            },
+            "trackers": [],
+            "expected": {
+                "effective_start_date": "2026-01-05",
+                "total_completions": 0,
+                "current_streak": 0,
+                "longest_streak": 0,
+                "longest_streak_end_date": null,
+                "overall_completion_rate": 0,
+                "thirty_day_completion_rate": 0,
+                "last_completed_date": null,
+                "weekday_completion_rates": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "streaks": []
+            }
+        },
+        {
+            "name": "single completion on the anchor date is a one-day current streak",
+            "anchor_date": "2026-01-05",
+            "habit": {
+                "id": 1,
+                "frequency": 1,
+                "range": 1,
+                "created_date": "2026-01-05T00:00:00"
+            },
+            "trackers": [
+                {
+                    "dated": "2026-01-05",
+                    "status": 2
+                }
+            ],
+            "expected": {
+                "effective_start_date": "2026-01-05",
+                "total_completions": 1,
+                "current_streak": 1,
+                "longest_streak": 1,
+                "longest_streak_end_date": "2026-01-05",
+                "overall_completion_rate": 1,
+                "last_completed_date": "2026-01-05",
+                "weekday_completion_rates": [
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "streaks": [
+                    {
+                        "start_date": "2026-01-05",
+                        "end_date": "2026-01-05",
+                        "length": 1
+                    }
+                ],
+                "thirty_day_completion_rate": 0.03333333333333333
+            }
+        },
+        {
+            "name": "unbroken daily run to the anchor date is the current streak",
+            "anchor_date": "2026-01-09",
+            "habit": {
+                "id": 1,
+                "frequency": 1,
+                "range": 1,
+                "created_date": "2026-01-05T00:00:00"
+            },
+            "trackers": [
+                {
+                    "dated": "2026-01-05",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-06",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-07",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-08",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-09",
+                    "status": 2
+                }
+            ],
+            "expected": {
+                "effective_start_date": "2026-01-05",
+                "total_completions": 5,
+                "current_streak": 5,
+                "longest_streak": 5,
+                "longest_streak_end_date": "2026-01-09",
+                "overall_completion_rate": 1,
+                "last_completed_date": "2026-01-09",
+                "weekday_completion_rates": [
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    0,
+                    0
+                ],
+                "streaks": [
+                    {
+                        "start_date": "2026-01-05",
+                        "end_date": "2026-01-09",
+                        "length": 5
+                    }
+                ],
+                "thirty_day_completion_rate": 0.16666666666666666
+            }
+        },
+        {
+            "name": "streak broken before the anchor leaves the current streak at zero",
+            "anchor_date": "2026-01-14",
+            "habit": {
+                "id": 1,
+                "frequency": 1,
+                "range": 1,
+                "created_date": "2026-01-05T00:00:00"
+            },
+            "trackers": [
+                {
+                    "dated": "2026-01-05",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-06",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-07",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-08",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-09",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-11",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-12",
+                    "status": 2
+                }
+            ],
+            "expected": {
+                "effective_start_date": "2026-01-05",
+                "total_completions": 7,
+                "current_streak": 0,
+                "longest_streak": 5,
+                "longest_streak_end_date": "2026-01-09",
+                "overall_completion_rate": 0.7,
+                "last_completed_date": "2026-01-12",
+                "weekday_completion_rates": [
+                    1,
+                    0.5,
+                    0.5,
+                    1,
+                    1,
+                    0,
+                    1
+                ],
+                "streaks": [
+                    {
+                        "start_date": "2026-01-05",
+                        "end_date": "2026-01-09",
+                        "length": 5
+                    },
+                    {
+                        "start_date": "2026-01-11",
+                        "end_date": "2026-01-12",
+                        "length": 2
+                    }
+                ],
+                "thirty_day_completion_rate": 0.23333333333333334
+            }
+        },
+        {
+            "name": "longest streak is an earlier run than the ongoing one",
+            "anchor_date": "2026-01-13",
+            "habit": {
+                "id": 1,
+                "frequency": 1,
+                "range": 1,
+                "created_date": "2026-01-05T00:00:00"
+            },
+            "trackers": [
+                {
+                    "dated": "2026-01-05",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-06",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-07",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-08",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-09",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-11",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-12",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-13",
+                    "status": 2
+                }
+            ],
+            "expected": {
+                "effective_start_date": "2026-01-05",
+                "total_completions": 8,
+                "current_streak": 3,
+                "longest_streak": 5,
+                "longest_streak_end_date": "2026-01-09",
+                "overall_completion_rate": 0.8888888888888888,
+                "last_completed_date": "2026-01-13",
+                "weekday_completion_rates": [
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    0,
+                    1
+                ],
+                "streaks": [
+                    {
+                        "start_date": "2026-01-05",
+                        "end_date": "2026-01-09",
+                        "length": 5
+                    },
+                    {
+                        "start_date": "2026-01-11",
+                        "end_date": "2026-01-13",
+                        "length": 3
+                    }
+                ],
+                "thirty_day_completion_rate": 0.26666666666666666
+            }
+        },
+        {
+            "name": "explicit skip bridges a streak without counting as a completion",
+            "anchor_date": "2026-01-08",
+            "habit": {
+                "id": 1,
+                "frequency": 1,
+                "range": 1,
+                "created_date": "2026-01-05T00:00:00"
+            },
+            "trackers": [
+                {
+                    "dated": "2026-01-05",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-06",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-07",
+                    "status": 1
+                },
+                {
+                    "dated": "2026-01-08",
+                    "status": 2
+                }
+            ],
+            "expected": {
+                "effective_start_date": "2026-01-05",
+                "total_completions": 3,
+                "current_streak": 4,
+                "longest_streak": 4,
+                "longest_streak_end_date": "2026-01-08",
+                "last_completed_date": "2026-01-08",
+                "weekday_completion_rates": [
+                    1,
+                    1,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0
+                ],
+                "streaks": [
+                    {
+                        "start_date": "2026-01-05",
+                        "end_date": "2026-01-08",
+                        "length": 4
+                    }
+                ],
+                "overall_completion_rate": 0.75,
+                "thirty_day_completion_rate": 0.1
+            }
+        },
+        {
+            "name": "a skip on the anchor date keeps the streak alive with no completion that day",
+            "anchor_date": "2026-01-06",
+            "habit": {
+                "id": 1,
+                "frequency": 1,
+                "range": 1,
+                "created_date": "2026-01-05T00:00:00"
+            },
+            "trackers": [
+                {
+                    "dated": "2026-01-05",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-06",
+                    "status": 1
+                }
+            ],
+            "expected": {
+                "effective_start_date": "2026-01-05",
+                "total_completions": 1,
+                "current_streak": 2,
+                "longest_streak": 2,
+                "longest_streak_end_date": "2026-01-06",
+                "last_completed_date": "2026-01-05",
+                "weekday_completion_rates": [
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "streaks": [
+                    {
+                        "start_date": "2026-01-05",
+                        "end_date": "2026-01-06",
+                        "length": 2
+                    }
+                ],
+                "overall_completion_rate": 0.5,
+                "thirty_day_completion_rate": 0.03333333333333333
+            }
+        },
+        {
+            "name": "a skip before the created date pulls the effective start earlier",
+            "anchor_date": "2026-01-12",
+            "habit": {
+                "id": 1,
+                "frequency": 1,
+                "range": 1,
+                "created_date": "2026-01-10T00:00:00"
+            },
+            "trackers": [
+                {
+                    "dated": "2026-01-07",
+                    "status": 1
+                },
+                {
+                    "dated": "2026-01-10",
+                    "status": 2
+                }
+            ],
+            "expected": {
+                "effective_start_date": "2026-01-07",
+                "total_completions": 1,
+                "current_streak": 0,
+                "longest_streak": 1,
+                "last_completed_date": "2026-01-10",
+                "weekday_completion_rates": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0
+                ],
+                "streaks": [
+                    {
+                        "start_date": "2026-01-07",
+                        "end_date": "2026-01-07",
+                        "length": 1
+                    },
+                    {
+                        "start_date": "2026-01-10",
+                        "end_date": "2026-01-10",
+                        "length": 1
+                    }
+                ],
+                "overall_completion_rate": 0.16666666666666666,
+                "thirty_day_completion_rate": 0.03333333333333333
+            },
+            "divergent": {
+                "longest_streak_end_date": {
+                    "backend": "2026-01-10",
+                    "frontend": "2026-01-07",
+                    "bugs": [
+                        "longest-streak-end-date-tie-break"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "a not-completed tracker before the created date does not move the start",
+            "anchor_date": "2026-01-10",
+            "habit": {
+                "id": 1,
+                "frequency": 1,
+                "range": 1,
+                "created_date": "2026-01-10T00:00:00"
+            },
+            "trackers": [
+                {
+                    "dated": "2026-01-07",
+                    "status": 0
+                },
+                {
+                    "dated": "2026-01-10",
+                    "status": 2
+                }
+            ],
+            "expected": {
+                "effective_start_date": "2026-01-10",
+                "total_completions": 1,
+                "current_streak": 1,
+                "longest_streak": 1,
+                "longest_streak_end_date": "2026-01-10",
+                "overall_completion_rate": 1,
+                "last_completed_date": "2026-01-10",
+                "weekday_completion_rates": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0
+                ],
+                "streaks": [
+                    {
+                        "start_date": "2026-01-10",
+                        "end_date": "2026-01-10",
+                        "length": 1
+                    }
+                ],
+                "thirty_day_completion_rate": 0.03333333333333333
+            }
+        },
+        {
+            "name": "weekly habit auto-skips the days after a completion",
+            "anchor_date": "2026-01-13",
+            "habit": {
+                "id": 1,
+                "frequency": 1,
+                "range": 7,
+                "created_date": "2026-01-05T00:00:00"
+            },
+            "trackers": [
+                {
+                    "dated": "2026-01-07",
+                    "status": 2
+                }
+            ],
+            "expected": {
+                "effective_start_date": "2026-01-05",
+                "total_completions": 1,
+                "current_streak": 7,
+                "longest_streak": 7,
+                "longest_streak_end_date": "2026-01-13",
+                "overall_completion_rate": 0.7777777777777777,
+                "last_completed_date": "2026-01-07",
+                "weekday_completion_rates": [
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "streaks": [
+                    {
+                        "start_date": "2026-01-07",
+                        "end_date": "2026-01-13",
+                        "length": 7
+                    }
+                ],
+                "thirty_day_completion_rate": 0.23333333333333334
+            }
+        },
+        {
+            "name": "weekly habit breaks the streak once the auto-skip window lapses",
+            "anchor_date": "2026-01-16",
+            "habit": {
+                "id": 1,
+                "frequency": 1,
+                "range": 7,
+                "created_date": "2026-01-05T00:00:00"
+            },
+            "trackers": [
+                {
+                    "dated": "2026-01-07",
+                    "status": 2
+                }
+            ],
+            "expected": {
+                "effective_start_date": "2026-01-05",
+                "total_completions": 1,
+                "current_streak": 0,
+                "longest_streak": 7,
+                "longest_streak_end_date": "2026-01-13",
+                "overall_completion_rate": 0.5833333333333334,
+                "last_completed_date": "2026-01-07",
+                "weekday_completion_rates": [
+                    0,
+                    0,
+                    0.5,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "streaks": [
+                    {
+                        "start_date": "2026-01-07",
+                        "end_date": "2026-01-13",
+                        "length": 7
+                    }
+                ],
+                "thirty_day_completion_rate": 0.23333333333333334
+            }
+        },
+        {
+            "name": "three-per-seven-day habit rescales the rate denominator",
+            "anchor_date": "2026-01-18",
+            "habit": {
+                "id": 1,
+                "frequency": 3,
+                "range": 7,
+                "created_date": "2026-01-05T00:00:00"
+            },
+            "trackers": [
+                {
+                    "dated": "2026-01-05",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-07",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-09",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-12",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-14",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-16",
+                    "status": 2
+                }
+            ],
+            "expected": {
+                "effective_start_date": "2026-01-05",
+                "total_completions": 6,
+                "current_streak": 10,
+                "longest_streak": 10,
+                "longest_streak_end_date": "2026-01-18",
+                "last_completed_date": "2026-01-16",
+                "weekday_completion_rates": [
+                    1,
+                    0,
+                    1,
+                    0,
+                    1,
+                    0,
+                    0
+                ],
+                "streaks": [
+                    {
+                        "start_date": "2026-01-05",
+                        "end_date": "2026-01-05",
+                        "length": 1
+                    },
+                    {
+                        "start_date": "2026-01-07",
+                        "end_date": "2026-01-07",
+                        "length": 1
+                    },
+                    {
+                        "start_date": "2026-01-09",
+                        "end_date": "2026-01-18",
+                        "length": 10
+                    }
+                ],
+                "overall_completion_rate": 1,
+                "thirty_day_completion_rate": 0.4666666666666667
+            }
+        },
+        {
+            "name": "frequency equal to range never auto-skips",
+            "anchor_date": "2026-01-09",
+            "habit": {
+                "id": 1,
+                "frequency": 2,
+                "range": 2,
+                "created_date": "2026-01-05T00:00:00"
+            },
+            "trackers": [
+                {
+                    "dated": "2026-01-05",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-06",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-08",
+                    "status": 2
+                }
+            ],
+            "expected": {
+                "effective_start_date": "2026-01-05",
+                "total_completions": 3,
+                "current_streak": 0,
+                "longest_streak": 2,
+                "longest_streak_end_date": "2026-01-06",
+                "overall_completion_rate": 0.6,
+                "last_completed_date": "2026-01-08",
+                "weekday_completion_rates": [
+                    1,
+                    1,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0
+                ],
+                "streaks": [
+                    {
+                        "start_date": "2026-01-05",
+                        "end_date": "2026-01-06",
+                        "length": 2
+                    },
+                    {
+                        "start_date": "2026-01-08",
+                        "end_date": "2026-01-08",
+                        "length": 1
+                    }
+                ],
+                "thirty_day_completion_rate": 0.1
+            }
+        },
+        {
+            "name": "four-week span gives round weekday completion rates",
+            "anchor_date": "2026-02-01",
+            "habit": {
+                "id": 1,
+                "frequency": 1,
+                "range": 1,
+                "created_date": "2026-01-05T00:00:00"
+            },
+            "trackers": [
+                {
+                    "dated": "2026-01-05",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-07",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-14",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-21",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-28",
+                    "status": 2
+                }
+            ],
+            "expected": {
+                "effective_start_date": "2026-01-05",
+                "total_completions": 5,
+                "current_streak": 0,
+                "longest_streak": 1,
+                "overall_completion_rate": 0.17857142857142858,
+                "last_completed_date": "2026-01-28",
+                "weekday_completion_rates": [
+                    0.25,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "streaks": [
+                    {
+                        "start_date": "2026-01-05",
+                        "end_date": "2026-01-05",
+                        "length": 1
+                    },
+                    {
+                        "start_date": "2026-01-07",
+                        "end_date": "2026-01-07",
+                        "length": 1
+                    },
+                    {
+                        "start_date": "2026-01-14",
+                        "end_date": "2026-01-14",
+                        "length": 1
+                    },
+                    {
+                        "start_date": "2026-01-21",
+                        "end_date": "2026-01-21",
+                        "length": 1
+                    },
+                    {
+                        "start_date": "2026-01-28",
+                        "end_date": "2026-01-28",
+                        "length": 1
+                    }
+                ],
+                "thirty_day_completion_rate": 0.16666666666666666
+            },
+            "divergent": {
+                "longest_streak_end_date": {
+                    "backend": "2026-01-28",
+                    "frontend": "2026-01-05",
+                    "bugs": [
+                        "longest-streak-end-date-tie-break"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "weekday rates ignore skipped and auto-skipped days",
+            "anchor_date": "2026-02-01",
+            "habit": {
+                "id": 1,
+                "frequency": 1,
+                "range": 7,
+                "created_date": "2026-01-05T00:00:00"
+            },
+            "trackers": [
+                {
+                    "dated": "2026-01-06",
+                    "status": 1
+                },
+                {
+                    "dated": "2026-01-07",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-13",
+                    "status": 1
+                },
+                {
+                    "dated": "2026-01-14",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-21",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-28",
+                    "status": 2
+                }
+            ],
+            "expected": {
+                "effective_start_date": "2026-01-05",
+                "total_completions": 4,
+                "current_streak": 27,
+                "longest_streak": 27,
+                "longest_streak_end_date": "2026-02-01",
+                "last_completed_date": "2026-01-28",
+                "weekday_completion_rates": [
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "streaks": [
+                    {
+                        "start_date": "2026-01-06",
+                        "end_date": "2026-02-01",
+                        "length": 27
+                    }
+                ],
+                "overall_completion_rate": 1,
+                "thirty_day_completion_rate": 0.9333333333333333
+            }
+        },
+        {
+            "name": "completions straddling the thirty-day window boundary",
+            "anchor_date": "2026-01-05",
+            "habit": {
+                "id": 1,
+                "frequency": 1,
+                "range": 1,
+                "created_date": "2025-12-01T00:00:00"
+            },
+            "trackers": [
+                {
+                    "dated": "2025-12-06",
+                    "status": 2
+                },
+                {
+                    "dated": "2025-12-07",
+                    "status": 2
+                }
+            ],
+            "expected": {
+                "effective_start_date": "2025-12-01",
+                "total_completions": 2,
+                "current_streak": 0,
+                "longest_streak": 2,
+                "longest_streak_end_date": "2025-12-07",
+                "overall_completion_rate": 0.05555555555555555,
+                "last_completed_date": "2025-12-07",
+                "weekday_completion_rates": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0.2,
+                    0.2
+                ],
+                "streaks": [
+                    {
+                        "start_date": "2025-12-06",
+                        "end_date": "2025-12-07",
+                        "length": 2
+                    }
+                ],
+                "thirty_day_completion_rate": 0.03333333333333333
+            }
+        },
+        {
+            "name": "a completion after the anchor counts toward totals but not streaks",
+            "anchor_date": "2026-01-06",
+            "habit": {
+                "id": 1,
+                "frequency": 1,
+                "range": 1,
+                "created_date": "2026-01-05T00:00:00"
+            },
+            "trackers": [
+                {
+                    "dated": "2026-01-05",
+                    "status": 2
+                },
+                {
+                    "dated": "2026-01-20",
+                    "status": 2
+                }
+            ],
+            "expected": {
+                "effective_start_date": "2026-01-05",
+                "total_completions": 2,
+                "current_streak": 0,
+                "longest_streak": 1,
+                "longest_streak_end_date": "2026-01-05",
+                "overall_completion_rate": 0.5,
+                "last_completed_date": "2026-01-20",
+                "weekday_completion_rates": [
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "streaks": [
+                    {
+                        "start_date": "2026-01-05",
+                        "end_date": "2026-01-05",
+                        "length": 1
+                    }
+                ],
+                "thirty_day_completion_rate": 0.03333333333333333
+            }
+        }
+    ]
+}

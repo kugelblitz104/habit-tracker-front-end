@@ -5,14 +5,14 @@ import { TaskStatus, type TaskBand } from '@/types/types';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router';
 import { getScheduledLabel } from '../utils/task-format';
-import { getCountdown } from '../utils/countdown';
+import { getCountdown } from '@/features/countdowns/utils/countdown';
 import { CardSubtaskChecklist } from './card-subtask-checklist';
 import { PriorityMeter } from './priority-meter';
 import { SubtaskQuickAdd } from './subtask-quick-add';
 import { STATUS_META } from './status-config';
 import { StatusControl } from './status-control';
 import { TaskCardMetaRow } from './task-card-meta-row';
-import { TaskContextMenu, type MenuPoint } from './task-context-menu';
+import { TaskContextMenu, type MenuPoint } from './task-context-menu/index';
 
 export type ActiveBand = Exclude<TaskBand, 'hidden'>;
 

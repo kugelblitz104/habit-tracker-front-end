@@ -1,4 +1,4 @@
-import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
+import { apiErrorMessage } from '@/lib/api-error-message';
 import { toast } from 'react-toastify';
 import { useStopTimeEntry } from '../api/stop-time-entries';
 

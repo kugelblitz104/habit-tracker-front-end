@@ -2,6 +2,7 @@ import type { HabitRead, TrackerLite } from '@/api';
 import { Label } from '@/components/ui/label';
 import { useHabitKpis } from '@/features/habits/api/get-habit-kpis';
 import { getTrackersLite } from '@/features/trackers/api/get-trackers';
+import { trackerKeys } from '@/features/trackers/api/query-keys';
 import {
     toTrackerLite,
     useTrackerMutations
@@ -14,7 +15,7 @@ import {
     getTrackerIcon,
     NotePip
 } from '@/features/trackers/utils/tracker-utils';
-import { getFrequencyString } from '@/lib/date-utils';
+import { getFrequencyString } from '@/features/habits/utils/frequency-label';
 import { useLongPress } from '@/lib/use-long-press';
 import { DisplayStatus } from '@/types/types';
 import { Button } from '@headlessui/react';
@@ -79,8 +80,7 @@ export const HabitListElement = ({
     // the Streak column re-fetches and updates immediately after a toggle
     // (the streak is server-computed from full history, ['kpis', { habitId }]).
     const { trackerCreate, trackerUpdate } = useTrackerMutations(habit.id, {
-        onSuccess: () =>
-            queryClient.invalidateQueries({ queryKey: ['kpis', { habitId: habit.id }] })
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: trackerKeys.kpis(habit.id) })
     });
 
     const handleNoteClick = (date: Date) => {

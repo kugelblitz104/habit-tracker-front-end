@@ -2,7 +2,7 @@ import {
     exportProfileBackup,
     importProfileBackup
 } from '@/features/settings/api/profile-backup';
-import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
+import { apiErrorMessage } from '@/lib/api-error-message';
 import { useAuth } from '@/lib/auth-context';
 import { useQueryClient } from '@tanstack/react-query';
 import { Download, Upload } from 'lucide-react';

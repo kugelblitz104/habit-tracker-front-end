@@ -1,6 +1,6 @@
 import type { ProfileRead, ProfileUpdate } from '@/api';
 import { useUpdateProfile } from '@/features/profiles/api/update-profiles';
-import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
+import { apiErrorMessage } from '@/lib/api-error-message';
 import { Minus, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 

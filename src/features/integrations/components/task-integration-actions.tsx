@@ -1,7 +1,7 @@
 import type { TaskRead } from '@/api';
 import { useIntegrationConnections } from '@/features/integrations/api/get-integration-connections';
 import { usePublishTask } from '@/features/integrations/api/publish-task';
-import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
+import { apiErrorMessage } from '@/lib/api-error-message';
 import { useUpdateTask } from '@/features/tasks/api/update-tasks';
 import { Link2, Send, Unlink } from 'lucide-react';
 import { useState } from 'react';

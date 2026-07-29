@@ -1,5 +1,6 @@
 import type { TimeEntryRead } from '@/api';
-import { parseServerDate } from '@/lib/date-utils';
+import { compactFieldClass, compactFieldStyle } from '@/components/ui/forms/form-field-styles';
+import { parseServerDate, toDateTimeLocal } from '@/lib/date-utils';
 import { ChevronRight, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -36,16 +37,8 @@ const formatDate = (value: string): string =>
 const formatTime = (value: string): string =>
     parseServerDate(value).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 
-const pad = (n: number) => String(n).padStart(2, '0');
-
-/** Server datetime -> value for <input type="datetime-local"> (local wall time).
- *  Exported so ManualEntryForm's start/end inputs share the same round-trip. */
-export const toLocalInput = (value: string): string => {
-    const d = parseServerDate(value);
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-        d.getHours()
-    )}:${pad(d.getMinutes())}`;
-};
+/** Server datetime -> value for <input type="datetime-local"> (local wall time). */
+const toLocalInput = (value: string): string => toDateTimeLocal(parseServerDate(value));
 
 /** datetime-local value (local wall time) -> ISO (UTC) for the API.
  *  Exported so ManualEntryForm sends start/end the same way EntryEditor does. */
@@ -58,13 +51,8 @@ export const fromLocalInput = (local: string): string | null => {
 const patchErrorMessage = (error: unknown): string =>
     (error as { body?: { detail?: string } })?.body?.detail ?? 'Failed to update entry.';
 
-const inputClass =
-    'rounded-button border px-2 py-1 font-mono text-[12px] text-text-secondary outline-none transition-colors focus-visible:ring-1 focus-visible:ring-now-accent';
-const inputStyle: React.CSSProperties = {
-    backgroundColor: 'var(--surface-input-bg)',
-    borderColor: 'var(--surface-input-border)',
-    colorScheme: 'dark'
-};
+const inputClass = compactFieldClass;
+const inputStyle = compactFieldStyle;
 
 type Group = {
     key: string;
@@ -426,7 +414,9 @@ export const EditableTimeLog = ({
             }
         }
         return [...map.values()];
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // primaryFor (and the contextNameFor prop it closes over) is a plain
+        // function recreated every render, not memoized; depending on it would
+        // regroup on every render regardless of whether entries actually changed.
     }, [entries]);
 
     return (

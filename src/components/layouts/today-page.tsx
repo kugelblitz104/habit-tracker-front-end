@@ -1,5 +1,5 @@
-import type { ProjectRead } from '@/api';
-import { AppHeader } from '@/components/layouts/app-header';
+import { PageShell } from '@/components/layouts/page-shell';
+import { QueryState } from '@/components/ui/query-state';
 import { TodaySchedule } from '@/features/calendar/components/today-schedule';
 import { ActiveTimerPanel } from '@/features/time-entries/components/active-timer-panel';
 import { CountdownSection } from '@/features/countdowns/components/countdown-section';
@@ -7,8 +7,8 @@ import { HabitDetailPane } from '@/features/habits/components/details/habit-deta
 import { TodayHabitsPanel } from '@/features/habits/components/today/today-habits-panel';
 import { useHabitDetailPane } from '@/features/habits/hooks/use-habit-detail-pane';
 import { useProjects } from '@/features/projects/api/get-projects';
+import { useProjectsById } from '@/features/projects/hooks/use-projects-by-id';
 import { useTasks } from '@/features/tasks/api/get-tasks';
-import { useUpdateTask } from '@/features/tasks/api/update-tasks';
 import { BandSection } from '@/features/tasks/components/band-section';
 import { CompletedSection } from '@/features/tasks/components/completed-section';
 import {
@@ -18,17 +18,14 @@ import {
 import { TaskCaptureForm } from '@/features/tasks/components/task-capture-form';
 import { TaskDetailPane } from '@/features/tasks/components/task-detail-pane';
 import { useTaskDetailPane } from '@/features/tasks/hooks/use-task-detail-pane';
+import { useTaskStatusChange } from '@/features/tasks/hooks/use-task-status-change';
 import { countGroupedTasks, groupTasksByBand } from '@/features/tasks/utils/task-bands';
 import { formatShortDate } from '@/features/tasks/utils/task-format';
-import { toastTaskClosed } from '@/features/tasks/utils/task-status-toast';
-import { useCreateTimeEntry } from '@/features/time-entries/api/create-time-entries';
-import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
+import { useStartTaskTimer } from '@/features/time-entries/hooks/use-start-task-timer';
 import { parseServerDate, toLocalDateString } from '@/lib/date-utils';
 import { useAuth } from '@/lib/auth-context';
-import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE, PAGE_WIDTH_TRANSITION, paneRowClass } from '@/lib/layout';
-import { TaskStatus, TimeEntryKind } from '@/types/types';
+import { TaskStatus } from '@/types/types';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { toast } from 'react-toastify';
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -40,8 +37,7 @@ export const TodayDashboard = () => {
     const projectsQuery = useProjects({ profileId });
     // Closed tasks (for the "done today" count under the header).
     const closedQuery = useTasks({ profileId, includeClosed: true, band: 'hidden' });
-    const updateTask = useUpdateTask();
-    const createTimeEntry = useCreateTimeEntry();
+    const handleStartTimer = useStartTaskTimer(activeProfileId);
 
     // Shift+Enter / + in the capture bar expands it into the full details form,
     // carrying the parsed draft along. `null` = collapsed (plain capture bar).
@@ -92,37 +88,13 @@ export const TodayDashboard = () => {
         [closeHabit, selectEdit]
     );
 
-    const handleStartTimer = useCallback(
-        (taskId: number) => {
-            if (!activeProfileId) return;
-            createTimeEntry.mutate(
-                {
-                    profile_id: activeProfileId,
-                    task_id: taskId,
-                    kind: TimeEntryKind.STOPWATCH
-                },
-                {
-                    onSuccess: () => toast.success('Timer started'),
-                    onError: (error) => toast.error(apiErrorMessage(error, 'Failed to start timer'))
-                }
-            );
-        },
-        [activeProfileId, createTimeEntry]
-    );
-
     const tasks = tasksQuery.data?.tasks ?? [];
     // Keyed by id (not the task object) so the pane stays open even after a task
     // leaves the active list — e.g. once it's completed — instead of the layout
     // snapping back to full width.
     const showPane = isWide && (selectedEditTaskId !== null || selectedHabitId !== null);
 
-    const projectsById = useMemo(() => {
-        const map = new Map<number, ProjectRead>();
-        for (const project of projectsQuery.data?.projects ?? []) {
-            map.set(project.id, project);
-        }
-        return map;
-    }, [projectsQuery.data]);
+    const projectsById = useProjectsById(projectsQuery.data?.projects);
 
     const grouped = useMemo(() => groupTasksByBand(tasks), [tasks]);
 
@@ -159,135 +131,16 @@ export const TodayDashboard = () => {
         return { inProgress, blocked, doneToday };
     }, [tasks, closedQuery.data]);
 
-    const handleStatusChange = (taskId: number, status: TaskStatus) => {
-        // Remember where the task was so the toast can put it back on undo.
-        const previous = tasks.find((t) => t.id === taskId)?.status;
-        updateTask.mutate(
-            { taskId, data: { status } },
-            {
-                // Only toast discrete, intentional completions — not every status
-                // shuffle — so feedback stays meaningful rather than noisy. The
-                // toast doubles as a tap-to-undo for a few seconds.
-                onSuccess: () => {
-                    if (status === TaskStatus.DONE || status === TaskStatus.CANCELLED) {
-                        toastTaskClosed(
-                            status === TaskStatus.DONE ? 'done' : 'cancelled',
-                            previous != null && previous !== status
-                                ? () => updateTask.mutate({ taskId, data: { status: previous } })
-                                : undefined
-                        );
-                    }
-                },
-                onError: (error) =>
-                    toast.error(apiErrorMessage(error, 'Failed to update task status'))
-            }
-        );
-    };
+    const handleStatusChange = useTaskStatusChange(tasks);
 
     return (
-        <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
-            <AppHeader maxWidthClass={showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH} />
-            <div
-                className={`mx-auto px-5 py-7 md:px-7 ${PAGE_WIDTH_TRANSITION} ${
-                    showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH
-                }`}
-            >
-                <div className={paneRowClass(isWide, showPane)}>
-                    <div className='min-w-0 flex-1'>
-                        {/* Header */}
-                        <header className='mb-[30px]'>
-                            <h1 className='font-display text-[23px] font-bold tracking-[-0.01em] text-text-primary'>
-                                {headerDate}
-                            </h1>
-                            <div className='mt-1.5 flex flex-wrap items-center gap-2 font-mono text-[11px]'>
-                                <span className='text-text-muted'>{subline}</span>
-                                <span className='text-text-faint'>·</span>
-                                <span className='text-text-muted'>
-                                    {statusCounts.inProgress} in progress
-                                </span>
-                                <span className='text-text-faint'>·</span>
-                                <span
-                                    style={
-                                        statusCounts.blocked > 0
-                                            ? { color: 'var(--color-danger)' }
-                                            : { color: 'var(--color-text-muted)' }
-                                    }
-                                >
-                                    {statusCounts.blocked} blocked
-                                </span>
-                                <span className='text-text-faint'>·</span>
-                                <span className='text-text-muted'>
-                                    {statusCounts.doneToday} done today
-                                </span>
-                            </div>
-                        </header>
-
-                        {captureDraft !== null && activeProfileId ? (
-                            <TaskCaptureForm
-                                profileId={activeProfileId}
-                                initial={captureDraft}
-                                onClose={() => setCaptureDraft(null)}
-                            />
-                        ) : (
-                            <TaskCaptureBar
-                                profileId={activeProfileId}
-                                onExpand={setCaptureDraft}
-                                disabled={!activeProfileId}
-                            />
-                        )}
-
-                        {tasksQuery.isError && (
-                            <p className='mb-6 font-mono text-[12px] text-danger'>
-                                Failed to load tasks.
-                            </p>
-                        )}
-
-                        {grouped.map(({ band, tasks: bandTasks }) => (
-                            <BandSection
-                                key={band}
-                                band={band}
-                                tasks={bandTasks}
-                                projectsById={projectsById}
-                                onStatusChange={handleStatusChange}
-                                notesTaskId={notesTaskId}
-                                selectedEditTaskId={selectedEditTaskId}
-                                onToggleNotes={toggleNotes}
-                                onSelectEdit={handleSelectEdit}
-                                subtasksTaskId={subtasksTaskId}
-                                onToggleSubtasks={toggleSubtasks}
-                                onStartTimer={handleStartTimer}
-                                emptyHint={
-                                    band === 'now' ? 'Nothing needs you right now.' : undefined
-                                }
-                                collapsible={band === 'whenever'}
-                                collapsed={band === 'whenever' ? hideWhenever : undefined}
-                                onToggleCollapsed={
-                                    band === 'whenever' ? toggleHideWhenever : undefined
-                                }
-                            />
-                        ))}
-
-                        <ActiveTimerPanel />
-
-                        <TodayHabitsPanel
-                            profile={activeProfile}
-                            onSelectHabit={isWide ? handleSelectHabit : undefined}
-                        />
-
-                        <TodaySchedule />
-
-                        <CountdownSection profileId={activeProfileId} />
-
-                        <CompletedSection
-                            profileId={activeProfileId}
-                            onSelectTask={handleSelectEdit}
-                            selectedTaskId={selectedEditTaskId}
-                        />
-                    </div>
-
+        <PageShell
+            isWide={isWide}
+            showPane={showPane}
+            pane={
+                <>
                     <TaskDetailPane
                         taskId={selectedEditTaskId}
-                        isWide={isWide}
                         onClose={closeEdit}
                         defaultEditing={editIntent}
                     />
@@ -297,8 +150,91 @@ export const TodayDashboard = () => {
                         isWide={isWide}
                         onClose={closeHabit}
                     />
+                </>
+            }
+        >
+            {/* Header */}
+            <header className='mb-[30px]'>
+                <h1 className='font-display text-[23px] font-bold tracking-[-0.01em] text-text-primary'>
+                    {headerDate}
+                </h1>
+                <div className='mt-1.5 flex flex-wrap items-center gap-2 font-mono text-[11px]'>
+                    <span className='text-text-muted'>{subline}</span>
+                    <span className='text-text-faint'>·</span>
+                    <span className='text-text-muted'>{statusCounts.inProgress} in progress</span>
+                    <span className='text-text-faint'>·</span>
+                    <span
+                        style={
+                            statusCounts.blocked > 0
+                                ? { color: 'var(--color-danger)' }
+                                : { color: 'var(--color-text-muted)' }
+                        }
+                    >
+                        {statusCounts.blocked} blocked
+                    </span>
+                    <span className='text-text-faint'>·</span>
+                    <span className='text-text-muted'>{statusCounts.doneToday} done today</span>
                 </div>
-            </div>
-        </div>
+            </header>
+
+            {captureDraft !== null && activeProfileId ? (
+                <TaskCaptureForm
+                    profileId={activeProfileId}
+                    initial={captureDraft}
+                    onClose={() => setCaptureDraft(null)}
+                />
+            ) : (
+                <TaskCaptureBar
+                    profileId={activeProfileId}
+                    onExpand={setCaptureDraft}
+                    disabled={!activeProfileId}
+                />
+            )}
+
+            <QueryState
+                isError={tasksQuery.isError}
+                errorMessage='Failed to load tasks.'
+                size='md'
+                className='mb-6'
+            />
+
+            {grouped.map(({ band, tasks: bandTasks }) => (
+                <BandSection
+                    key={band}
+                    band={band}
+                    tasks={bandTasks}
+                    projectsById={projectsById}
+                    onStatusChange={handleStatusChange}
+                    notesTaskId={notesTaskId}
+                    selectedEditTaskId={selectedEditTaskId}
+                    onToggleNotes={toggleNotes}
+                    onSelectEdit={handleSelectEdit}
+                    subtasksTaskId={subtasksTaskId}
+                    onToggleSubtasks={toggleSubtasks}
+                    onStartTimer={handleStartTimer}
+                    emptyHint={band === 'now' ? 'Nothing needs you right now.' : undefined}
+                    collapsible={band === 'whenever'}
+                    collapsed={band === 'whenever' ? hideWhenever : undefined}
+                    onToggleCollapsed={band === 'whenever' ? toggleHideWhenever : undefined}
+                />
+            ))}
+
+            <ActiveTimerPanel />
+
+            <TodayHabitsPanel
+                profile={activeProfile}
+                onSelectHabit={isWide ? handleSelectHabit : undefined}
+            />
+
+            <TodaySchedule />
+
+            <CountdownSection profileId={activeProfileId} />
+
+            <CompletedSection
+                profileId={activeProfileId}
+                onSelectTask={handleSelectEdit}
+                selectedTaskId={selectedEditTaskId}
+            />
+        </PageShell>
     );
 };

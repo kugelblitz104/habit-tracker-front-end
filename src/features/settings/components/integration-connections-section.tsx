@@ -1,25 +1,29 @@
 import type { IntegrationConnectionRead, ProfileRead } from '@/api';
-import { InlineConfirmAction } from '@/components/ui/inline-confirm-action';
 import { useCreateIntegrationConnection } from '@/features/integrations/api/create-integration-connection';
 import { useDeleteIntegrationConnection } from '@/features/integrations/api/delete-integration-connection';
 import { useIntegrationConnections } from '@/features/integrations/api/get-integration-connections';
 import { useSyncIntegrationConnection } from '@/features/integrations/api/sync-integration-connection';
 import { useUpdateIntegrationConnection } from '@/features/integrations/api/update-integration-connection';
-import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
-import { Pencil, Plus, RefreshCw, Trash2, TriangleAlert } from 'lucide-react';
+import { apiErrorMessage } from '@/lib/api-error-message';
+import { Pencil, RefreshCw, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
+import {
+    AddConnectionButton,
+    CONNECTION_PIP_CLASS,
+    CONNECTION_ROW_CLASS,
+    CONNECTION_ROW_STYLE,
+    ConnectionLastError,
+    ConnectionListState,
+    ConnectionRowActions,
+    ConnectionsSubtitle
+} from './connection-row';
 import {
     IntegrationForm,
     type IntegrationFormValues,
     type IntegrationSubmitValues
 } from './integration-form';
 import { SettingsCard } from './settings-card';
-
-const rowStyle = {
-    backgroundColor: 'rgba(255,255,255,.02)',
-    borderColor: 'rgba(255,255,255,.07)'
-} as const;
 
 const PROVIDER_LABEL: Record<string, string> = {
     azure_devops: 'Azure DevOps',
@@ -166,22 +170,17 @@ export const IntegrationConnectionsSection = ({ profile }: Props) => {
 
     return (
         <SettingsCard label='Task trackers'>
-            <div className='mb-2.5 text-[12px]' style={{ color: '#9a8f81' }}>
-                Azure DevOps &amp; GitHub — pull your open items in, publish tasks out · for{' '}
-                <span className='font-semibold text-text-secondary-soft'>{profile.name}</span>
-            </div>
+            <ConnectionsSubtitle profileName={profile.name}>
+                Azure DevOps &amp; GitHub — pull your open items in, publish tasks out
+            </ConnectionsSubtitle>
 
             <div className='flex flex-col gap-2'>
-                {connectionsQuery.isLoading && (
-                    <div className='py-1 font-mono text-[11px] text-text-faint'>
-                        Loading connections…
-                    </div>
-                )}
-                {connectionsQuery.isError && (
-                    <div className='py-1 font-mono text-[11px] text-danger'>
-                        Failed to load connections
-                    </div>
-                )}
+                <ConnectionListState
+                    isLoading={connectionsQuery.isLoading}
+                    isError={connectionsQuery.isError}
+                    loadingMessage='Loading connections…'
+                    errorMessage='Failed to load connections'
+                />
 
                 {connections.map((connection) =>
                     editingId === connection.id ? (
@@ -206,11 +205,11 @@ export const IntegrationConnectionsSection = ({ profile }: Props) => {
                     ) : (
                         <div
                             key={connection.id}
-                            className='flex items-center gap-3 rounded-[10px] border px-3.5 py-[11px]'
-                            style={rowStyle}
+                            className={CONNECTION_ROW_CLASS}
+                            style={CONNECTION_ROW_STYLE}
                         >
                             <span
-                                className='h-[9px] w-[9px] flex-none rounded-[2px]'
+                                className={CONNECTION_PIP_CLASS}
                                 style={{ backgroundColor: providerColor(connection.provider) }}
                                 aria-hidden='true'
                             />
@@ -221,7 +220,8 @@ export const IntegrationConnectionsSection = ({ profile }: Props) => {
                                     </span>
                                     <span className='font-mono text-[11px] text-text-muted'>
                                         {' '}
-                                        · {PROVIDER_LABEL[connection.provider] ?? connection.provider}
+                                        ·{' '}
+                                        {PROVIDER_LABEL[connection.provider] ?? connection.provider}
                                     </span>
                                 </div>
                                 <div className='mt-0.5 truncate font-mono text-[11px] text-text-muted'>
@@ -230,22 +230,14 @@ export const IntegrationConnectionsSection = ({ profile }: Props) => {
                                         <> · synced {connection.last_synced_at.split('T')[0]}</>
                                     )}
                                 </div>
-                                {connection.last_error && (
-                                    <div className='mt-1 flex items-center gap-1 font-mono text-[11px] text-danger'>
-                                        <TriangleAlert size={11} className='flex-none' />
-                                        <span className='truncate'>{connection.last_error}</span>
-                                    </div>
-                                )}
+                                <ConnectionLastError message={connection.last_error} />
                             </div>
 
-                            <InlineConfirmAction
+                            <ConnectionRowActions
                                 isConfirming={confirmDeleteId === connection.id}
                                 onConfirm={() => deleteConnection.mutate(connection.id)}
                                 onCancel={() => setConfirmDeleteId(null)}
                                 pending={deleteConnection.isPending}
-                                confirmPrompt='Remove?'
-                                confirmButtonClassName='py-1'
-                                triggerClassName='flex items-center gap-1'
                             >
                                 <button
                                     type='button'
@@ -281,7 +273,7 @@ export const IntegrationConnectionsSection = ({ profile }: Props) => {
                                 >
                                     <Trash2 size={13} />
                                 </button>
-                            </InlineConfirmAction>
+                            </ConnectionRowActions>
                         </div>
                     )
                 )}
@@ -295,15 +287,10 @@ export const IntegrationConnectionsSection = ({ profile }: Props) => {
                         onCancel={() => setAdding(false)}
                     />
                 ) : (
-                    <button
-                        type='button'
+                    <AddConnectionButton
+                        label='Connect a task tracker'
                         onClick={() => setAdding(true)}
-                        className='flex items-center justify-center gap-2 rounded-[10px] border border-dashed p-2.5 text-[12.5px] text-text-muted transition-colors hover:text-text-secondary'
-                        style={{ borderColor: 'rgba(255,255,255,.12)' }}
-                    >
-                        <Plus size={14} />
-                        Connect a task tracker
-                    </button>
+                    />
                 )}
             </div>
 

@@ -1,5 +1,5 @@
 import type { HabitRead } from '@/api';
-import { getFrequencyString } from '@/lib/date-utils';
+import { getFrequencyString } from '@/features/habits/utils/frequency-label';
 import { useTrackerToggle } from '@/features/trackers/hooks/use-tracker-toggle';
 import { DisplayStatus } from '@/types/types';
 import { Check, ChevronsRight } from 'lucide-react';

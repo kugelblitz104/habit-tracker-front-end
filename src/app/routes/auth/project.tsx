@@ -1,5 +1,7 @@
 import type { ProjectRead } from '@/api';
 import { ErrorPage } from '@/components/layouts/error-page';
+import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
+import { QueryState } from '@/components/ui/query-state';
 import { ProtectedRoute } from '@/features/auth/components/protected-route';
 import { useDeleteProject } from '@/features/projects/api/delete-projects';
 import { useProject, useProjects } from '@/features/projects/api/get-projects';
@@ -10,7 +12,6 @@ import { ProjectDangerZone } from '@/features/projects/components/project-danger
 import { ProjectEditor } from '@/features/projects/components/project-editor';
 import { ProjectHeader } from '@/features/projects/components/project-header';
 import { useTasks } from '@/features/tasks/api/get-tasks';
-import { useUpdateTask } from '@/features/tasks/api/update-tasks';
 import {
     TaskCaptureBar,
     type TaskCaptureDraft
@@ -24,24 +25,16 @@ import { TaskListView } from '@/features/tasks/components/task-list-view';
 import { useBulkTaskActions } from '@/features/tasks/hooks/use-bulk-task-actions';
 import { useTaskControls } from '@/features/tasks/hooks/use-task-controls';
 import { useTaskDetailPane } from '@/features/tasks/hooks/use-task-detail-pane';
+import { useTaskMarkdownExport } from '@/features/tasks/hooks/use-task-markdown-export';
 import { useTaskSelection } from '@/features/tasks/hooks/use-task-selection';
-import {
-    buildTaskSections,
-    passesDateFilter,
-    showClosedSection
-} from '@/features/tasks/utils/task-controls';
-import { downloadMarkdownFile, renderTasksMarkdown, slugify } from '@/features/tasks/utils/task-markdown';
-import { useCreateTimeEntry } from '@/features/time-entries/api/create-time-entries';
+import { useTaskStatusChange } from '@/features/tasks/hooks/use-task-status-change';
+import { showClosedSection } from '@/features/tasks/utils/task-controls';
+import { useStartTaskTimer } from '@/features/time-entries/hooks/use-start-task-timer';
 import { ProjectTimeLog } from '@/features/time-entries/components/project-time-log';
-import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
-import { AppHeader } from '@/components/layouts/app-header';
+import { PageShell } from '@/components/layouts/page-shell';
 import { sanitizeText } from '@/lib/input-sanitization';
-import { toLocalDateString } from '@/lib/date-utils';
-import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE, PAGE_WIDTH_TRANSITION, paneRowClass } from '@/lib/layout';
-import { toastTaskClosed } from '@/features/tasks/utils/task-status-toast';
 import { useAuth } from '@/lib/auth-context';
-import { TaskStatus, TimeEntryKind } from '@/types/types';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import type { Route } from './+types/project';
@@ -80,10 +73,9 @@ function ProjectContent({ projectId }: { projectId: number }) {
     const tasksQuery = useTasks({ profileId, projectId, includeClosed: true });
     // All projects (archived-aware) for the bulk "move to project" action.
     const allProjectsQuery = useProjects({ profileId, includeArchived: true });
-    const updateTask = useUpdateTask();
     const updateProject = useUpdateProject();
     const deleteProject = useDeleteProject();
-    const createTimeEntry = useCreateTimeEntry();
+    const handleStartTimer = useStartTaskTimer(activeProfileId);
 
     const [isEditing, setIsEditing] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -105,17 +97,6 @@ function ProjectContent({ projectId }: { projectId: number }) {
         closeEdit
     } = useTaskDetailPane();
 
-    const handleStartTimer = (taskId: number) => {
-        if (!activeProfileId) return;
-        createTimeEntry.mutate(
-            { profile_id: activeProfileId, task_id: taskId, kind: TimeEntryKind.STOPWATCH },
-            {
-                onSuccess: () => toast.success('Timer started'),
-                onError: (error) => toast.error(apiErrorMessage(error, 'Failed to start timer'))
-            }
-        );
-    };
-
     const project = projectQuery.data;
     // Top-level tasks only (subtasks are managed within their parent).
     const tasks = useMemo(
@@ -125,7 +106,10 @@ function ProjectContent({ projectId }: { projectId: number }) {
     const showPane = isWide && selectedEditTaskId !== null;
 
     // Every task here belongs to this one project, so a single-entry map is all
-    // TaskCard needs to render its project tag.
+    // TaskCard needs to render its project tag. Deliberately NOT the shared
+    // `useProjectsById` (Today/All tasks): that hook takes a list, and wrapping
+    // this single `project` as `[project]` would allocate a new array every
+    // render, defeating its memo.
     const projectsById = useMemo(() => {
         const map = new Map<number, ProjectRead>();
         if (project) map.set(project.id, project);
@@ -138,56 +122,21 @@ function ProjectContent({ projectId }: { projectId: number }) {
     const showClosed = showClosedSection(controls);
     const allLoadedTasks = tasksQuery.data?.tasks ?? [];
 
-    const handleExport = useCallback(() => {
-        const sections = buildTaskSections(tasks, controls, projectsById);
-        const closedTasks = showClosed
-            ? allLoadedTasks.filter(
-                  (t) =>
-                      t.parent_id == null &&
-                      t.band === 'hidden' &&
-                      passesDateFilter(t, controls)
-              )
-            : [];
-        const markdown = renderTasksMarkdown({
-            title: project?.name ?? 'Project',
-            sections,
-            closedTasks,
-            allTasks: allLoadedTasks,
-            projectsById
-        });
-        const projectSlug = slugify(project?.name ?? 'project');
-        downloadMarkdownFile(`tasks-${projectSlug}-${toLocalDateString(new Date())}.md`, markdown);
-    }, [tasks, controls, projectsById, showClosed, allLoadedTasks, project]);
-
-    // Ids currently visible under the active filters — the target of "Select all".
-    const visibleIds = useMemo(
-        () =>
-            buildTaskSections(tasks, controls, projectsById).flatMap((s) =>
-                s.tasks.map((t) => t.id)
-            ),
-        [tasks, controls, projectsById]
-    );
+    const { handleExport, visibleIds } = useTaskMarkdownExport({
+        tasks,
+        allLoadedTasks,
+        controls,
+        projectsById,
+        title: project?.name ?? 'Project',
+        filenameSource: project?.name,
+        filenameFallback: 'project'
+    });
     const selectedIdArray = [...selection.selectedIds];
     const allProjects = allProjectsQuery.data?.projects ?? [];
 
-    const handleStatusChange = (taskId: number, status: TaskStatus) => {
-        const previous = tasks.find((t) => t.id === taskId)?.status;
-        updateTask.mutate(
-            { taskId, data: { status } },
-            {
-                onSuccess: () => {
-                    if (status === TaskStatus.DONE || status === TaskStatus.CANCELLED) {
-                        toastTaskClosed(
-                            status === TaskStatus.DONE ? 'done' : 'cancelled',
-                            previous != null && previous !== status
-                                ? () => updateTask.mutate({ taskId, data: { status: previous } })
-                                : undefined
-                        );
-                    }
-                }
-            }
-        );
-    };
+    // Adopting the shared hook adds an onError toast here (the project view had
+    // none before) — see `e2e/flows/task-status.spec.ts`.
+    const handleStatusChange = useTaskStatusChange(tasks);
 
     const handleToggleArchive = () => {
         if (!project || updateProject.isPending) return;
@@ -224,196 +173,193 @@ function ProjectContent({ projectId }: { projectId: number }) {
     const notes = project?.notes?.trim();
 
     return (
-        <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
-            <AppHeader maxWidthClass={showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH} />
-            <div
-                className={`mx-auto px-5 py-7 md:px-7 ${PAGE_WIDTH_TRANSITION} ${
-                    showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH
-                }`}
-            >
-                <div className={paneRowClass(isWide, showPane)}>
-                    <div className='min-w-0 flex-1'>
-                        {/* Inline edit surface replaces the read view (mirrors the
-                            habit detail pattern). */}
-                        {isEditing && project ? (
-                            <ProjectEditor
-                                project={project}
-                                isSaving={updateProject.isPending}
-                                onDelete={() => setIsDeleteModalOpen(true)}
-                                onCancel={() => setIsEditing(false)}
-                                onSave={(update) =>
-                                    updateProject.mutate(
-                                        { projectId: project.id, data: update },
-                                        {
-                                            onSuccess: () => {
-                                                setIsEditing(false);
-                                                toast.success('Project updated');
-                                            },
-                                            onError: () =>
-                                                toast.error(
-                                                    'Failed to update project. Please try again.'
-                                                )
-                                        }
-                                    )
-                                }
+        <PageShell
+            isWide={isWide}
+            showPane={showPane}
+            pane={
+                <TaskDetailPane
+                    taskId={selectedEditTaskId}
+                    onClose={closeEdit}
+                    defaultEditing={editIntent}
+                />
+            }
+            overlay={
+                <>
+                    {selection.selectionMode && (
+                        <BulkActionBar
+                            count={selection.selectedIds.size}
+                            projects={allProjects}
+                            onSetStatus={(status) => bulk.updateMany(selectedIdArray, { status })}
+                            onSetPriority={(priority) =>
+                                bulk.updateMany(selectedIdArray, { priority })
+                            }
+                            onSetProject={(project_id) =>
+                                bulk.updateMany(selectedIdArray, { project_id })
+                            }
+                            onDelete={() =>
+                                bulk.deleteMany(selectedIdArray)?.then(() => selection.exit())
+                            }
+                            onSelectAll={() => selection.selectMany(visibleIds)}
+                            onClose={selection.exit}
+                            isPending={bulk.isPending}
+                        />
+                    )}
+
+                    {/* Mounted outside the edit/read swap so the confirm is
+                        reachable from both the footer Delete and the editor's
+                        in-form Delete. */}
+                    {project && (
+                        <DeleteProjectModal
+                            isOpen={isDeleteModalOpen}
+                            project={project}
+                            onClose={() => setIsDeleteModalOpen(false)}
+                            handleDeleteProject={handleDelete}
+                        />
+                    )}
+                </>
+            }
+        >
+            {/* Inline edit surface replaces the read view (mirrors the
+                habit detail pattern). */}
+            {isEditing && project ? (
+                <ProjectEditor
+                    project={project}
+                    isSaving={updateProject.isPending}
+                    onDelete={() => setIsDeleteModalOpen(true)}
+                    onCancel={() => setIsEditing(false)}
+                    onSave={(update) =>
+                        updateProject.mutate(
+                            { projectId: project.id, data: update },
+                            {
+                                onSuccess: () => {
+                                    setIsEditing(false);
+                                    toast.success('Project updated');
+                                },
+                                onError: () =>
+                                    toast.error('Failed to update project. Please try again.')
+                            }
+                        )
+                    }
+                />
+            ) : (
+                <>
+                    <ProjectHeader
+                        backTo={backTo}
+                        backLabel={backLabel}
+                        project={project}
+                        openCount={openCount}
+                        doneCount={doneCount}
+                        donePct={donePct}
+                        onEdit={() => setIsEditing(true)}
+                    />
+
+                    {/* Project notes */}
+                    {notes && (
+                        <div
+                            className='mb-[30px] rounded-card border p-4'
+                            style={CARD_SURFACE_STYLE}
+                        >
+                            <h2 className='mb-2 font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-text-muted'>
+                                Project notes
+                            </h2>
+                            <div className='font-mono text-[12px] leading-relaxed whitespace-pre-wrap text-text-secondary-soft'>
+                                {sanitizeText(notes)}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Quick-add, pre-attached to this project (an @token
+                        still lets you retarget to another). */}
+                    {activeProfileId &&
+                        (captureDraft !== null ? (
+                            <TaskCaptureForm
+                                profileId={activeProfileId}
+                                initial={captureDraft}
+                                onClose={() => setCaptureDraft(null)}
                             />
                         ) : (
-                            <>
-                                <ProjectHeader
-                                    backTo={backTo}
-                                    backLabel={backLabel}
-                                    project={project}
-                                    openCount={openCount}
-                                    doneCount={doneCount}
-                                    donePct={donePct}
-                                    onEdit={() => setIsEditing(true)}
-                                />
+                            <TaskCaptureBar
+                                profileId={activeProfileId}
+                                defaultProjectId={projectId}
+                                onExpand={setCaptureDraft}
+                            />
+                        ))}
 
-                                {/* Project notes */}
-                                {notes && (
-                                    <div
-                                        className='mb-[30px] rounded-card border p-4'
-                                        style={{
-                                            backgroundColor: 'var(--surface-card-bg)',
-                                            borderColor: 'var(--surface-card-border)'
-                                        }}
-                                    >
-                                        <h2 className='mb-2 font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-text-muted'>
-                                            Project notes
-                                        </h2>
-                                        <div className='font-mono text-[12px] leading-relaxed whitespace-pre-wrap text-text-secondary-soft'>
-                                            {sanitizeText(notes)}
-                                        </div>
-                                    </div>
-                                )}
+                    <QueryState
+                        isError={tasksQuery.isError}
+                        errorMessage='Failed to load tasks.'
+                        size='md'
+                        className='mb-6'
+                    />
 
-                                {/* Quick-add, pre-attached to this project (an @token
-                                    still lets you retarget to another). */}
-                                {activeProfileId &&
-                                    (captureDraft !== null ? (
-                                        <TaskCaptureForm
-                                            profileId={activeProfileId}
-                                            initial={captureDraft}
-                                            onClose={() => setCaptureDraft(null)}
-                                        />
-                                    ) : (
-                                        <TaskCaptureBar
-                                            profileId={activeProfileId}
-                                            defaultProjectId={projectId}
-                                            onExpand={setCaptureDraft}
-                                        />
-                                    ))}
+                    <TaskControlsBar
+                        controls={controls}
+                        onChange={setControls}
+                        projects={[]}
+                        showProjectOptions={false}
+                        onExport={handleExport}
+                        onToggleSelection={selection.toggleMode}
+                        selectionActive={selection.selectionMode}
+                    />
 
-                                {tasksQuery.isError && (
-                                    <p className='mb-6 font-mono text-[12px] text-danger'>
-                                        Failed to load tasks.
-                                    </p>
-                                )}
+                    <QueryState
+                        isLoading={tasksQuery.isLoading}
+                        loadingMessage='Loading tasks…'
+                        size='md'
+                    />
 
-                                <TaskControlsBar
+                    {!tasksQuery.isLoading && (
+                        <>
+                            <TaskListView
+                                tasks={tasks}
+                                projectsById={projectsById}
+                                controls={controls}
+                                onStatusChange={handleStatusChange}
+                                notesTaskId={notesTaskId}
+                                selectedEditTaskId={selectedEditTaskId}
+                                onToggleNotes={toggleNotes}
+                                onSelectEdit={selectEdit}
+                                subtasksTaskId={subtasksTaskId}
+                                onToggleSubtasks={toggleSubtasks}
+                                onStartTimer={handleStartTimer}
+                                emptyHint='No tasks in this project yet.'
+                                showProject={false}
+                                selectionMode={selection.selectionMode}
+                                selectedIds={selection.selectedIds}
+                                onToggleSelect={selection.toggle}
+                            />
+
+                            {showClosed && (
+                                <CompletedSection
+                                    profileId={activeProfileId}
+                                    projectId={projectId}
+                                    onSelectTask={selectEdit}
+                                    selectedTaskId={selectedEditTaskId}
                                     controls={controls}
-                                    onChange={setControls}
-                                    projects={[]}
-                                    showProjectOptions={false}
-                                    onExport={handleExport}
-                                    onToggleSelection={selection.toggleMode}
-                                    selectionActive={selection.selectionMode}
                                 />
+                            )}
+                        </>
+                    )}
 
-                                {tasksQuery.isLoading ? (
-                                    <p className='font-mono text-[12px] text-text-faint'>
-                                        Loading tasks…
-                                    </p>
-                                ) : (
-                                    <>
-                                        <TaskListView
-                                            tasks={tasks}
-                                            projectsById={projectsById}
-                                            controls={controls}
-                                            onStatusChange={handleStatusChange}
-                                            notesTaskId={notesTaskId}
-                                            selectedEditTaskId={selectedEditTaskId}
-                                            onToggleNotes={toggleNotes}
-                                            onSelectEdit={selectEdit}
-                                            subtasksTaskId={subtasksTaskId}
-                                            onToggleSubtasks={toggleSubtasks}
-                                            onStartTimer={handleStartTimer}
-                                            emptyHint='No tasks in this project yet.'
-                                            showProject={false}
-                                            selectionMode={selection.selectionMode}
-                                            selectedIds={selection.selectedIds}
-                                            onToggleSelect={selection.toggle}
-                                        />
+                    {project && !tasksQuery.isLoading && (
+                        <ProjectAnalytics project={project} tasks={allLoadedTasks} />
+                    )}
 
-                                        {showClosed && (
-                                            <CompletedSection
-                                                profileId={activeProfileId}
-                                                projectId={projectId}
-                                                onSelectTask={selectEdit}
-                                                selectedTaskId={selectedEditTaskId}
-                                                controls={controls}
-                                            />
-                                        )}
-                                    </>
-                                )}
-
-                                {project && !tasksQuery.isLoading && (
-                                    <ProjectAnalytics project={project} tasks={allLoadedTasks} />
-                                )}
-
-                                <div className='mt-[30px]'>
-                                    <ProjectTimeLog
-                                        profileId={activeProfileId}
-                                        projectId={projectId}
-                                    />
-                                </div>
-
-                                {project && (
-                                    <ProjectDangerZone
-                                        project={project}
-                                        isArchiving={updateProject.isPending}
-                                        onToggleArchive={handleToggleArchive}
-                                        onDeleteClick={() => setIsDeleteModalOpen(true)}
-                                    />
-                                )}
-                            </>
-                        )}
+                    <div className='mt-[30px]'>
+                        <ProjectTimeLog profileId={activeProfileId} projectId={projectId} />
                     </div>
 
-                    <TaskDetailPane
-                        taskId={selectedEditTaskId}
-                        isWide={isWide}
-                        onClose={closeEdit}
-                        defaultEditing={editIntent}
-                    />
-                </div>
-            </div>
-
-            {selection.selectionMode && (
-                <BulkActionBar
-                    count={selection.selectedIds.size}
-                    projects={allProjects}
-                    onSetStatus={(status) => bulk.updateMany(selectedIdArray, { status })}
-                    onSetPriority={(priority) => bulk.updateMany(selectedIdArray, { priority })}
-                    onSetProject={(project_id) => bulk.updateMany(selectedIdArray, { project_id })}
-                    onDelete={() => bulk.deleteMany(selectedIdArray)?.then(() => selection.exit())}
-                    onSelectAll={() => selection.selectMany(visibleIds)}
-                    onClose={selection.exit}
-                    isPending={bulk.isPending}
-                />
+                    {project && (
+                        <ProjectDangerZone
+                            project={project}
+                            isArchiving={updateProject.isPending}
+                            onToggleArchive={handleToggleArchive}
+                            onDeleteClick={() => setIsDeleteModalOpen(true)}
+                        />
+                    )}
+                </>
             )}
-
-            {/* Mounted outside the edit/read swap so the confirm is reachable from
-                both the footer Delete and the editor's in-form Delete. */}
-            {project && (
-                <DeleteProjectModal
-                    isOpen={isDeleteModalOpen}
-                    project={project}
-                    onClose={() => setIsDeleteModalOpen(false)}
-                    handleDeleteProject={handleDelete}
-                />
-            )}
-        </div>
+        </PageShell>
     );
 }
 

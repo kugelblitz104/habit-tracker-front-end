@@ -1,4 +1,5 @@
 import { ImportService, type ImportResult } from '@/api';
+import { downloadBlob } from '@/lib/download';
 
 /**
  * Export habits to a Loop Habit Tracker compatible database file.
@@ -21,14 +22,7 @@ export const exportHabits = async (includeArchived = false, profileId?: number):
     }
 
     const blob = new Blob([bytes], { type: result.content_type ?? 'application/x-sqlite3' });
-    const objectUrl = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = objectUrl;
-    link.download = result.filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(objectUrl);
+    downloadBlob(blob, result.filename);
 };
 
 /**
@@ -45,10 +39,9 @@ export const importHabits = async (file: File, profileId?: number): Promise<Impo
 
         return await ImportService.importFromLoopHabitTrackerImportLoopHabitTrackerPost(
             {
-                // Newer FastAPI describes uploads via contentMediaType, which the
-                // codegen types as `string` instead of Blob; the runtime multipart
-                // request is unchanged, so pass the File through the wrong type.
-                file: file as unknown as string
+                // The generated request model declares `file: Blob`, and a File
+                // is a Blob, so it's passed through with no cast needed.
+                file
             },
             profileId
         );

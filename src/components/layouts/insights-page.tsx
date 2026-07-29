@@ -1,4 +1,5 @@
 import { AppHeader } from '@/components/layouts/app-header';
+import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
 import { HabitPerformanceChart } from '@/features/insights/components/habit-performance-chart';
 import { InsightsSummaryCards } from '@/features/insights/components/insights-summary-cards';
 import { RangeToggle } from '@/features/insights/components/range-toggle';
@@ -60,10 +61,7 @@ export const InsightsPage = () => {
                                 <div
                                     key={i}
                                     className='h-[92px] animate-pulse rounded-card border'
-                                    style={{
-                                        backgroundColor: 'var(--surface-card-bg)',
-                                        borderColor: 'var(--surface-card-border)'
-                                    }}
+                                    style={CARD_SURFACE_STYLE}
                                 />
                             ))}
                         </div>
@@ -72,10 +70,7 @@ export const InsightsPage = () => {
                                 <div
                                     key={i}
                                     className='h-[248px] animate-pulse rounded-card border'
-                                    style={{
-                                        backgroundColor: 'var(--surface-card-bg)',
-                                        borderColor: 'var(--surface-card-border)'
-                                    }}
+                                    style={CARD_SURFACE_STYLE}
                                 />
                             ))}
                         </div>
@@ -83,10 +78,7 @@ export const InsightsPage = () => {
                 ) : !data.hasAnyData ? (
                     <div
                         className='rounded-card border p-10 text-center'
-                        style={{
-                            backgroundColor: 'var(--surface-card-bg)',
-                            borderColor: 'var(--surface-card-border)'
-                        }}
+                        style={CARD_SURFACE_STYLE}
                     >
                         <p className='font-display text-[15px] text-text-secondary'>
                             Nothing to show yet

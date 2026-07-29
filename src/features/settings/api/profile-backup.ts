@@ -1,4 +1,5 @@
 import { BackupService, type ImportSummary, type ProfileBackup } from '@/api';
+import { downloadText, slugify } from '@/lib/download';
 
 /**
  * Full-profile backup helpers. Unlike the Loop Habit Tracker import/export
@@ -9,26 +10,9 @@ import { BackupService, type ImportSummary, type ProfileBackup } from '@/api';
  * manage-data card pattern.
  */
 
-const slugify = (name: string): string =>
-    name
-        .replace(/[^a-z0-9]+/gi, '-')
-        .replace(/^-+|-+$/g, '')
-        .toLowerCase() || 'profile';
-
 /** Stringify a plain JSON object and trigger a browser download. */
-const downloadJson = (data: unknown, filename: string): void => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-        type: 'application/json'
-    });
-    const objectUrl = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = objectUrl;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(objectUrl);
-};
+const downloadJson = (data: unknown, filename: string): void =>
+    downloadText(JSON.stringify(data, null, 2), filename, 'application/json');
 
 /**
  * Export a profile as JSON and trigger a browser download. The document is a
@@ -42,7 +26,7 @@ export const exportProfileBackup = async (
         profileId
     );
     const stamp = new Date().toISOString().slice(0, 10);
-    downloadJson(backup, `habit-tracker-${slugify(profileName)}-${stamp}.json`);
+    downloadJson(backup, `habit-tracker-${slugify(profileName, 'profile')}-${stamp}.json`);
 };
 
 /** The per-entity arrays a profile backup carries, keyed for slicing. */
@@ -81,7 +65,7 @@ export const exportProfileEntity = async (
             count: rows.length,
             [entity]: rows
         },
-        `habit-tracker-${slugify(profileName)}-${entity.replace(/_/g, '-')}-${stamp}.json`
+        `habit-tracker-${slugify(profileName, 'profile')}-${entity.replace(/_/g, '-')}-${stamp}.json`
     );
     return rows.length;
 };

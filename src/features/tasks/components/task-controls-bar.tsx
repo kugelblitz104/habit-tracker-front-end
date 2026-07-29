@@ -1,5 +1,6 @@
 import type { ProjectRead } from '@/api';
 import { POPOVER_PANEL_CLASS, popoverPanelStyle } from '@/components/ui/menu';
+import { SelectOption } from '@/components/ui/forms/select-option';
 import { toLocalDateString } from '@/lib/date-utils';
 import {
     Checkbox,
@@ -10,8 +11,8 @@ import {
     PopoverPanel
 } from '@headlessui/react';
 import { ArrowDown, ArrowUp, Check, ChevronDown, Download, ListChecks } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { STATUS_ORDER, STATUS_META } from './status-config';
-import { selectOptionStyle } from './task-form-fields';
 import {
     ALL_PRIORITY_VALUES,
     ALL_STATUS_VALUES,
@@ -49,6 +50,27 @@ const selectStyle = {
 };
 const labelClass =
     'font-mono text-[9.5px] font-semibold uppercase tracking-[0.12em] text-text-faint';
+
+/** Mono caption + control, wrapped in a `<label>` so clicking the caption
+ *  focuses the control. Only for controls where that's valid HTML — a
+ *  popover trigger button is not a labelable element, so those use
+ *  `FilterField` instead. */
+const SelectField = ({ label, children }: { label: string; children: ReactNode }) => (
+    <label className='flex flex-col gap-1'>
+        <span className={labelClass}>{label}</span>
+        {children}
+    </label>
+);
+
+/** Same mono caption as `SelectField`, but in a `<div>` — for the Priority and
+ *  Status popovers (buttons, not native `<select>`s) and the date filter
+ *  popover, none of which may be wrapped in a `<label>`. */
+const FilterField = ({ label, children }: { label: string; children: ReactNode }) => (
+    <div className='flex flex-col gap-1'>
+        <span className={labelClass}>{label}</span>
+        {children}
+    </div>
+);
 
 /** Same chrome as the native `<select>`s above, but as a button that opens a
  *  checkbox popover instead of a listbox. */
@@ -221,8 +243,7 @@ const DateFilterPopover = ({ controls, onChange }: DateFilterPopoverProps) => {
                 style={popoverPanelStyle}
             >
                 <div className='flex flex-col gap-2 p-2'>
-                    <label className='flex flex-col gap-1'>
-                        <span className={labelClass}>Filter by</span>
+                    <SelectField label='Filter by'>
                         <select
                             className={selectClass}
                             style={selectStyle}
@@ -236,16 +257,14 @@ const DateFilterPopover = ({ controls, onChange }: DateFilterPopoverProps) => {
                                 );
                             }}
                         >
-                            <option style={selectOptionStyle} value='none'>
-                                No date filter
-                            </option>
+                            <SelectOption value='none'>No date filter</SelectOption>
                             {DATE_FIELD_OPTIONS.map((o) => (
-                                <option key={o.value} style={selectOptionStyle} value={o.value}>
+                                <SelectOption key={o.value} value={o.value}>
                                     {o.label}
-                                </option>
+                                </SelectOption>
                             ))}
                         </select>
-                    </label>
+                    </SelectField>
 
                     {dateField && (
                         <>
@@ -319,34 +338,22 @@ export const TaskControlsBar = ({
     return (
         <div className='mb-5 flex flex-wrap items-end gap-x-4 gap-y-3'>
             {/* Group by */}
-            <label className='flex flex-col gap-1'>
-                <span className={labelClass}>Group</span>
+            <SelectField label='Group'>
                 <select
                     className={selectClass}
                     style={selectStyle}
                     value={controls.groupBy}
                     onChange={(e) => set({ groupBy: e.target.value as TaskGroupBy })}
                 >
-                    <option style={selectOptionStyle} value='none'>
-                        None
-                    </option>
-                    {showProjectOptions && (
-                        <option style={selectOptionStyle} value='project'>
-                            Project
-                        </option>
-                    )}
-                    <option style={selectOptionStyle} value='priority'>
-                        Priority
-                    </option>
-                    <option style={selectOptionStyle} value='status'>
-                        Status
-                    </option>
+                    <SelectOption value='none'>None</SelectOption>
+                    {showProjectOptions && <SelectOption value='project'>Project</SelectOption>}
+                    <SelectOption value='priority'>Priority</SelectOption>
+                    <SelectOption value='status'>Status</SelectOption>
                 </select>
-            </label>
+            </SelectField>
 
             {/* Sort by (+ direction) */}
-            <label className='flex flex-col gap-1'>
-                <span className={labelClass}>Sort</span>
+            <SelectField label='Sort'>
                 <div className='flex items-center gap-1'>
                     <select
                         className={selectClass}
@@ -354,24 +361,12 @@ export const TaskControlsBar = ({
                         value={controls.sortBy}
                         onChange={(e) => set({ sortBy: e.target.value as TaskSortBy })}
                     >
-                        <option style={selectOptionStyle} value='smart'>
-                            Smart
-                        </option>
-                        <option style={selectOptionStyle} value='priority'>
-                            Priority
-                        </option>
-                        <option style={selectOptionStyle} value='due'>
-                            Due date
-                        </option>
-                        <option style={selectOptionStyle} value='created'>
-                            Created
-                        </option>
-                        <option style={selectOptionStyle} value='title'>
-                            Title
-                        </option>
-                        <option style={selectOptionStyle} value='status'>
-                            Status
-                        </option>
+                        <SelectOption value='smart'>Smart</SelectOption>
+                        <SelectOption value='priority'>Priority</SelectOption>
+                        <SelectOption value='due'>Due date</SelectOption>
+                        <SelectOption value='created'>Created</SelectOption>
+                        <SelectOption value='title'>Title</SelectOption>
+                        <SelectOption value='status'>Status</SelectOption>
                     </select>
                     <button
                         type='button'
@@ -392,12 +387,11 @@ export const TaskControlsBar = ({
                         )}
                     </button>
                 </div>
-            </label>
+            </SelectField>
 
             {/* Filter: project */}
             {showProjectOptions && (
-                <label className='flex flex-col gap-1'>
-                    <span className={labelClass}>Project</span>
+                <SelectField label='Project'>
                     <select
                         className={selectClass}
                         style={selectStyle}
@@ -409,25 +403,20 @@ export const TaskControlsBar = ({
                             });
                         }}
                     >
-                        <option style={selectOptionStyle} value='all'>
-                            All projects
-                        </option>
-                        <option style={selectOptionStyle} value='none'>
-                            No project
-                        </option>
+                        <SelectOption value='all'>All projects</SelectOption>
+                        <SelectOption value='none'>No project</SelectOption>
                         {projects.map((project) => (
-                            <option style={selectOptionStyle} key={project.id} value={project.id}>
+                            <SelectOption key={project.id} value={project.id}>
                                 {project.name}
                                 {project.archived ? ' (archived)' : ''}
-                            </option>
+                            </SelectOption>
                         ))}
                     </select>
-                </label>
+                </SelectField>
             )}
 
             {/* Filter: priority (multi-select checkboxes) */}
-            <div className='flex flex-col gap-1'>
-                <span className={labelClass}>Priority</span>
+            <FilterField label='Priority'>
                 <CheckboxFilterPopover
                     label='Priority'
                     options={[3, 2, 1, 0].map((p) => ({ value: p, label: PRIORITY_LABELS[p]! }))}
@@ -435,12 +424,11 @@ export const TaskControlsBar = ({
                     selected={controls.filterPriorities}
                     onChange={(next) => set({ filterPriorities: next })}
                 />
-            </div>
+            </FilterField>
 
             {/* Filter: status (multi-select checkboxes; Done/Cancelled default off —
                 closed tasks live in the separate Closed section instead). */}
-            <div className='flex flex-col gap-1'>
-                <span className={labelClass}>Status</span>
+            <FilterField label='Status'>
                 <CheckboxFilterPopover
                     label='Status'
                     options={STATUS_ORDER.map((s) => ({
@@ -452,13 +440,12 @@ export const TaskControlsBar = ({
                     selected={controls.filterStatuses}
                     onChange={(next) => set({ filterStatuses: next })}
                 />
-            </div>
+            </FilterField>
 
             {/* Filter: date range (Due / Scheduled / Completed / Created). */}
-            <div className='flex flex-col gap-1'>
-                <span className={labelClass}>Date</span>
+            <FilterField label='Date'>
                 <DateFilterPopover controls={controls} onChange={set} />
-            </div>
+            </FilterField>
 
             {/* Trailing actions: Select + Reset (only when something's changed) + Export. */}
             <div className='ml-auto flex items-end gap-3'>

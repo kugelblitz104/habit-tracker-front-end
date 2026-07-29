@@ -1,9 +1,10 @@
 import { exportHabits, importHabits } from '@/features/habits/api/import-export-habits';
+import { invalidateHabits } from '@/features/habits/api/query-keys';
 import {
     exportProfileEntity,
     type BackupEntity
 } from '@/features/settings/api/profile-backup';
-import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
+import { apiErrorMessage } from '@/lib/api-error-message';
 import { exportTasksMarkdown } from '@/features/tasks/api/export-tasks';
 import { useAuth } from '@/lib/auth-context';
 import { useQueryClient } from '@tanstack/react-query';
@@ -112,7 +113,7 @@ export const ManageDataCard = () => {
                 );
                 // New habits (and their history) exist server-side now; drop
                 // every habit-scoped cache so the dashboard/today views refetch.
-                queryClient.invalidateQueries({ queryKey: ['habits'] });
+                invalidateHabits(queryClient);
             } else {
                 toast.warning(`Import completed with issues: ${result.message}`);
             }

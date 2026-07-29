@@ -1,13 +1,12 @@
-import { HexColorSwatchInput } from '@/components/ui/forms/hex-color-swatch-input';
-import { useState } from 'react';
 import {
-    settingsGhostBorder,
-    settingsGhostButtonClass,
-    settingsInputClass,
-    settingsInputStyle,
-    settingsPrimaryButtonClass,
-    settingsPrimaryButtonStyle
-} from './settings-card';
+    ghostButtonBorder,
+    ghostButtonClass,
+    primaryButtonClass,
+    primaryButtonStyle
+} from '@/components/ui/buttons/button-styles';
+import { HexColorSwatchInput } from '@/components/ui/forms/hex-color-swatch-input';
+import { themedInputClass, themedInputStyle } from '@/components/ui/forms/input-styles';
+import { useState } from 'react';
 
 // Accept webcal:// too (Proton/Apple surface subscription links with that
 // pseudo-scheme); it's rewritten to https:// before submit.
@@ -89,8 +88,8 @@ export const ConnectionForm = ({
                         onChange={(e) => set({ name: e.target.value })}
                         placeholder='e.g. Work'
                         autoFocus
-                        className={settingsInputClass}
-                        style={settingsInputStyle}
+                        className={themedInputClass}
+                        style={themedInputStyle}
                     />
                     {touched && !nameValid && (
                         <span className='mt-1 block text-[11px] text-danger'>Name is required</span>
@@ -105,8 +104,8 @@ export const ConnectionForm = ({
                         value={values.provider}
                         onChange={(e) => set({ provider: e.target.value })}
                         placeholder='e.g. Google'
-                        className={settingsInputClass}
-                        style={settingsInputStyle}
+                        className={themedInputClass}
+                        style={themedInputStyle}
                     />
                 </label>
                 <label className='md:col-span-2'>
@@ -118,8 +117,8 @@ export const ConnectionForm = ({
                         value={values.url}
                         onChange={(e) => set({ url: e.target.value })}
                         placeholder='https://…/calendar.ics'
-                        className={`${settingsInputClass} font-mono text-[12.5px]`}
-                        style={settingsInputStyle}
+                        className={`${themedInputClass} font-mono text-[12.5px]`}
+                        style={themedInputStyle}
                     />
                     {touched && !urlValid && (
                         <span className='mt-1 block text-[11px] text-danger'>
@@ -143,16 +142,16 @@ export const ConnectionForm = ({
                         type='button'
                         onClick={handleSubmit}
                         disabled={pending}
-                        className={settingsPrimaryButtonClass}
-                        style={settingsPrimaryButtonStyle}
+                        className={primaryButtonClass}
+                        style={primaryButtonStyle}
                     >
                         {submitLabel}
                     </button>
                     <button
                         type='button'
                         onClick={onCancel}
-                        className={settingsGhostButtonClass}
-                        style={{ borderColor: settingsGhostBorder }}
+                        className={ghostButtonClass}
+                        style={{ borderColor: ghostButtonBorder }}
                     >
                         Cancel
                     </button>

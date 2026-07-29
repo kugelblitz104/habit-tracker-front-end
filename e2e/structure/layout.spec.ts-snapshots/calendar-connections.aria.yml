@@ -1,0 +1,5 @@
+- text: Connections Calendars — read-only, into Today's schedule · for E2E Golden Structure Calendar · Google
+- button "Edit calendar \"Structure Calendar\""
+- button "Remove calendar \"Structure Calendar\""
+- switch "Structure Calendar enabled"
+- button "Connect a calendar"

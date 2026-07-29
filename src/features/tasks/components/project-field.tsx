@@ -1,15 +1,15 @@
+import {
+    formFieldClass,
+    formFieldStyle,
+    formLabelClass
+} from '@/components/ui/forms/form-field-styles';
+import { SelectOption } from '@/components/ui/forms/select-option';
 import { useCreateProject } from '@/features/projects/api/create-projects';
 import { useProjects } from '@/features/projects/api/get-projects';
 import { randomProjectColor } from '@/features/projects/utils/project-colors';
 import { Check, X } from 'lucide-react';
 import { useId, useState, type KeyboardEvent } from 'react';
 import { toast } from 'react-toastify';
-import {
-    formFieldClass,
-    formFieldStyle,
-    formLabelClass,
-    selectOptionStyle
-} from './task-form-fields';
 
 type ProjectFieldProps = {
     /** Profile whose projects populate the dropdown (self-fetched). */
@@ -141,18 +141,14 @@ export const ProjectField = ({
                     className={formFieldClass}
                     style={{ ...formFieldStyle, colorScheme: 'dark' }}
                 >
-                    <option style={selectOptionStyle} value=''>
-                        No project
-                    </option>
+                    <SelectOption value=''>No project</SelectOption>
                     {projects.map((project) => (
-                        <option style={selectOptionStyle} key={project.id} value={project.id}>
+                        <SelectOption key={project.id} value={project.id}>
                             {project.name}
                             {project.archived ? ' (archived)' : ''}
-                        </option>
+                        </SelectOption>
                     ))}
-                    <option style={selectOptionStyle} value={CREATE_PROJECT_OPTION}>
-                        ＋ New project…
-                    </option>
+                    <SelectOption value={CREATE_PROJECT_OPTION}>＋ New project…</SelectOption>
                 </select>
             )}
         </div>

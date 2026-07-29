@@ -116,7 +116,10 @@ export const usePomodoroSession = ({
                 beginBreak();
             }
         });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // activeId, stopEntry, completedWork and cycles are read inside this
+        // effect but deliberately left out of the deps: completingRef (reset by
+        // the separate activeId effect above) is what actually guards re-firing,
+        // and stopEntry is a fresh mutate function reference every render.
     }, [running, isPomodoro, onBreak, elapsed, workSeconds]);
 
     const skipBreak = () => setBreakUntil(null);

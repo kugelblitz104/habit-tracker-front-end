@@ -1,7 +1,6 @@
 import type { IntegrationSyncResult } from '@/api';
 import { IntegrationsService } from '@/api';
-import type { MutationConfig } from '@/lib/react-query';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { defineMutationHook } from '@/lib/react-query';
 
 export const syncIntegrationConnection = async (
     connectionId: number
@@ -11,23 +10,11 @@ export const syncIntegrationConnection = async (
     );
 };
 
-type UseSyncIntegrationConnectionOptions = {
-    mutationConfig?: MutationConfig<typeof syncIntegrationConnection>;
-};
-
-export const useSyncIntegrationConnection = ({
-    mutationConfig
-}: UseSyncIntegrationConnectionOptions = {}) => {
-    const queryClient = useQueryClient();
-    const { onSuccess, ...restConfig } = mutationConfig ?? {};
-    return useMutation({
-        mutationFn: syncIntegrationConnection,
-        onSuccess: (data, ...args) => {
-            // Newly-imported items become tasks — refresh the task lists.
-            queryClient.invalidateQueries({ queryKey: ['tasks'] });
-            queryClient.invalidateQueries({ queryKey: ['integration-connections'] });
-            onSuccess?.(data, ...args);
-        },
-        ...restConfig
-    });
-};
+export const useSyncIntegrationConnection = defineMutationHook(
+    syncIntegrationConnection,
+    (queryClient) => {
+        // Newly-imported items become tasks — refresh the task lists.
+        queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        queryClient.invalidateQueries({ queryKey: ['integration-connections'] });
+    }
+);

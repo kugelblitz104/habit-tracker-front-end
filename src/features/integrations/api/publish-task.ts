@@ -1,7 +1,6 @@
 import type { PublishResult } from '@/api';
 import { IntegrationsService } from '@/api';
-import type { MutationConfig } from '@/lib/react-query';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { defineMutationHook } from '@/lib/react-query';
 
 type PublishTaskInput = {
     connectionId: number;
@@ -18,20 +17,7 @@ export const publishTask = async ({
     );
 };
 
-type UsePublishTaskOptions = {
-    mutationConfig?: MutationConfig<typeof publishTask>;
-};
-
-export const usePublishTask = ({ mutationConfig }: UsePublishTaskOptions = {}) => {
-    const queryClient = useQueryClient();
-    const { onSuccess, ...restConfig } = mutationConfig ?? {};
-    return useMutation({
-        mutationFn: publishTask,
-        onSuccess: (data, ...args) => {
-            // The task now carries an external link — refresh so the chip shows.
-            queryClient.invalidateQueries({ queryKey: ['tasks'] });
-            onSuccess?.(data, ...args);
-        },
-        ...restConfig
-    });
-};
+export const usePublishTask = defineMutationHook(publishTask, (queryClient) => {
+    // The task now carries an external link — refresh so the chip shows.
+    queryClient.invalidateQueries({ queryKey: ['tasks'] });
+});

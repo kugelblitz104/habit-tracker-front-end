@@ -15,6 +15,12 @@ type ConfirmModalProps = {
     cancelLabel?: string;
     /** Danger styling for destructive confirms (red solid button). */
     danger?: boolean;
+    /** Rendered above the body, as a sibling — e.g. an entity chip box naming
+     * what's about to be deleted. */
+    preface?: ReactNode;
+    /** Extra classes on the body wrapper, e.g. `space-y-3` for multi-paragraph
+     * copy. Prepended to the base body classes. */
+    bodyClassName?: string;
 };
 
 const cancelClass =
@@ -36,7 +42,9 @@ export const ConfirmModal = ({
     children,
     confirmLabel = 'Confirm',
     cancelLabel = 'Cancel',
-    danger = false
+    danger = false,
+    preface,
+    bodyClassName
 }: ConfirmModalProps) => {
     const handleConfirm = () => {
         onConfirm();
@@ -45,7 +53,14 @@ export const ConfirmModal = ({
 
     return (
         <BaseModal isOpen={isOpen} onClose={onClose} title={title}>
-            <div className='font-mono text-[12px] leading-relaxed text-text-muted'>{children}</div>
+            {preface}
+            <div
+                className={`${
+                    bodyClassName ? `${bodyClassName} ` : ''
+                }font-mono text-[12px] leading-relaxed text-text-muted`}
+            >
+                {children}
+            </div>
             <div className='mt-4 flex justify-end gap-2'>
                 <CloseButton type='button' className={cancelClass} onClick={onClose}>
                     {cancelLabel}

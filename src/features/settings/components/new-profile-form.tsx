@@ -1,13 +1,12 @@
-import { HexColorSwatchInput } from '@/components/ui/forms/hex-color-swatch-input';
-import { useState } from 'react';
 import {
-    settingsGhostBorder,
-    settingsGhostButtonClass,
-    settingsInputClass,
-    settingsInputStyle,
-    settingsPrimaryButtonClass,
-    settingsPrimaryButtonStyle
-} from './settings-card';
+    ghostButtonBorder,
+    ghostButtonClass,
+    primaryButtonClass,
+    primaryButtonStyle
+} from '@/components/ui/buttons/button-styles';
+import { HexColorSwatchInput } from '@/components/ui/forms/hex-color-swatch-input';
+import { themedInputClass, themedInputStyle } from '@/components/ui/forms/input-styles';
+import { useState } from 'react';
 
 const DEFAULT_COLOR_START = '#e0763f';
 const DEFAULT_COLOR_END = '#c14e6a';
@@ -60,8 +59,8 @@ export const NewProfileForm = ({ pending, onCreate, onCancel }: NewProfileFormPr
                         }}
                         placeholder='e.g. Work'
                         autoFocus
-                        className={settingsInputClass}
-                        style={settingsInputStyle}
+                        className={themedInputClass}
+                        style={themedInputStyle}
                     />
                 </label>
                 <label className='flex flex-col'>
@@ -95,16 +94,16 @@ export const NewProfileForm = ({ pending, onCreate, onCancel }: NewProfileFormPr
                         type='button'
                         onClick={handleCreate}
                         disabled={!name.trim() || pending}
-                        className={settingsPrimaryButtonClass}
-                        style={settingsPrimaryButtonStyle}
+                        className={primaryButtonClass}
+                        style={primaryButtonStyle}
                     >
                         Create profile
                     </button>
                     <button
                         type='button'
                         onClick={onCancel}
-                        className={settingsGhostButtonClass}
-                        style={{ borderColor: settingsGhostBorder }}
+                        className={ghostButtonClass}
+                        style={{ borderColor: ghostButtonBorder }}
                     >
                         Cancel
                     </button>

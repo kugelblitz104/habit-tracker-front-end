@@ -1,0 +1,78 @@
+- banner:
+  - heading "All tasks" [level=1]
+  - paragraph: 9 tasks
+- button "Add details"
+- textbox "Add a task":
+  - /placeholder: Add a task...
+- text: ↵ add ⇧↵ details
+- button "Quick-add token help"
+- text: Group
+- combobox "Group":
+  - option "None" [selected]
+  - option "Project"
+  - option "Priority"
+  - option "Status"
+- text: Sort
+- combobox "Sort Sort ascending":
+  - option "Smart" [selected]
+  - option "Priority"
+  - option "Due date"
+  - option "Created"
+  - option "Title"
+  - option "Status"
+- button "Sort ascending"
+- text: Project
+- combobox "Project":
+  - option "All projects" [selected]
+  - option "No project"
+  - option "Alpha Project"
+  - option "Beta Project"
+- text: Priority
+- 'button "Priority: All"'
+- text: Status
+- button "Status (8)"
+- text: Date
+- 'button "Date: Any"'
+- button "Select"
+- button "Export"
+- 'button "Status: In progress. Change status"'
+- button "Parent with subtasks"
+- link "Beta Project":
+  - /url: /\/projects\/\d+/
+- text: in progress
+- button "1/2"
+- img "Priority 2 of 3"
+- 'button "Status: Open. Change status"'
+- button "Now band task"
+- link "Alpha Project":
+  - /url: /\/projects\/\d+/
+- img "Priority 3 of 3"
+- 'button "Status: Open. Change status"'
+- button "A deliberately very long task title that has to ellipsis-clip rather than widen its row on a narrow viewport"
+- link "Alpha Project":
+  - /url: /\/projects\/\d+/
+- img "Priority 3 of 3"
+- 'button "Status: Open. Change status"'
+- button "Soon band task"
+- link "Alpha Project":
+  - /url: /\/projects\/\d+/
+- img "Priority 2 of 3"
+- 'button "Status: Open. Change status"'
+- button "Whenever band task"
+- link "Alpha Project":
+  - /url: /\/projects\/\d+/
+- img "Priority 0 of 3"
+- 'button "Status: Open. Change status"'
+- button "Task with no project"
+- img "Priority 0 of 3"
+- 'button "Status: Open. Change status"'
+- button "Task with an estimate"
+- link "Alpha Project":
+  - /url: /\/projects\/\d+/
+- img "Priority 0 of 3"
+- 'button "Status: Deferred. Change status"'
+- button "Deferred task"
+- link "Beta Project":
+  - /url: /\/projects\/\d+/
+- text: deferred
+- img "Priority 3 of 3"

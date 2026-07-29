@@ -6,7 +6,7 @@ import {
     deleteAllTimeEntries,
     deleteAllTrackers
 } from '@/features/settings/api/bulk-delete';
-import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
+import { apiErrorMessage } from '@/lib/api-error-message';
 import { deleteUser } from '@/features/users/api/delete-users';
 import { DeleteUserDataModal } from '@/features/users/components/delete-user-data-modal';
 import { useAuth } from '@/lib/auth-context';

@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-toastify';
 import { useCreateTask } from '../api/create-tasks';
-import type { MenuPoint } from './task-context-menu';
+import type { MenuPoint } from './task-context-menu/index';
 
 type SubtaskQuickAddProps = {
     profileId: number;

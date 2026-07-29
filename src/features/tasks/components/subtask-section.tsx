@@ -1,4 +1,10 @@
 import type { TaskRead } from '@/api';
+import {
+    formFieldClass,
+    formFieldStyle,
+    formLabelClass
+} from '@/components/ui/forms/form-field-styles';
+import { QueryState } from '@/components/ui/query-state';
 import { TaskStatus } from '@/types/types';
 import {
     closestCenter,
@@ -17,12 +23,12 @@ import { toast } from 'react-toastify';
 import { useCreateTask } from '../api/create-tasks';
 import { useDeleteTask } from '../api/delete-tasks';
 import { useTasks } from '../api/get-tasks';
+import { taskKeys } from '../api/query-keys';
 import { useSortTasks } from '../api/sort-tasks';
 import { useUpdateTask } from '../api/update-tasks';
 import { sortSubtasks } from '../utils/subtasks';
 import { ParentTaskAutocomplete } from './parent-task-autocomplete';
 import { SubtaskRow } from './subtask-row';
-import { formFieldClass, formFieldStyle, formLabelClass } from './task-form-fields';
 
 type SubtaskSectionProps = {
     /** The task being edited — must be a top-level task (subtasks are one level deep). */
@@ -170,7 +176,7 @@ export const SubtaskSection = ({ parent }: SubtaskSectionProps) => {
     const handleDelete = (subtaskId: number) => {
         deleteTask.mutate(subtaskId, {
             onSuccess: () =>
-                queryClient.invalidateQueries({ queryKey: ['task', { taskId: parent.id }] }),
+                queryClient.invalidateQueries({ queryKey: taskKeys.detail(parent.id) }),
             onError: () => toast.error('Failed to delete subtask. Please try again.')
         });
     };
@@ -185,7 +191,7 @@ export const SubtaskSection = ({ parent }: SubtaskSectionProps) => {
             { taskId: subtaskId, data: { parent_id: newParentId } },
             {
                 onSuccess: () => {
-                    queryClient.invalidateQueries({ queryKey: ['task', { taskId: parent.id }] });
+                    queryClient.invalidateQueries({ queryKey: taskKeys.detail(parent.id) });
                     toast.success(newParentId == null ? 'Promoted to a task' : 'Subtask moved');
                 },
                 onError: () => toast.error('Failed to move subtask. Please try again.')
@@ -202,7 +208,7 @@ export const SubtaskSection = ({ parent }: SubtaskSectionProps) => {
             {
                 onSuccess: () => {
                     queryClient.invalidateQueries({
-                        queryKey: ['task', { taskId: parent.id }]
+                        queryKey: taskKeys.detail(parent.id)
                     });
                     toast.success('Promoted to a task');
                 },
@@ -262,12 +268,13 @@ export const SubtaskSection = ({ parent }: SubtaskSectionProps) => {
                 )}
             </div>
 
-            {tasksQuery.isLoading && (
-                <p className='font-mono text-[11px] text-text-faint'>Loading subtasks…</p>
-            )}
-            {tasksQuery.isError && (
-                <p className='font-mono text-[11px] text-danger'>Failed to load subtasks.</p>
-            )}
+            <QueryState
+                isLoading={tasksQuery.isLoading}
+                isError={tasksQuery.isError}
+                loadingMessage='Loading subtasks…'
+                errorMessage='Failed to load subtasks.'
+                size='sm'
+            />
 
             {ordered.length > 0 && (
                 <DndContext

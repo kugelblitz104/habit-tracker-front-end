@@ -1,22 +1,21 @@
 import type { HabitRead } from '@/api';
-import { createHabit } from '@/features/habits/api/create-habits';
-import { getHabits } from '@/features/habits/api/get-habits';
+import { useCreateHabit } from '@/features/habits/api/create-habits';
+import { useHabits } from '@/features/habits/api/get-habits';
 import { HabitDetailPane } from '@/features/habits/components/details/habit-detail-pane';
 import { HabitList } from '@/features/habits/components/dashboard/habit-list';
 import { SortHabitModal } from '@/features/habits/components/modals/sort-habit-modal';
 import { useHabitDetailPane } from '@/features/habits/hooks/use-habit-detail-pane';
 import { CaptureBar } from '@/features/tasks/components/capture-bar';
-import { AppHeader } from '@/components/layouts/app-header';
-import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE, PAGE_WIDTH_TRANSITION, paneRowClass } from '@/lib/layout';
+import { PageShell } from '@/components/layouts/page-shell';
 import { useAuth } from '@/lib/auth-context';
+import { useOpenFromSearchState } from '@/lib/use-open-from-search-state';
 import { useResponsiveLayout, DASHBOARD_DAYS_BY_SIZE } from '@/lib/use-responsive-layout';
-import { useMutation, useQuery } from '@tanstack/react-query';
 import { GripVertical } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Navigate, useLocation } from 'react-router';
+import { Navigate } from 'react-router';
 import { ErrorPage } from './error-page';
 import { LoadingPage } from './loading-page';
-import { sortHabits } from '@/features/habits/api/update-habits';
+import { useSortHabits } from '@/features/habits/api/update-habits';
 import { toast } from 'react-toastify';
 
 const ghostButton =
@@ -36,14 +35,7 @@ export const HabitsDashboard = () => {
 
     // Open a habit's detail pane when arriving from global search (wide screens
     // route here with the id in router state; narrow goes to /details/:id).
-    // Keyed on location.key so repeat searches re-trigger.
-    const location = useLocation();
-    useEffect(() => {
-        const openHabitId = (location.state as { openHabitId?: number } | null)?.openHabitId;
-        if (openHabitId != null) selectHabit(openHabitId);
-        // selectHabit is stable; re-run only on navigation.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [location.key]);
+    useOpenFromSearchState('openHabitId', selectHabit);
 
     // hooks
     const [habits, setHabits] = useState<HabitRead[]>([]);
@@ -66,26 +58,23 @@ export const HabitsDashboard = () => {
     };
     // Scope habits to the active profile (keyed per profile so it caches
     // separately and matches the Today panel). Gate until a profile resolves.
-    const habitsQuery = useQuery({
-        queryKey: ['habits', { userId, profileId: activeProfileId }],
-        queryFn: () => getHabits(userId, 100, activeProfileId),
-        enabled: !!activeProfileId,
-        staleTime: 1000 * 60 // 1 minute
-    });
+    const habitsQuery = useHabits({ userId, profileId: activeProfileId });
 
-    const habitsAdd = useMutation({
-        mutationFn: createHabit,
-        onSuccess: (data) => {
-            setHabits((prev) => [...prev, data]);
-            habitsQuery.refetch();
-            toast.success('Habit added successfully!');
+    const habitsAdd = useCreateHabit({
+        mutationConfig: {
+            onSuccess: (data) => {
+                setHabits((prev) => [...prev, data]);
+                habitsQuery.refetch();
+                toast.success('Habit added successfully!');
+            }
         }
     });
 
-    const habitsSort = useMutation({
-        mutationFn: sortHabits,
-        onSuccess: () => {
-            habitsQuery.refetch();
+    const habitsSort = useSortHabits({
+        mutationConfig: {
+            onSuccess: () => {
+                habitsQuery.refetch();
+            }
         }
     });
 
@@ -150,73 +139,13 @@ export const HabitsDashboard = () => {
             : 'All habits done';
 
     return (
-        <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
-            <AppHeader maxWidthClass={showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH} />
-            <div
-                className={`mx-auto px-5 py-7 md:px-7 ${PAGE_WIDTH_TRANSITION} ${
-                    showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH
-                }`}
-            >
-                <div className={paneRowClass(isWide, showPane)}>
-                    <div className='min-w-0 flex-1'>
-                        {/* Header */}
-                        <header className='mb-[30px] flex items-start justify-between gap-4'>
-                            <div>
-                                <h1 className='font-display text-[23px] font-bold tracking-[-0.01em] text-text-primary'>
-                                    {headerTitle}
-                                </h1>
-                                <p className='mt-0.5 font-mono text-[12px] text-text-muted'>
-                                    {subline}
-                                </p>
-                            </div>
-                            <button
-                                type='button'
-                                onClick={() => setSortModalOpen(true)}
-                                disabled={groupByCategory}
-                                title={
-                                    groupByCategory
-                                        ? 'Disable grouping to reorder'
-                                        : 'Change custom order'
-                                }
-                                className={`${ghostButton} ${
-                                    groupByCategory
-                                        ? 'cursor-not-allowed opacity-45'
-                                        : 'hover:text-text-primary'
-                                }`}
-                                style={{ borderColor: 'var(--habit-container-border)' }}
-                            >
-                                <GripVertical size={13} />
-                                Reorder
-                            </button>
-                        </header>
-
-                        <CaptureBar
-                            onCapture={handleCaptureHabit}
-                            disabled={!activeProfileId}
-                            isPending={habitsAdd.isPending}
-                            placeholder='Add a habit'
-                        />
-
-                        <HabitList
-                            habits={habits}
-                            days={days}
-                            isSmall={isSmall}
-                            isWide={isWide}
-                            selectedHabitId={selectedHabitId}
-                            onSelectHabit={selectHabit}
-                            groupByCategory={groupByCategory}
-                            onToggleGroupByCategory={handleToggleGroupByCategory}
-                            onIncompleteCountChange={setIncompleteCount}
-                        />
-                    </div>
-
-                    <HabitDetailPane
-                        habitId={selectedHabitId}
-                        isWide={isWide}
-                        onClose={closeHabit}
-                    />
-                </div>
-
+        <PageShell
+            isWide={isWide}
+            showPane={showPane}
+            pane={
+                <HabitDetailPane habitId={selectedHabitId} isWide={isWide} onClose={closeHabit} />
+            }
+            afterRow={
                 <SortHabitModal
                     key={sortModalOpen ? 'open' : 'closed'} // Force remount to reset state
                     isOpen={sortModalOpen}
@@ -226,7 +155,51 @@ export const HabitsDashboard = () => {
                     }
                     habits={habits}
                 />
-            </div>
-        </div>
+            }
+        >
+            {/* Header */}
+            <header className='mb-[30px] flex items-start justify-between gap-4'>
+                <div>
+                    <h1 className='font-display text-[23px] font-bold tracking-[-0.01em] text-text-primary'>
+                        {headerTitle}
+                    </h1>
+                    <p className='mt-0.5 font-mono text-[12px] text-text-muted'>{subline}</p>
+                </div>
+                <button
+                    type='button'
+                    onClick={() => setSortModalOpen(true)}
+                    disabled={groupByCategory}
+                    title={groupByCategory ? 'Disable grouping to reorder' : 'Change custom order'}
+                    className={`${ghostButton} ${
+                        groupByCategory
+                            ? 'cursor-not-allowed opacity-45'
+                            : 'hover:text-text-primary'
+                    }`}
+                    style={{ borderColor: 'var(--habit-container-border)' }}
+                >
+                    <GripVertical size={13} />
+                    Reorder
+                </button>
+            </header>
+
+            <CaptureBar
+                onCapture={handleCaptureHabit}
+                disabled={!activeProfileId}
+                isPending={habitsAdd.isPending}
+                placeholder='Add a habit'
+            />
+
+            <HabitList
+                habits={habits}
+                days={days}
+                isSmall={isSmall}
+                isWide={isWide}
+                selectedHabitId={selectedHabitId}
+                onSelectHabit={selectHabit}
+                groupByCategory={groupByCategory}
+                onToggleGroupByCategory={handleToggleGroupByCategory}
+                onIncompleteCountChange={setIncompleteCount}
+            />
+        </PageShell>
     );
 };

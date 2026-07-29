@@ -1,4 +1,9 @@
 import type { TaskRead, TaskUpdate } from '@/api';
+import {
+    formFieldClass,
+    formFieldStyle,
+    formLabelClass
+} from '@/components/ui/forms/form-field-styles';
 import { useAuth } from '@/lib/auth-context';
 import { sanitizeMultilineText } from '@/lib/input-sanitization';
 import { TaskStatus } from '@/types/types';
@@ -14,9 +19,6 @@ import { formatHumanDuration } from '@/features/time-entries/utils/format-durati
 import {
     DateTimeField,
     EstimatedEffortField,
-    formFieldClass,
-    formFieldStyle,
-    formLabelClass,
     NotesField,
     ParentTaskField,
     PriorityField,

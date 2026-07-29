@@ -8,10 +8,15 @@
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
     "generate-api": "npx openapi-typescript-codegen --input http://localhost:8080/openapi.json --output ./src/api --client axios",
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@fontsource/jetbrains-mono": "^5.2.8",
     "@fontsource/space-grotesk": "^5.2.10",
     "@headlessui/react": "^2.2.6",
@@ -19,9 +24,8 @@
     "@react-router/serve": "^7.5.3",
     "@tanstack/react-query": "^5.80.5",
     "axios": "^1.9.0",
-    "classnames": "^2.5.1",
     "dompurify": "^3.3.0",
-    "isbot": "^5.1.27",
+    "isbot": "^5",
     "lucide-react": "^0.533.0",
     "react": "^19.1.0",
     "react-colorful": "^5.6.1",
@@ -45,12 +49,13 @@
     "tailwindcss": "^4.1.8",
     "typescript": "^5.8.3",
     "vite": "^6.3.3",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.2.7"
   },
   "prettier": {
     "arrowParens": "always",
     "bracketSpacing": true,
-    "endOfLine": "crlf",
+    "endOfLine": "lf",
     "htmlWhitespaceSensitivity": "css",
     "insertPragma": false,
     "singleAttributePerLine": false,

@@ -4,7 +4,7 @@ import { TaskStatus } from '@/types/types';
 import { ClipboardCopy, Pencil, X } from 'lucide-react';
 import { Link } from 'react-router';
 import { toActiveBand } from '../utils/task-bands';
-import { getCountdown, URGENCY_META } from '../utils/countdown';
+import { getCountdown, URGENCY_META } from '@/features/countdowns/utils/countdown';
 import { formatShortDate } from '../utils/task-format';
 import { PRIORITY_LABELS } from '../utils/priority-config';
 import { PriorityMeter } from './priority-meter';

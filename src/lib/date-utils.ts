@@ -1,12 +1,3 @@
-export const getFrequencyString = (frequency: number, range: number) => {
-    if (frequency === range) return 'daily';
-    else if (frequency === 1 && range === 7) return 'weekly';
-    else if (frequency === 1 && range === 30) return 'monthly';
-    else if (frequency === 1) return `once every ${range} days`;
-    else return `${frequency} times every ${range} days`;
-    // if (frequency === 1 && range === 365) return 'yearly'
-};
-
 /**
  * The browser's IANA timezone name (e.g. 'America/New_York'). Sent as the `tz`
  * query param so the server computes "today" in the user's zone rather than the
@@ -45,4 +36,12 @@ export const parseLocalDate = (dateStr: string): Date => {
 export const parseServerDate = (value: string): Date => {
     const hasTz = /[zZ]$|[+-]\d{2}:?\d{2}$/.test(value);
     return new Date(hasTz ? value : `${value}Z`);
+};
+
+/** Format a Date as a value for <input type="datetime-local"> (local wall time, minute precision). */
+export const toDateTimeLocal = (date: Date): string => {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+        date.getHours()
+    )}:${pad(date.getMinutes())}`;
 };

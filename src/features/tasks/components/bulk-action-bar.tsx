@@ -1,5 +1,6 @@
 import type { ProjectRead } from '@/api';
 import { POPOVER_PANEL_CLASS, popoverPanelStyle } from '@/components/ui/menu';
+import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
 import { TaskStatus } from '@/types/types';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { ChevronDown, Trash2, X } from 'lucide-react';
@@ -49,10 +50,7 @@ export const BulkActionBar = ({
     <div className='pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-4'>
         <div
             className='pointer-events-auto flex items-center gap-1 rounded-full border py-1.5 pl-3 pr-1.5 shadow-lg'
-            style={{
-                backgroundColor: 'var(--surface-card-bg)',
-                borderColor: 'var(--surface-card-border)'
-            }}
+            style={CARD_SURFACE_STYLE}
         >
             <span className='px-1 font-mono text-[11px] text-text-muted'>
                 {count} selected

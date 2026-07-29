@@ -1,6 +1,6 @@
 import type { UserUpdate } from '@/api';
 import { UpdateUserForm } from '@/features/auth/components/update-user-form';
-import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
+import { apiErrorMessage } from '@/lib/api-error-message';
 import { updateUser } from '@/features/users/api/update-users';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router';

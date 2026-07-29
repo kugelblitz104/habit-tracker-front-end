@@ -21,10 +21,8 @@ export const RecentEntries = ({ profileId }: RecentEntriesProps) => {
     return (
         <>
             <TimeLogSection
-                className='mt-8'
+                variant='recent'
                 title='Recent entries'
-                titleClassName='font-mono text-[11.5px] uppercase tracking-[0.16em] text-text-muted'
-                headerClassName='mb-3 flex items-center justify-between'
                 headerActions={
                     <button
                         type='button'
@@ -37,16 +35,13 @@ export const RecentEntries = ({ profileId }: RecentEntriesProps) => {
                         <Plus size={12} />
                     </button>
                 }
-                summaryClassName='font-mono text-[11.5px] text-text-faint'
                 entriesQuery={entriesQuery}
                 totalSeconds={summaryQuery.data?.total_seconds ?? 0}
                 contextNameFor={contextNameFor}
                 projectFor={projectFor}
                 showProject
                 errorMessage='Failed to load time entries.'
-                errorClassName='font-mono text-[12px] text-danger'
                 emptyMessage='No time tracked yet. Start a timer above.'
-                emptyClassName='font-mono text-[12px] text-text-faint'
             />
             <ManualEntryForm
                 isOpen={addOpen}

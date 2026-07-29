@@ -1,6 +1,6 @@
 import { MENU_ITEM_CLASS, POPOVER_PANEL_CLASS, popoverPanelStyle } from '@/components/ui/menu';
+import { formFieldClass, formFieldStyle } from '@/components/ui/forms/form-field-styles';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import { formFieldClass, formFieldStyle } from './task-form-fields';
 
 export type ParentTaskOption = { id: number; title: string };
 

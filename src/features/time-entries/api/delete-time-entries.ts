@@ -1,6 +1,5 @@
 import { TimeEntriesService } from '@/api';
-import type { MutationConfig } from '@/lib/react-query';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { defineMutationHook } from '@/lib/react-query';
 import { invalidateTimeEntries } from './query-keys';
 
 export type DeleteTimeEntryInput = {
@@ -14,19 +13,6 @@ export const deleteTimeEntry = async ({ entryId }: DeleteTimeEntryInput): Promis
     await TimeEntriesService.deleteTimeEntryTimeEntriesEntryIdDelete(entryId);
 };
 
-type UseDeleteTimeEntryOptions = {
-    mutationConfig?: MutationConfig<typeof deleteTimeEntry>;
-};
-
-export const useDeleteTimeEntry = ({ mutationConfig }: UseDeleteTimeEntryOptions = {}) => {
-    const queryClient = useQueryClient();
-    const { onSuccess, ...restConfig } = mutationConfig ?? {};
-    return useMutation({
-        mutationFn: deleteTimeEntry,
-        onSuccess: (data, variables, ...args) => {
-            invalidateTimeEntries(queryClient, variables.profileId);
-            onSuccess?.(data, variables, ...args);
-        },
-        ...restConfig
-    });
-};
+export const useDeleteTimeEntry = defineMutationHook(deleteTimeEntry, (queryClient, _data, variables) => {
+    invalidateTimeEntries(queryClient, variables.profileId);
+});

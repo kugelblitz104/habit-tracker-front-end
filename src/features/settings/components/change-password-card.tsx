@@ -1,12 +1,11 @@
+import { primaryButtonClass, primaryButtonStyle } from '@/components/ui/buttons/button-styles';
 import {
-    settingsFieldLabelClass,
-    settingsFieldLabelStyle,
-    settingsInputClass,
-    settingsInputStyle,
-    settingsPrimaryButtonClass,
-    settingsPrimaryButtonStyle
-} from '@/features/settings/components/settings-card';
-import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
+    fieldLabelClass,
+    fieldLabelStyle,
+    themedInputClass,
+    themedInputStyle
+} from '@/components/ui/forms/input-styles';
+import { apiErrorMessage } from '@/lib/api-error-message';
 import { updateUser } from '@/features/users/api/update-users';
 import { useAuth } from '@/lib/auth-context';
 import { validationPatterns } from '@/lib/input-sanitization';
@@ -79,8 +78,8 @@ export const ChangePasswordCard = () => {
                         <div key={field.name}>
                             <label
                                 htmlFor={`password-${field.name}`}
-                                className={settingsFieldLabelClass}
-                                style={settingsFieldLabelStyle}
+                                className={fieldLabelClass}
+                                style={fieldLabelStyle}
                             >
                                 {field.label}
                             </label>
@@ -88,9 +87,9 @@ export const ChangePasswordCard = () => {
                                 id={`password-${field.name}`}
                                 type='password'
                                 autoComplete='new-password'
-                                className={settingsInputClass}
+                                className={themedInputClass}
                                 style={{
-                                    ...settingsInputStyle,
+                                    ...themedInputStyle,
                                     ...(field.error
                                         ? { borderColor: 'var(--color-danger)' }
                                         : undefined)
@@ -113,8 +112,8 @@ export const ChangePasswordCard = () => {
                 <button
                     type='submit'
                     disabled={isSubmitting}
-                    className={settingsPrimaryButtonClass}
-                    style={settingsPrimaryButtonStyle}
+                    className={primaryButtonClass}
+                    style={primaryButtonStyle}
                 >
                     {isSubmitting ? 'Changing...' : 'Change password'}
                 </button>

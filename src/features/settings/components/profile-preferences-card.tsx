@@ -2,7 +2,7 @@ import type { ProfileRead } from '@/api';
 import { EmberToggle } from '@/components/ui/forms/ember-toggle';
 import { ThemedMenuItems } from '@/components/ui/menu';
 import { useUpdateProfile } from '@/features/profiles/api/update-profiles';
-import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
+import { apiErrorMessage } from '@/lib/api-error-message';
 import { ProfileSelector } from '@/features/settings/components/profile-selector';
 import { PomodoroSettingsGroup } from '@/features/time-entries/components/pomodoro-settings-group';
 import { Menu, MenuButton, MenuItem } from '@headlessui/react';

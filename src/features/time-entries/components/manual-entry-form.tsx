@@ -1,6 +1,9 @@
 import { BaseModal } from '@/components/ui/modals/base-modal';
-import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
+import { formFieldClass, formFieldStyle } from '@/components/ui/forms/form-field-styles';
+import { apiErrorMessage } from '@/lib/api-error-message';
+import { toDateTimeLocal } from '@/lib/date-utils';
 import { TimeEntryKind } from '@/types/types';
+import type { CSSProperties } from 'react';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useCreateTimeEntry } from '../api/create-time-entries';
@@ -15,25 +18,14 @@ type ManualEntryFormProps = {
     profileId: number | null | undefined;
 };
 
-const pad = (n: number) => String(n).padStart(2, '0');
-
 /** datetime-local value for "now + offsetMinutes" (local wall time). */
-const nowLocalInput = (offsetMinutes = 0): string => {
-    const d = new Date(Date.now() + offsetMinutes * 60_000);
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-        d.getHours()
-    )}:${pad(d.getMinutes())}`;
-};
+const nowLocalInput = (offsetMinutes = 0): string =>
+    toDateTimeLocal(new Date(Date.now() + offsetMinutes * 60_000));
 
 const fieldLabelClass =
     'mb-1 block font-mono text-[10px] uppercase tracking-[0.1em] text-text-faint';
-const inputClass =
-    'w-full rounded-button border px-2.5 py-1.5 font-mono text-[12px] text-text-secondary outline-none transition-colors focus-visible:ring-1 focus-visible:ring-now-accent';
-const inputStyle: React.CSSProperties = {
-    backgroundColor: 'var(--surface-input-bg)',
-    borderColor: 'var(--surface-input-border)',
-    colorScheme: 'dark'
-};
+const inputClass = formFieldClass;
+const inputStyle: CSSProperties = { ...formFieldStyle, colorScheme: 'dark' };
 
 /**
  * "Add entry" modal for logging an already-completed time entry with an

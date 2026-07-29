@@ -1,11 +1,10 @@
 import { useState } from 'react';
+import { DetailPane } from '@/components/layouts/detail-pane';
 import { TaskDetailBody } from './task-detail-body';
 
 type TaskDetailPaneProps = {
     /** The selected task id, or null when nothing is open. */
     taskId: number | null;
-    /** Wide layout (lg/xl) is the only layout this pane renders in. */
-    isWide: boolean;
     onClose: () => void;
     /** Open straight into the edit form (context menu "Edit…"). */
     defaultEditing?: boolean;
@@ -31,37 +30,26 @@ export const TaskDetailPane = ({
     if (taskId == null) return null;
 
     return (
-        // Fills (and clips) the grid pane track that animates 0 -> 480px while
-        // opening; the fixed-width inner keeps the content laid out at its final
-        // 480px throughout. `pane-rise` floats it up into place — it lives on the
-        // scroll container itself (not the inner) so the transform doesn't inflate
-        // scrollHeight and flash a scrollbar mid-rise. Keyed by taskId so picking
-        // a different task while the pane is open remounts it and replays the rise.
-        <aside
-            key={taskId}
-            className='pane-rise sticky top-7 max-h-[calc(100vh-3.5rem)] w-full min-w-0 overflow-x-hidden overflow-y-auto'
-        >
-            <div className='w-[480px]'>
-                <div
-                    className={editing ? 'p-4' : 'rounded-card border p-4'}
-                    style={
-                        editing
-                            ? undefined
-                            : {
-                                  backgroundColor: 'var(--surface-card-bg)',
-                                  borderColor: 'var(--surface-card-border)'
-                              }
-                    }
-                >
-                    <TaskDetailBody
-                        key={`${taskId}-${defaultEditing ? 'edit' : 'view'}`}
-                        taskId={taskId}
-                        onClose={onClose}
-                        defaultEditing={defaultEditing}
-                        onEditingChange={setEditing}
-                    />
-                </div>
+        <DetailPane key={taskId}>
+            <div
+                className={editing ? 'p-4' : 'rounded-card border p-4'}
+                style={
+                    editing
+                        ? undefined
+                        : {
+                              backgroundColor: 'var(--surface-card-bg)',
+                              borderColor: 'var(--surface-card-border)'
+                          }
+                }
+            >
+                <TaskDetailBody
+                    key={`${taskId}-${defaultEditing ? 'edit' : 'view'}`}
+                    taskId={taskId}
+                    onClose={onClose}
+                    defaultEditing={defaultEditing}
+                    onEditingChange={setEditing}
+                />
             </div>
-        </aside>
+        </DetailPane>
     );
 };

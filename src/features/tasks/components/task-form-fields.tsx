@@ -1,3 +1,8 @@
+import {
+    formFieldClass,
+    formFieldStyle,
+    formLabelClass
+} from '@/components/ui/forms/form-field-styles';
 import { X } from 'lucide-react';
 import { useId } from 'react';
 import { PRIORITY_LEVELS } from '../utils/priority-config';
@@ -5,32 +10,13 @@ import { ParentTaskAutocomplete, type ParentTaskOption } from './parent-task-aut
 import { TimePicker } from './time-picker';
 
 /**
- * Shared field primitives for task forms. Extracted from `TaskEditor` so the
+ * Shared field components for task forms. Extracted from `TaskEditor` so the
  * quick-capture expanded form (`TaskCaptureForm`) renders visually identical
- * fields; both forms import from here.
+ * fields; both forms import from here. The underlying style tokens
+ * (`formLabelClass`/`formFieldClass`/`formFieldStyle`/`selectOptionStyle`) live
+ * in `components/ui/forms/form-field-styles` — this file re-uses them but the
+ * field components themselves stay here.
  */
-
-export const formLabelClass =
-    'mb-1 block font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-text-faint';
-
-export const formFieldClass =
-    'w-full rounded-button border px-2.5 py-1.5 font-mono text-[12px] text-text-secondary outline-none transition-colors focus-visible:ring-1 focus-visible:ring-now-accent';
-
-export const formFieldStyle: React.CSSProperties = {
-    backgroundColor: 'var(--surface-input-bg)',
-    borderColor: 'var(--surface-input-border)'
-};
-
-/**
- * Explicit colors for native <option>s. Some platforms render the option popup
- * with the system (white) background regardless of the select's color-scheme,
- * which left our light option text invisible (white-on-white). Setting an
- * opaque dark background + light text on each option fixes it everywhere.
- */
-export const selectOptionStyle: React.CSSProperties = {
-    backgroundColor: '#1c1710',
-    color: 'var(--color-text-primary)'
-};
 
 // Full-size, labeled priority levels (shared taxonomy — see priority-config).
 // Each carries a short description of its effect, since priority feeds the

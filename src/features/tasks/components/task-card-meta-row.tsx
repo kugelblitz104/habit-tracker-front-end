@@ -2,7 +2,7 @@ import type { ProjectRead, TaskRead } from '@/api';
 import { TaskStatus } from '@/types/types';
 import { ChevronRight, ListChecks } from 'lucide-react';
 import { Link } from 'react-router';
-import type { Countdown, CountdownUrgency } from '../utils/countdown';
+import type { Countdown, CountdownUrgency } from '@/features/countdowns/utils/countdown';
 import { STATUS_META, type StatusMeta } from './status-config';
 
 /** Due-chip styling per urgency: overdue + due-now get a filled chip; the

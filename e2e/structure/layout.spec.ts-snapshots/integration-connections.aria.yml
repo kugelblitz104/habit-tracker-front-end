@@ -1,0 +1,6 @@
+- text: Task trackers Azure DevOps & GitHub — pull your open items in, publish tasks out · for E2E Golden Structure GitHub · GitHub issues assigned to you
+- button "Sync \"Structure GitHub\" now": Sync now
+- button "Edit \"Structure GitHub\""
+- button "Remove \"Structure GitHub\""
+- button "Connect a task tracker"
+- paragraph: Uses a personal access token you create in Azure DevOps or GitHub — stored encrypted, never shown again.

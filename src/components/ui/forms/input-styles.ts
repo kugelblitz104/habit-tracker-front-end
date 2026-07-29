@@ -5,6 +5,12 @@ import type { CSSProperties } from 'react';
  * connections, new-profile, auth pages). Live in `components/ui` because they're
  * used across features; `settings-card` re-exports them under their historical
  * `settings*` names for compatibility.
+ *
+ * Not the same design tier as `form-field-styles.ts`'s `formFieldClass`/
+ * `compactFieldClass` (task/countdown/time-entry forms): different radius,
+ * padding, font family and size, and the surface colors genuinely differ too
+ * (`rgba(255,255,255,.04)`/`.1` here vs `--surface-input-bg`/`--surface-input-
+ * border` = `.045`/`.09` there). Two deliberate tiers — don't unify them.
  */
 
 /** Mono uppercase section-label color from the Settings design frame. */

@@ -1,15 +1,16 @@
+import { formFieldClass, formFieldStyle } from '@/components/ui/forms/form-field-styles';
+import { TaskStatus } from '@/types/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { Trash2 } from 'lucide-react';
 import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { toast } from 'react-toastify';
-import { TaskStatus } from '@/types/types';
 import { useCreateTask } from '../api/create-tasks';
 import { useDeleteTask } from '../api/delete-tasks';
 import { useTasks } from '../api/get-tasks';
+import { taskKeys } from '../api/query-keys';
 import { useUpdateTask } from '../api/update-tasks';
 import { sortSubtasks } from '../utils/subtasks';
 import { SubtaskRow } from './subtask-row';
-import { formFieldClass, formFieldStyle } from './task-form-fields';
 
 type TaskDetailSubtasksProps = {
     /** Profile the subtasks belong to (undefined while the parent is loading). */
@@ -51,7 +52,7 @@ export const TaskDetailSubtasks = ({ profileId, parentId }: TaskDetailSubtasksPr
     // Refresh this parent's single-task query so its subtask counts stay current
     // (add/delete responses don't carry the parent's id).
     const invalidateParent = () =>
-        queryClient.invalidateQueries({ queryKey: ['task', { taskId: parentId }] });
+        queryClient.invalidateQueries({ queryKey: taskKeys.detail(parentId) });
 
     const changeStatus = (subtaskId: number, status: TaskStatus) => {
         updateTask.mutate(

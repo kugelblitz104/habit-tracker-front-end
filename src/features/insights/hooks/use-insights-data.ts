@@ -49,7 +49,7 @@ export type HabitPerf = {
     id: number;
     name: string;
     color: string;
-    /** Windowed completion rate, 0–100 (auto-skip aware, from `kpi-utils`). */
+    /** Windowed completion rate, 0–100 (completed days only, from `kpi-utils`). */
     completionRate: number;
     /** Current streak length (streaks are inherently not windowed). */
     currentStreak: number;
@@ -266,7 +266,8 @@ export const useInsightsData = (rangeDays: RangeDays): InsightsData => {
             timeTruncated: (timeQuery.data?.total ?? 0) > entries.length
         };
         // trackerKey stands in for the tracker arrays (new refs each render).
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // habitsQuery.data is deliberately omitted: activeHabits is its filtered,
+        // memoized derivative and already re-triggers this memo when it changes.
     }, [
         rangeDays,
         weekStartMonday,

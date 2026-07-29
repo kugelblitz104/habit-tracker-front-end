@@ -1,12 +1,11 @@
 import type { UserRead, UserUpdate } from '@/api';
+import { primaryButtonClass, primaryButtonStyle } from '@/components/ui/buttons/button-styles';
 import {
-    settingsFieldLabelClass,
-    settingsFieldLabelStyle,
-    settingsInputClass,
-    settingsInputStyle,
-    settingsPrimaryButtonClass,
-    settingsPrimaryButtonStyle
-} from '@/features/settings/components/settings-card';
+    fieldLabelClass,
+    fieldLabelStyle,
+    themedInputClass,
+    themedInputStyle
+} from '@/components/ui/forms/input-styles';
 import {
     sanitizeEmail,
     sanitizeFormData,
@@ -49,7 +48,7 @@ const FIELDS: FieldConfig[] = [
  *
  * Not rebuilt on `TextField` (components/ui/forms/text-field.tsx): that field
  * uses its own token set (mono uppercase label + `rounded-button`/`--surface-
- * input-*` classes) rather than the settings input tokens used here
+ * input-*` classes) rather than the themed input tokens used here
  * (`rounded-[9px]` + `rgba(255,255,255,.04)` surface, font-display). Swapping
  * would visibly change this form, so the hand-rolled label+input+error markup
  * stays as-is.
@@ -93,17 +92,17 @@ export const UpdateUserForm = ({ user, handleUpdateUser }: UpdateUserFormProps) 
                         <div key={field.name}>
                             <label
                                 htmlFor={`account-${field.name}`}
-                                className={settingsFieldLabelClass}
-                                style={settingsFieldLabelStyle}
+                                className={fieldLabelClass}
+                                style={fieldLabelStyle}
                             >
                                 {field.label}
                             </label>
                             <input
                                 id={`account-${field.name}`}
                                 type={field.type ?? 'text'}
-                                className={settingsInputClass}
+                                className={themedInputClass}
                                 style={{
-                                    ...settingsInputStyle,
+                                    ...themedInputStyle,
                                     ...(fieldError
                                         ? { borderColor: 'var(--color-danger)' }
                                         : undefined)
@@ -124,11 +123,7 @@ export const UpdateUserForm = ({ user, handleUpdateUser }: UpdateUserFormProps) 
                     );
                 })}
             </div>
-            <button
-                type='submit'
-                className={settingsPrimaryButtonClass}
-                style={settingsPrimaryButtonStyle}
-            >
+            <button type='submit' className={primaryButtonClass} style={primaryButtonStyle}>
                 Save changes
             </button>
         </form>

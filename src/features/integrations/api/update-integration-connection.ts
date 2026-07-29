@@ -1,7 +1,6 @@
 import type { IntegrationConnectionRead, IntegrationConnectionUpdate } from '@/api';
 import { IntegrationsService } from '@/api';
-import type { MutationConfig } from '@/lib/react-query';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { defineMutationHook } from '@/lib/react-query';
 
 type UpdateIntegrationConnectionInput = {
     connectionId: number;
@@ -18,21 +17,9 @@ export const updateIntegrationConnection = async ({
     );
 };
 
-type UseUpdateIntegrationConnectionOptions = {
-    mutationConfig?: MutationConfig<typeof updateIntegrationConnection>;
-};
-
-export const useUpdateIntegrationConnection = ({
-    mutationConfig
-}: UseUpdateIntegrationConnectionOptions = {}) => {
-    const queryClient = useQueryClient();
-    const { onSuccess, ...restConfig } = mutationConfig ?? {};
-    return useMutation({
-        mutationFn: updateIntegrationConnection,
-        onSuccess: (data, ...args) => {
-            queryClient.invalidateQueries({ queryKey: ['integration-connections'] });
-            onSuccess?.(data, ...args);
-        },
-        ...restConfig
-    });
-};
+export const useUpdateIntegrationConnection = defineMutationHook(
+    updateIntegrationConnection,
+    (queryClient) => {
+        queryClient.invalidateQueries({ queryKey: ['integration-connections'] });
+    }
+);

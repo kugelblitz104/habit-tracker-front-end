@@ -17,16 +17,12 @@ export const ProjectTimeLog = ({ profileId, projectId }: ProjectTimeLogProps) =>
 
     return (
         <TimeLogSection
-            className='mt-[30px]'
+            variant='project'
             title='Time log'
-            titleClassName='font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-text-muted'
-            summaryClassName='font-mono text-[11px] text-text-faint'
             entriesQuery={entriesQuery}
             contextNameFor={contextNameFor}
             errorMessage='Failed to load time log.'
-            errorClassName='font-mono text-[12px] text-danger'
             emptyMessage='No time tracked for this project yet.'
-            emptyClassName='font-mono text-[12px] text-text-faint'
         />
     );
 };

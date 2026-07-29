@@ -1,37 +1,36 @@
 import type { CountdownRead } from '@/api';
-import { AppHeader } from '@/components/layouts/app-header';
 import { BaseModal } from '@/components/ui/modals/base-modal';
+import { DetailPane } from '@/components/layouts/detail-pane';
+import { PageShell } from '@/components/layouts/page-shell';
+import { QueryState } from '@/components/ui/query-state';
+import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
 import { useCreateCountdown } from '@/features/countdowns/api/create-countdowns';
 import { useDeleteCountdown } from '@/features/countdowns/api/delete-countdowns';
 import { useCountdowns } from '@/features/countdowns/api/get-countdowns';
 import { useUpdateCountdown } from '@/features/countdowns/api/update-countdowns';
 import { CountdownCard } from '@/features/countdowns/components/countdown-card';
-import { selectOptionStyle } from '@/features/tasks/components/task-form-fields';
+import { compactFieldClass, compactFieldStyle } from '@/components/ui/forms/form-field-styles';
+import { SelectOption } from '@/components/ui/forms/select-option';
 import {
     COUNTDOWN_GROUPS,
     getCountdown,
     REPEAT_OPTIONS,
     type Countdown,
     type CountdownRepeat
-} from '@/features/tasks/utils/countdown';
+} from '@/features/countdowns/utils/countdown';
 import { TaskSelect } from '@/features/time-entries/components/task-select';
 import { useAuth } from '@/lib/auth-context';
-import { PAGE_MAX_WIDTH, PAGE_MAX_WIDTH_PANE, PAGE_WIDTH_TRANSITION, paneRowClass } from '@/lib/layout';
 import { useNow } from '@/lib/use-now';
 import { useResponsiveLayout } from '@/lib/use-responsive-layout';
 import { Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
-const inputClass =
-    'rounded-button border px-2 py-1 font-mono text-[12px] text-text-secondary outline-none transition-colors focus-visible:ring-1 focus-visible:ring-now-accent placeholder:text-text-faint';
-const inputStyle: React.CSSProperties = {
-    backgroundColor: 'var(--surface-input-bg)',
-    borderColor: 'var(--surface-input-border)',
-    colorScheme: 'dark'
-};
+const inputClass = `${compactFieldClass} placeholder:text-text-faint`;
+const inputStyle = compactFieldStyle;
 const GRID_CLASS = 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3';
-const labelCls = 'mb-1 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-text-faint';
+const labelCls =
+    'mb-1 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-text-faint';
 
 /** Create/edit form for a countdown. `initial` present = edit; absent = create. */
 const CountdownForm = ({
@@ -144,9 +143,9 @@ const CountdownForm = ({
                     style={inputStyle}
                 >
                     {REPEAT_OPTIONS.map((o) => (
-                        <option key={o.value} value={o.value} style={selectOptionStyle}>
+                        <SelectOption key={o.value} value={o.value}>
                             {o.label}
-                        </option>
+                        </SelectOption>
                     ))}
                 </select>
                 {repeat !== 'none' && (
@@ -329,7 +328,12 @@ export const CountdownDashboard = () => {
         return [...map.entries()]
             .map(([name, entry]) => {
                 entry.items.sort((a, b) => a.calc.dueMs - b.calc.dueMs);
-                return { name, color: entry.color, items: entry.items, soonest: entry.items[0]!.calc.dueMs };
+                return {
+                    name,
+                    color: entry.color,
+                    items: entry.items,
+                    soonest: entry.items[0]!.calc.dueMs
+                };
             })
             .sort((a, b) => a.soonest - b.soonest);
     }, [items]);
@@ -363,183 +367,170 @@ export const CountdownDashboard = () => {
     ) : null;
 
     return (
-        <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
-            <AppHeader maxWidthClass={showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH} />
-            <div
-                className={`mx-auto px-5 py-7 md:px-7 ${PAGE_WIDTH_TRANSITION} ${showPane ? PAGE_MAX_WIDTH_PANE : PAGE_MAX_WIDTH}`}
-            >
-                <div className={paneRowClass(isWide, showPane, 400)}>
-                    <div className='min-w-0 flex-1'>
-                {/* flex-wrap: the grouping toggle + "New countdown" are shrink-0
-                    and together outgrow a phone-width row, so they drop to their
-                    own line instead of pushing the page sideways. */}
-                <header className='mb-[24px] flex flex-wrap items-start justify-between gap-3'>
-                    <div className='min-w-0'>
-                        <h1 className='font-display text-[23px] font-bold tracking-[-0.01em] text-text-primary'>
-                            Countdown
-                        </h1>
-                        <div className='mt-1.5 flex flex-wrap items-center gap-2 font-mono text-[11px]'>
-                            <span className='text-text-muted'>
-                                {total} {total === 1 ? 'countdown' : 'countdowns'}
-                            </span>
-                            {overdueCount > 0 && (
-                                <>
-                                    <span className='text-text-faint'>·</span>
-                                    <span style={{ color: 'var(--color-danger)' }}>
-                                        {overdueCount} overdue
-                                    </span>
-                                </>
-                            )}
+        <PageShell
+            isWide={isWide}
+            showPane={showPane}
+            paneWidth={400}
+            pane={
+                showPane && (
+                    <DetailPane
+                        key={editing?.id ?? 'new'}
+                        innerClassName='w-[400px] rounded-card border p-4'
+                        innerStyle={CARD_SURFACE_STYLE}
+                    >
+                        <div className='mb-3 flex items-center justify-between'>
+                            <h2 className='font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-habit-label'>
+                                {paneTitle}
+                            </h2>
+                            <button
+                                type='button'
+                                onClick={closePane}
+                                aria-label='Close'
+                                className='text-text-faint transition-colors hover:text-text-secondary'
+                            >
+                                <X size={15} />
+                            </button>
                         </div>
-                    </div>
-                    {!disabled && (
-                        <div className='flex shrink-0 items-center gap-2'>
-                            {total > 0 && (
-                                <span
-                                    className='flex items-center gap-0.5 rounded-chip border p-0.5'
-                                    style={{ borderColor: 'var(--surface-input-border)' }}
-                                >
-                                    {(['time', 'category'] as const).map((mode) => {
-                                        const selected = groupMode === mode;
-                                        return (
-                                            <button
-                                                key={mode}
-                                                type='button'
-                                                onClick={() => setGroupMode(mode)}
-                                                aria-pressed={selected}
-                                                className='rounded-chip px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] transition-colors'
-                                                style={{
-                                                    backgroundColor: selected
-                                                        ? 'rgba(255,255,255,.06)'
-                                                        : 'transparent',
-                                                    color: selected
-                                                        ? 'var(--color-now-accent)'
-                                                        : 'var(--color-text-muted)'
-                                                }}
-                                            >
-                                                {mode}
-                                            </button>
-                                        );
-                                    })}
+                        {formEl}
+                    </DetailPane>
+                )
+            }
+            overlay={
+                // Narrow screens have no room for a side pane — use a modal.
+                !isWide && (
+                    <BaseModal
+                        isOpen={paneOpen}
+                        onClose={closePane}
+                        title={paneTitle}
+                        panelClassName='max-w-lg'
+                    >
+                        {formEl}
+                    </BaseModal>
+                )
+            }
+        >
+            {/* flex-wrap: the grouping toggle + "New countdown" are shrink-0
+                and together outgrow a phone-width row, so they drop to their
+                own line instead of pushing the page sideways. */}
+            <header className='mb-[24px] flex flex-wrap items-start justify-between gap-3'>
+                <div className='min-w-0'>
+                    <h1 className='font-display text-[23px] font-bold tracking-[-0.01em] text-text-primary'>
+                        Countdown
+                    </h1>
+                    <div className='mt-1.5 flex flex-wrap items-center gap-2 font-mono text-[11px]'>
+                        <span className='text-text-muted'>
+                            {total} {total === 1 ? 'countdown' : 'countdowns'}
+                        </span>
+                        {overdueCount > 0 && (
+                            <>
+                                <span className='text-text-faint'>·</span>
+                                <span style={{ color: 'var(--color-danger)' }}>
+                                    {overdueCount} overdue
                                 </span>
-                            )}
-                            {activeProfileId && (
-                                <button
-                                    type='button'
-                                    onClick={() => setCreating(true)}
-                                    className='flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11px] text-text-secondary transition-colors hover:text-text-primary'
-                                    style={inputStyle}
-                                >
-                                    <Plus size={13} />
-                                    New countdown
-                                </button>
-                            )}
-                        </div>
-                    )}
-                </header>
-
-                {disabled ? (
-                    <p className='font-mono text-[12px] text-text-faint'>
-                        Countdowns are turned off for this profile. Enable them in Settings.
-                    </p>
-                ) : (
-                    <>
-                        {countdownsQuery.isError ? (
-                            <p className='font-mono text-[12px] text-danger'>
-                                Failed to load countdowns.
-                            </p>
-                        ) : countdownsQuery.isLoading ? (
-                            <p className='font-mono text-[12px] text-text-faint'>Loading…</p>
-                        ) : total === 0 ? (
-                            <p className='font-mono text-[12px] text-text-faint'>
-                                No countdowns yet. Add one to track a deadline — with or without a task.
-                            </p>
-                        ) : (
-                            <div className='flex flex-col gap-[26px]'>
-                                {sections.map((section) => {
-                                    if (section.rows.length === 0) return null;
+                            </>
+                        )}
+                    </div>
+                </div>
+                {!disabled && (
+                    <div className='flex shrink-0 items-center gap-2'>
+                        {total > 0 && (
+                            <span
+                                className='flex items-center gap-0.5 rounded-chip border p-0.5'
+                                style={{ borderColor: 'var(--surface-input-border)' }}
+                            >
+                                {(['time', 'category'] as const).map((mode) => {
+                                    const selected = groupMode === mode;
                                     return (
-                                        <section key={section.key}>
-                                            <div className='mb-2.5 flex items-center gap-2'>
-                                                <span
-                                                    className='h-2 w-2 rounded-full'
-                                                    style={{ backgroundColor: section.color }}
-                                                />
-                                                <h2 className='font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-text-muted'>
-                                                    {section.label}
-                                                </h2>
-                                                <span className='font-mono text-[11px] text-text-faint'>
-                                                    {section.rows.length}
-                                                </span>
-                                            </div>
-                                            <div className={GRID_CLASS}>
-                                                {section.rows.map(({ countdown, calc }) => (
-                                                    <CountdownGridItem
-                                                        key={countdown.id}
-                                                        countdown={countdown}
-                                                        calc={calc}
-                                                        now={now}
-                                                        onEdit={() => setEditing(countdown)}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </section>
+                                        <button
+                                            key={mode}
+                                            type='button'
+                                            onClick={() => setGroupMode(mode)}
+                                            aria-pressed={selected}
+                                            className='rounded-chip px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] transition-colors'
+                                            style={{
+                                                backgroundColor: selected
+                                                    ? 'rgba(255,255,255,.06)'
+                                                    : 'transparent',
+                                                color: selected
+                                                    ? 'var(--color-now-accent)'
+                                                    : 'var(--color-text-muted)'
+                                            }}
+                                        >
+                                            {mode}
+                                        </button>
                                     );
                                 })}
-                            </div>
+                            </span>
                         )}
-                    </>
-                )}
-                    </div>
-
-                    {showPane && (
-                        // Fills (and clips) the grid pane track that animates
-                        // 0 -> 400px; the fixed-width card inner keeps its layout
-                        // steady. `pane-rise` (on the scroll container, so its
-                        // transform doesn't flash a scrollbar) floats it up into
-                        // place, and the key replays that on switching targets.
-                        <aside
-                            key={editing?.id ?? 'new'}
-                            className='pane-rise sticky top-7 max-h-[calc(100vh-3.5rem)] w-full min-w-0 overflow-x-hidden overflow-y-auto'
-                        >
-                            <div
-                                className='w-[400px] rounded-card border p-4'
-                                style={{
-                                    backgroundColor: 'var(--surface-card-bg)',
-                                    borderColor: 'var(--surface-card-border)'
-                                }}
+                        {activeProfileId && (
+                            <button
+                                type='button'
+                                onClick={() => setCreating(true)}
+                                className='flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11px] text-text-secondary transition-colors hover:text-text-primary'
+                                style={inputStyle}
                             >
-                                <div className='mb-3 flex items-center justify-between'>
-                                    <h2 className='font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-habit-label'>
-                                        {paneTitle}
-                                    </h2>
-                                    <button
-                                        type='button'
-                                        onClick={closePane}
-                                        aria-label='Close'
-                                        className='text-text-faint transition-colors hover:text-text-secondary'
-                                    >
-                                        <X size={15} />
-                                    </button>
-                                </div>
-                                {formEl}
-                            </div>
-                        </aside>
-                    )}
-                </div>
-            </div>
+                                <Plus size={13} />
+                                New countdown
+                            </button>
+                        )}
+                    </div>
+                )}
+            </header>
 
-            {/* Narrow screens have no room for a side pane — use a modal. */}
-            {!isWide && (
-                <BaseModal
-                    isOpen={paneOpen}
-                    onClose={closePane}
-                    title={paneTitle}
-                    panelClassName='max-w-lg'
-                >
-                    {formEl}
-                </BaseModal>
+            {disabled ? (
+                <p className='font-mono text-[12px] text-text-faint'>
+                    Countdowns are turned off for this profile. Enable them in Settings.
+                </p>
+            ) : (
+                <>
+                    <QueryState
+                        isError={countdownsQuery.isError}
+                        isLoading={countdownsQuery.isLoading}
+                        errorMessage='Failed to load countdowns.'
+                        loadingMessage='Loading…'
+                        size='md'
+                    />
+                    {!countdownsQuery.isError && !countdownsQuery.isLoading && total === 0 && (
+                        <p className='font-mono text-[12px] text-text-faint'>
+                            No countdowns yet. Add one to track a deadline — with or without a task.
+                        </p>
+                    )}
+                    {!countdownsQuery.isError && !countdownsQuery.isLoading && total > 0 && (
+                        <div className='flex flex-col gap-[26px]'>
+                            {sections.map((section) => {
+                                if (section.rows.length === 0) return null;
+                                return (
+                                    <section key={section.key}>
+                                        <div className='mb-2.5 flex items-center gap-2'>
+                                            <span
+                                                className='h-2 w-2 rounded-full'
+                                                style={{ backgroundColor: section.color }}
+                                            />
+                                            <h2 className='font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-text-muted'>
+                                                {section.label}
+                                            </h2>
+                                            <span className='font-mono text-[11px] text-text-faint'>
+                                                {section.rows.length}
+                                            </span>
+                                        </div>
+                                        <div className={GRID_CLASS}>
+                                            {section.rows.map(({ countdown, calc }) => (
+                                                <CountdownGridItem
+                                                    key={countdown.id}
+                                                    countdown={countdown}
+                                                    calc={calc}
+                                                    now={now}
+                                                    onEdit={() => setEditing(countdown)}
+                                                />
+                                            ))}
+                                        </div>
+                                    </section>
+                                );
+                            })}
+                        </div>
+                    )}
+                </>
             )}
-        </div>
+        </PageShell>
     );
 };

@@ -1,4 +1,11 @@
 import type { ProjectRead, TaskRead } from '@/api';
+import {
+    CHART_CURSOR_FILL,
+    CHART_TOOLTIP_CONTENT_STYLE,
+    CHART_TOOLTIP_ITEM_STYLE,
+    CHART_TOOLTIP_LABEL_STYLE
+} from '@/components/ui/chart-theme';
+import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
 import { STATUS_META } from '@/features/tasks/components/status-config';
 import { PRIORITY_LEVELS } from '@/features/tasks/utils/priority-config';
 import { useTimeEntrySummary } from '@/features/time-entries/api/get-time-entries';
@@ -91,15 +98,10 @@ const ThroughputChart = ({ weeks, color }: { weeks: ThroughputWeek[]; color: str
                                 tickLine={false}
                             />
                             <Tooltip
-                                cursor={{ fill: 'rgba(255,255,255,0.04)' }}
-                                contentStyle={{
-                                    backgroundColor: 'var(--bg)',
-                                    border: '1px solid var(--surface-card-border)',
-                                    borderRadius: 8,
-                                    fontSize: 11
-                                }}
-                                labelStyle={{ color: 'var(--color-text-muted)' }}
-                                itemStyle={{ color: 'var(--color-text-secondary)' }}
+                                cursor={CHART_CURSOR_FILL}
+                                contentStyle={CHART_TOOLTIP_CONTENT_STYLE}
+                                labelStyle={CHART_TOOLTIP_LABEL_STYLE}
+                                itemStyle={CHART_TOOLTIP_ITEM_STYLE}
                                 formatter={(value) => [value ?? 0, 'completed']}
                                 labelFormatter={(label) => `Week of ${label}`}
                             />
@@ -151,13 +153,7 @@ export const ProjectAnalytics = ({ project, tasks }: { project: ProjectRead; tas
     }));
 
     return (
-        <section
-            className='mt-[30px] rounded-card border p-4'
-            style={{
-                backgroundColor: 'var(--surface-card-bg)',
-                borderColor: 'var(--surface-card-border)'
-            }}
-        >
+        <section className='mt-[30px] rounded-card border p-4' style={CARD_SURFACE_STYLE}>
             <button
                 type='button'
                 onClick={toggle}

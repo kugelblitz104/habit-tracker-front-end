@@ -12,8 +12,10 @@ import { deleteHabit } from '@/features/habits/api/delete-habits';
 import { getHabit } from '@/features/habits/api/get-habits';
 import { useHabitKpis } from '@/features/habits/api/get-habit-kpis';
 import { useHabitStreaks } from '@/features/habits/api/get-habit-streaks';
+import { habitKeys, invalidateHabits } from '@/features/habits/api/query-keys';
 import { updateHabit } from '@/features/habits/api/update-habits';
 import { getTrackersLite } from '@/features/trackers/api/get-trackers';
+import { invalidateHabitTrackers, trackerKeys } from '@/features/trackers/api/query-keys';
 import { useTrackerMutations } from '@/features/trackers/hooks/use-tracker-mutations';
 import {
     adaptKpisToServerShape,
@@ -57,7 +59,7 @@ export const useHabitDetailData = (habitId: number) => {
 
     // queries
     const habitQuery = useQuery({
-        queryKey: ['habit', { habitId }],
+        queryKey: habitKeys.detail(habitId),
         queryFn: () => getHabit(habitId),
         staleTime: 1000 * 60 // 1 minute
     });
@@ -97,14 +99,11 @@ export const useHabitDetailData = (habitId: number) => {
     // Reconcile the KPI/streak caches with the server once a mutation has persisted.
     // Also invalidate the trackers-lite/trackers caches so every other consumer of
     // this habit's trackers (the Today panel, the dashboard grid) picks up the
-    // change too — mirrors `invalidateTrackerCaches` in `use-tracker-toggle.ts`,
-    // which otherwise leaves those caches stale after a detail-view edit and can
-    // make the Today panel's auto-skip computation diverge from this view.
+    // change too — mirrors the invalidation in `use-tracker-toggle.ts`, which
+    // otherwise leaves those caches stale after a detail-view edit and can make
+    // the Today panel's auto-skip computation diverge from this view.
     const invalidateKpiCaches = useCallback(() => {
-        queryClient.invalidateQueries({ queryKey: ['kpis', { habitId }] });
-        queryClient.invalidateQueries({ queryKey: ['streaks', { habitId }] });
-        queryClient.invalidateQueries({ queryKey: ['trackers-lite', { habitId }] });
-        queryClient.invalidateQueries({ queryKey: ['trackers', { habitId }] });
+        invalidateHabitTrackers(queryClient, habitId);
     }, [habitId, queryClient]);
 
     // mutations
@@ -113,9 +112,9 @@ export const useHabitDetailData = (habitId: number) => {
             updateHabit(id, update),
         onSuccess: (data) => {
             setHabit(data);
-            queryClient.setQueryData(['habit', { habitId }], data);
+            queryClient.setQueryData(habitKeys.detail(habitId), data);
             queryClient.setQueriesData<{ habits: HabitRead[] }>(
-                { queryKey: ['habits'] },
+                { queryKey: habitKeys.all },
                 (oldData) => {
                     if (!oldData?.habits) return oldData;
                     return {
@@ -135,7 +134,7 @@ export const useHabitDetailData = (habitId: number) => {
         },
         onSettled: () => {
             // Background refresh to ensure consistency
-            queryClient.invalidateQueries({ queryKey: ['habits'] });
+            invalidateHabits(queryClient);
         }
     });
 
@@ -144,7 +143,7 @@ export const useHabitDetailData = (habitId: number) => {
         onSuccess: (_, deletedHabitId) => {
             // Remove habit from cache before navigating
             queryClient.setQueriesData<{ habits: HabitRead[] }>(
-                { queryKey: ['habits'] },
+                { queryKey: habitKeys.all },
                 (oldData) => {
                     if (!oldData?.habits) return oldData;
                     return {
@@ -155,11 +154,11 @@ export const useHabitDetailData = (habitId: number) => {
             );
             // Remove individual habit query from cache
             queryClient.removeQueries({
-                queryKey: ['habit', { habitId: deletedHabitId }]
+                queryKey: habitKeys.detail(deletedHabitId)
             });
             // Remove related tracker queries from cache
             queryClient.removeQueries({
-                queryKey: ['trackers-lite', { habitId: deletedHabitId }]
+                queryKey: trackerKeys.lite(deletedHabitId)
             });
             setIsDeleteModalOpen(false);
         }

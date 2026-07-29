@@ -1,5 +1,6 @@
 import type { ProjectRead, TaskRead } from '@/api';
 import { parseLocalDate } from '@/lib/date-utils';
+import { downloadText } from '@/lib/download';
 import { TaskStatus } from '@/types/types';
 import { STATUS_META } from '../components/status-config';
 import type { TaskSection } from './task-controls';
@@ -155,30 +156,6 @@ export const renderTasksMarkdown = ({
     return lines.join('\n') + '\n';
 };
 
-/** Lowercase and collapse non-alphanumeric runs to single dashes ("My Project!" -> "my-project"). */
-export const slugify = (value: string): string => {
-    const slug = value
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-    return slug || 'tasks';
-};
-
-/**
- * Trigger a browser download of `content` as a `.md` file. Same blob →
- * object-URL → anchor approach as `api/export-tasks.ts`'s backend export;
- * duplicated (rather than imported) since that module owns the *server*
- * export and this one is a view-aware client-side export with a different
- * input shape.
- */
-export const downloadMarkdownFile = (filename: string, content: string): void => {
-    const blob = new Blob([content], { type: 'text/markdown' });
-    const objectUrl = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = objectUrl;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(objectUrl);
-};
+/** Trigger a browser download of `content` as a `.md` file. */
+export const downloadMarkdownFile = (filename: string, content: string): void =>
+    downloadText(content, filename, 'text/markdown');

@@ -1,11 +1,12 @@
 import type { CountdownRead } from '@/api';
+import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
 import {
     countdownHero,
     groupColor,
     occurrenceLabel,
     repeatLabel,
     type Countdown
-} from '@/features/tasks/utils/countdown';
+} from '@/features/countdowns/utils/countdown';
 import { formatCompactTime, formatShortDate } from '@/features/tasks/utils/task-format';
 import { parseLocalDate } from '@/lib/date-utils';
 import { ExternalLink, Repeat } from 'lucide-react';
@@ -96,8 +97,7 @@ export const CountdownCard = ({ countdown, calc, now, to, linkState, actions }: 
 
     const className = 'relative flex min-w-0 flex-col rounded-card border p-4';
     const style: React.CSSProperties = {
-        backgroundColor: 'var(--surface-card-bg)',
-        borderColor: 'var(--surface-card-border)',
+        ...CARD_SURFACE_STYLE,
         borderLeft: `3px solid ${accent}`
     };
 

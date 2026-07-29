@@ -146,10 +146,23 @@ const getLongestStreakLength = (streaks: Streak[]): number => {
 };
 
 /**
- * Calculate the completion rate for a given period.
- * If `days` is provided, calculates the rate for that many days back from today.
- * Otherwise, calculates the overall rate since habit creation.
- * Auto-skipped dates count as completions.
+ * Calculate the completion rate for a given period, mirroring the backend's
+ * `habit_stats._completion_rate` exactly (see `services/habit_stats.py`).
+ *
+ * If `days` is provided, the window is `[today - (days - 1), today]` — `days`
+ * calendar days inclusive of both ends (so `days=30` covers exactly 30 days,
+ * not 31). Otherwise the window starts at the habit's effective start date.
+ * The habit start date is never used to clamp a `days`-based window, matching
+ * the backend, which passes its windowed start straight through.
+ *
+ * Only `TrackerStatus.COMPLETED` days count toward the numerator — a skipped
+ * or auto-skipped day is not a completion here. The denominator scales by
+ * `frequency / range` (`window_days * frequency / range`) rather than the raw
+ * day count, and the result is capped at 100%, so an "N per M days" habit that
+ * hits its target reads as fully complete.
+ *
+ * Returns a 0–100 percentage (the frontend's contract), not the backend's
+ * 0.0–1.0 fraction.
  */
 export const calculateCompletionRate = (
     trackers: (TrackerRead | TrackerLite)[],
@@ -161,16 +174,13 @@ export const calculateCompletionRate = (
     const today = new Date();
     const todayStr = toLocalDateString(today);
     const habitStartStr = getEffectiveStartDate(trackers, createdDate);
-    const habitStartDate = parseLocalDate(habitStartStr);
 
     let startDate: Date;
     if (days !== undefined) {
-        const daysAgo = new Date(today);
-        daysAgo.setDate(today.getDate() - days);
-        // Use the later of habit start date or days ago
-        startDate = daysAgo ? daysAgo : habitStartDate;
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - (days - 1));
     } else {
-        startDate = habitStartDate;
+        startDate = parseLocalDate(habitStartStr);
     }
 
     // Build a set of completed dates for quick lookup
@@ -180,33 +190,25 @@ export const calculateCompletionRate = (
             .map((t) => t.dated as string)
     );
 
-    const skippedDates = new Set(
-        trackers
-            .filter((t) => t.status === TrackerStatus.SKIPPED && t.dated)
-            .map((t) => t.dated as string)
-    );
-
-    // Count completions and total days by iterating through dates
-    let completions = 0;
-    let totalDays = 0;
+    // Count actual completions and window days by iterating through dates.
+    let actual = 0;
+    let windowDays = 0;
     let currentDate = new Date(startDate);
 
     while (toLocalDateString(currentDate) <= todayStr) {
-        const dateStr = toLocalDateString(currentDate);
-        totalDays++;
-
-        if (completedDates.has(dateStr) || skippedDates.has(dateStr)) {
-            completions++;
-        } else if (isAutoSkipped(currentDate, trackers, frequency, range)) {
-            completions++;
+        windowDays++;
+        if (completedDates.has(toLocalDateString(currentDate))) {
+            actual++;
         }
-
         currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    if (totalDays <= 0) return 0;
+    if (windowDays <= 0) return 0;
 
-    return (completions / totalDays) * 100;
+    const expected = (windowDays * frequency) / range;
+    if (expected <= 0) return 0;
+
+    return Math.min(1, actual / expected) * 100;
 };
 
 /**

@@ -1,5 +1,7 @@
 import type { ProjectRead } from '@/api';
 import { AppHeader } from '@/components/layouts/app-header';
+import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
+import { QueryState } from '@/components/ui/query-state';
 import { Switch } from '@headlessui/react';
 import { ProtectedRoute } from '@/features/auth/components/protected-route';
 import { useCreateProject } from '@/features/projects/api/create-projects';
@@ -27,10 +29,7 @@ const ProjectCard = ({ project }: { project: ProjectRead }) => {
             className={`flex items-center gap-3 rounded-card border p-4 transition-colors hover:bg-white/5 ${
                 project.archived ? 'opacity-60' : ''
             }`}
-            style={{
-                backgroundColor: 'var(--surface-card-bg)',
-                borderColor: 'var(--surface-card-border)'
-            }}
+            style={CARD_SURFACE_STYLE}
         >
             <span
                 className='inline-block h-3.5 w-3.5 shrink-0 rounded-sm'
@@ -128,13 +127,13 @@ function ProjectsContent() {
                     placeholder='Add a project'
                 />
 
-                {projectsQuery.isError && (
-                    <p className='font-mono text-[12px] text-danger'>Failed to load projects.</p>
-                )}
-
-                {projectsQuery.isLoading && (
-                    <p className='font-mono text-[12px] text-text-faint'>Loading projects…</p>
-                )}
+                <QueryState
+                    isError={projectsQuery.isError}
+                    isLoading={projectsQuery.isLoading}
+                    errorMessage='Failed to load projects.'
+                    loadingMessage='Loading projects…'
+                    size='md'
+                />
 
                 {!projectsQuery.isLoading && !projectsQuery.isError && allProjects.length === 0 && (
                     <p className='font-mono text-[12px] text-text-faint'>

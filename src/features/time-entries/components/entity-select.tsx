@@ -1,8 +1,5 @@
-import {
-    formFieldClass,
-    formFieldStyle,
-    selectOptionStyle
-} from '@/features/tasks/components/task-form-fields';
+import { formFieldClass, formFieldStyle } from '@/components/ui/forms/form-field-styles';
+import { SelectOption } from '@/components/ui/forms/select-option';
 
 export type EntitySelectOption = {
     value: number;
@@ -43,13 +40,11 @@ export const EntitySelect = ({
         className={`${formFieldClass} disabled:cursor-not-allowed disabled:opacity-60`}
         style={{ ...formFieldStyle, colorScheme: 'dark' }}
     >
-        <option style={selectOptionStyle} value=''>
-            {placeholder}
-        </option>
+        <SelectOption value=''>{placeholder}</SelectOption>
         {options.map((option) => (
-            <option style={selectOptionStyle} key={option.value} value={option.value}>
+            <SelectOption key={option.value} value={option.value}>
                 {option.indent ? `  └ ${option.label}` : option.label}
-            </option>
+            </SelectOption>
         ))}
     </select>
 );

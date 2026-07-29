@@ -1,3 +1,4 @@
+import { CARD_SURFACE_CLASS, CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
 import { formatHumanDuration } from '@/features/time-entries/utils/format-duration';
 import type { InsightsData } from '../hooks/use-insights-data';
 
@@ -7,13 +8,7 @@ const cardValueClass = 'font-display text-[26px] font-semibold leading-none text
 const cardSubClass = 'font-mono text-[11px] text-text-muted';
 
 const Card = ({ label, value, sub }: { label: string; value: string; sub?: string }) => (
-    <div
-        className='rounded-card border p-4'
-        style={{
-            backgroundColor: 'var(--surface-card-bg)',
-            borderColor: 'var(--surface-card-border)'
-        }}
-    >
+    <div className={CARD_SURFACE_CLASS} style={CARD_SURFACE_STYLE}>
         <h3 className={cardLabelClass}>{label}</h3>
         <div className='mt-2 flex items-baseline gap-2'>
             <span className={cardValueClass}>{value}</span>

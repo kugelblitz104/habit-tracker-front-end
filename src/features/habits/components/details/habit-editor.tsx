@@ -3,6 +3,7 @@ import { ColorPicker } from '@/components/ui/forms/color-picker';
 import { FrequencyPicker } from '@/components/ui/forms/frequency-picker';
 import { LabeledSwitch } from '@/components/ui/forms/labeled-switch';
 import { TextField } from '@/components/ui/forms/text-field';
+import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
 import {
     sanitizeFormData,
     sanitizeMultilineText,
@@ -120,13 +121,7 @@ export const HabitEditor = ({
                     <X size={16} />
                 </button>
             </div>
-            <div
-                className='flex flex-col gap-3 rounded-card border p-5'
-                style={{
-                    backgroundColor: 'var(--surface-card-bg)',
-                    borderColor: 'var(--surface-card-border)'
-                }}
-            >
+            <div className='flex flex-col gap-3 rounded-card border p-5' style={CARD_SURFACE_STYLE}>
                 <FormProvider {...methods}>
                     <form onSubmit={methods.handleSubmit(onSubmit)}>
                         <Fieldset>

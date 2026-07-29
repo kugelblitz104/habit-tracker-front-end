@@ -1,21 +1,25 @@
 import type { CalendarConnectionRead, ProfileRead } from '@/api';
 import { EmberToggle } from '@/components/ui/forms/ember-toggle';
-import { InlineConfirmAction } from '@/components/ui/inline-confirm-action';
 import { useCreateCalendarConnection } from '@/features/calendar/api/create-calendar-connections';
 import { useDeleteCalendarConnection } from '@/features/calendar/api/delete-calendar-connections';
 import { useCalendarConnections } from '@/features/calendar/api/get-calendar-connections';
 import { useUpdateCalendarConnection } from '@/features/calendar/api/update-calendar-connections';
-import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
-import { Pencil, Plus, Trash2, TriangleAlert } from 'lucide-react';
+import { apiErrorMessage } from '@/lib/api-error-message';
+import { Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
+import {
+    AddConnectionButton,
+    CONNECTION_PIP_CLASS,
+    CONNECTION_ROW_CLASS,
+    CONNECTION_ROW_STYLE,
+    ConnectionLastError,
+    ConnectionListState,
+    ConnectionRowActions,
+    ConnectionsSubtitle
+} from './connection-row';
 import { ConnectionForm, type ConnectionFormValues } from './connection-form';
 import { SettingsCard } from './settings-card';
-
-const connectionRowStyle = {
-    backgroundColor: 'rgba(255,255,255,.02)',
-    borderColor: 'rgba(255,255,255,.07)'
-} as const;
 
 const DEFAULT_NEW_COLOR = '#6f9fe0';
 
@@ -104,22 +108,17 @@ export const ConnectionsCard = ({ profile }: ConnectionsCardProps) => {
 
     return (
         <SettingsCard label='Connections'>
-            <div className='mb-2.5 text-[12px]' style={{ color: '#9a8f81' }}>
-                Calendars — read-only, into Today's schedule · for{' '}
-                <span className='font-semibold text-text-secondary-soft'>{profile.name}</span>
-            </div>
+            <ConnectionsSubtitle profileName={profile.name}>
+                Calendars — read-only, into Today's schedule
+            </ConnectionsSubtitle>
 
             <div className='mb-4 flex flex-col gap-2'>
-                {connectionsQuery.isLoading && (
-                    <div className='py-1 font-mono text-[11px] text-text-faint'>
-                        Loading calendars…
-                    </div>
-                )}
-                {connectionsQuery.isError && (
-                    <div className='py-1 font-mono text-[11px] text-danger'>
-                        Failed to load calendars
-                    </div>
-                )}
+                <ConnectionListState
+                    isLoading={connectionsQuery.isLoading}
+                    isError={connectionsQuery.isError}
+                    loadingMessage='Loading calendars…'
+                    errorMessage='Failed to load calendars'
+                />
 
                 {connections.map((connection) =>
                     editingId === connection.id ? (
@@ -139,11 +138,11 @@ export const ConnectionsCard = ({ profile }: ConnectionsCardProps) => {
                     ) : (
                         <div
                             key={connection.id}
-                            className='flex items-center gap-3 rounded-[10px] border px-3.5 py-[11px]'
-                            style={connectionRowStyle}
+                            className={CONNECTION_ROW_CLASS}
+                            style={CONNECTION_ROW_STYLE}
                         >
                             <span
-                                className='h-[9px] w-[9px] flex-none rounded-[3px]'
+                                className={CONNECTION_PIP_CLASS}
                                 style={{ backgroundColor: connection.color }}
                                 aria-hidden='true'
                             />
@@ -159,22 +158,14 @@ export const ConnectionsCard = ({ profile }: ConnectionsCardProps) => {
                                         </span>
                                     )}
                                 </div>
-                                {connection.last_error && (
-                                    <div className='mt-1 flex items-center gap-1 font-mono text-[11px] text-danger'>
-                                        <TriangleAlert size={11} className='flex-none' />
-                                        <span className='truncate'>{connection.last_error}</span>
-                                    </div>
-                                )}
+                                <ConnectionLastError message={connection.last_error} />
                             </div>
 
-                            <InlineConfirmAction
+                            <ConnectionRowActions
                                 isConfirming={confirmDeleteId === connection.id}
                                 onConfirm={() => deleteConnection.mutate(connection.id)}
                                 onCancel={() => setConfirmDeleteId(null)}
                                 pending={deleteConnection.isPending}
-                                confirmPrompt='Remove?'
-                                confirmButtonClassName='py-1'
-                                triggerClassName='flex items-center gap-1'
                             >
                                 <button
                                     type='button'
@@ -201,7 +192,7 @@ export const ConnectionsCard = ({ profile }: ConnectionsCardProps) => {
                                     size='sm'
                                     disabled={updateConnection.isPending}
                                 />
-                            </InlineConfirmAction>
+                            </ConnectionRowActions>
                         </div>
                     )
                 )}
@@ -228,15 +219,10 @@ export const ConnectionsCard = ({ profile }: ConnectionsCardProps) => {
                         onCancel={() => setAdding(false)}
                     />
                 ) : (
-                    <button
-                        type='button'
+                    <AddConnectionButton
+                        label='Connect a calendar'
                         onClick={() => setAdding(true)}
-                        className='flex items-center justify-center gap-2 rounded-[10px] border border-dashed p-2.5 text-[12.5px] text-text-muted transition-colors hover:text-text-secondary'
-                        style={{ borderColor: 'rgba(255,255,255,.12)' }}
-                    >
-                        <Plus size={14} />
-                        Connect a calendar
-                    </button>
+                    />
                 )}
             </div>
         </SettingsCard>

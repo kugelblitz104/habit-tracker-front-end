@@ -1,5 +1,6 @@
 import type { ProfileRead } from '@/api';
-import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
+import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
+import { apiErrorMessage } from '@/lib/api-error-message';
 import { TimeEntryKind } from '@/types/types';
 import { Coffee, Pause, Play, SkipForward } from 'lucide-react';
 import { useState } from 'react';
@@ -115,13 +116,7 @@ export const TimerPanel = ({ profile, profileId }: TimerPanelProps) => {
     }
 
     return (
-        <section
-            className='rounded-card border p-6 md:p-8'
-            style={{
-                backgroundColor: 'var(--surface-card-bg)',
-                borderColor: 'var(--surface-card-border)'
-            }}
-        >
+        <section className='rounded-card border p-6 md:p-8' style={CARD_SURFACE_STYLE}>
             {/* Mode segmented control — hidden while a session runs or a break counts down */}
             {!running && !onBreak && (
                 <div

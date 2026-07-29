@@ -1,8 +1,10 @@
 import type { TaskUpdate } from '@/api';
+import { invalidateProjects } from '@/features/projects/api/query-keys';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { deleteTask } from '../api/delete-tasks';
+import { invalidateTasks } from '../api/query-keys';
 import { updateTask } from '../api/update-tasks';
 
 const plural = (n: number) => (n === 1 ? 'task' : 'tasks');
@@ -20,9 +22,8 @@ export const useBulkTaskActions = () => {
     const [isPending, setIsPending] = useState(false);
 
     const invalidate = () => {
-        queryClient.invalidateQueries({ queryKey: ['tasks'] });
-        queryClient.invalidateQueries({ queryKey: ['projects'] });
-        queryClient.invalidateQueries({ queryKey: ['project'] });
+        invalidateTasks(queryClient);
+        invalidateProjects(queryClient);
     };
 
     const run = async (ids: number[], op: (id: number) => Promise<unknown>, verb: string) => {

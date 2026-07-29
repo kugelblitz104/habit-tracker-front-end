@@ -1,4 +1,4 @@
-import { getCountdown, type CountdownRepeat } from '@/features/tasks/utils/countdown';
+import { getCountdown, type CountdownRepeat } from '@/features/countdowns/utils/countdown';
 import { useAuth } from '@/lib/auth-context';
 import { useNow } from '@/lib/use-now';
 import { useEffect, useMemo, useState } from 'react';

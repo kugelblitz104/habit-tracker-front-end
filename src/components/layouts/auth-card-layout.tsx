@@ -1,3 +1,4 @@
+import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
 import type { ReactNode } from 'react';
 
 type AuthCardLayoutProps = {
@@ -25,13 +26,7 @@ export const AuthCardLayout = ({ subtitle, children }: AuthCardLayoutProps) => (
                     {subtitle}
                 </p>
             </header>
-            <div
-                className='rounded-card border p-5 md:p-6'
-                style={{
-                    backgroundColor: 'var(--surface-card-bg)',
-                    borderColor: 'var(--surface-card-border)'
-                }}
-            >
+            <div className='rounded-card border p-5 md:p-6' style={CARD_SURFACE_STYLE}>
                 {children}
             </div>
         </div>

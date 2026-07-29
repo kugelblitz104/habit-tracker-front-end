@@ -1,7 +1,6 @@
 import type { CalendarConnectionRead, CalendarConnectionUpdate } from '@/api';
 import { CalendarConnectionsService } from '@/api';
-import type { MutationConfig } from '@/lib/react-query';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { defineMutationHook } from '@/lib/react-query';
 
 export type UpdateCalendarConnectionInput = {
     connectionId: number;
@@ -18,22 +17,7 @@ export const updateCalendarConnection = async ({
     );
 };
 
-type UseUpdateCalendarConnectionOptions = {
-    mutationConfig?: MutationConfig<typeof updateCalendarConnection>;
-};
-
-export const useUpdateCalendarConnection = ({
-    mutationConfig
-}: UseUpdateCalendarConnectionOptions = {}) => {
-    const queryClient = useQueryClient();
-    const { onSuccess, ...restConfig } = mutationConfig ?? {};
-    return useMutation({
-        mutationFn: updateCalendarConnection,
-        onSuccess: (data, ...args) => {
-            queryClient.invalidateQueries({ queryKey: ['calendar-connections'] });
-            queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
-            onSuccess?.(data, ...args);
-        },
-        ...restConfig
-    });
-};
+export const useUpdateCalendarConnection = defineMutationHook(updateCalendarConnection, (queryClient) => {
+    queryClient.invalidateQueries({ queryKey: ['calendar-connections'] });
+    queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
+});

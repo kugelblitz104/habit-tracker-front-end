@@ -22,6 +22,13 @@ const PANE_OPEN_COLS: Record<number, string> = {
 };
 const PANE_CLOSED_COLS = 'grid-cols-[minmax(0,1fr)_0px]';
 
+// Fixed-width literals for a DetailPane's inner div — kept whole, next to the
+// grid-track literals above, so Tailwind's source scanner sees both.
+export const PANE_INNER_WIDTH: Record<400 | 480, string> = {
+    480: 'w-[480px]',
+    400: 'w-[400px]'
+};
+
 /**
  * Classes for the master-detail row. On wide screens it's a two-track grid whose
  * second (pane) track animates between 0 and `paneWidth`, so opening/closing the

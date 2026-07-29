@@ -1,15 +1,16 @@
 import type { ProfileRead } from '@/api';
+import { ghostButtonBorder, ghostButtonClass } from '@/components/ui/buttons/button-styles';
 import { InlineConfirmAction } from '@/components/ui/inline-confirm-action';
 import { useCreateProfile } from '@/features/profiles/api/create-profiles';
 import { useDeleteProfile } from '@/features/profiles/api/delete-profiles';
 import { ProfileAvatar } from '@/features/profiles/components/profile-avatar';
-import { apiErrorMessage } from '@/features/settings/lib/api-error-message';
+import { apiErrorMessage } from '@/lib/api-error-message';
 import { useAuth } from '@/lib/auth-context';
 import { Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { NewProfileForm } from './new-profile-form';
-import { SettingsCard, settingsGhostBorder, settingsGhostButtonClass } from './settings-card';
+import { SettingsCard } from './settings-card';
 
 /** Mono one-liner under the profile name, built from the feature flags. */
 const profileSummary = (profile: ProfileRead): string => {
@@ -117,8 +118,8 @@ export const ProfilesCard = () => {
                                     <button
                                         type='button'
                                         onClick={() => setActiveProfileId(profile.id)}
-                                        className={settingsGhostButtonClass}
-                                        style={{ borderColor: settingsGhostBorder }}
+                                        className={ghostButtonClass}
+                                        style={{ borderColor: ghostButtonBorder }}
                                     >
                                         Switch
                                     </button>
