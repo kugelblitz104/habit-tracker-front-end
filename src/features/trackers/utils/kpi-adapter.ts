@@ -70,7 +70,7 @@ export const adaptKpisToServerShape = (
     const localKpis = calculateKPIsFromTrackers(habit, trackers);
     const streaks = calculateStreaks(trackers, habit.frequency, habit.range, habit.created_date);
     const longest = streaks.reduce<Streak | null>(
-        (max, s) => (!max || s.length > max.length ? s : max),
+        (max, s) => (!max || s.length >= max.length ? s : max),
         null
     );
 

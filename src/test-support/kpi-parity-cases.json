@@ -15,13 +15,14 @@
         "recorded value so drift still fails, and `bugs` names the defect (see _divergences).",
         "When a divergence is fixed, move the quantity from `divergent` into `expected`.",
         "",
+        "There are NO open divergences as of 2026-07-30: `_divergences` is empty and every case",
+        "pins all ten quantities in `expected`. The mechanism stays documented for the next one.",
+        "",
         "Values were derived by running each implementation, not written by hand.",
         "habit.created_date is an ISO datetime; tracker.status is TrackerStatus",
         "(0 = not completed, 1 = skipped, 2 = completed)."
     ],
-    "_divergences": {
-        "longest-streak-end-date-tie-break": "longest_streak_end_date breaks a tie between equal-length streaks in opposite directions. Backend calculate_kpis uses `>=` so the MOST RECENT streak wins ('better for a recency label', per its comment). Frontend kpi-adapter's reduce uses `s.length > max.length` so the EARLIEST wins. The backend is right: the field feeds a recency sublabel ('N days - Mon'), so an optimistic toggle currently jumps that date backwards in time and snaps forward on refetch."
-    },
+    "_divergences": {},
     "cases": [
         {
             "name": "empty tracker list zeroes every KPI",
@@ -368,6 +369,7 @@
                 "total_completions": 1,
                 "current_streak": 0,
                 "longest_streak": 1,
+                "longest_streak_end_date": "2026-01-10",
                 "last_completed_date": "2026-01-10",
                 "weekday_completion_rates": [0, 0, 0, 0, 0, 1, 0],
                 "streaks": [
@@ -384,13 +386,6 @@
                 ],
                 "overall_completion_rate": 0.16666666666666666,
                 "thirty_day_completion_rate": 0.03333333333333333
-            },
-            "divergent": {
-                "longest_streak_end_date": {
-                    "backend": "2026-01-10",
-                    "frontend": "2026-01-07",
-                    "bugs": ["longest-streak-end-date-tie-break"]
-                }
             }
         },
         {
@@ -646,6 +641,7 @@
                 "total_completions": 5,
                 "current_streak": 0,
                 "longest_streak": 1,
+                "longest_streak_end_date": "2026-01-28",
                 "overall_completion_rate": 0.17857142857142858,
                 "last_completed_date": "2026-01-28",
                 "weekday_completion_rates": [0.25, 0, 1, 0, 0, 0, 0],
@@ -677,13 +673,6 @@
                     }
                 ],
                 "thirty_day_completion_rate": 0.16666666666666666
-            },
-            "divergent": {
-                "longest_streak_end_date": {
-                    "backend": "2026-01-28",
-                    "frontend": "2026-01-05",
-                    "bugs": ["longest-streak-end-date-tie-break"]
-                }
             }
         },
         {
