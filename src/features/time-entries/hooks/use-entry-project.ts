@@ -42,6 +42,6 @@ export const useEntryProject = ({
         } else if (entry.project_id != null) {
             projectId = entry.project_id;
         }
-        return projectId != null ? projectsById.get(projectId) ?? null : null;
+        return projectId != null ? (projectsById.get(projectId) ?? null) : null;
     };
 };

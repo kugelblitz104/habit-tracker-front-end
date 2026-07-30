@@ -176,10 +176,7 @@ export const DangerZoneCard = () => {
                 </div>
             </div>
 
-            <div
-                className='mt-5 border-t pt-4'
-                style={{ borderColor: 'rgba(209,90,110,.2)' }}
-            >
+            <div className='mt-5 border-t pt-4' style={{ borderColor: 'rgba(209,90,110,.2)' }}>
                 <div className={scopeLabelClass} style={{ color: '#c98a98' }}>
                     Account
                 </div>

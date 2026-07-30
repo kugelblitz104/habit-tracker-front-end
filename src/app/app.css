@@ -79,8 +79,7 @@
         'Space Grotesk', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
         'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
     --font-mono:
-        'JetBrains Mono', ui-monospace, 'SFMono-Regular', 'Menlo', 'Monaco',
-        'Consolas', monospace;
+        'JetBrains Mono', ui-monospace, 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
 
     /* Surfaces & titlebar */
     --color-surface-ember: #17130c;
@@ -153,8 +152,7 @@
     --radius-cell: 8px;
 
     /* Shadows */
-    --shadow-frame:
-        0 40px 80px -24px rgba(30, 18, 6, 0.55), 0 10px 26px rgba(0, 0, 0, 0.22);
+    --shadow-frame: 0 40px 80px -24px rgba(30, 18, 6, 0.55), 0 10px 26px rgba(0, 0, 0, 0.22);
     --shadow-now-glow: 0 0 44px -12px rgba(255, 110, 40, 0.4);
     --shadow-popover: 0 -18px 44px -14px rgba(0, 0, 0, 0.6);
 }

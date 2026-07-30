@@ -9,9 +9,7 @@ export default defineConfig(({ mode }) => {
     return {
         plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
         define: {
-            __API_BASE_URL__: JSON.stringify(
-                env.API_BASE_URL || 'http://localhost:8080'
-            )
+            __API_BASE_URL__: JSON.stringify(env.API_BASE_URL || 'http://localhost:8080')
         }
     };
 });

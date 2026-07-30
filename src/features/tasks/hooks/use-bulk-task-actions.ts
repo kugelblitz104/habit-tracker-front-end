@@ -35,7 +35,10 @@ export const useBulkTaskActions = () => {
         const failed = results.filter((r) => r.status === 'rejected').length;
         const ok = ids.length - failed;
         if (failed === 0) toast.success(`${ok} ${plural(ok)} ${verb}`);
-        else if (ok === 0) toast.error(`Failed to ${verb === 'deleted' ? 'delete' : 'update'} ${plural(ids.length)}`);
+        else if (ok === 0)
+            toast.error(
+                `Failed to ${verb === 'deleted' ? 'delete' : 'update'} ${plural(ids.length)}`
+            );
         else toast.error(`${verb} ${ok} of ${ids.length} — ${failed} failed`);
     };
 

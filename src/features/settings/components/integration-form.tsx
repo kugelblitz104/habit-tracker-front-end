@@ -169,9 +169,7 @@ export const IntegrationForm = ({
                         style={themedInputStyle}
                     />
                     {touched && !nameValid && (
-                        <span className='mt-1 block text-[11px] text-danger'>
-                            Name is required
-                        </span>
+                        <span className='mt-1 block text-[11px] text-danger'>Name is required</span>
                     )}
                 </label>
                 <label>

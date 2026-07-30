@@ -56,9 +56,9 @@ export const FrequencyPicker = ({
     // (editing an existing custom habit), else fall back to the custom preset.
     const isCustom = selected.name === 'custom';
     const [freq, setFreq] = useState(
-        isCustom ? selected.frequency : frequencies[3]?.frequency ?? 3
+        isCustom ? selected.frequency : (frequencies[3]?.frequency ?? 3)
     );
-    const [range, setRange] = useState(isCustom ? selected.range : frequencies[3]?.range ?? 7);
+    const [range, setRange] = useState(isCustom ? selected.range : (frequencies[3]?.range ?? 7));
 
     return (
         <Field className='mb-3'>

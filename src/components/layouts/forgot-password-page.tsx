@@ -72,8 +72,7 @@ export const ForgotPasswordPage = () => {
             <FormProvider {...methods}>
                 <form onSubmit={methods.handleSubmit(onSubmit)} className='space-y-4'>
                     <p className='text-[13px] leading-relaxed text-text-secondary'>
-                        Enter your account email and we'll send you a link to choose a new
-                        password.
+                        Enter your account email and we'll send you a link to choose a new password.
                     </p>
                     <Fieldset className='space-y-4'>
                         <TextField
@@ -91,9 +90,7 @@ export const ForgotPasswordPage = () => {
                             submittingLabel='Sending...'
                             label='Send reset link'
                         />
-                        {error && (
-                            <div className='font-mono text-[11px] text-danger'>{error}</div>
-                        )}
+                        {error && <div className='font-mono text-[11px] text-danger'>{error}</div>}
                         <div className='text-center text-[13px] text-text-muted'>
                             Remembered it?{' '}
                             <Link

@@ -34,12 +34,18 @@ export const InsightsSummaryCards = ({ data }: { data: InsightsData }) => {
             <Card
                 label='Time tracked'
                 value={
-                    data.timeTrackedSeconds > 0 ? formatHumanDuration(data.timeTrackedSeconds) : '0m'
+                    data.timeTrackedSeconds > 0
+                        ? formatHumanDuration(data.timeTrackedSeconds)
+                        : '0m'
                 }
                 sub={data.timeTruncated ? 'most recent 500' : undefined}
             />
             {hasHabits && (
-                <Card label='Habit completion' value={`${data.habitCompletionRate}%`} sub='avg rate' />
+                <Card
+                    label='Habit completion'
+                    value={`${data.habitCompletionRate}%`}
+                    sub='avg rate'
+                />
             )}
             {hasHabits && (
                 <Card

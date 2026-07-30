@@ -1,11 +1,7 @@
 import type { HabitKPIs, HabitStreak, HabitRead, TrackerLite, TrackerRead } from '@/api';
 import { parseLocalDate, toLocalDateString } from '@/lib/date-utils';
 import { type Streak, TrackerStatus } from '@/types/types';
-import {
-    calculateKPIsFromTrackers,
-    calculateStreaks,
-    getEffectiveStartDate
-} from './kpi-utils';
+import { calculateKPIsFromTrackers, calculateStreaks, getEffectiveStartDate } from './kpi-utils';
 
 /**
  * Bridge between the client-side KPI/streak compute (which uses ×100 percentages

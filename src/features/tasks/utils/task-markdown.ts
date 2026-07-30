@@ -56,7 +56,9 @@ const renderTaskLines = (
         lines.push(`${indent}  - Due: ${formatWhen(task.due_date, task.due_time)}`);
     }
     if (task.scheduled_date) {
-        lines.push(`${indent}  - Scheduled: ${formatWhen(task.scheduled_date, task.scheduled_time)}`);
+        lines.push(
+            `${indent}  - Scheduled: ${formatWhen(task.scheduled_date, task.scheduled_time)}`
+        );
     }
     const project = task.project_id != null ? projectsById.get(task.project_id) : undefined;
     if (project) lines.push(`${indent}  - Project: ${project.name}`);

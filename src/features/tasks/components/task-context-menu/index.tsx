@@ -166,8 +166,7 @@ export const TaskContextMenu = ({
     // its own copy from here on.
     const handleAddCountdown = () => {
         onClose();
-        const target_date =
-            task.due_date ?? task.scheduled_date ?? toLocalDateString(new Date());
+        const target_date = task.due_date ?? task.scheduled_date ?? toLocalDateString(new Date());
         createCountdown.mutate(
             {
                 profile_id: task.profile_id,

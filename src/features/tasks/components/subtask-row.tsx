@@ -1,7 +1,14 @@
 import type { TaskRead } from '@/api';
 import { TaskStatus } from '@/types/types';
 import type { DraggableAttributes } from '@dnd-kit/core';
-import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react';
+import {
+    useEffect,
+    useRef,
+    useState,
+    type CSSProperties,
+    type KeyboardEvent,
+    type ReactNode
+} from 'react';
 import { StatusControl } from './status-control';
 
 type SubtaskRowProps = {

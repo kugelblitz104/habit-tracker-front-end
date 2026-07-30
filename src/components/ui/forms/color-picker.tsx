@@ -21,7 +21,10 @@ export const ColorPicker = ({ color, onColorChange }: ColorPickerProps) => {
                 <div className='flex flex-col'>
                     {/* using inline style definition because tailwind does not support dynamic values */}
                     <div
-                        style={{ backgroundColor: color, borderColor: 'var(--surface-input-border)' }}
+                        style={{
+                            backgroundColor: color,
+                            borderColor: 'var(--surface-input-border)'
+                        }}
                         className='w-27 h-27 rounded-button border'
                     />
                     <Input

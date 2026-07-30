@@ -133,10 +133,10 @@ export const useHabitListSort = (
                             ? -1
                             : 1
                         : aValue > bValue
-                        ? sortDirection === 'asc'
-                            ? 1
-                            : -1
-                        : 0;
+                          ? sortDirection === 'asc'
+                              ? 1
+                              : -1
+                          : 0;
 
                 // If primary sort values are equal, use name as secondary sort
                 if (primarySort === 0) {

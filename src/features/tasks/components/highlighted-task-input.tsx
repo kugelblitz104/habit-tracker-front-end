@@ -99,7 +99,9 @@ export const HighlightedTaskInput = ({
                     onCaretChange?.(e.target.selectionStart ?? e.target.value.length);
                 }}
                 onKeyDown={onKeyDown}
-                onSelect={(e) => onCaretChange?.(e.currentTarget.selectionStart ?? e.currentTarget.value.length)}
+                onSelect={(e) =>
+                    onCaretChange?.(e.currentTarget.selectionStart ?? e.currentTarget.value.length)
+                }
                 onScroll={(e) => syncScroll(e.currentTarget)}
                 placeholder={placeholder}
                 className={`relative w-full bg-transparent whitespace-pre text-transparent caret-text-primary outline-none ${SHARED_TEXT_CLASS}`}

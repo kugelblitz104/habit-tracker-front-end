@@ -14,7 +14,13 @@ import {
 import { parseLocalDate, parseServerDate } from '@/lib/date-utils';
 import { TaskStatus } from '@/types/types';
 import type { TrackerLite } from '@/api';
-import { buildBuckets, bucketBy, startOfDay, type Bucket, type RangeDays } from '../utils/insights-utils';
+import {
+    buildBuckets,
+    bucketBy,
+    startOfDay,
+    type Bucket,
+    type RangeDays
+} from '../utils/insights-utils';
 
 /**
  * The list endpoints have no date-range filter and cap `limit` at 100 per
@@ -157,13 +163,10 @@ export const useInsightsData = (rangeDays: RangeDays): InsightsData => {
         const topLevel = tasks.filter((t) => t.parent_id == null);
 
         // Completed tasks per bucket (DONE, bucketed by closed_date).
-        const tasksCompletedSeries = bucketBy(
-            topLevel,
-            buckets,
-            (t) =>
-                (t.status ?? -1) === TaskStatus.DONE && t.closed_date
-                    ? parseServerDate(t.closed_date)
-                    : null
+        const tasksCompletedSeries = bucketBy(topLevel, buckets, (t) =>
+            (t.status ?? -1) === TaskStatus.DONE && t.closed_date
+                ? parseServerDate(t.closed_date)
+                : null
         );
         const tasksCompleted = tasksCompletedSeries.reduce((a, b) => a + b, 0);
 
@@ -219,7 +222,13 @@ export const useInsightsData = (rangeDays: RangeDays): InsightsData => {
                 name: h.name,
                 color: h.color,
                 completionRate: Math.round(
-                    calculateCompletionRate(trackers, h.frequency, h.range, h.created_date, rangeDays)
+                    calculateCompletionRate(
+                        trackers,
+                        h.frequency,
+                        h.range,
+                        h.created_date,
+                        rangeDays
+                    )
                 ),
                 currentStreak: getCurrentStreakLength(streaks)
             };
@@ -242,10 +251,7 @@ export const useInsightsData = (rangeDays: RangeDays): InsightsData => {
             tasksQuery.isError || timeQuery.isError || projectsQuery.isError || habitsQuery.isError;
 
         const hasAnyData =
-            tasksCompleted > 0 ||
-            timeTrackedSeconds > 0 ||
-            habitPerf.length > 0 ||
-            openCount > 0;
+            tasksCompleted > 0 || timeTrackedSeconds > 0 || habitPerf.length > 0 || openCount > 0;
 
         return {
             isLoading,

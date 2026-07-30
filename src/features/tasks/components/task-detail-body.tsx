@@ -52,7 +52,7 @@ export const TaskDetailBody = ({
     const project = useMemo(
         () =>
             task?.project_id != null
-                ? projectsQuery.data?.projects?.find((p) => p.id === task.project_id) ?? null
+                ? (projectsQuery.data?.projects?.find((p) => p.id === task.project_id) ?? null)
                 : null,
         [task?.project_id, projectsQuery.data]
     );

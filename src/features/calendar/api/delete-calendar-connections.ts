@@ -7,8 +7,11 @@ export const deleteCalendarConnection = async (connectionId: number): Promise<un
     );
 };
 
-export const useDeleteCalendarConnection = defineMutationHook(deleteCalendarConnection, (queryClient) => {
-    // Connection scope is unknown from the id alone; refresh everything.
-    queryClient.invalidateQueries({ queryKey: ['calendar-connections'] });
-    queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
-});
+export const useDeleteCalendarConnection = defineMutationHook(
+    deleteCalendarConnection,
+    (queryClient) => {
+        // Connection scope is unknown from the id alone; refresh everything.
+        queryClient.invalidateQueries({ queryKey: ['calendar-connections'] });
+        queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
+    }
+);

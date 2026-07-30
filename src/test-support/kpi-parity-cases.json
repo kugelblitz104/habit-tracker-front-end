@@ -42,15 +42,7 @@
                 "overall_completion_rate": 0,
                 "thirty_day_completion_rate": 0,
                 "last_completed_date": null,
-                "weekday_completion_rates": [
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0
-                ],
+                "weekday_completion_rates": [0, 0, 0, 0, 0, 0, 0],
                 "streaks": []
             }
         },
@@ -77,15 +69,7 @@
                 "longest_streak_end_date": "2026-01-05",
                 "overall_completion_rate": 1,
                 "last_completed_date": "2026-01-05",
-                "weekday_completion_rates": [
-                    1,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0
-                ],
+                "weekday_completion_rates": [1, 0, 0, 0, 0, 0, 0],
                 "streaks": [
                     {
                         "start_date": "2026-01-05",
@@ -135,15 +119,7 @@
                 "longest_streak_end_date": "2026-01-09",
                 "overall_completion_rate": 1,
                 "last_completed_date": "2026-01-09",
-                "weekday_completion_rates": [
-                    1,
-                    1,
-                    1,
-                    1,
-                    1,
-                    0,
-                    0
-                ],
+                "weekday_completion_rates": [1, 1, 1, 1, 1, 0, 0],
                 "streaks": [
                     {
                         "start_date": "2026-01-05",
@@ -201,15 +177,7 @@
                 "longest_streak_end_date": "2026-01-09",
                 "overall_completion_rate": 0.7,
                 "last_completed_date": "2026-01-12",
-                "weekday_completion_rates": [
-                    1,
-                    0.5,
-                    0.5,
-                    1,
-                    1,
-                    0,
-                    1
-                ],
+                "weekday_completion_rates": [1, 0.5, 0.5, 1, 1, 0, 1],
                 "streaks": [
                     {
                         "start_date": "2026-01-05",
@@ -276,15 +244,7 @@
                 "longest_streak_end_date": "2026-01-09",
                 "overall_completion_rate": 0.8888888888888888,
                 "last_completed_date": "2026-01-13",
-                "weekday_completion_rates": [
-                    1,
-                    1,
-                    1,
-                    1,
-                    1,
-                    0,
-                    1
-                ],
+                "weekday_completion_rates": [1, 1, 1, 1, 1, 0, 1],
                 "streaks": [
                     {
                         "start_date": "2026-01-05",
@@ -334,15 +294,7 @@
                 "longest_streak": 4,
                 "longest_streak_end_date": "2026-01-08",
                 "last_completed_date": "2026-01-08",
-                "weekday_completion_rates": [
-                    1,
-                    1,
-                    0,
-                    1,
-                    0,
-                    0,
-                    0
-                ],
+                "weekday_completion_rates": [1, 1, 0, 1, 0, 0, 0],
                 "streaks": [
                     {
                         "start_date": "2026-01-05",
@@ -380,15 +332,7 @@
                 "longest_streak": 2,
                 "longest_streak_end_date": "2026-01-06",
                 "last_completed_date": "2026-01-05",
-                "weekday_completion_rates": [
-                    1,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0
-                ],
+                "weekday_completion_rates": [1, 0, 0, 0, 0, 0, 0],
                 "streaks": [
                     {
                         "start_date": "2026-01-05",
@@ -425,15 +369,7 @@
                 "current_streak": 0,
                 "longest_streak": 1,
                 "last_completed_date": "2026-01-10",
-                "weekday_completion_rates": [
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    1,
-                    0
-                ],
+                "weekday_completion_rates": [0, 0, 0, 0, 0, 1, 0],
                 "streaks": [
                     {
                         "start_date": "2026-01-07",
@@ -453,9 +389,7 @@
                 "longest_streak_end_date": {
                     "backend": "2026-01-10",
                     "frontend": "2026-01-07",
-                    "bugs": [
-                        "longest-streak-end-date-tie-break"
-                    ]
+                    "bugs": ["longest-streak-end-date-tie-break"]
                 }
             }
         },
@@ -486,15 +420,7 @@
                 "longest_streak_end_date": "2026-01-10",
                 "overall_completion_rate": 1,
                 "last_completed_date": "2026-01-10",
-                "weekday_completion_rates": [
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    1,
-                    0
-                ],
+                "weekday_completion_rates": [0, 0, 0, 0, 0, 1, 0],
                 "streaks": [
                     {
                         "start_date": "2026-01-10",
@@ -528,15 +454,7 @@
                 "longest_streak_end_date": "2026-01-13",
                 "overall_completion_rate": 0.7777777777777777,
                 "last_completed_date": "2026-01-07",
-                "weekday_completion_rates": [
-                    0,
-                    0,
-                    1,
-                    0,
-                    0,
-                    0,
-                    0
-                ],
+                "weekday_completion_rates": [0, 0, 1, 0, 0, 0, 0],
                 "streaks": [
                     {
                         "start_date": "2026-01-07",
@@ -570,15 +488,7 @@
                 "longest_streak_end_date": "2026-01-13",
                 "overall_completion_rate": 0.5833333333333334,
                 "last_completed_date": "2026-01-07",
-                "weekday_completion_rates": [
-                    0,
-                    0,
-                    0.5,
-                    0,
-                    0,
-                    0,
-                    0
-                ],
+                "weekday_completion_rates": [0, 0, 0.5, 0, 0, 0, 0],
                 "streaks": [
                     {
                         "start_date": "2026-01-07",
@@ -631,15 +541,7 @@
                 "longest_streak": 10,
                 "longest_streak_end_date": "2026-01-18",
                 "last_completed_date": "2026-01-16",
-                "weekday_completion_rates": [
-                    1,
-                    0,
-                    1,
-                    0,
-                    1,
-                    0,
-                    0
-                ],
+                "weekday_completion_rates": [1, 0, 1, 0, 1, 0, 0],
                 "streaks": [
                     {
                         "start_date": "2026-01-05",
@@ -692,15 +594,7 @@
                 "longest_streak_end_date": "2026-01-06",
                 "overall_completion_rate": 0.6,
                 "last_completed_date": "2026-01-08",
-                "weekday_completion_rates": [
-                    1,
-                    1,
-                    0,
-                    1,
-                    0,
-                    0,
-                    0
-                ],
+                "weekday_completion_rates": [1, 1, 0, 1, 0, 0, 0],
                 "streaks": [
                     {
                         "start_date": "2026-01-05",
@@ -754,15 +648,7 @@
                 "longest_streak": 1,
                 "overall_completion_rate": 0.17857142857142858,
                 "last_completed_date": "2026-01-28",
-                "weekday_completion_rates": [
-                    0.25,
-                    0,
-                    1,
-                    0,
-                    0,
-                    0,
-                    0
-                ],
+                "weekday_completion_rates": [0.25, 0, 1, 0, 0, 0, 0],
                 "streaks": [
                     {
                         "start_date": "2026-01-05",
@@ -796,9 +682,7 @@
                 "longest_streak_end_date": {
                     "backend": "2026-01-28",
                     "frontend": "2026-01-05",
-                    "bugs": [
-                        "longest-streak-end-date-tie-break"
-                    ]
+                    "bugs": ["longest-streak-end-date-tie-break"]
                 }
             }
         },
@@ -844,15 +728,7 @@
                 "longest_streak": 27,
                 "longest_streak_end_date": "2026-02-01",
                 "last_completed_date": "2026-01-28",
-                "weekday_completion_rates": [
-                    0,
-                    0,
-                    1,
-                    0,
-                    0,
-                    0,
-                    0
-                ],
+                "weekday_completion_rates": [0, 0, 1, 0, 0, 0, 0],
                 "streaks": [
                     {
                         "start_date": "2026-01-06",
@@ -891,15 +767,7 @@
                 "longest_streak_end_date": "2025-12-07",
                 "overall_completion_rate": 0.05555555555555555,
                 "last_completed_date": "2025-12-07",
-                "weekday_completion_rates": [
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0.2,
-                    0.2
-                ],
+                "weekday_completion_rates": [0, 0, 0, 0, 0, 0.2, 0.2],
                 "streaks": [
                     {
                         "start_date": "2025-12-06",
@@ -937,15 +805,7 @@
                 "longest_streak_end_date": "2026-01-05",
                 "overall_completion_rate": 0.5,
                 "last_completed_date": "2026-01-20",
-                "weekday_completion_rates": [
-                    1,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0
-                ],
+                "weekday_completion_rates": [1, 0, 0, 0, 0, 0, 0],
                 "streaks": [
                     {
                         "start_date": "2026-01-05",

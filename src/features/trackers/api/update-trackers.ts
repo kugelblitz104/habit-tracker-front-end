@@ -5,8 +5,5 @@ export const updateTracker = async (
     trackerId: number,
     tracker: TrackerUpdate
 ): Promise<TrackerRead> => {
-    return await TrackersService.patchTrackerTrackersTrackerIdPatch(
-        trackerId,
-        tracker
-    );
+    return await TrackersService.patchTrackerTrackersTrackerIdPatch(trackerId, tracker);
 };

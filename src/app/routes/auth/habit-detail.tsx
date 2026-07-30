@@ -7,10 +7,7 @@ import { Link, useLocation, useNavigate } from 'react-router';
 import type { Route } from './+types/habit-detail';
 
 export function meta({}: Route.MetaArgs) {
-    return [
-        { title: 'Habit Tracker' },
-        { name: 'description', content: 'Habit detail' }
-    ];
+    return [{ title: 'Habit Tracker' }, { name: 'description', content: 'Habit detail' }];
 }
 
 export default function HabitDetail({

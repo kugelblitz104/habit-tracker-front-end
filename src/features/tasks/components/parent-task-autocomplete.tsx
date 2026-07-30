@@ -31,7 +31,7 @@ export const ParentTaskAutocomplete = ({
     options,
     id
 }: ParentTaskAutocompleteProps) => {
-    const selectedTitle = value == null ? '' : options.find((o) => o.id === value)?.title ?? '';
+    const selectedTitle = value == null ? '' : (options.find((o) => o.id === value)?.title ?? '');
     const [text, setText] = useState(selectedTitle);
     const [open, setOpen] = useState(false);
     const [typing, setTyping] = useState(false);

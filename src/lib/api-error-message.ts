@@ -16,9 +16,7 @@ export const apiErrorMessage = (error: unknown, fallback = 'Something went wrong
             const message = detail
                 .map((entry) => {
                     const msg = (entry as { msg?: unknown } | null)?.msg;
-                    return typeof msg === 'string' && msg.length > 0
-                        ? msg
-                        : JSON.stringify(entry);
+                    return typeof msg === 'string' && msg.length > 0 ? msg : JSON.stringify(entry);
                 })
                 .join('; ');
             if (message.length > 0) {

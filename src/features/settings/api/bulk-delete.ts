@@ -31,9 +31,7 @@ export const deleteAllCountdowns = async (profileId: number): Promise<number> =>
     deletedCount(await CountdownsService.deleteAllCountdownsCountdownsDelete(profileId));
 
 export const deleteAllTimeEntries = async (profileId: number): Promise<number> =>
-    deletedCount(
-        await TimeEntriesService.deleteAllTimeEntriesTimeEntriesDelete(profileId)
-    );
+    deletedCount(await TimeEntriesService.deleteAllTimeEntriesTimeEntriesDelete(profileId));
 
 export const deleteAllHabits = async (profileId: number): Promise<number> =>
     deletedCount(await HabitsService.deleteAllHabitsHabitsDelete(profileId));

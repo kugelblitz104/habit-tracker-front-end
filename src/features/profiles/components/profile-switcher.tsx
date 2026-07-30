@@ -26,7 +26,8 @@ export const ProfileSwitcher = () => {
     return (
         <>
             <Menu as='div' className='relative'>
-                <MenuButton className='flex items-center gap-2 rounded-chip border py-1 pl-1 pr-2.5 outline-none transition-colors hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-now-accent'
+                <MenuButton
+                    className='flex items-center gap-2 rounded-chip border py-1 pl-1 pr-2.5 outline-none transition-colors hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-now-accent'
                     style={{ borderColor: 'var(--surface-card-border)' }}
                 >
                     <ProfileAvatar profile={activeProfile} size={24} />

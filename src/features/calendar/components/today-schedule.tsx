@@ -249,8 +249,8 @@ export const TodaySchedule = () => {
                     {events.length > 0
                         ? 'All shown calendars are hidden.'
                         : windowDays === 1
-                        ? 'No events today.'
-                        : 'No events in this range.'}
+                          ? 'No events today.'
+                          : 'No events in this range.'}
                 </p>
             ) : (
                 <>

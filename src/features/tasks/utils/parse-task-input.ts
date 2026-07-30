@@ -61,13 +61,24 @@ const toISODate = (d: Date): string =>
 
 // Weekday names + common abbreviations → 0(Sun)–6(Sat).
 const WEEKDAY_INDEX: Record<string, number> = {
-    sun: 0, sunday: 0,
-    mon: 1, monday: 1,
-    tue: 2, tues: 2, tuesday: 2,
-    wed: 3, weds: 3, wednesday: 3,
-    thu: 4, thur: 4, thurs: 4, thursday: 4,
-    fri: 5, friday: 5,
-    sat: 6, saturday: 6
+    sun: 0,
+    sunday: 0,
+    mon: 1,
+    monday: 1,
+    tue: 2,
+    tues: 2,
+    tuesday: 2,
+    wed: 3,
+    weds: 3,
+    wednesday: 3,
+    thu: 4,
+    thur: 4,
+    thurs: 4,
+    thursday: 4,
+    fri: 5,
+    friday: 5,
+    sat: 6,
+    saturday: 6
 };
 
 /**
@@ -93,7 +104,7 @@ const parseRelativeDate = (raw: string, now: Date): string | null => {
         return toISODate(base);
     }
     if (key in WEEKDAY_INDEX) {
-        const delta = ((WEEKDAY_INDEX[key]! - base.getDay() + 7) % 7) || 7;
+        const delta = (WEEKDAY_INDEX[key]! - base.getDay() + 7) % 7 || 7;
         base.setDate(base.getDate() + delta);
         return toISODate(base);
     }

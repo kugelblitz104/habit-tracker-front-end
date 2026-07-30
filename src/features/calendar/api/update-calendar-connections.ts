@@ -17,7 +17,10 @@ export const updateCalendarConnection = async ({
     );
 };
 
-export const useUpdateCalendarConnection = defineMutationHook(updateCalendarConnection, (queryClient) => {
-    queryClient.invalidateQueries({ queryKey: ['calendar-connections'] });
-    queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
-});
+export const useUpdateCalendarConnection = defineMutationHook(
+    updateCalendarConnection,
+    (queryClient) => {
+        queryClient.invalidateQueries({ queryKey: ['calendar-connections'] });
+        queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
+    }
+);

@@ -13,6 +13,9 @@ export const deleteTimeEntry = async ({ entryId }: DeleteTimeEntryInput): Promis
     await TimeEntriesService.deleteTimeEntryTimeEntriesEntryIdDelete(entryId);
 };
 
-export const useDeleteTimeEntry = defineMutationHook(deleteTimeEntry, (queryClient, _data, variables) => {
-    invalidateTimeEntries(queryClient, variables.profileId);
-});
+export const useDeleteTimeEntry = defineMutationHook(
+    deleteTimeEntry,
+    (queryClient, _data, variables) => {
+        invalidateTimeEntries(queryClient, variables.profileId);
+    }
+);

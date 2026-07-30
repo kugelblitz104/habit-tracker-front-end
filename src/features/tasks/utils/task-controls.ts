@@ -92,8 +92,7 @@ const STATUS_ORDER = [
 /** Done/cancelled — these never interleave in the main grouped list; they
  *  render in the separate "Closed" section (CompletedSection) instead. */
 const CLOSED_STATUS_VALUES: number[] = [TaskStatus.DONE, TaskStatus.CANCELLED];
-export const isClosedStatus = (status: number): boolean =>
-    CLOSED_STATUS_VALUES.includes(status);
+export const isClosedStatus = (status: number): boolean => CLOSED_STATUS_VALUES.includes(status);
 
 /** Every status value, for a "select all" affordance in the filter UI. */
 export const ALL_STATUS_VALUES: number[] = [...STATUS_ORDER];

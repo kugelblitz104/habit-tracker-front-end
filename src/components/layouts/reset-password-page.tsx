@@ -55,8 +55,7 @@ export const ResetPasswordPage = () => {
             <AuthCardLayout subtitle='Reset your password'>
                 <div className='space-y-4'>
                     <p className='text-[13px] leading-relaxed text-text-secondary'>
-                        This reset link is missing or malformed. Request a new one to
-                        continue.
+                        This reset link is missing or malformed. Request a new one to continue.
                     </p>
                     <div className='text-center text-[13px] text-text-muted'>
                         <Link
@@ -103,9 +102,7 @@ export const ResetPasswordPage = () => {
                             submittingLabel='Resetting...'
                             label='Reset password'
                         />
-                        {error && (
-                            <div className='font-mono text-[11px] text-danger'>{error}</div>
-                        )}
+                        {error && <div className='font-mono text-[11px] text-danger'>{error}</div>}
                         <div className='text-center text-[13px] text-text-muted'>
                             <Link
                                 to='/login'

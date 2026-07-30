@@ -22,9 +22,7 @@ export const exportProfileBackup = async (
     profileId: number,
     profileName: string
 ): Promise<void> => {
-    const backup = await BackupService.exportProfileBackupBackupProfilesProfileIdGet(
-        profileId
-    );
+    const backup = await BackupService.exportProfileBackupBackupProfilesProfileIdGet(profileId);
     const stamp = new Date().toISOString().slice(0, 10);
     downloadJson(backup, `habit-tracker-${slugify(profileName, 'profile')}-${stamp}.json`);
 };
@@ -52,9 +50,7 @@ export const exportProfileEntity = async (
     profileName: string,
     entity: BackupEntity
 ): Promise<number> => {
-    const backup = await BackupService.exportProfileBackupBackupProfilesProfileIdGet(
-        profileId
-    );
+    const backup = await BackupService.exportProfileBackupBackupProfilesProfileIdGet(profileId);
     const rows = (backup[entity] ?? []) as unknown[];
     const stamp = new Date().toISOString().slice(0, 10);
     downloadJson(
@@ -81,9 +77,7 @@ export const importProfileBackup = async (file: File): Promise<ImportSummary> =>
     try {
         parsed = JSON.parse(text);
     } catch {
-        throw new Error(
-            "That file isn't valid JSON — choose a backup exported from this app."
-        );
+        throw new Error("That file isn't valid JSON — choose a backup exported from this app.");
     }
     return BackupService.importProfileBackupBackupProfilesPost(parsed as ProfileBackup);
 };

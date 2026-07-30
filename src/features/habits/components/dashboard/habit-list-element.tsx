@@ -212,8 +212,8 @@ export const HabitListElement = ({
                 isSelected
                     ? 'bg-[rgba(120,168,205,.10)]'
                     : rowIsActive
-                    ? 'bg-[rgba(120,168,205,.07)]'
-                    : ''
+                      ? 'bg-[rgba(120,168,205,.07)]'
+                      : ''
             }`}
         >
             <td className='relative'>

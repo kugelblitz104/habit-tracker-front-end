@@ -11,8 +11,7 @@ import type { CSSProperties } from 'react';
  *  - `ThemedMenuItems` — a thin `MenuItems` wrapper that applies both for the
  *    common headless `Menu` case; pass a width via `className`.
  */
-export const POPOVER_PANEL_CLASS =
-    'z-50 rounded-button border p-1 shadow-popover outline-none';
+export const POPOVER_PANEL_CLASS = 'z-50 rounded-button border p-1 shadow-popover outline-none';
 
 export const popoverPanelStyle: CSSProperties = {
     backgroundColor: 'var(--bg)',

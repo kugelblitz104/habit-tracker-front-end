@@ -23,10 +23,16 @@ const sanitizeControls = (raw: unknown): TaskControlsState => {
     ) {
         next.filterProjectId = parsed.filterProjectId as TaskControlsState['filterProjectId'];
     }
-    if (Array.isArray(parsed.filterPriorities) && parsed.filterPriorities.every((v) => typeof v === 'number')) {
+    if (
+        Array.isArray(parsed.filterPriorities) &&
+        parsed.filterPriorities.every((v) => typeof v === 'number')
+    ) {
         next.filterPriorities = parsed.filterPriorities as number[];
     }
-    if (Array.isArray(parsed.filterStatuses) && parsed.filterStatuses.every((v) => typeof v === 'number')) {
+    if (
+        Array.isArray(parsed.filterStatuses) &&
+        parsed.filterStatuses.every((v) => typeof v === 'number')
+    ) {
         next.filterStatuses = parsed.filterStatuses as number[];
     }
     if (

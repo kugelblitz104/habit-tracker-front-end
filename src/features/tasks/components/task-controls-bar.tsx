@@ -114,8 +114,8 @@ const CheckboxFilterPopover = ({
         selected.length === 0
             ? `${label}: None`
             : selected.length === allValues.length
-            ? `${label}: All`
-            : `${label} (${selected.length})`;
+              ? `${label}: All`
+              : `${label} (${selected.length})`;
 
     return (
         <Popover className='relative'>

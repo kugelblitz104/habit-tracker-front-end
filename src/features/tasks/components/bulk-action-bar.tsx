@@ -52,9 +52,7 @@ export const BulkActionBar = ({
             className='pointer-events-auto flex items-center gap-1 rounded-full border py-1.5 pl-3 pr-1.5 shadow-lg'
             style={CARD_SURFACE_STYLE}
         >
-            <span className='px-1 font-mono text-[11px] text-text-muted'>
-                {count} selected
-            </span>
+            <span className='px-1 font-mono text-[11px] text-text-muted'>{count} selected</span>
             <span className='mx-1 h-4 w-px bg-white/10' />
 
             <Popover className='relative'>

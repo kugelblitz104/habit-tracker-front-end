@@ -2,13 +2,7 @@ import { OpenAPI, type ProfileRead } from '@/api';
 import { useProfiles } from '@/features/profiles/api/get-profiles';
 import { getUser } from '@/features/users/api/get-users';
 import { useQueryClient } from '@tanstack/react-query';
-import React, {
-    createContext,
-    useContext,
-    useEffect,
-    useMemo,
-    useState
-} from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { getUserIdFromToken, isTokenExpired } from './token-utils';
 import { Refresh } from '@/features/auth/api/refresh';
 
@@ -61,10 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const profilesQuery = useProfiles({
         queryConfig: { enabled: isAuthenticated }
     });
-    const profiles = useMemo(
-        () => profilesQuery.data?.profiles ?? [],
-        [profilesQuery.data]
-    );
+    const profiles = useMemo(() => profilesQuery.data?.profiles ?? [], [profilesQuery.data]);
 
     const [activeProfileId, setActiveProfileIdState] = useState<number | null>(null);
     const [profileHydrated, setProfileHydrated] = useState(false);
@@ -119,8 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         [profiles, activeProfileId]
     );
 
-    const profilesLoading =
-        isAuthenticated && (!profileHydrated || profilesQuery.isLoading);
+    const profilesLoading = isAuthenticated && (!profileHydrated || profilesQuery.isLoading);
 
     // Initialize auth state from localStorage
     useEffect(() => {

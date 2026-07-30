@@ -1,10 +1,4 @@
-import {
-    expect,
-    request,
-    test as base,
-    type APIRequestContext,
-    type Page
-} from '@playwright/test';
+import { expect, request, test as base, type APIRequestContext, type Page } from '@playwright/test';
 
 import { anchorNow } from './clock';
 import { API_BASE, deleteUser, importGoldenProfile, register, type Account } from './api';

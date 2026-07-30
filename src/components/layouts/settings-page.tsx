@@ -28,8 +28,7 @@ export const SettingsPage = () => {
     // back to the active profile until a selection is made (or if the selected
     // profile gets deleted).
     const [editingProfileId, setEditingProfileId] = useState<number | null>(null);
-    const editingProfile =
-        profiles.find((p) => p.id === editingProfileId) ?? activeProfile;
+    const editingProfile = profiles.find((p) => p.id === editingProfileId) ?? activeProfile;
 
     const sublineParts = [
         `${profiles.length} ${profiles.length === 1 ? 'profile' : 'profiles'}`,

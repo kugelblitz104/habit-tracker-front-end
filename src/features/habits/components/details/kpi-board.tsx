@@ -57,7 +57,13 @@ const Ring = ({ fraction, accent }: { fraction: number; accent: string }) => {
         >
             <span
                 className='flex items-center justify-center rounded-full font-semibold'
-                style={{ width: 31, height: 31, background: 'var(--bg)', fontSize: 11, color: '#c6d6e2' }}
+                style={{
+                    width: 31,
+                    height: 31,
+                    background: 'var(--bg)',
+                    fontSize: 11,
+                    color: '#c6d6e2'
+                }}
             >
                 {pct}%
             </span>

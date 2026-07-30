@@ -138,8 +138,8 @@ export const TaskCard = ({
     const pillLabel = showBlockedReason
         ? `${statusMeta.label.toLowerCase()} · ${blockReason}`
         : isScheduled && scheduledLabel
-        ? scheduledLabel
-        : statusMeta.label.toLowerCase();
+          ? scheduledLabel
+          : statusMeta.label.toLowerCase();
 
     const containerStyle: React.CSSProperties = editing
         ? {
@@ -147,7 +147,7 @@ export const TaskCard = ({
               outline: '1px solid var(--color-now-accent)',
               outlineOffset: '2px'
           }
-        : style.containerStyle ?? {};
+        : (style.containerStyle ?? {});
 
     // Context menu — opened by right-click (desktop) or long-press (touch) at
     // the pointer/touch position. Rendered only while open so its project fetch
@@ -264,125 +264,128 @@ export const TaskCard = ({
                         className={style.container}
                         style={containerStyle}
                         onKeyDown={handleKeyDown}
-            // Suppress the BROWSER context menu on task cards only, showing ours
-            // instead. (Android also routes native long-press through here.)
-            onContextMenu={(e) => {
-                e.preventDefault();
-                setMenuPoint({ x: e.clientX, y: e.clientY });
-            }}
-            onTouchStart={(e) => {
-                // Portal events bubble through the React tree — don't restart a
-                // long-press from touches on the open menu itself.
-                if (menuPoint) return;
-                const touch = e.touches[0];
-                if (touch) touchPointRef.current = { x: touch.clientX, y: touch.clientY };
-                longPressHandlers.onTouchStart(e);
-            }}
-            onTouchMove={longPressHandlers.onTouchMove}
-            onTouchEnd={longPressHandlers.onTouchEnd}
-        >
-            <div className='flex items-start gap-3'>
-                {selectable && (
-                    <div className='pt-1'>
-                        <input
-                            type='checkbox'
-                            checked={selected}
-                            onChange={onToggleSelect}
-                            aria-label={`Select task: ${task.title}`}
-                            className='h-4 w-4 cursor-pointer accent-[var(--color-now-accent)]'
-                        />
-                    </div>
-                )}
-                <div className='pt-0.5'>
-                    <StatusControl
-                        status={status}
-                        onSelect={handleStatusSelect}
-                        band={band}
-                        openUpward={openUpward}
-                    />
-                </div>
-
-                <div className='min-w-0 flex-1'>
-                    <button
-                        type='button'
-                        onClick={() => onSelectEdit()}
-                        aria-pressed={editing}
-                        className={`block w-full truncate text-left font-display hover:opacity-90 ${
-                            style.title
-                        } ${isCancelled ? 'line-through' : ''}`}
-                        title={task.title}
+                        // Suppress the BROWSER context menu on task cards only, showing ours
+                        // instead. (Android also routes native long-press through here.)
+                        onContextMenu={(e) => {
+                            e.preventDefault();
+                            setMenuPoint({ x: e.clientX, y: e.clientY });
+                        }}
+                        onTouchStart={(e) => {
+                            // Portal events bubble through the React tree — don't restart a
+                            // long-press from touches on the open menu itself.
+                            if (menuPoint) return;
+                            const touch = e.touches[0];
+                            if (touch)
+                                touchPointRef.current = { x: touch.clientX, y: touch.clientY };
+                            longPressHandlers.onTouchStart(e);
+                        }}
+                        onTouchMove={longPressHandlers.onTouchMove}
+                        onTouchEnd={longPressHandlers.onTouchEnd}
                     >
-                        {task.title}
-                    </button>
+                        <div className='flex items-start gap-3'>
+                            {selectable && (
+                                <div className='pt-1'>
+                                    <input
+                                        type='checkbox'
+                                        checked={selected}
+                                        onChange={onToggleSelect}
+                                        aria-label={`Select task: ${task.title}`}
+                                        className='h-4 w-4 cursor-pointer accent-[var(--color-now-accent)]'
+                                    />
+                                </div>
+                            )}
+                            <div className='pt-0.5'>
+                                <StatusControl
+                                    status={status}
+                                    onSelect={handleStatusSelect}
+                                    band={band}
+                                    openUpward={openUpward}
+                                />
+                            </div>
 
-                    {/* Meta row — always directly beneath the title, left-aligned. */}
-                    <TaskCardMetaRow
-                        task={task}
-                        project={project}
-                        showProject={showProject}
-                        pathname={pathname}
-                        statusMeta={statusMeta}
-                        status={status}
-                        pillLabel={pillLabel}
-                        countdown={countdown}
-                        subtaskCount={subtaskCount}
-                        subtaskDoneCount={subtaskDoneCount}
-                        allSubtasksDone={allSubtasksDone}
-                        subtasksOpen={subtasksOpen}
-                        onToggleSubtasks={onToggleSubtasks}
-                        hasNotes={hasNotes}
-                        notesOpen={notesOpen}
-                        onToggleNotes={onToggleNotes}
-                    />
-                </div>
+                            <div className='min-w-0 flex-1'>
+                                <button
+                                    type='button'
+                                    onClick={() => onSelectEdit()}
+                                    aria-pressed={editing}
+                                    className={`block w-full truncate text-left font-display hover:opacity-90 ${
+                                        style.title
+                                    } ${isCancelled ? 'line-through' : ''}`}
+                                    title={task.title}
+                                >
+                                    {task.title}
+                                </button>
 
-                <div className='pt-1.5'>
-                    <PriorityMeter priority={task.priority ?? 0} band={band} />
-                </div>
-            </div>
+                                {/* Meta row — always directly beneath the title, left-aligned. */}
+                                <TaskCardMetaRow
+                                    task={task}
+                                    project={project}
+                                    showProject={showProject}
+                                    pathname={pathname}
+                                    statusMeta={statusMeta}
+                                    status={status}
+                                    pillLabel={pillLabel}
+                                    countdown={countdown}
+                                    subtaskCount={subtaskCount}
+                                    subtaskDoneCount={subtaskDoneCount}
+                                    allSubtasksDone={allSubtasksDone}
+                                    subtasksOpen={subtasksOpen}
+                                    onToggleSubtasks={onToggleSubtasks}
+                                    hasNotes={hasNotes}
+                                    notesOpen={notesOpen}
+                                    onToggleNotes={onToggleNotes}
+                                />
+                            </div>
 
-            {/* Read-only notes view — opened by the meta-row "notes" chip. Mirrors the
+                            <div className='pt-1.5'>
+                                <PriorityMeter priority={task.priority ?? 0} band={band} />
+                            </div>
+                        </div>
+
+                        {/* Read-only notes view — opened by the meta-row "notes" chip. Mirrors the
                 project-notes rendering: sanitized, whitespace-preserved, mono/secondary. */}
-            {notesOpen && hasNotes && (
-                <div
-                    className='mt-3 rounded-button border p-3 font-mono text-[12px] leading-relaxed whitespace-pre-wrap text-text-secondary-soft'
-                    style={{
-                        backgroundColor: 'var(--surface-input-bg)',
-                        borderColor: 'var(--surface-input-border)'
-                    }}
-                >
-                    {sanitizeText(task.notes ?? '')}
-                </div>
-            )}
+                        {notesOpen && hasNotes && (
+                            <div
+                                className='mt-3 rounded-button border p-3 font-mono text-[12px] leading-relaxed whitespace-pre-wrap text-text-secondary-soft'
+                                style={{
+                                    backgroundColor: 'var(--surface-input-bg)',
+                                    borderColor: 'var(--surface-input-border)'
+                                }}
+                            >
+                                {sanitizeText(task.notes ?? '')}
+                            </div>
+                        )}
 
-            {/* Subtask quick-clear checklist — opened by the subtask chip. */}
-            {subtasksOpen && onToggleSubtasks && subtaskCount > 0 && (
-                <CardSubtaskChecklist profileId={task.profile_id} parentId={task.id} />
-            )}
+                        {/* Subtask quick-clear checklist — opened by the subtask chip. */}
+                        {subtasksOpen && onToggleSubtasks && subtaskCount > 0 && (
+                            <CardSubtaskChecklist profileId={task.profile_id} parentId={task.id} />
+                        )}
 
-            {menuPoint && (
-                <TaskContextMenu
-                    task={task}
-                    point={menuPoint}
-                    onClose={closeMenu}
-                    onStatusChange={handleStatusSelect}
-                    onSelectEdit={onSelectEdit}
-                    editing={editing}
-                    onStartTimer={onStartTimer}
-                    onAddSubtask={
-                        task.parent_id == null ? () => setSubtaskAddPoint(menuPoint) : undefined
-                    }
-                />
-            )}
+                        {menuPoint && (
+                            <TaskContextMenu
+                                task={task}
+                                point={menuPoint}
+                                onClose={closeMenu}
+                                onStatusChange={handleStatusSelect}
+                                onSelectEdit={onSelectEdit}
+                                editing={editing}
+                                onStartTimer={onStartTimer}
+                                onAddSubtask={
+                                    task.parent_id == null
+                                        ? () => setSubtaskAddPoint(menuPoint)
+                                        : undefined
+                                }
+                            />
+                        )}
 
-            {subtaskAddPoint && (
-                <SubtaskQuickAdd
-                    profileId={task.profile_id}
-                    parentId={task.id}
-                    point={subtaskAddPoint}
-                    onClose={() => setSubtaskAddPoint(null)}
-                />
-            )}
+                        {subtaskAddPoint && (
+                            <SubtaskQuickAdd
+                                profileId={task.profile_id}
+                                parentId={task.id}
+                                point={subtaskAddPoint}
+                                onClose={() => setSubtaskAddPoint(null)}
+                            />
+                        )}
                     </div>
                 </div>
             </div>

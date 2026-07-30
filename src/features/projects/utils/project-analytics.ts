@@ -37,7 +37,8 @@ export type ProjectAnalyticsData = {
 };
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
-const isoDate = (d: Date): string => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const isoDate = (d: Date): string =>
+    `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 
 /** Monday-anchored start of the week containing `d`, at local midnight. */
 const startOfWeek = (d: Date): Date => {
@@ -47,7 +48,8 @@ const startOfWeek = (d: Date): Date => {
     return x;
 };
 
-const weekLabel = (d: Date): string => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+const weekLabel = (d: Date): string =>
+    d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 
 /**
  * DONE tasks completed per week over the last `weeks` weeks (Monday-anchored),
@@ -113,7 +115,11 @@ export const computeProjectAnalytics = (
     for (const t of tasks) titleById.set(t.id, t.title);
     const topTasksByTime: TaskTimeEntry[] = (summary?.per_task ?? [])
         .filter((b) => b.task_id != null && titleById.has(b.task_id))
-        .map((b) => ({ taskId: b.task_id!, title: titleById.get(b.task_id!)!, seconds: b.total_seconds }))
+        .map((b) => ({
+            taskId: b.task_id!,
+            title: titleById.get(b.task_id!)!,
+            seconds: b.total_seconds
+        }))
         .sort((a, b) => b.seconds - a.seconds)
         .slice(0, 5);
 

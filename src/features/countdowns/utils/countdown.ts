@@ -32,11 +32,13 @@ export type Countdown = {
 
 const DAY_MS = 86_400_000;
 const pad2 = (n: number) => String(n).padStart(2, '0');
-const isoDate = (d: Date): string => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const isoDate = (d: Date): string =>
+    `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 const startOfDay = (d: Date): Date => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
 /** Last day of a (0-based) month, used to clamp e.g. day 31 into February. */
-const lastDayOfMonth = (year: number, month: number): number => new Date(year, month + 1, 0).getDate();
+const lastDayOfMonth = (year: number, month: number): number =>
+    new Date(year, month + 1, 0).getDate();
 const clampDay = (year: number, month: number, day: number): number =>
     Math.min(day, lastDayOfMonth(year, month));
 
@@ -78,7 +80,7 @@ const nextOccurrence = (anchorStr: string, repeat: CountdownRepeat, today: Date)
         let m = today.getMonth();
         let d = new Date(y, m, clampDay(y, m, day));
         if (d < today) {
-            if (++m > 11) (m = 0), y++;
+            if (++m > 11) ((m = 0), y++);
             d = new Date(y, m, clampDay(y, m, day));
         }
         return isoDate(d);
@@ -98,7 +100,7 @@ const nextOccurrence = (anchorStr: string, repeat: CountdownRepeat, today: Date)
     let m = today.getMonth();
     let d = nthWeekdayOfMonth(y, m, weekday, ordinal);
     if (d < today) {
-        if (++m > 11) (m = 0), y++;
+        if (++m > 11) ((m = 0), y++);
         d = nthWeekdayOfMonth(y, m, weekday, ordinal);
     }
     return isoDate(d);
@@ -227,7 +229,9 @@ export const occurrenceLabel = (
 ): string | null => {
     if (!repeat || repeat === 'none') return null;
     const anchor = parseLocalDate(anchorDate);
-    const next = parseLocalDate(nextOccurrence(anchorDate, repeat as CountdownRepeat, startOfDay(now)));
+    const next = parseLocalDate(
+        nextOccurrence(anchorDate, repeat as CountdownRepeat, startOfDay(now))
+    );
     let n: number;
     switch (repeat) {
         case 'yearly':
@@ -238,7 +242,9 @@ export const occurrenceLabel = (
             break;
         case 'monthly':
         case 'monthly_weekday':
-            n = (next.getFullYear() - anchor.getFullYear()) * 12 + (next.getMonth() - anchor.getMonth());
+            n =
+                (next.getFullYear() - anchor.getFullYear()) * 12 +
+                (next.getMonth() - anchor.getMonth());
             break;
         default:
             return null;

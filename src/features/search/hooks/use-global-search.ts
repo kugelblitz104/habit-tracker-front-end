@@ -17,7 +17,11 @@ const GROUP_LIMIT = 8;
 
 /** Case-insensitive: does any of the given fields contain the query? A leading
  *  name/title match ranks ahead of a body-only (notes/etc.) match. */
-const scoreMatch = (query: string, primary: string, ...secondary: (string | null | undefined)[]) => {
+const scoreMatch = (
+    query: string,
+    primary: string,
+    ...secondary: (string | null | undefined)[]
+) => {
     const p = primary.toLowerCase();
     if (p.startsWith(query)) return 3;
     if (p.includes(query)) return 2;
@@ -25,7 +29,7 @@ const scoreMatch = (query: string, primary: string, ...secondary: (string | null
     return 0;
 };
 
-const rankBy = <T,>(items: { item: T; score: number }[]): T[] =>
+const rankBy = <T>(items: { item: T; score: number }[]): T[] =>
     items
         .filter((r) => r.score > 0)
         .sort((a, b) => b.score - a.score)
@@ -73,7 +77,9 @@ export const useGlobalSearch = (open: boolean, query: string): GlobalSearchGroup
 
     return useMemo(() => {
         const isLoading =
-            tasksQuery.isLoading || projectsQuery.isLoading || (habitsEnabled && habitsQuery.isLoading);
+            tasksQuery.isLoading ||
+            projectsQuery.isLoading ||
+            (habitsEnabled && habitsQuery.isLoading);
 
         if (!q) {
             return { tasks: [], habits: [], projects: [], isLoading, isEmpty: true };
@@ -93,7 +99,7 @@ export const useGlobalSearch = (open: boolean, query: string): GlobalSearchGroup
             }))
         );
 
-        const allHabits: HabitRead[] = habitsEnabled ? habitsQuery.data?.habits ?? [] : [];
+        const allHabits: HabitRead[] = habitsEnabled ? (habitsQuery.data?.habits ?? []) : [];
         const habits = rankBy(
             allHabits.map((habit) => ({
                 item: {

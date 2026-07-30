@@ -77,9 +77,7 @@ export const BandSection = ({
     // section below.
     const upwardIdx = upwardFrom(tasks.length);
 
-    const label = (
-        <SectionHeader label={meta.label} color={meta.labelColor} count={tasks.length} />
-    );
+    const label = <SectionHeader label={meta.label} color={meta.labelColor} count={tasks.length} />;
 
     // The band body (tasks, or the empty hint). Only collapsible bands wrap this
     // in the animated overflow-hidden container — non-collapsible bands (Now /
@@ -98,9 +96,7 @@ export const BandSection = ({
                         task={task}
                         band={band}
                         project={
-                            task.project_id != null
-                                ? projectsById.get(task.project_id)
-                                : undefined
+                            task.project_id != null ? projectsById.get(task.project_id) : undefined
                         }
                         onStatusChange={(status) => onStatusChange(task.id, status)}
                         notesOpen={notesTaskId === task.id}

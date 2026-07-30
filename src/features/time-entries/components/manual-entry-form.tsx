@@ -90,7 +90,12 @@ export const ManualEntryForm = ({ isOpen, onClose, profileId }: ManualEntryFormP
     };
 
     return (
-        <BaseModal isOpen={isOpen} onClose={handleClose} title='Add time entry' panelClassName='max-w-sm'>
+        <BaseModal
+            isOpen={isOpen}
+            onClose={handleClose}
+            title='Add time entry'
+            panelClassName='max-w-sm'
+        >
             <div className='flex flex-col gap-3'>
                 <div>
                     <span className={fieldLabelClass}>Attach to</span>
@@ -182,7 +187,9 @@ export const ManualEntryForm = ({ isOpen, onClose, profileId }: ManualEntryFormP
                 </div>
 
                 {rangeInvalid && (
-                    <p className='font-mono text-[11px] text-danger'>End must be on or after start.</p>
+                    <p className='font-mono text-[11px] text-danger'>
+                        End must be on or after start.
+                    </p>
                 )}
 
                 <div className='flex justify-end gap-2 pt-1'>

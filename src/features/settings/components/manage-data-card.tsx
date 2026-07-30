@@ -1,9 +1,6 @@
 import { exportHabits, importHabits } from '@/features/habits/api/import-export-habits';
 import { invalidateHabits } from '@/features/habits/api/query-keys';
-import {
-    exportProfileEntity,
-    type BackupEntity
-} from '@/features/settings/api/profile-backup';
+import { exportProfileEntity, type BackupEntity } from '@/features/settings/api/profile-backup';
 import { apiErrorMessage } from '@/lib/api-error-message';
 import { exportTasksMarkdown } from '@/features/tasks/api/export-tasks';
 import { useAuth } from '@/lib/auth-context';
@@ -83,11 +80,7 @@ export const ManageDataCard = () => {
         if (!activeProfile) return;
         setExportingEntity(entity);
         try {
-            const count = await exportProfileEntity(
-                activeProfile.id,
-                activeProfile.name,
-                entity
-            );
+            const count = await exportProfileEntity(activeProfile.id, activeProfile.name, entity);
             toast.success(`Exported ${count} ${label.toLowerCase()}`);
         } catch (error) {
             toast.error(apiErrorMessage(error, `Failed to export ${label.toLowerCase()}`));
@@ -178,8 +171,8 @@ export const ManageDataCard = () => {
                     Export by type (JSON) &mdash; one entity of this profile at a time
                 </div>
                 <div className='mb-2.5 text-[11px]' style={{ color: '#7d7369' }}>
-                    A snapshot for portability. For a full, re-importable backup use the Full
-                    backup card below. Integration tokens are never included.
+                    A snapshot for portability. For a full, re-importable backup use the Full backup
+                    card below. Integration tokens are never included.
                 </div>
                 <div className='flex flex-wrap gap-2.5'>
                     {JSON_EXPORTS.map(({ entity, label }) => (

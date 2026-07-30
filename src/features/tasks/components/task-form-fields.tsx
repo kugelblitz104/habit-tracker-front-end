@@ -246,7 +246,12 @@ export const ParentTaskField = ({ value, onChange, options, id }: ParentTaskFiel
             <label className={formLabelClass} htmlFor={fieldId}>
                 Parent task
             </label>
-            <ParentTaskAutocomplete id={fieldId} value={value} onChange={onChange} options={options} />
+            <ParentTaskAutocomplete
+                id={fieldId}
+                value={value}
+                onChange={onChange}
+                options={options}
+            />
         </div>
     );
 };

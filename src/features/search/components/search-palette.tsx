@@ -37,7 +37,9 @@ const ResultRow = ({ result }: { result: SearchResult }) => (
         {result.kind === 'task' && (
             <CheckSquare size={14} className='shrink-0 text-text-faint' aria-hidden='true' />
         )}
-        {result.kind === 'habit' && <Flame size={14} className='shrink-0' style={{ color: result.color }} />}
+        {result.kind === 'habit' && (
+            <Flame size={14} className='shrink-0' style={{ color: result.color }} />
+        )}
         {result.kind === 'project' && <Dot color={result.color} />}
         <span className='min-w-0 flex-1 truncate' title={result.title}>
             {result.title}
@@ -88,14 +90,21 @@ export const SearchPalette = ({ open, onClose }: SearchPaletteProps) => {
             <div className='fixed inset-0 flex justify-center sm:p-4 sm:pt-[12vh]'>
                 <DialogPanel
                     className='flex h-[100dvh] w-full flex-col overflow-hidden border shadow-popover sm:h-fit sm:max-h-[70vh] sm:max-w-xl sm:rounded-card'
-                    style={{ backgroundColor: 'var(--bg)', borderColor: 'var(--surface-card-border)' }}
+                    style={{
+                        backgroundColor: 'var(--bg)',
+                        borderColor: 'var(--surface-card-border)'
+                    }}
                 >
                     <Combobox<SearchResult | null> immediate value={null} onChange={handleSelect}>
                         <div
                             className='flex items-center gap-2.5 border-b px-3.5 py-3'
                             style={{ borderColor: 'var(--surface-card-border)' }}
                         >
-                            <Search size={16} className='shrink-0 text-text-faint' aria-hidden='true' />
+                            <Search
+                                size={16}
+                                className='shrink-0 text-text-faint'
+                                aria-hidden='true'
+                            />
                             <ComboboxInput
                                 autoFocus
                                 value={query}

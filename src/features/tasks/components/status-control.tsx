@@ -72,11 +72,7 @@ export const StatusControl = ({
                                                 : undefined
                                         }
                                     >
-                                        <StatusGlyph
-                                            status={s}
-                                            size={16}
-                                            color={meta.color}
-                                        />
+                                        <StatusGlyph status={s} size={16} color={meta.color} />
                                         <span
                                             style={{
                                                 color: isCurrent

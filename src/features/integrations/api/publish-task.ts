@@ -11,10 +11,9 @@ export const publishTask = async ({
     connectionId,
     taskId
 }: PublishTaskInput): Promise<PublishResult> => {
-    return await IntegrationsService.publishTaskIntegrationsConnectionIdPublishPost(
-        connectionId,
-        { task_id: taskId }
-    );
+    return await IntegrationsService.publishTaskIntegrationsConnectionIdPublishPost(connectionId, {
+        task_id: taskId
+    });
 };
 
 export const usePublishTask = defineMutationHook(publishTask, (queryClient) => {

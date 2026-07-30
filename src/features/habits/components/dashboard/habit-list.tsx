@@ -83,17 +83,15 @@ export const HabitList = ({
     // Shared optimistic mutations so a note saved from this dashboard-level
     // dialog gets the same error handling + cache invalidation as every other
     // tracker write, instead of firing the raw API calls with no feedback.
-    const {
-        trackerCreate: noteTrackerCreate,
-        trackerUpdate: noteTrackerUpdate
-    } = useTrackerMutations(noteDialog.target ?? -1, {
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ['trackers-lite', { habitId: noteDialog.target }]
-            });
-        },
-        onError: () => toast.error('Failed to save note. Please try again.')
-    });
+    const { trackerCreate: noteTrackerCreate, trackerUpdate: noteTrackerUpdate } =
+        useTrackerMutations(noteDialog.target ?? -1, {
+            onSuccess: () => {
+                queryClient.invalidateQueries({
+                    queryKey: ['trackers-lite', { habitId: noteDialog.target }]
+                });
+            },
+            onError: () => toast.error('Failed to save note. Please try again.')
+        });
 
     // Callback for child components to report their streak values
     const handleStreakChange = useCallback((habitId: number, streak: number) => {

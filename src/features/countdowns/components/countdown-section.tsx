@@ -105,8 +105,12 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
                                 aria-pressed={selected}
                                 className='rounded-chip px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] transition-colors'
                                 style={{
-                                    backgroundColor: selected ? 'rgba(255,255,255,.06)' : 'transparent',
-                                    color: selected ? 'var(--color-now-accent)' : 'var(--color-text-muted)'
+                                    backgroundColor: selected
+                                        ? 'rgba(255,255,255,.06)'
+                                        : 'transparent',
+                                    color: selected
+                                        ? 'var(--color-now-accent)'
+                                        : 'var(--color-text-muted)'
                                 }}
                             >
                                 {preset.label}
@@ -125,16 +129,23 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
                             aria-pressed={!isHidden}
                             title={isHidden ? 'Show this group' : 'Hide this group'}
                             className='inline-flex items-center gap-1.5 font-mono text-[11px] transition-opacity'
-                            style={{ color: 'var(--color-text-muted)', opacity: isHidden ? 0.45 : 1 }}
+                            style={{
+                                color: 'var(--color-text-muted)',
+                                opacity: isHidden ? 0.45 : 1
+                            }}
                         >
                             <span
                                 className='h-2.5 w-2.5 rounded-full'
                                 style={{
-                                    backgroundColor: isHidden ? 'transparent' : color ?? 'var(--color-text-faint)',
+                                    backgroundColor: isHidden
+                                        ? 'transparent'
+                                        : (color ?? 'var(--color-text-faint)'),
                                     border: `1.5px solid ${color ?? 'var(--color-text-faint)'}`
                                 }}
                             />
-                            <span style={{ textDecoration: isHidden ? 'line-through' : 'none' }}>{name}</span>
+                            <span style={{ textDecoration: isHidden ? 'line-through' : 'none' }}>
+                                {name}
+                            </span>
                         </button>
                     );
                 })}
@@ -164,7 +175,9 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
                                         countdown={c}
                                         calc={calc}
                                         now={now}
-                                        to={c.task_id != null ? `/tasks/${c.task_id}` : '/countdown'}
+                                        to={
+                                            c.task_id != null ? `/tasks/${c.task_id}` : '/countdown'
+                                        }
                                         linkState={{ from: '/' }}
                                     />
                                 ))}

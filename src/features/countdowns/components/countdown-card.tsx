@@ -30,7 +30,14 @@ type CountdownCardProps = {
  * occurrence). The hero color reflects urgency; the left border reflects the
  * countdown's own category color.
  */
-export const CountdownCard = ({ countdown, calc, now, to, linkState, actions }: CountdownCardProps) => {
+export const CountdownCard = ({
+    countdown,
+    calc,
+    now,
+    to,
+    linkState,
+    actions
+}: CountdownCardProps) => {
     const hero = countdownHero(calc);
     const heroColor = groupColor(calc.group);
     const accent = countdown.color ?? 'var(--surface-card-border)';

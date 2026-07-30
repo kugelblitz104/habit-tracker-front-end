@@ -393,7 +393,7 @@ export const EditableTimeLog = ({
     // Resolved lazily per row/group — undefined (not called) when the caller
     // doesn't opt in, so task/project detail logs pay nothing extra.
     const projectOf = (entry: TimeEntryRead): EntryProject | null =>
-        showProject ? projectFor?.(entry) ?? null : null;
+        showProject ? (projectFor?.(entry) ?? null) : null;
 
     const groups = useMemo<Group[]>(() => {
         const map = new Map<string, Group>();

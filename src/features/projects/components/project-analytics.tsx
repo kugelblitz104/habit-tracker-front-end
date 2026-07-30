@@ -12,21 +12,15 @@ import { useTimeEntrySummary } from '@/features/time-entries/api/get-time-entrie
 import { formatHumanDuration } from '@/features/time-entries/utils/format-duration';
 import { ChevronDown } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import {
-    Bar,
-    BarChart,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis
-} from 'recharts';
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { computeProjectAnalytics, type ThroughputWeek } from '../utils/project-analytics';
 
 const HIDE_KEY = 'project_hide_analytics';
 
 const sectionLabelClass =
     'font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-text-muted';
-const tileLabelClass = 'font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-text-faint';
+const tileLabelClass =
+    'font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-text-faint';
 
 type Segment = { label: string; color: string; count: number };
 
@@ -74,7 +68,9 @@ const ThroughputChart = ({ weeks, color }: { weeks: ThroughputWeek[]; color: str
         <div>
             <div className='mb-2 flex items-baseline justify-between'>
                 <h3 className={tileLabelClass}>Throughput</h3>
-                <span className='font-mono text-[11px] text-text-faint'>{totalDone} done · 8 wks</span>
+                <span className='font-mono text-[11px] text-text-faint'>
+                    {totalDone} done · 8 wks
+                </span>
             </div>
             {totalDone === 0 ? (
                 <p className='font-mono text-[12px] text-text-faint'>
@@ -120,7 +116,13 @@ const ThroughputChart = ({ weeks, color }: { weeks: ThroughputWeek[]; color: str
  * client-side from the project's counts, the loaded task list and the time
  * summary. Stacks into the project page's scroll like the time log below it.
  */
-export const ProjectAnalytics = ({ project, tasks }: { project: ProjectRead; tasks: TaskRead[] }) => {
+export const ProjectAnalytics = ({
+    project,
+    tasks
+}: {
+    project: ProjectRead;
+    tasks: TaskRead[];
+}) => {
     const summaryQuery = useTimeEntrySummary({ profileId: project.profile_id });
 
     const data = useMemo(
@@ -143,7 +145,8 @@ export const ProjectAnalytics = ({ project, tasks }: { project: ProjectRead; tas
 
     const statusSegments: Segment[] = data.statusMix.map((s) => ({
         label: STATUS_META[s.status as keyof typeof STATUS_META]?.label ?? `Status ${s.status}`,
-        color: STATUS_META[s.status as keyof typeof STATUS_META]?.color ?? 'var(--color-text-muted)',
+        color:
+            STATUS_META[s.status as keyof typeof STATUS_META]?.color ?? 'var(--color-text-muted)',
         count: s.count
     }));
     const prioritySegments: Segment[] = data.priorityMix.map((p) => ({
@@ -192,7 +195,10 @@ export const ProjectAnalytics = ({ project, tasks }: { project: ProjectRead; tas
                                 >
                                     <div
                                         className='h-full rounded-full'
-                                        style={{ width: `${data.donePct}%`, backgroundColor: project.color }}
+                                        style={{
+                                            width: `${data.donePct}%`,
+                                            backgroundColor: project.color
+                                        }}
                                     />
                                 </div>
                             </div>
@@ -205,7 +211,8 @@ export const ProjectAnalytics = ({ project, tasks }: { project: ProjectRead; tas
                                         {formatHumanDuration(data.totalSeconds)}
                                     </span>
                                     <span className='font-mono text-[11px] text-text-muted'>
-                                        {data.entryCount} {data.entryCount === 1 ? 'entry' : 'entries'}
+                                        {data.entryCount}{' '}
+                                        {data.entryCount === 1 ? 'entry' : 'entries'}
                                     </span>
                                 </div>
                                 {data.topTasksByTime.length > 0 && (

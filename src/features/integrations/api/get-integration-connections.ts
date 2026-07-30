@@ -9,9 +9,7 @@ export const getIntegrationConnections = async (
     return await IntegrationsService.listIntegrationConnectionsIntegrationsGet(profileId);
 };
 
-export const getIntegrationConnectionsQueryOptions = (
-    profileId: number | null | undefined
-) => {
+export const getIntegrationConnectionsQueryOptions = (profileId: number | null | undefined) => {
     return queryOptions({
         queryKey: ['integration-connections', { profileId }],
         queryFn: () => getIntegrationConnections(profileId!),

@@ -107,9 +107,7 @@ export const useTrackerToggle = (habit: HabitRead, date: Date): UseTrackerToggle
         const update = getNextTrackerState(tracker);
         const previousTrackers = trackers;
         setTrackers((prev) =>
-            prev.map((t) =>
-                t.id === tracker.id ? { ...t, status: update.status ?? t.status } : t
-            )
+            prev.map((t) => (t.id === tracker.id ? { ...t, status: update.status ?? t.status } : t))
         );
         trackerUpdate.mutate(
             { id: tracker.id, update },

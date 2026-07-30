@@ -199,10 +199,18 @@ describe('passesDateFilter', () => {
             closed_date: '2026-03-15T18:42:11.123',
             created_date: '2026-02-01T09:00:00'
         });
-        const onCompleted = { dateField: 'completed' as const, dateFrom: '2026-03-15', dateTo: '2026-03-15' };
+        const onCompleted = {
+            dateField: 'completed' as const,
+            dateFrom: '2026-03-15',
+            dateTo: '2026-03-15'
+        };
         expect(passesDateFilter(done, controls(onCompleted))).toBe(true);
 
-        const onCreated = { dateField: 'created' as const, dateFrom: '2026-02-01', dateTo: '2026-02-01' };
+        const onCreated = {
+            dateField: 'created' as const,
+            dateFrom: '2026-02-01',
+            dateTo: '2026-02-01'
+        };
         expect(passesDateFilter(done, controls(onCreated))).toBe(true);
     });
 
@@ -246,9 +254,10 @@ describe('splitTasksForControls', () => {
             )
         ).toEqual(['assigned']);
         expect(
-            splitTasksForControls([assigned, loose], controls({ filterProjectId: 'none' })).active.map(
-                (t) => t.title
-            )
+            splitTasksForControls(
+                [assigned, loose],
+                controls({ filterProjectId: 'none' })
+            ).active.map((t) => t.title)
         ).toEqual(['loose']);
         expect(
             splitTasksForControls([assigned, loose], controls({ filterProjectId: 'all' })).active
@@ -258,10 +267,7 @@ describe('splitTasksForControls', () => {
     it('filters by priority membership', () => {
         const high = makeTask({ title: 'high', priority: 3 });
         const none = makeTask({ title: 'none', priority: 0 });
-        const { active } = splitTasksForControls(
-            [high, none],
-            controls({ filterPriorities: [3] })
-        );
+        const { active } = splitTasksForControls([high, none], controls({ filterPriorities: [3] }));
         expect(active.map((t) => t.title)).toEqual(['high']);
     });
 });
@@ -349,12 +355,25 @@ describe('buildTaskSections', () => {
     });
 
     describe('sorting', () => {
-        const byTitle = (sortBy: TaskControlsState['sortBy'], sortDir: TaskControlsState['sortDir']) =>
+        const byTitle = (
+            sortBy: TaskControlsState['sortBy'],
+            sortDir: TaskControlsState['sortDir']
+        ) =>
             buildTaskSections(
                 [
-                    makeTask({ title: 'b', priority: 1, due_date: '2026-03-20', status: TaskStatus.SCHEDULED }),
+                    makeTask({
+                        title: 'b',
+                        priority: 1,
+                        due_date: '2026-03-20',
+                        status: TaskStatus.SCHEDULED
+                    }),
                     makeTask({ title: 'a', priority: 3, due_date: null, status: TaskStatus.OPEN }),
-                    makeTask({ title: 'c', priority: 2, due_date: '2026-03-10', status: TaskStatus.BLOCKED })
+                    makeTask({
+                        title: 'c',
+                        priority: 2,
+                        due_date: '2026-03-10',
+                        status: TaskStatus.BLOCKED
+                    })
                 ],
                 controls({ sortBy, sortDir }),
                 new Map()

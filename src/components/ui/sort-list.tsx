@@ -31,11 +31,7 @@ export const SortList = ({
                     >
                         {selectedSort.label}
                         <span className='pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2'>
-                            <ChevronDown
-                                size={16}
-                                className='text-text-muted'
-                                aria-hidden='true'
-                            />
+                            <ChevronDown size={16} className='text-text-muted' aria-hidden='true' />
                         </span>
                     </ListboxButton>
                     <ListboxOptions
@@ -55,9 +51,7 @@ export const SortList = ({
                                     {option.label}
                                     {selectedSort.field === option.field && (
                                         <span className='text-habit-label'>
-                                            {sortDirection === 'asc' && (
-                                                <ArrowUpRight size={15} />
-                                            )}
+                                            {sortDirection === 'asc' && <ArrowUpRight size={15} />}
                                             {sortDirection === 'desc' && (
                                                 <ArrowDownRight size={15} />
                                             )}

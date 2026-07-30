@@ -192,7 +192,10 @@ export const TaskCaptureBar = ({
                 label: `Scheduled ${formatShortDate(parseLocalDate(parsed.scheduledDate))}`
             });
         if (parsed.dueDate)
-            pills.push({ type: 'due', label: `Due ${formatShortDate(parseLocalDate(parsed.dueDate))}` });
+            pills.push({
+                type: 'due',
+                label: `Due ${formatShortDate(parseLocalDate(parsed.dueDate))}`
+            });
         if (parsed.projectName) pills.push({ type: 'project', label: `@${parsed.projectName}` });
         if (parsed.estimatedMinutes != null)
             pills.push({ type: 'estimate', label: `~${parsed.estimatedMinutes}m` });
@@ -209,13 +212,19 @@ export const TaskCaptureBar = ({
             !!s && s.type === 'text' && /^\s+$/.test(s.text);
         let start = idx;
         let count = 1;
-        if (isWs(segs[idx + 1])) count = 2; // token + trailing space
+        if (isWs(segs[idx + 1]))
+            count = 2; // token + trailing space
         else if (isWs(segs[idx - 1])) {
             start = idx - 1; // leading space + token
             count = 2;
         }
         segs.splice(start, count);
-        setValue(segs.map((s) => s.text).join('').replace(/^\s+/, ''));
+        setValue(
+            segs
+                .map((s) => s.text)
+                .join('')
+                .replace(/^\s+/, '')
+        );
         inputRef.current?.focus();
     };
 
