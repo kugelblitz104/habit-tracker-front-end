@@ -22,13 +22,14 @@ type TaskDetailSubtasksProps = {
  * TaskDetailBody's subtasks list — an inline manager so subtasks can be added,
  * renamed, completed and deleted without opening the edit form. (Re-parenting a
  * subtask is a more structural change, so it lives in the editor's
- * SubtaskSection instead.) Subtasks arrive in the profile's tasks-list response
- * (with `parent_id` set) so no extra request is needed. Renders even with zero
- * subtasks so the add input is always available.
+ * SubtaskSection instead.) Fetches this parent's subtasks directly via
+ * `parent_id` (closed ones included, so completed subtasks stay visible struck
+ * through). Renders even with zero subtasks so the add input is always
+ * available.
  */
 export const TaskDetailSubtasks = ({ profileId, parentId }: TaskDetailSubtasksProps) => {
     const queryClient = useQueryClient();
-    const subtasksQuery = useTasks({ profileId, includeClosed: true });
+    const subtasksQuery = useTasks({ profileId, parentId, includeClosed: true });
     const createTask = useCreateTask();
     const updateTask = useUpdateTask();
     const deleteTask = useDeleteTask();
@@ -37,11 +38,9 @@ export const TaskDetailSubtasks = ({ profileId, parentId }: TaskDetailSubtasksPr
     const [newTitle, setNewTitle] = useState('');
     const inputRef = useRef<HTMLInputElement>(null);
 
-    const allTasks = subtasksQuery.data?.tasks ?? [];
-
     const allSubtasks = useMemo(
-        () => sortSubtasks(allTasks.filter((t) => t.parent_id === parentId)),
-        [allTasks, parentId]
+        () => sortSubtasks(subtasksQuery.data?.tasks ?? []),
+        [subtasksQuery.data]
     );
 
     const doneCount = allSubtasks.filter((s) => s.status === TaskStatus.DONE).length;

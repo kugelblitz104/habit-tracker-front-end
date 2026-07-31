@@ -25,6 +25,9 @@ export class TasksService {
      * that view is ordered by closed date (most recent first)
      * - **limit**: Maximum number of tasks to return (default: 100, max: 100)
      * - **offset**: Number of tasks to skip (default: 0)
+     * - **parent_id**: Optional. Only subtasks of this parent task. A plain
+     * filter like `project_id`, not a fetch: a parent that is missing or in
+     * another profile matches nothing rather than 404-ing
      *
      * Active tasks are ordered by priority (desc), due date (asc, no due date
      * last), then creation date (asc).
@@ -43,6 +46,7 @@ export class TasksService {
      * @param includeClosed Include done/cancelled tasks (excluded by default)
      * @param limit Maximum number of tasks to return (1-100)
      * @param offset Number of tasks to skip
+     * @param parentId Only subtasks of this parent task
      * @returns TaskList Successful Response
      * @throws ApiError
      */
@@ -54,6 +58,7 @@ export class TasksService {
         includeClosed: boolean = false,
         limit: number = 100,
         offset?: number,
+        parentId?: (number | null),
     ): CancelablePromise<TaskList> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -66,6 +71,7 @@ export class TasksService {
                 'include_closed': includeClosed,
                 'limit': limit,
                 'offset': offset,
+                'parent_id': parentId,
             },
             errors: {
                 404: `Not found`,

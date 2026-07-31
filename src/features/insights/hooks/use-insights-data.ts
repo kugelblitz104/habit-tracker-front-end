@@ -13,6 +13,7 @@ import {
     getCurrentStreakLength
 } from '@/features/trackers/utils/kpi-utils';
 import { parseLocalDate, parseServerDate } from '@/lib/date-utils';
+import { fetchAllPages } from '@/lib/paginate';
 import { TaskStatus } from '@/types/types';
 import type { TrackerLite } from '@/api';
 import {
@@ -24,33 +25,14 @@ import {
 } from '../utils/insights-utils';
 
 /**
- * The list endpoints have no date-range filter and cap `limit` at 100 per
- * request, so we page through in `PAGE_SIZE` chunks up to `MAX_ROWS` and bucket
- * locally. If a profile has more than the cap, the UI shows a "most recent 500"
- * note rather than silently undercounting.
+ * The list endpoints have no date-range filter, so this reads rows and buckets
+ * them locally. Deliberately bounded at `MAX_ROWS`: if a profile has more, the
+ * UI shows a "most recent 500" note rather than silently undercounting — the
+ * one place that reads a partial list on purpose. `fetchAllPages` walks the
+ * API's 100-row pages up to that bound.
  */
-const PAGE_SIZE = 100;
 const MAX_ROWS = 500;
 const CLOSED_STATUSES = new Set<number>([TaskStatus.DONE, TaskStatus.CANCELLED]);
-
-type Paged<T> = { items: T[]; total: number };
-
-/** Page a list endpoint (100/request) until we hit its total or `MAX_ROWS`. */
-const fetchPaged = async <T>(
-    fetchPage: (limit: number, offset: number) => Promise<{ rows: T[]; total: number }>
-): Promise<Paged<T>> => {
-    const first = await fetchPage(PAGE_SIZE, 0);
-    const items = [...first.rows];
-    const total = first.total ?? items.length;
-    let offset = PAGE_SIZE;
-    while (items.length < Math.min(total, MAX_ROWS)) {
-        const page = await fetchPage(PAGE_SIZE, offset);
-        if (page.rows.length === 0) break;
-        items.push(...page.rows);
-        offset += PAGE_SIZE;
-    }
-    return { items, total };
-};
 
 export type HabitPerf = {
     id: number;
@@ -104,21 +86,25 @@ export const useInsightsData = (rangeDays: RangeDays): InsightsData => {
 
     const tasksQuery = useQuery({
         queryKey: ['insights-tasks', { profileId }],
-        queryFn: () =>
-            fetchPaged(async (limit, offset) => {
-                const res = await getTasks({ profileId, includeClosed: true, limit, offset });
-                return { rows: res.tasks ?? [], total: res.total };
-            }),
+        queryFn: async () => {
+            // getTasks pages internally, so the cap is passed rather than
+            // imposed by slicing here.
+            const res = await getTasks({ profileId, includeClosed: true, maxRows: MAX_ROWS });
+            return { items: res.tasks ?? [], total: res.total };
+        },
         enabled: !!profileId,
         staleTime: 1000 * 60
     });
     const timeQuery = useQuery({
         queryKey: ['insights-time', { profileId }],
         queryFn: () =>
-            fetchPaged(async (limit, offset) => {
-                const res = await getTimeEntries({ profileId, limit, offset });
-                return { rows: res.time_entries ?? [], total: res.total };
-            }),
+            fetchAllPages(
+                async ({ offset, limit }) => {
+                    const res = await getTimeEntries({ profileId, limit, offset });
+                    return { items: res.time_entries ?? [], total: res.total };
+                },
+                { maxRows: MAX_ROWS }
+            ),
         enabled: !!profileId,
         staleTime: 1000 * 60
     });

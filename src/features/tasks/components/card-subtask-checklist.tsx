@@ -12,18 +12,15 @@ type CardSubtaskChecklistProps = {
 
 /**
  * Inline "clear subtasks quickly" list shown under a task card. Lists the
- * parent's OPEN subtasks (the active task list excludes done/cancelled ones),
- * each a checkbox that completes it — completed subtasks then drop out. Add /
- * remove / rename still live in the task editor.
+ * parent's OPEN subtasks (closed ones aren't requested), each a checkbox that
+ * completes it — completed subtasks then drop out. Add / remove / rename still
+ * live in the task editor.
  */
 export const CardSubtaskChecklist = ({ profileId, parentId }: CardSubtaskChecklistProps) => {
-    const tasksQuery = useTasks({ profileId });
+    const tasksQuery = useTasks({ profileId, parentId });
     const updateTask = useUpdateTask();
 
-    const subtasks = useMemo(
-        () => sortSubtasks((tasksQuery.data?.tasks ?? []).filter((t) => t.parent_id === parentId)),
-        [tasksQuery.data, parentId]
-    );
+    const subtasks = useMemo(() => sortSubtasks(tasksQuery.data?.tasks ?? []), [tasksQuery.data]);
 
     const complete = (subtaskId: number) => {
         updateTask.mutate({ taskId: subtaskId, data: { status: TaskStatus.DONE } });
