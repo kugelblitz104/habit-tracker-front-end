@@ -29,7 +29,6 @@ export const HabitsDashboard = () => {
     const days = DASHBOARD_DAYS_BY_SIZE[layoutSize];
     const isSmall = layoutSize === 'sm';
     const { user, activeProfile, activeProfileId } = useAuth();
-    const userId = user?.id || 0; // Fallback to non-existent user ID
 
     const { isWide, selectedHabitId, selectHabit, closeHabit } = useHabitDetailPane();
 
@@ -58,7 +57,7 @@ export const HabitsDashboard = () => {
     };
     // Scope habits to the active profile (keyed per profile so it caches
     // separately and matches the Today panel). Gate until a profile resolves.
-    const habitsQuery = useHabits({ userId, profileId: activeProfileId });
+    const habitsQuery = useHabits({ profileId: activeProfileId });
 
     const habitsAdd = useCreateHabit({
         mutationConfig: {

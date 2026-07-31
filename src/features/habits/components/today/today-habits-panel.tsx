@@ -1,6 +1,6 @@
 import type { HabitRead, ProfileRead } from '@/api';
 import { getHabits } from '@/features/habits/api/get-habits';
-import { useAuth } from '@/lib/auth-context';
+import { habitKeys } from '@/features/habits/api/query-keys';
 import { useResponsiveLayout } from '@/lib/use-responsive-layout';
 import { DisplayStatus } from '@/types/types';
 import { Switch } from '@headlessui/react';
@@ -24,15 +24,17 @@ const UNCATEGORIZED = 'Uncategorized';
  * Dimmed via `opacity: var(--quiet)`.
  */
 export const TodayHabitsPanel = ({ profile, onSelectHabit }: TodayHabitsPanelProps) => {
-    const { user } = useAuth();
-    const userId = user?.id ?? 0;
     const layoutSize = useResponsiveLayout();
     const isPhone = layoutSize === 'sm';
 
+    const profileId = profile?.id;
     const habitsQuery = useQuery({
-        queryKey: ['habits', { userId, profileId: profile?.id }],
-        queryFn: () => getHabits(userId, 100, profile?.id),
-        enabled: !!userId && !!profile?.id && profile?.habits_enabled !== false,
+        queryKey: habitKeys.list(profileId),
+        queryFn: () => {
+            if (!profileId) throw new Error('profileId is required');
+            return getHabits(profileId, 100);
+        },
+        enabled: !!profileId && profile?.habits_enabled !== false,
         staleTime: 1000 * 60
     });
 

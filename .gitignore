@@ -19,3 +19,9 @@
 /blob-report/
 /playwright/.cache/
 .last-run.json
+
+# Claude Code: local-only agent config and guidance. CLAUDE.local.md is the
+# personal variant Claude Code reads alongside (or instead of) a committed
+# CLAUDE.md, so it stays out of the repo.
+.claude/
+CLAUDE.local.md

@@ -113,9 +113,8 @@ test('the habit delete confirm warns, cancels cleanly, and on confirm removes th
     await expect(habitRow(authedPage, GOLDEN.habits.thrice)).toHaveCount(1);
     await expect(habitRow(authedPage, GOLDEN.habits.paused)).toHaveCount(1);
 
-    // Actually deleted server-side, not just dropped from the query cache. The
-    // habit LIST lives under the user, not /habits/ (which is create/delete-all).
-    const remaining = await api.get(`/users/${account.userId}/habits`, {
+    // Actually deleted server-side, not just dropped from the query cache.
+    const remaining = await api.get('/habits/', {
         headers: authHeaders(account),
         params: { profile_id: goldenProfileId, limit: 100 }
     });

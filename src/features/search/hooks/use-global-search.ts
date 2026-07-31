@@ -1,5 +1,6 @@
 import type { HabitRead, ProjectRead, TaskRead } from '@/api';
 import { getHabits } from '@/features/habits/api/get-habits';
+import { habitKeys } from '@/features/habits/api/query-keys';
 import { useProjects } from '@/features/projects/api/get-projects';
 import { useTasks } from '@/features/tasks/api/get-tasks';
 import { getDueInfo } from '@/features/tasks/utils/task-format';
@@ -53,7 +54,7 @@ export type GlobalSearchGroups = {
  * text as a weaker signal); results are ranked and capped per group.
  */
 export const useGlobalSearch = (open: boolean, query: string): GlobalSearchGroups => {
-    const { user, activeProfile, activeProfileId } = useAuth();
+    const { activeProfile, activeProfileId } = useAuth();
     const habitsEnabled = activeProfile?.habits_enabled !== false;
 
     const tasksQuery = useTasks({
@@ -67,8 +68,11 @@ export const useGlobalSearch = (open: boolean, query: string): GlobalSearchGroup
         queryConfig: { enabled: open && !!activeProfileId }
     });
     const habitsQuery = useQuery({
-        queryKey: ['habits', { userId: user?.id ?? 0, profileId: activeProfileId }],
-        queryFn: () => getHabits(user?.id ?? 0, 100, activeProfileId ?? undefined),
+        queryKey: habitKeys.list(activeProfileId),
+        queryFn: () => {
+            if (!activeProfileId) throw new Error('profileId is required');
+            return getHabits(activeProfileId, 100);
+        },
         enabled: open && !!activeProfileId && habitsEnabled,
         staleTime: 1000 * 60
     });

@@ -13,6 +13,6 @@ export type HabitCreate = {
     archived?: boolean;
     sort_order?: number;
     category?: (string | null);
-    profile_id?: (number | null);
+    profile_id: number;
 };
 

@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { HabitCreate } from '../models/HabitCreate';
 import type { HabitKPIs } from '../models/HabitKPIs';
+import type { HabitList } from '../models/HabitList';
 import type { HabitRead } from '../models/HabitRead';
 import type { HabitStreak } from '../models/HabitStreak';
 import type { HabitUpdate } from '../models/HabitUpdate';
@@ -17,7 +18,6 @@ export class HabitsService {
      * Create a new habit
      * Create a new habit with the following information:
      *
-     * - **user_id**: The ID of the user who owns this habit
      * - **name**: Name of the habit
      * - **question**: The daily question to prompt for this habit
      * - **color**: Color code for visual representation
@@ -28,8 +28,8 @@ export class HabitsService {
      * - **archived**: Whether the habit is archived
      * - **sort_order**: The order in which the habit appears in lists (ascending)
      * - **category**: Optional free-text group label (e.g. "Hygiene")
-     * - **profile_id**: Optional profile for this habit. Must belong to the
-     * current user; defaults to the user's oldest profile if omitted
+     * - **profile_id**: The profile this habit belongs to. Must belong to the
+     * current user
      * @param requestBody
      * @returns HabitRead Successful Response
      * @throws ApiError
@@ -42,6 +42,38 @@ export class HabitsService {
             url: '/habits/',
             body: requestBody,
             mediaType: 'application/json',
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * List habits for a profile
+     * Get a paginated list of habits belonging to a profile.
+     *
+     * - **profile_id**: The profile whose habits to list (required)
+     * - **limit**: Maximum number of habits to return (default: 5, max: 100)
+     * - **tz**: Optional IANA timezone for determining "today" (invalid name -> 422)
+     * @param profileId The profile whose habits to list
+     * @param limit Maximum number of habits to return (1-100)
+     * @param tz IANA timezone name (e.g. 'America/New_York'). When provided, 'today' for completed_today/skipped_today is today in this zone; when omitted, the server's local date is used.
+     * @returns HabitList Successful Response
+     * @throws ApiError
+     */
+    public static listHabitsHabitsGet(
+        profileId: number,
+        limit: number = 5,
+        tz?: (string | null),
+    ): CancelablePromise<HabitList> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/habits/',
+            query: {
+                'profile_id': profileId,
+                'limit': limit,
+                'tz': tz,
+            },
             errors: {
                 404: `Not found`,
                 422: `Validation Error`,
@@ -79,10 +111,16 @@ export class HabitsService {
      * Reorder habits
      * Reorder habits by providing their IDs in the desired display order.
      *
-     * - **habit_ids**: List of habit IDs in the order you want them displayed
+     * - **habit_ids**: List of habit IDs in the order you want them displayed,
+     * naming only habits the caller owns
      *
      * The first ID gets the lowest sort_order, last ID gets the highest.
-     * Habits are displayed in ascending sort_order.
+     * Habits are displayed in ascending sort_order. sort_order gaps are
+     * preserved for archived habits within the affected profiles.
+     *
+     * Any unknown id is reported as 404 before ownership of the touched
+     * profiles is checked, so a batch mixing an unknown id with a foreign
+     * habit reports the unknown id rather than a 403.
      * @param requestBody
      * @returns any Successful Response
      * @throws ApiError

@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { HabitList } from '../models/HabitList';
 import type { UserCreate } from '../models/UserCreate';
 import type { UserList } from '../models/UserList';
 import type { UserRead } from '../models/UserRead';
@@ -166,45 +165,6 @@ export class UsersService {
             url: '/users/{user_id}',
             path: {
                 'user_id': userId,
-            },
-            errors: {
-                404: `Not found`,
-                422: `Validation Error`,
-            },
-        });
-    }
-    /**
-     * List all habits for a user
-     * Get a paginated list of all habits belonging to a specific user.
-     *
-     * - **user_id**: The unique identifier of the user
-     * - **limit**: Maximum number of habits to return (default: 5, max: 100)
-     * - **profile_id**: Optional. Only habits belonging to this profile (must
-     * belong to the user)
-     * - **tz**: Optional IANA timezone for determining "today" (invalid name -> 422)
-     * @param userId
-     * @param limit Maximum number of habits to return (1-100)
-     * @param profileId Only habits belonging to this profile
-     * @param tz IANA timezone name (e.g. 'America/New_York'). When provided, 'today' for completed_today/skipped_today is today in this zone; when omitted, the server's local date is used.
-     * @returns HabitList Successful Response
-     * @throws ApiError
-     */
-    public static listUserHabitsUsersUserIdHabitsGet(
-        userId: number,
-        limit: number = 5,
-        profileId?: (number | null),
-        tz?: (string | null),
-    ): CancelablePromise<HabitList> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/users/{user_id}/habits',
-            path: {
-                'user_id': userId,
-            },
-            query: {
-                'limit': limit,
-                'profile_id': profileId,
-                'tz': tz,
             },
             errors: {
                 404: `Not found`,

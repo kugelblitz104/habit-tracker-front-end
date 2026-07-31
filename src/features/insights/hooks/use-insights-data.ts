@@ -5,6 +5,7 @@ import { getTasks } from '@/features/tasks/api/get-tasks';
 import { getTimeEntries } from '@/features/time-entries/api/get-time-entries';
 import { useProjects } from '@/features/projects/api/get-projects';
 import { getHabits } from '@/features/habits/api/get-habits';
+import { habitKeys } from '@/features/habits/api/query-keys';
 import { getTrackersLite } from '@/features/trackers/api/get-trackers';
 import {
     calculateCompletionRate,
@@ -97,9 +98,8 @@ export type InsightsData = {
  * `getTrackersLite` query per active habit via `useQueries`.
  */
 export const useInsightsData = (rangeDays: RangeDays): InsightsData => {
-    const { user, activeProfileId, activeProfile } = useAuth();
+    const { activeProfileId, activeProfile } = useAuth();
     const profileId = activeProfileId ?? undefined;
-    const userId = user?.id ?? 0;
     const weekStartMonday = activeProfile?.week_start_monday ?? true;
 
     const tasksQuery = useQuery({
@@ -125,8 +125,11 @@ export const useInsightsData = (rangeDays: RangeDays): InsightsData => {
     const projectsQuery = useProjects({ profileId });
 
     const habitsQuery = useQuery({
-        queryKey: ['habits', { userId, profileId: activeProfileId }],
-        queryFn: () => getHabits(userId, 100, activeProfileId),
+        queryKey: habitKeys.list(activeProfileId),
+        queryFn: () => {
+            if (!activeProfileId) throw new Error('profileId is required');
+            return getHabits(activeProfileId, 100);
+        },
         enabled: !!activeProfileId,
         staleTime: 1000 * 60
     });
