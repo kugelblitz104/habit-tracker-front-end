@@ -1,6 +1,6 @@
 import type { ProjectRead } from '@/api';
+import { BackLink } from '@/components/ui/back-link';
 import { Pencil } from 'lucide-react';
-import { Link } from 'react-router';
 
 type ProjectHeaderProps = {
     backTo: string;
@@ -27,12 +27,11 @@ export const ProjectHeader = ({
     onEdit
 }: ProjectHeaderProps) => (
     <header className='mb-[30px]'>
-        <Link
+        <BackLink
             to={backTo}
+            label={backLabel}
             className='font-mono text-[12px] text-text-muted hover:text-text-secondary'
-        >
-            {backLabel}
-        </Link>
+        />
 
         <div className='mt-3 flex items-start justify-between gap-4'>
             <div className='flex min-w-0 items-center gap-2.5'>

@@ -11,7 +11,7 @@ import {
 import { CheckSquare, Flame, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { taskDetailPath } from '@/features/tasks/utils/task-url';
+import { habitDetailPath, projectDetailPath, taskDetailPath } from '@/lib/entity-ref';
 import { useGlobalSearch, type SearchResult } from '../hooks/use-global-search';
 
 type SearchPaletteProps = {
@@ -73,13 +73,13 @@ export const SearchPalette = ({ open, onClose }: SearchPaletteProps) => {
         if (!result) return;
         onClose();
         if (result.kind === 'project') {
-            navigate(`/projects/${result.id}`);
+            navigate(projectDetailPath(result));
         } else if (result.kind === 'task') {
             if (isWide) navigate('/tasks', { state: { openTaskId: result.id } });
             else navigate(taskDetailPath(result.task), { state: { from: '/tasks' } });
         } else {
             if (isWide) navigate('/habits', { state: { openHabitId: result.id } });
-            else navigate(`/details/${result.id}`, { state: { from: 'habits' } });
+            else navigate(habitDetailPath(result), { state: { from: 'habits' } });
         }
     };
 

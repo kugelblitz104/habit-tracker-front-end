@@ -3,7 +3,7 @@ import type { TaskStatus } from '@/types/types';
 import { ChevronRight } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { upwardFrom } from '../utils/task-bands';
-import type { TaskUrlRef } from '../utils/task-url';
+import type { SluggedEntity } from '@/lib/entity-ref';
 import { SectionHeader } from './section-header';
 import { TaskCard, type ActiveBand } from './task-card';
 
@@ -29,7 +29,7 @@ export type BandSectionProps = {
     selectedEditTaskId: number | null;
     onToggleNotes: (taskId: number) => void;
     /** Passed the task, not just its id, so the detail URL can use its slug. */
-    onSelectEdit: (task: TaskUrlRef, editing?: boolean) => void;
+    onSelectEdit: (task: SluggedEntity, editing?: boolean) => void;
     /** Task whose subtask quick-clear checklist is open, or null. */
     subtasksTaskId?: number | null;
     onToggleSubtasks?: (taskId: number) => void;

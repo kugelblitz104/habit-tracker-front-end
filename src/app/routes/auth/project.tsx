@@ -1,10 +1,16 @@
 import type { ProjectRead } from '@/api';
 import { ErrorPage } from '@/components/layouts/error-page';
+import { LoadingPage } from '@/components/layouts/loading-page';
 import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
 import { QueryState } from '@/components/ui/query-state';
 import { ProtectedRoute } from '@/features/auth/components/protected-route';
 import { useDeleteProject } from '@/features/projects/api/delete-projects';
-import { useProject, useProjects } from '@/features/projects/api/get-projects';
+import {
+    getProjectQueryOptions,
+    useProject,
+    useProjectBySlug,
+    useProjects
+} from '@/features/projects/api/get-projects';
 import { useUpdateProject } from '@/features/projects/api/update-projects';
 import { DeleteProjectModal } from '@/features/projects/components/delete-project-modal';
 import { ProjectAnalytics } from '@/features/projects/components/project-analytics';
@@ -34,6 +40,8 @@ import { ProjectTimeLog } from '@/features/time-entries/components/project-time-
 import { PageShell } from '@/components/layouts/page-shell';
 import { sanitizeText } from '@/lib/input-sanitization';
 import { useAuth } from '@/lib/auth-context';
+import { parseEntityRef } from '@/lib/entity-ref';
+import { useSlugResolution } from '@/lib/use-slug-resolution';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
@@ -66,7 +74,7 @@ function ProjectContent({ projectId }: { projectId: number }) {
     // Origin-aware back: return to wherever the project was opened from.
     const from = (location.state as { from?: string } | null)?.from;
     const backTo = from === '/' ? '/' : from === '/tasks' ? '/tasks' : '/projects';
-    const backLabel = from === '/' ? '‹ Today' : from === '/tasks' ? '‹ All tasks' : '‹ Projects';
+    const backLabel = from === '/' ? 'Today' : from === '/tasks' ? 'All tasks' : 'Projects';
 
     const projectQuery = useProject({ projectId });
     // Include closed so the Status filter/group can reach done/cancelled tasks.
@@ -363,18 +371,75 @@ function ProjectContent({ projectId }: { projectId: number }) {
     );
 }
 
+/**
+ * Page chrome for the states that render before `ProjectContent` exists: a slug
+ * still resolving, or one that matched nothing.
+ *
+ * `ProjectContent` brings its own `PageShell`, so without this the app header
+ * and nav would vanish on a bad project link, leaving a bare error with no way
+ * out. The task and habit detail routes wrap their equivalent states the same
+ * way.
+ */
+function ProjectStateShell({ children }: { children: React.ReactNode }) {
+    return (
+        <PageShell isWide={false} showPane={false}>
+            {children}
+        </PageShell>
+    );
+}
+
+/**
+ * Slug URLs (`/projects/alpha-project`) resolve the slug to a project, then hand
+ * the resolved id to the same content the numeric route renders. Resolution is
+ * scoped to the active profile, since slugs are unique per profile.
+ */
+function ProjectBySlug({ slug }: { slug: string }) {
+    const { activeProfileId } = useAuth();
+    const query = useProjectBySlug({ slug, profileId: activeProfileId });
+    const { id, isPending, notFound } = useSlugResolution(
+        query,
+        (project) => getProjectQueryOptions(project.id).queryKey
+    );
+
+    if (isPending) {
+        return (
+            <ProjectStateShell>
+                <LoadingPage />
+            </ProjectStateShell>
+        );
+    }
+    if (notFound || id === null) {
+        return (
+            <ProjectStateShell>
+                <ErrorPage message="That project link doesn't match a project in this profile." />
+            </ProjectStateShell>
+        );
+    }
+    return <ProjectContent projectId={id} />;
+}
+
 export default function Project({
     params
-}: Route.ComponentProps & { params: { projectId: string } }) {
-    const projectId = parseInt(params.projectId, 10);
+}: Route.ComponentProps & { params: { projectRef: string } }) {
+    const ref = parseEntityRef(params.projectRef);
 
-    if (isNaN(projectId)) {
-        return <ErrorPage message='Invalid project ID' />;
+    if (ref === null) {
+        return (
+            <ProtectedRoute>
+                <ProjectStateShell>
+                    <ErrorPage message='Invalid project URL' />
+                </ProjectStateShell>
+            </ProtectedRoute>
+        );
     }
 
     return (
         <ProtectedRoute>
-            <ProjectContent projectId={projectId} />
+            {'id' in ref ? (
+                <ProjectContent projectId={ref.id} />
+            ) : (
+                <ProjectBySlug slug={ref.slug} />
+            )}
         </ProtectedRoute>
     );
 }

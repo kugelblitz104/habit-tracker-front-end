@@ -10,8 +10,8 @@ import { useMemo } from 'react';
 
 export type SearchResult =
     | { kind: 'task'; id: number; title: string; meta?: string; task: TaskRead }
-    | { kind: 'habit'; id: number; title: string; meta?: string; color: string }
-    | { kind: 'project'; id: number; title: string; color: string };
+    | { kind: 'habit'; id: number; title: string; meta?: string; color: string; slug: string }
+    | { kind: 'project'; id: number; title: string; color: string; slug: string };
 
 /** Per-group cap so the palette stays scannable on a broad query. */
 const GROUP_LIMIT = 8;
@@ -111,7 +111,8 @@ export const useGlobalSearch = (open: boolean, query: string): GlobalSearchGroup
                     id: habit.id,
                     title: habit.name,
                     meta: habit.category ?? undefined,
-                    color: habit.color
+                    color: habit.color,
+                    slug: habit.slug
                 },
                 score: scoreMatch(q, habit.name, habit.question, habit.notes, habit.category)
             }))
@@ -124,7 +125,8 @@ export const useGlobalSearch = (open: boolean, query: string): GlobalSearchGroup
                     kind: 'project' as const,
                     id: project.id,
                     title: project.name,
-                    color: project.color
+                    color: project.color,
+                    slug: project.slug
                 },
                 score: scoreMatch(q, project.name, project.notes)
             }))

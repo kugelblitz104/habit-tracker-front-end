@@ -58,6 +58,11 @@ export class ProjectsService {
      * - **color**: Hex color code for visual representation
      * - **notes**: Optional markdown notes about the project
      * - **archived**: Whether the project is archived
+     *
+     * The response carries a server-assigned **slug** derived from the name and
+     * unique within the profile ("Alpha" twice gives `alpha` then `alpha-2`), for
+     * use as a readable detail URL - see `GET /projects/by-slug/{slug}`. It cannot
+     * be set by the client.
      * @param requestBody
      * @returns ProjectRead Successful Response
      * @throws ApiError
@@ -105,6 +110,43 @@ export class ProjectsService {
         });
     }
     /**
+     * Get a project by its URL slug
+     * Retrieve a project by its URL **slug** instead of its numeric id, so a
+     * project URL can read as the project it opens (`/projects/alpha-project`).
+     * The response is identical to `GET /projects/{project_id}`, task counts
+     * included.
+     *
+     * - **slug**: The project's slug, as returned in **slug** on any project read
+     * - **profile_id**: The profile the slug belongs to (required)
+     *
+     * Slugs are unique per profile and are re-derived when a project's name
+     * changes, so a slug that resolved before a rename returns 404 afterwards -
+     * the numeric route is the stable one.
+     * @param slug
+     * @param profileId The profile the slug belongs to
+     * @returns ProjectRead Successful Response
+     * @throws ApiError
+     */
+    public static readProjectBySlugProjectsBySlugSlugGet(
+        slug: string,
+        profileId: number,
+    ): CancelablePromise<ProjectRead> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/projects/by-slug/{slug}',
+            path: {
+                'slug': slug,
+            },
+            query: {
+                'profile_id': profileId,
+            },
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Get a project by ID
      * Retrieve a specific project by its ID, including its task counts
      * (**open_count** and **done_count**).
@@ -142,6 +184,11 @@ export class ProjectsService {
      * - **color**: Hex color code for visual representation
      * - **notes**: Optional markdown notes about the project
      * - **archived**: Whether the project is archived
+     *
+     * Changing the **name** re-derives the read-only **slug**, so the project's
+     * `/projects/by-slug/{slug}` URL changes and the previous one stops resolving;
+     * the numeric id URL is unaffected. Moving the project to another profile also
+     * re-derives it, since slugs are unique per profile.
      * @param projectId
      * @param requestBody
      * @returns ProjectRead Successful Response

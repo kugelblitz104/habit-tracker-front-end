@@ -16,11 +16,20 @@ export default [
     route('countdown', 'routes/auth/countdown.tsx'),
     route('habits', 'routes/auth/habits.tsx'),
     route('projects', 'routes/auth/projects.tsx'),
-    route('projects/:projectId', 'routes/auth/project.tsx'),
     route('timer', 'routes/auth/timer.tsx'),
     route('insights', 'routes/auth/insights.tsx'),
-    route('details/:habitId', 'routes/auth/habit-detail.tsx'),
+
+    // Detail routes. Each `:*Ref` is a slug ("setup-utilities") or a numeric id
+    // ("172"); the route resolves whichever it got. Numeric URLs stay
+    // permanently valid: they are what every pre-slug bookmark contains.
+    //
+    // These sit AFTER their list routes above ('tasks', 'projects', 'habits') so
+    // the static path wins over the parameterised one.
     route('tasks/:taskRef', 'routes/auth/task-detail.tsx'),
+    route('projects/:projectRef', 'routes/auth/project.tsx'),
+    route('habits/:habitRef', 'routes/auth/habit-detail.tsx'),
+    // Habit detail used to live at /details/:habitId, kept as a redirect.
+    route('details/:habitId', 'routes/auth/habit-detail-legacy-redirect.tsx'),
     route('settings', 'routes/auth/settings.tsx'),
 
     // Dev-only debug playground (LoadingPage/ErrorPage/Login/Register on

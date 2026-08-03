@@ -7,7 +7,7 @@ import { ChevronRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { passesDateFilter, type TaskControlsState } from '../utils/task-controls';
 import { formatShortDate } from '../utils/task-format';
-import type { TaskUrlRef } from '../utils/task-url';
+import type { SluggedEntity } from '@/lib/entity-ref';
 import { StatusControl } from './status-control';
 
 type CompletedSectionProps = {
@@ -18,7 +18,7 @@ type CompletedSectionProps = {
      * Open a closed task's detail (title click). Omit to render titles inert.
      * Passed the task, not just its id, so the detail URL can use its slug.
      */
-    onSelectTask?: (task: TaskUrlRef) => void;
+    onSelectTask?: (task: SluggedEntity) => void;
     /** Task currently open in the detail pane, for highlight. */
     selectedTaskId?: number | null;
     /** Current controls — used to apply the date-range filter to closed tasks

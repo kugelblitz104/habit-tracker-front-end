@@ -19,5 +19,6 @@ export type HabitRead = {
     updated_date?: (string | null);
     completed_today?: boolean;
     skipped_today?: boolean;
+    slug: string;
 };
 

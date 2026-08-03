@@ -17,6 +17,47 @@ export const getHabit = async (habitId: number): Promise<HabitRead> => {
     return await HabitsService.readHabitHabitsHabitIdGet(habitId, getBrowserTimeZone());
 };
 
+/**
+ * Resolve a readable habit URL (`/habits/daily-stretch`) to its habit.
+ *
+ * Slugs are unique per profile, not globally, so this needs the profile as well
+ * as the slug: a slug from another profile returns 404 rather than the wrong
+ * habit.
+ */
+export const getHabitBySlug = async (slug: string, profileId: number): Promise<HabitRead> => {
+    if (!slug) throw new Error('slug is required');
+    return await HabitsService.readHabitBySlugHabitsBySlugSlugGet(
+        slug,
+        profileId,
+        getBrowserTimeZone()
+    );
+};
+
+export const getHabitBySlugQueryOptions = (
+    slug: string | null | undefined,
+    profileId: number | null | undefined
+) => {
+    return queryOptions({
+        queryKey: ['habit-by-slug', { slug, profileId }],
+        queryFn: () => getHabitBySlug(slug!, profileId!),
+        enabled: !!slug && !!profileId,
+        staleTime: 1000 * 60
+    });
+};
+
+type UseHabitBySlugOptions = {
+    slug: string | null | undefined;
+    profileId: number | null | undefined;
+    queryConfig?: QueryConfig<typeof getHabitBySlugQueryOptions>;
+};
+
+export const useHabitBySlug = ({ slug, profileId, queryConfig }: UseHabitBySlugOptions) => {
+    return useQuery({
+        ...getHabitBySlugQueryOptions(slug, profileId),
+        ...queryConfig
+    });
+};
+
 const getHabitsQueryOptions = (profileId: number | null | undefined, limit = 100) => {
     return queryOptions({
         queryKey: habitKeys.list(profileId),

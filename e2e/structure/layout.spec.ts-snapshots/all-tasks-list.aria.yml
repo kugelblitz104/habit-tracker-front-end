@@ -38,29 +38,29 @@
 - 'button "Status: In progress. Change status"'
 - button "Parent with subtasks"
 - link "Beta Project":
-  - /url: /\/projects\/\d+/
+  - /url: /projects/beta-project
 - text: in progress
 - button "1/2"
 - img "Priority 2 of 3"
 - 'button "Status: Open. Change status"'
 - button "Now band task"
 - link "Alpha Project":
-  - /url: /\/projects\/\d+/
+  - /url: /projects/alpha-project
 - img "Priority 3 of 3"
 - 'button "Status: Open. Change status"'
 - button "A deliberately very long task title that has to ellipsis-clip rather than widen its row on a narrow viewport"
 - link "Alpha Project":
-  - /url: /\/projects\/\d+/
+  - /url: /projects/alpha-project
 - img "Priority 3 of 3"
 - 'button "Status: Open. Change status"'
 - button "Soon band task"
 - link "Alpha Project":
-  - /url: /\/projects\/\d+/
+  - /url: /projects/alpha-project
 - img "Priority 2 of 3"
 - 'button "Status: Open. Change status"'
 - button "Whenever band task"
 - link "Alpha Project":
-  - /url: /\/projects\/\d+/
+  - /url: /projects/alpha-project
 - img "Priority 0 of 3"
 - 'button "Status: Open. Change status"'
 - button "Task with no project"
@@ -68,11 +68,11 @@
 - 'button "Status: Open. Change status"'
 - button "Task with an estimate"
 - link "Alpha Project":
-  - /url: /\/projects\/\d+/
+  - /url: /projects/alpha-project
 - img "Priority 0 of 3"
 - 'button "Status: Deferred. Change status"'
 - button "Deferred task"
 - link "Beta Project":
-  - /url: /\/projects\/\d+/
+  - /url: /projects/beta-project
 - text: deferred
 - img "Priority 3 of 3"

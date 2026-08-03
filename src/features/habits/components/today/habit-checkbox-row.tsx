@@ -5,6 +5,7 @@ import { DisplayStatus } from '@/types/types';
 import { Check, ChevronsRight } from 'lucide-react';
 import { useEffect } from 'react';
 import { Link } from 'react-router';
+import { habitDetailPath } from '@/lib/entity-ref';
 
 type HabitCheckboxRowProps = {
     habit: HabitRead;
@@ -108,7 +109,7 @@ export const HabitCheckboxRow = ({
                 </span>
             </button>
             <Link
-                to={`/details/${habit.id}`}
+                to={habitDetailPath(habit)}
                 state={{ from: 'today' }}
                 onClick={(e) => {
                     // Wide master-detail: open the side pane in place instead of

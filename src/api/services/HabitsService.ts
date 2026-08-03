@@ -30,6 +30,11 @@ export class HabitsService {
      * - **category**: Optional free-text group label (e.g. "Hygiene")
      * - **profile_id**: The profile this habit belongs to. Must belong to the
      * current user
+     *
+     * The response carries a server-assigned **slug** derived from the name and
+     * unique within the profile ("Stretch" twice gives `stretch` then
+     * `stretch-2`), for use as a readable detail URL - see
+     * `GET /habits/by-slug/{slug}`. It cannot be set by the client.
      * @param requestBody
      * @returns HabitRead Successful Response
      * @throws ApiError
@@ -140,6 +145,46 @@ export class HabitsService {
         });
     }
     /**
+     * Get a habit by its URL slug
+     * Retrieve a habit by its URL **slug** instead of its numeric id, so a habit
+     * URL can read as the habit it opens (`/habits/daily-stretch`). The response
+     * is identical to `GET /habits/{habit_id}`.
+     *
+     * - **slug**: The habit's slug, as returned in **slug** on any habit read
+     * - **profile_id**: The profile the slug belongs to (required)
+     * - **tz**: Optional IANA timezone for determining "today" (invalid name -> 422)
+     *
+     * Slugs are unique per profile and are re-derived when a habit's name changes,
+     * so a slug that resolved before a rename returns 404 afterwards - the numeric
+     * route is the stable one.
+     * @param slug
+     * @param profileId The profile the slug belongs to
+     * @param tz IANA timezone name (e.g. 'America/New_York'). When provided, 'today' for completed_today/skipped_today is today in this zone; when omitted, the server's local date is used.
+     * @returns HabitRead Successful Response
+     * @throws ApiError
+     */
+    public static readHabitBySlugHabitsBySlugSlugGet(
+        slug: string,
+        profileId: number,
+        tz?: (string | null),
+    ): CancelablePromise<HabitRead> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/habits/by-slug/{slug}',
+            path: {
+                'slug': slug,
+            },
+            query: {
+                'profile_id': profileId,
+                'tz': tz,
+            },
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Get a habit by ID
      * Retrieve a specific habit by its ID.
      *
@@ -222,6 +267,11 @@ export class HabitsService {
      * - **category**: Optional free-text group label (e.g. "Hygiene")
      * - **profile_id**: Move the habit to another profile (must belong to the
      * habit's owner)
+     *
+     * Changing the **name** re-derives the read-only **slug**, so the habit's
+     * `/habits/by-slug/{slug}` URL changes and the previous one stops resolving;
+     * the numeric id URL is unaffected. Moving the habit to another profile also
+     * re-derives it, since slugs are unique per profile.
      * @param habitId
      * @param requestBody
      * @returns HabitRead Successful Response

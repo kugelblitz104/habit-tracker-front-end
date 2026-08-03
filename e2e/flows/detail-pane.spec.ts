@@ -1,7 +1,7 @@
 import type { APIRequestContext, Locator, Page } from '@playwright/test';
 
 import { authHeaders, type Account } from '../fixtures/api';
-import { GOLDEN, GOLDEN_TASK_SLUGS } from '../fixtures/golden-profile';
+import { GOLDEN, GOLDEN_HABIT_SLUGS, GOLDEN_TASK_SLUGS } from '../fixtures/golden-profile';
 import { expect, gotoAppRoute, test } from '../fixtures/test';
 
 /**
@@ -144,7 +144,7 @@ test("Today's habit rows open the habit pane, evicting the task pane", async ({ 
     await expect(habitLink).toBeVisible();
     await habitLink.click();
 
-    await expect(authedPage).not.toHaveURL(/\/details\//);
+    await expect(authedPage).not.toHaveURL(/\/habits\/[^/]+$/);
     await expect(
         pane.getByRole('heading', { name: GOLDEN.habits.daily, exact: true })
     ).toBeVisible();
@@ -327,15 +327,15 @@ test('@narrow a task title navigates to the full-page task route instead of a pa
 
     await taskTitle(authedPage, GOLDEN.tasks.now).click();
 
-    // The readable slug, not the numeric id — and the heading below proves the
-    // slug actually resolved to the right task rather than just routing.
+    // The readable slug, not the numeric id. The heading below proves the slug
+    // actually resolved to the right task rather than just routing.
     await expect(authedPage).toHaveURL(`/tasks/${GOLDEN_TASK_SLUGS.now}`);
     await expect(detailPane(authedPage)).toHaveCount(0);
     await expect(
         authedPage.getByRole('heading', { name: GOLDEN.tasks.now, exact: true })
     ).toBeVisible();
     // Origin-aware back link, since there is no pane to close.
-    await expect(authedPage.getByRole('link', { name: '‹ Today' })).toBeVisible();
+    await expect(authedPage.getByRole('link', { name: 'Back to Today' })).toBeVisible();
 });
 
 test('@narrow All tasks navigates to the full-page task route instead of a pane', async ({
@@ -358,12 +358,14 @@ test('@narrow a habit row navigates to the full-page habit route instead of a pa
 
     await habitRowLink(authedPage, GOLDEN.habits.daily).click();
 
-    await expect(authedPage).toHaveURL(/\/details\/\d+$/);
+    // Readable slug under /habits, not the numeric /details/ path this route
+    // used to live at; the heading below proves the slug resolved.
+    await expect(authedPage).toHaveURL(`/habits/${GOLDEN_HABIT_SLUGS.daily}`);
     await expect(detailPane(authedPage)).toHaveCount(0);
     await expect(
         authedPage.getByRole('heading', { name: GOLDEN.habits.daily, exact: true })
     ).toBeVisible();
-    await expect(authedPage.getByRole('link', { name: '‹ Habits' })).toBeVisible();
+    await expect(authedPage.getByRole('link', { name: 'Back to Habits' })).toBeVisible();
 });
 
 test('@narrow the countdown form opens as a modal instead of a pane', async ({ authedPage }) => {

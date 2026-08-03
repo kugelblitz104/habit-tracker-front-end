@@ -108,7 +108,7 @@ export const getTaskQueryOptions = (taskId: number | null | undefined) => {
  * Resolve a readable task URL (`/tasks/setup-utilities`) to its task.
  *
  * Slugs are unique per profile, not globally, so this needs the profile as well
- * as the slug — a slug from another profile returns 404 rather than the wrong
+ * as the slug: a slug from another profile returns 404 rather than the wrong
  * task.
  */
 export const getTaskBySlug = async (slug: string, profileId: number): Promise<TaskRead> => {

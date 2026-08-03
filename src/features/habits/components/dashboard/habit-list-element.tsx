@@ -24,6 +24,7 @@ import { Flame } from 'lucide-react';
 import type { MouseEvent } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
+import { habitDetailPath } from '@/lib/entity-ref';
 
 export type HabitListElementProps = {
     habit: HabitRead;
@@ -218,7 +219,7 @@ export const HabitListElement = ({
         >
             <td className='relative'>
                 <Link
-                    to={`/details/${habit.id}`}
+                    to={habitDetailPath(habit)}
                     state={{ from: 'habits' }}
                     onClick={handleNameClick}
                     className='absolute inset-0 flex items-center cursor-pointer px-4'

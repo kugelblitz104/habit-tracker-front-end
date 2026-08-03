@@ -4,6 +4,7 @@ import { ChevronRight, ListChecks } from 'lucide-react';
 import { Link } from 'react-router';
 import type { Countdown, CountdownUrgency } from '@/features/countdowns/utils/countdown';
 import { STATUS_META, type StatusMeta } from './status-config';
+import { projectDetailPath } from '@/lib/entity-ref';
 
 /** Due-chip styling per urgency: overdue + due-now get a filled chip; the
  *  calmer buckets are colored text only, so urgency reads at a glance. */
@@ -73,7 +74,7 @@ export const TaskCardMetaRow = ({
         <div className='mt-1 flex flex-wrap items-center gap-2 font-mono text-[11px]'>
             {showProject && project && (
                 <Link
-                    to={`/projects/${project.id}`}
+                    to={projectDetailPath(project)}
                     state={{ from: pathname }}
                     className='font-semibold transition-opacity hover:opacity-80'
                     style={{ color: project.color }}

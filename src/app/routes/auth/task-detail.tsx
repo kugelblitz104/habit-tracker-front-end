@@ -1,14 +1,15 @@
 import { AppHeader } from '@/components/layouts/app-header';
+import { BackLink } from '@/components/ui/back-link';
 import { ErrorPage } from '@/components/layouts/error-page';
 import { LoadingPage } from '@/components/layouts/loading-page';
 import { ProtectedRoute } from '@/features/auth/components/protected-route';
 import { getTaskQueryOptions, useTaskBySlug } from '@/features/tasks/api/get-tasks';
 import { TaskDetailBody } from '@/features/tasks/components/task-detail-body';
-import { parseTaskRef } from '@/features/tasks/utils/task-url';
+import { parseEntityRef } from '@/lib/entity-ref';
 import { useAuth } from '@/lib/auth-context';
 import { PAGE_MAX_WIDTH } from '@/lib/layout';
 import { useQueryClient } from '@tanstack/react-query';
-import { Link, useLocation, useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import type { Route } from './+types/task-detail';
 
 export function meta({}: Route.MetaArgs) {
@@ -30,12 +31,12 @@ function useBackTo() {
     const fromProject = typeof from === 'string' && from.startsWith('/projects');
     return {
         backTo: fromProject ? from : '/',
-        backLabel: fromProject ? '‹ Back' : '‹ Today',
+        backLabel: fromProject ? 'Back' : 'Today',
         editing: state?.editing ?? false
     };
 }
 
-/** The chrome around the detail body — back-nav, header, width. */
+/** The chrome around the detail body: back-nav, header, width. */
 function TaskDetailShell({ children }: { children: React.ReactNode }) {
     const { backTo, backLabel } = useBackTo();
 
@@ -43,12 +44,13 @@ function TaskDetailShell({ children }: { children: React.ReactNode }) {
         <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
             <AppHeader maxWidthClass={PAGE_MAX_WIDTH} />
             <div className={`mx-auto px-5 py-7 md:px-7 ${PAGE_MAX_WIDTH}`}>
-                <Link
+                <BackLink
                     to={backTo}
-                    className='mb-4 inline-block font-mono text-[12.5px] text-text-muted transition-colors hover:text-text-secondary'
-                >
-                    {backLabel}
-                </Link>
+                    label={backLabel}
+                    // 'Back to Back' would be nonsense for the project origin.
+                    ariaLabel={backLabel === 'Back' ? 'Back' : undefined}
+                    className='mb-4 font-mono text-[12.5px] text-text-muted transition-colors hover:text-text-secondary'
+                />
 
                 <div className='mx-auto max-w-[640px]'>{children}</div>
             </div>
@@ -70,12 +72,12 @@ function TaskDetailContent({ taskId }: { taskId: number }) {
  * resolved id to the same body the numeric route renders.
  *
  * The resolved task is written into the by-id cache so `TaskDetailBody`'s own
- * `useTask` reads it instead of fetching the same row again — a slug deep-link
- * costs one request, not two.
+ * `useTask` reads it instead of fetching the same row again, so a slug
+ * deep-link costs one request, not two.
  *
  * That write is deliberately in the render pass rather than an effect. Child
  * effects run before the parent's, so an effect here fires only after
- * `TaskDetailBody` has already started its own request — measured, not assumed.
+ * `TaskDetailBody` has already started its own request. Measured, not assumed.
  * Nothing is subscribed to the by-id key yet (the child has not mounted), so the
  * write notifies no one, and the app's 60s `staleTime` leaves the seeded entry
  * fresh enough that `useTask` does not revalidate it.
@@ -104,7 +106,7 @@ function TaskDetailBySlug({ slug }: { slug: string }) {
 export default function TaskDetail({
     params
 }: Route.ComponentProps & { params: { taskRef: string } }) {
-    const ref = parseTaskRef(params.taskRef);
+    const ref = parseEntityRef(params.taskRef);
 
     if (ref === null) {
         return <ErrorPage message='Invalid task URL' />;
@@ -113,8 +115,8 @@ export default function TaskDetail({
     return (
         <ProtectedRoute>
             <TaskDetailShell>
-                {'taskId' in ref ? (
-                    <TaskDetailContent taskId={ref.taskId} />
+                {'id' in ref ? (
+                    <TaskDetailContent taskId={ref.id} />
                 ) : (
                     <TaskDetailBySlug slug={ref.slug} />
                 )}

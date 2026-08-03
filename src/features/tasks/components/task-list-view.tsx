@@ -3,7 +3,7 @@ import type { TaskStatus } from '@/types/types';
 import { useMemo } from 'react';
 import { toActiveBand, upwardFrom } from '../utils/task-bands';
 import { buildTaskSections, type TaskControlsState } from '../utils/task-controls';
-import type { TaskUrlRef } from '../utils/task-url';
+import type { SluggedEntity } from '@/lib/entity-ref';
 import { SectionHeader } from './section-header';
 import { TaskCard } from './task-card';
 
@@ -16,7 +16,7 @@ type TaskListViewProps = {
     selectedEditTaskId: number | null;
     onToggleNotes: (taskId: number) => void;
     /** Passed the task, not just its id, so the detail URL can use its slug. */
-    onSelectEdit: (task: TaskUrlRef, editing?: boolean) => void;
+    onSelectEdit: (task: SluggedEntity, editing?: boolean) => void;
     subtasksTaskId?: number | null;
     onToggleSubtasks?: (taskId: number) => void;
     onStartTimer?: (taskId: number) => void;

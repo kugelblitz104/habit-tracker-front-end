@@ -58,7 +58,7 @@ export const DebugMenu = () => {
     const navItems: { label: string; to: string | null }[] = [
         {
             label: habitId ? `Habit detail (#${habitId})` : 'Habit detail — no cached habit',
-            to: habitId ? `/details/${habitId}` : null
+            to: habitId ? `/habits/${habitId}` : null
         },
         {
             label: taskId ? `Task detail (#${taskId})` : 'Task detail — no cached task',

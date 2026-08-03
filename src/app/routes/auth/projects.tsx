@@ -13,6 +13,7 @@ import { PAGE_MAX_WIDTH } from '@/lib/layout';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'react-toastify';
+import { projectDetailPath } from '@/lib/entity-ref';
 import type { Route } from './+types/projects';
 
 export function meta({}: Route.MetaArgs) {
@@ -25,7 +26,7 @@ const ProjectCard = ({ project }: { project: ProjectRead }) => {
     const doneCount = project.done_count ?? 0;
     return (
         <Link
-            to={`/projects/${project.id}`}
+            to={projectDetailPath(project)}
             className={`flex items-center gap-3 rounded-card border p-4 transition-colors hover:bg-white/5 ${
                 project.archived ? 'opacity-60' : ''
             }`}

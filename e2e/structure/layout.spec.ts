@@ -317,8 +317,9 @@ test('the All tasks list keeps its accessible structure', async ({ authedPage })
     // accessible name without coupling to styling at all, so a restructure that
     // preserves classes but reorders or renames controls still fails.
     //
-    // Project link hrefs are matched by pattern — project ids are assigned per
-    // test run by the golden import.
+    // Project link hrefs are asserted literally: they are slugs derived from the
+    // project name, so unlike the ids they replaced they are identical on every
+    // run and need no pattern.
     await expect(paneRow(authedPage).locator('xpath=./div[1]')).toMatchAriaSnapshot({
         name: 'all-tasks-list.aria.yml'
     });

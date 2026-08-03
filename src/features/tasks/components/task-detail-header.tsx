@@ -9,6 +9,7 @@ import { formatShortDate } from '../utils/task-format';
 import { PRIORITY_LABELS } from '../utils/priority-config';
 import { PriorityMeter } from './priority-meter';
 import { STATUS_META } from './status-config';
+import { projectDetailPath } from '@/lib/entity-ref';
 
 // Only now/soon get a colored band chip; whenever is implied (no chip), and
 // closed tasks show their status instead.
@@ -104,7 +105,7 @@ export const TaskDetailHeader = ({
                 <div className='flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11.5px] text-text-faint'>
                     {project && (
                         <Link
-                            to={`/projects/${project.id}`}
+                            to={projectDetailPath(project)}
                             state={{ from: pathname }}
                             className='font-semibold transition-opacity hover:opacity-80'
                             style={{ color: project.color }}

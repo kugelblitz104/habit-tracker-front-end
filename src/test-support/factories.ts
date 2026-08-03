@@ -56,6 +56,8 @@ export const makeProject = (overrides: Partial<ProjectRead> = {}): ProjectRead =
         id: seq,
         profile_id: 1,
         name: `Project ${seq}`,
+        // The API derives this from the name and never returns it null.
+        slug: `project-${seq}`,
         color: '#3366cc',
         created_date: `2026-03-01T00:00:${String(seq).padStart(2, '0')}`,
         ...overrides
@@ -72,6 +74,8 @@ export const makeHabit = (overrides: Partial<HabitRead> = {}): HabitRead => {
         id: seq,
         profile_id: 1,
         name: `Habit ${seq}`,
+        // The API derives this from the name and never returns it null.
+        slug: `habit-${seq}`,
         question: 'Did you?',
         color: '#3366cc',
         frequency: 1,

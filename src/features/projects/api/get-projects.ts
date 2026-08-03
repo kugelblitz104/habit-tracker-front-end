@@ -26,6 +26,29 @@ export const getProjectsQueryOptions = (
     });
 };
 
+/**
+ * Resolve a readable project URL (`/projects/alpha-project`) to its project.
+ *
+ * Slugs are unique per profile, not globally, so this needs the profile as well
+ * as the slug: a slug from another profile returns 404 rather than the wrong
+ * project.
+ */
+export const getProjectBySlug = async (slug: string, profileId: number): Promise<ProjectRead> => {
+    if (!slug) throw new Error('slug is required');
+    return await ProjectsService.readProjectBySlugProjectsBySlugSlugGet(slug, profileId);
+};
+
+export const getProjectBySlugQueryOptions = (
+    slug: string | null | undefined,
+    profileId: number | null | undefined
+) => {
+    return queryOptions({
+        queryKey: ['project-by-slug', { slug, profileId }],
+        queryFn: () => getProjectBySlug(slug!, profileId!),
+        enabled: !!slug && !!profileId
+    });
+};
+
 export const getProjectQueryOptions = (projectId: number | null | undefined) => {
     return queryOptions({
         queryKey: ['project', { projectId }],
@@ -54,6 +77,19 @@ export const useProjects = ({
 type UseProjectOptions = {
     projectId: number | null | undefined;
     queryConfig?: QueryConfig<typeof getProjectQueryOptions>;
+};
+
+type UseProjectBySlugOptions = {
+    slug: string | null | undefined;
+    profileId: number | null | undefined;
+    queryConfig?: QueryConfig<typeof getProjectBySlugQueryOptions>;
+};
+
+export const useProjectBySlug = ({ slug, profileId, queryConfig }: UseProjectBySlugOptions) => {
+    return useQuery({
+        ...getProjectBySlugQueryOptions(slug, profileId),
+        ...queryConfig
+    });
 };
 
 export const useProject = ({ projectId, queryConfig }: UseProjectOptions) => {

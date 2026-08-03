@@ -3,7 +3,7 @@ import { registerDetailPane } from '@/lib/detail-pane-registry';
 import { useResponsiveLayout } from '@/lib/use-responsive-layout';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { taskDetailPath, type TaskUrlRef } from '../utils/task-url';
+import { taskDetailPath, type SluggedEntity } from '@/lib/entity-ref';
 
 /**
  * Shared state for the Today + project task surfaces: the inline read-only notes
@@ -60,7 +60,7 @@ export const useTaskDetailPane = () => {
     // the readable slug URL; a bare id is still accepted for callers that only
     // have one (the search-state hand-off) and yields the numeric URL.
     const selectEdit = useCallback(
-        (task: number | TaskUrlRef, editing = false) => {
+        (task: number | SluggedEntity, editing = false) => {
             const ref = typeof task === 'number' ? { id: task } : task;
             if (isWide) {
                 setSelectedEditTaskId((current) =>

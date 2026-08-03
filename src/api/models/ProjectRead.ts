@@ -13,5 +13,6 @@ export type ProjectRead = {
     updated_date?: (string | null);
     open_count?: number;
     done_count?: number;
+    slug: string;
 };
 
