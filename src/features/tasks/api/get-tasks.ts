@@ -104,6 +104,29 @@ export const getTaskQueryOptions = (taskId: number | null | undefined) => {
     });
 };
 
+/**
+ * Resolve a readable task URL (`/tasks/setup-utilities`) to its task.
+ *
+ * Slugs are unique per profile, not globally, so this needs the profile as well
+ * as the slug — a slug from another profile returns 404 rather than the wrong
+ * task.
+ */
+export const getTaskBySlug = async (slug: string, profileId: number): Promise<TaskRead> => {
+    if (!slug) throw new Error('slug is required');
+    return await TasksService.readTaskBySlugTasksBySlugSlugGet(slug, profileId);
+};
+
+export const getTaskBySlugQueryOptions = (
+    slug: string | null | undefined,
+    profileId: number | null | undefined
+) => {
+    return queryOptions({
+        queryKey: ['task-by-slug', { slug, profileId }],
+        queryFn: () => getTaskBySlug(slug!, profileId!),
+        enabled: !!slug && !!profileId
+    });
+};
+
 type UseTasksOptions = TaskListParams & {
     queryConfig?: QueryConfig<typeof getTasksQueryOptions>;
 };
@@ -123,6 +146,19 @@ type UseTaskOptions = {
 export const useTask = ({ taskId, queryConfig }: UseTaskOptions) => {
     return useQuery({
         ...getTaskQueryOptions(taskId),
+        ...queryConfig
+    });
+};
+
+type UseTaskBySlugOptions = {
+    slug: string | null | undefined;
+    profileId: number | null | undefined;
+    queryConfig?: QueryConfig<typeof getTaskBySlugQueryOptions>;
+};
+
+export const useTaskBySlug = ({ slug, profileId, queryConfig }: UseTaskBySlugOptions) => {
+    return useQuery({
+        ...getTaskBySlugQueryOptions(slug, profileId),
         ...queryConfig
     });
 };

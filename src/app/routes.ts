@@ -20,7 +20,7 @@ export default [
     route('timer', 'routes/auth/timer.tsx'),
     route('insights', 'routes/auth/insights.tsx'),
     route('details/:habitId', 'routes/auth/habit-detail.tsx'),
-    route('tasks/:taskId', 'routes/auth/task-detail.tsx'),
+    route('tasks/:taskRef', 'routes/auth/task-detail.tsx'),
     route('settings', 'routes/auth/settings.tsx'),
 
     // Dev-only debug playground (LoadingPage/ErrorPage/Login/Register on

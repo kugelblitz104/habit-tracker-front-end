@@ -1,8 +1,13 @@
 import { AppHeader } from '@/components/layouts/app-header';
 import { ErrorPage } from '@/components/layouts/error-page';
+import { LoadingPage } from '@/components/layouts/loading-page';
 import { ProtectedRoute } from '@/features/auth/components/protected-route';
+import { getTaskQueryOptions, useTaskBySlug } from '@/features/tasks/api/get-tasks';
 import { TaskDetailBody } from '@/features/tasks/components/task-detail-body';
+import { parseTaskRef } from '@/features/tasks/utils/task-url';
+import { useAuth } from '@/lib/auth-context';
 import { PAGE_MAX_WIDTH } from '@/lib/layout';
+import { useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useNavigate } from 'react-router';
 import type { Route } from './+types/task-detail';
 
@@ -10,18 +15,29 @@ export function meta({}: Route.MetaArgs) {
     return [{ title: 'Habit Tracker' }, { name: 'description', content: 'Task detail' }];
 }
 
-function TaskDetailContent({ taskId }: { taskId: number }) {
-    const navigate = useNavigate();
-    const location = useLocation();
+type DetailState = { from?: string; editing?: boolean } | null;
 
-    // `from` is the origin pathname stashed by the task list (Today `/` or a
-    // project `/projects/:id`). Project origins return to that project; anything
-    // else (including a fresh deep-link) falls back to Today.
-    const state = location.state as { from?: string; editing?: boolean } | null;
+/**
+ * Where the back link and the detail's close button go.
+ *
+ * `from` is the origin pathname stashed by the task list (Today `/` or a project
+ * `/projects/:id`). Project origins return to that project; anything else
+ * (including a fresh deep-link) falls back to Today.
+ */
+function useBackTo() {
+    const state = useLocation().state as DetailState;
     const from = state?.from;
     const fromProject = typeof from === 'string' && from.startsWith('/projects');
-    const backTo = fromProject ? from : '/';
-    const backLabel = fromProject ? '‹ Back' : '‹ Today';
+    return {
+        backTo: fromProject ? from : '/',
+        backLabel: fromProject ? '‹ Back' : '‹ Today',
+        editing: state?.editing ?? false
+    };
+}
+
+/** The chrome around the detail body — back-nav, header, width. */
+function TaskDetailShell({ children }: { children: React.ReactNode }) {
+    const { backTo, backLabel } = useBackTo();
 
     return (
         <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
@@ -34,30 +50,75 @@ function TaskDetailContent({ taskId }: { taskId: number }) {
                     {backLabel}
                 </Link>
 
-                <div className='mx-auto max-w-[640px]'>
-                    <TaskDetailBody
-                        taskId={taskId}
-                        onClose={() => navigate(backTo)}
-                        defaultEditing={state?.editing ?? false}
-                    />
-                </div>
+                <div className='mx-auto max-w-[640px]'>{children}</div>
             </div>
         </div>
     );
 }
 
+function TaskDetailContent({ taskId }: { taskId: number }) {
+    const navigate = useNavigate();
+    const { backTo, editing } = useBackTo();
+
+    return (
+        <TaskDetailBody taskId={taskId} onClose={() => navigate(backTo)} defaultEditing={editing} />
+    );
+}
+
+/**
+ * Slug URLs (`/tasks/setup-utilities`) resolve the slug to a task, then hand the
+ * resolved id to the same body the numeric route renders.
+ *
+ * The resolved task is written into the by-id cache so `TaskDetailBody`'s own
+ * `useTask` reads it instead of fetching the same row again — a slug deep-link
+ * costs one request, not two.
+ *
+ * That write is deliberately in the render pass rather than an effect. Child
+ * effects run before the parent's, so an effect here fires only after
+ * `TaskDetailBody` has already started its own request — measured, not assumed.
+ * Nothing is subscribed to the by-id key yet (the child has not mounted), so the
+ * write notifies no one, and the app's 60s `staleTime` leaves the seeded entry
+ * fresh enough that `useTask` does not revalidate it.
+ *
+ * Slugs are unique per profile, so resolution is scoped to the active profile: a
+ * link to a task in a profile you are not currently in reads as not-found rather
+ * than opening the wrong task.
+ */
+function TaskDetailBySlug({ slug }: { slug: string }) {
+    const { activeProfileId } = useAuth();
+    const queryClient = useQueryClient();
+    const slugQuery = useTaskBySlug({ slug, profileId: activeProfileId });
+    const task = slugQuery.data ?? null;
+
+    if (task) {
+        queryClient.setQueryData(getTaskQueryOptions(task.id).queryKey, task);
+    }
+
+    if (slugQuery.isPending) return <LoadingPage />;
+    if (!task) {
+        return <ErrorPage message="That task link doesn't match a task in this profile." />;
+    }
+    return <TaskDetailContent taskId={task.id} />;
+}
+
 export default function TaskDetail({
     params
-}: Route.ComponentProps & { params: { taskId: string } }) {
-    const taskId = parseInt(params.taskId, 10);
+}: Route.ComponentProps & { params: { taskRef: string } }) {
+    const ref = parseTaskRef(params.taskRef);
 
-    if (isNaN(taskId)) {
-        return <ErrorPage message='Invalid task ID' />;
+    if (ref === null) {
+        return <ErrorPage message='Invalid task URL' />;
     }
 
     return (
         <ProtectedRoute>
-            <TaskDetailContent taskId={taskId} />
+            <TaskDetailShell>
+                {'taskId' in ref ? (
+                    <TaskDetailContent taskId={ref.taskId} />
+                ) : (
+                    <TaskDetailBySlug slug={ref.slug} />
+                )}
+            </TaskDetailShell>
         </ProtectedRoute>
     );
 }

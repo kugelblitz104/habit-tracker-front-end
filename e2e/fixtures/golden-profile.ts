@@ -54,6 +54,26 @@ export const GOLDEN = {
     }
 } as const;
 
+/**
+ * The slug the API derives from a golden title — the readable half of a task
+ * detail URL, `/tasks/now-band-task`.
+ *
+ * This mirrors the backend's `core/slugs.slugify` for the easy case ONLY: the
+ * golden titles are plain ASCII and all distinct, so there is no ASCII folding
+ * to reproduce and no numbered suffix to predict. The real rules (accent
+ * folding, length trimming, `-2` suffixes, all-digit titles) are pinned in the
+ * backend's tests/test_slugs.py — don't grow this into a second implementation.
+ */
+const toSlug = (title: string) =>
+    title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+
+export const GOLDEN_TASK_SLUGS = {
+    now: toSlug(GOLDEN.tasks.now)
+} as const;
+
 const IDS = {
     projectAlpha: 1,
     projectBeta: 2,

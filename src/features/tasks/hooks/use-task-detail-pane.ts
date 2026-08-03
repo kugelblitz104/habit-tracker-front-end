@@ -3,6 +3,7 @@ import { registerDetailPane } from '@/lib/detail-pane-registry';
 import { useResponsiveLayout } from '@/lib/use-responsive-layout';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
+import { taskDetailPath, type TaskUrlRef } from '../utils/task-url';
 
 /**
  * Shared state for the Today + project task surfaces: the inline read-only notes
@@ -12,7 +13,7 @@ import { useLocation, useNavigate } from 'react-router';
  * `isWide` (lg/xl) decides how the editor renders: a sticky right-side detail
  * pane on wide screens. On narrow screens the editor is a full-page screen
  * instead (mirroring habit detail), so selecting a task navigates to
- * `/tasks/:taskId` rather than opening an in-page overlay. The routes own the
+ * `/tasks/:taskRef` rather than opening an in-page overlay. The routes own the
  * task lookup; this hook only tracks which id is open in the wide pane.
  */
 export const useTaskDetailPane = () => {
@@ -54,16 +55,23 @@ export const useTaskDetailPane = () => {
     // intent). On narrow screens there is no pane — navigate to the full-page
     // detail screen, remembering the current page (Today `/` or `/projects/:id`)
     // so the screen can offer origin-aware back-nav. `editing` opens edit mode.
+    //
+    // Takes the task itself where the caller has it, so the navigation can use
+    // the readable slug URL; a bare id is still accepted for callers that only
+    // have one (the search-state hand-off) and yields the numeric URL.
     const selectEdit = useCallback(
-        (taskId: number, editing = false) => {
+        (task: number | TaskUrlRef, editing = false) => {
+            const ref = typeof task === 'number' ? { id: task } : task;
             if (isWide) {
                 setSelectedEditTaskId((current) =>
-                    current === taskId && !editing ? null : taskId
+                    current === ref.id && !editing ? null : ref.id
                 );
                 setEditIntent(editing);
                 return;
             }
-            navigate(`/tasks/${taskId}`, { state: { from: location.pathname, editing } });
+            navigate(taskDetailPath(ref), {
+                state: { from: location.pathname, editing }
+            });
         },
         [isWide, navigate, location.pathname]
     );

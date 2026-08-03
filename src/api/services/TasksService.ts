@@ -104,6 +104,13 @@ export class TasksService {
      * Scheduled data only lives on SCHEDULED tasks: if the created status is
      * anything other than SCHEDULED, scheduled_date/scheduled_time are forced to
      * null even when supplied (prevents orphaned scheduled data).
+     *
+     * The response carries a server-assigned **slug** derived from the title and
+     * unique within the profile ("Follow up" twice gives `follow-up` then
+     * `follow-up-2`), for use as a readable detail URL - see
+     * `GET /tasks/by-slug/{slug}`. It cannot be set by the client, and is always
+     * present: a title whose own characters yield no slug (all digits, or a
+     * non-Latin script) falls back to "task", numbered as usual.
      * @param requestBody
      * @returns TaskRead Successful Response
      * @throws ApiError
@@ -216,6 +223,44 @@ export class TasksService {
         });
     }
     /**
+     * Get a task by its URL slug
+     * Retrieve a task by its URL **slug** instead of its numeric id, so a task
+     * detail URL can read as the task it opens (`/tasks/setup-utilities`). The
+     * response is identical to `GET /tasks/{task_id}`, band and subtask counts
+     * included.
+     *
+     * - **slug**: The task's slug, as returned in **slug** on any task read
+     * - **profile_id**: The profile the slug belongs to (required)
+     *
+     * Slugs are unique per profile and are re-derived when a task's title
+     * changes, so a slug that resolved before a rename returns 404 afterwards -
+     * the numeric route is the stable one. Every task has a slug, so every task
+     * is reachable this way.
+     * @param slug
+     * @param profileId The profile the slug belongs to
+     * @returns TaskRead Successful Response
+     * @throws ApiError
+     */
+    public static readTaskBySlugTasksBySlugSlugGet(
+        slug: string,
+        profileId: number,
+    ): CancelablePromise<TaskRead> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/tasks/by-slug/{slug}',
+            path: {
+                'slug': slug,
+            },
+            query: {
+                'profile_id': profileId,
+            },
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Get a task by ID
      * Retrieve a specific task by its ID, including its computed urgency band
      * and its subtask counts (subtask_count / subtask_done_count, done = status
@@ -279,6 +324,11 @@ export class TasksService {
      * SCHEDULED, scheduled_date/scheduled_time are forced to null - even when the
      * scheduled fields themselves were not part of this update (prevents orphaned
      * scheduled data).
+     *
+     * Changing the **title** re-derives the read-only **slug**, so the task's
+     * `/tasks/by-slug/{slug}` URL changes and the previous one stops resolving;
+     * the numeric id URL is unaffected. Moving the task to another profile also
+     * re-derives it, since slugs are unique per profile.
      * @param taskId
      * @param requestBody
      * @returns TaskRead Successful Response

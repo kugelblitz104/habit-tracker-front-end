@@ -1,7 +1,7 @@
 import type { APIRequestContext, Locator, Page } from '@playwright/test';
 
 import { authHeaders, type Account } from '../fixtures/api';
-import { GOLDEN } from '../fixtures/golden-profile';
+import { GOLDEN, GOLDEN_TASK_SLUGS } from '../fixtures/golden-profile';
 import { expect, gotoAppRoute, test } from '../fixtures/test';
 
 /**
@@ -327,7 +327,9 @@ test('@narrow a task title navigates to the full-page task route instead of a pa
 
     await taskTitle(authedPage, GOLDEN.tasks.now).click();
 
-    await expect(authedPage).toHaveURL(/\/tasks\/\d+$/);
+    // The readable slug, not the numeric id — and the heading below proves the
+    // slug actually resolved to the right task rather than just routing.
+    await expect(authedPage).toHaveURL(`/tasks/${GOLDEN_TASK_SLUGS.now}`);
     await expect(detailPane(authedPage)).toHaveCount(0);
     await expect(
         authedPage.getByRole('heading', { name: GOLDEN.tasks.now, exact: true })
@@ -345,7 +347,7 @@ test('@narrow All tasks navigates to the full-page task route instead of a pane'
     await expect(listTitle).toBeVisible();
     await listTitle.click();
 
-    await expect(authedPage).toHaveURL(/\/tasks\/\d+$/);
+    await expect(authedPage).toHaveURL(`/tasks/${GOLDEN_TASK_SLUGS.now}`);
     await expect(detailPane(authedPage)).toHaveCount(0);
 });
 

@@ -27,5 +27,6 @@ export type TaskRead = {
     band?: string;
     subtask_count?: number;
     subtask_done_count?: number;
+    slug: string;
 };
 

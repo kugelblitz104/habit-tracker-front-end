@@ -21,6 +21,7 @@ import { useTaskDetailPane } from '@/features/tasks/hooks/use-task-detail-pane';
 import { useTaskStatusChange } from '@/features/tasks/hooks/use-task-status-change';
 import { countGroupedTasks, groupTasksByBand } from '@/features/tasks/utils/task-bands';
 import { formatShortDate } from '@/features/tasks/utils/task-format';
+import type { TaskUrlRef } from '@/features/tasks/utils/task-url';
 import { useStartTaskTimer } from '@/features/time-entries/hooks/use-start-task-timer';
 import { parseServerDate, toLocalDateString } from '@/lib/date-utils';
 import { useAuth } from '@/lib/auth-context';
@@ -81,9 +82,9 @@ export const TodayDashboard = () => {
         [closeEdit, selectHabit]
     );
     const handleSelectEdit = useCallback(
-        (taskId: number, editing?: boolean) => {
+        (task: TaskUrlRef, editing?: boolean) => {
             closeHabit();
-            selectEdit(taskId, editing);
+            selectEdit(task, editing);
         },
         [closeHabit, selectEdit]
     );

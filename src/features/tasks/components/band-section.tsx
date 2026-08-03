@@ -3,6 +3,7 @@ import type { TaskStatus } from '@/types/types';
 import { ChevronRight } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { upwardFrom } from '../utils/task-bands';
+import type { TaskUrlRef } from '../utils/task-url';
 import { SectionHeader } from './section-header';
 import { TaskCard, type ActiveBand } from './task-card';
 
@@ -27,7 +28,8 @@ export type BandSectionProps = {
     /** Task selected for the edit detail pane/overlay, or null. */
     selectedEditTaskId: number | null;
     onToggleNotes: (taskId: number) => void;
-    onSelectEdit: (taskId: number, editing?: boolean) => void;
+    /** Passed the task, not just its id, so the detail URL can use its slug. */
+    onSelectEdit: (task: TaskUrlRef, editing?: boolean) => void;
     /** Task whose subtask quick-clear checklist is open, or null. */
     subtasksTaskId?: number | null;
     onToggleSubtasks?: (taskId: number) => void;
@@ -102,7 +104,7 @@ export const BandSection = ({
                         notesOpen={notesTaskId === task.id}
                         editing={selectedEditTaskId === task.id}
                         onToggleNotes={() => onToggleNotes(task.id)}
-                        onSelectEdit={(editing) => onSelectEdit(task.id, editing)}
+                        onSelectEdit={(editing) => onSelectEdit(task, editing)}
                         subtasksOpen={subtasksTaskId === task.id}
                         onToggleSubtasks={
                             onToggleSubtasks ? () => onToggleSubtasks(task.id) : undefined

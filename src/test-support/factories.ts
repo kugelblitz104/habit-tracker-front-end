@@ -23,6 +23,10 @@ export const makeTask = (overrides: Partial<TaskRead> = {}): TaskRead => {
         id: seq,
         profile_id: 1,
         title: `Task ${seq}`,
+        // The API derives this from the title and never returns it null. Kept in
+        // step with `title` above so a fixture task's URL is what the real one
+        // would be; the numbering rule itself is the backend's, tested there.
+        slug: `task-${seq}`,
         priority: 0,
         status: TaskStatus.OPEN,
         due_date: null,

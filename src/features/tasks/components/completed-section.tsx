@@ -7,14 +7,18 @@ import { ChevronRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { passesDateFilter, type TaskControlsState } from '../utils/task-controls';
 import { formatShortDate } from '../utils/task-format';
+import type { TaskUrlRef } from '../utils/task-url';
 import { StatusControl } from './status-control';
 
 type CompletedSectionProps = {
     profileId: number | null | undefined;
     /** Scope to a single project's closed tasks (project view). */
     projectId?: number | null;
-    /** Open a closed task's detail (title click). Omit to render titles inert. */
-    onSelectTask?: (taskId: number) => void;
+    /**
+     * Open a closed task's detail (title click). Omit to render titles inert.
+     * Passed the task, not just its id, so the detail URL can use its slug.
+     */
+    onSelectTask?: (task: TaskUrlRef) => void;
     /** Task currently open in the detail pane, for highlight. */
     selectedTaskId?: number | null;
     /** Current controls — used to apply the date-range filter to closed tasks
@@ -129,7 +133,7 @@ export const CompletedSection = ({
                                             {onSelectTask ? (
                                                 <button
                                                     type='button'
-                                                    onClick={() => onSelectTask(task.id)}
+                                                    onClick={() => onSelectTask(task)}
                                                     aria-pressed={selectedTaskId === task.id}
                                                     className={`min-w-0 flex-1 truncate text-left font-display text-[13.5px] text-text-muted transition-colors hover:text-text-secondary ${
                                                         cancelled ? 'line-through' : ''
