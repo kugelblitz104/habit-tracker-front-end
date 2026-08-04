@@ -8,8 +8,9 @@ type ProjectTimeLogProps = {
 };
 
 /**
- * Editable, date-grouped log of every time entry for a project — task-attached
- * (whose task belongs to the project) plus adhoc entries attached directly.
+ * Editable, date-grouped log of every time entry for a project: task-attached
+ * (whose task, or that task's parent, belongs to the project) plus adhoc
+ * entries attached directly.
  */
 export const ProjectTimeLog = ({ profileId, projectId }: ProjectTimeLogProps) => {
     const entriesQuery = useTimeEntries({ profileId, projectId });

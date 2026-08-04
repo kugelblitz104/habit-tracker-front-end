@@ -28,7 +28,12 @@ export type ProjectAnalyticsData = {
     /** Total tracked seconds for the project (incl. adhoc project-attached). */
     totalSeconds: number;
     entryCount: number;
-    /** Tasks with the most tracked time, highest first (top 5). */
+    /**
+     * This project's own tasks with the most tracked time, highest first (top
+     * 5). Scoped to the loaded task list, which the server filters by
+     * project_id, so a subtask whose project comes from its parent is not in
+     * this list even though its time is folded into totalSeconds above.
+     */
     topTasksByTime: TaskTimeEntry[];
     /** Tasks completed per week, oldest → newest. */
     throughput: ThroughputWeek[];

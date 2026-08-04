@@ -5,7 +5,7 @@ import {
     CHART_TOOLTIP_LABEL_STYLE
 } from '@/components/ui/chart-theme';
 import { formatHumanDuration } from '@/features/time-entries/utils/format-duration';
-import type { ProjectTime } from '../hooks/use-insights-data';
+import type { ProjectTime } from '../utils/insights-utils';
 import { ChartCard } from './chart-card';
 
 /**

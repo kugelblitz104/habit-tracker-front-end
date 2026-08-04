@@ -5,6 +5,9 @@
  * math is local-time (not fixed ms) so bucket boundaries stay put across DST.
  */
 
+import type { ProjectRead, TimeEntryRead } from '@/api';
+import { parseServerDate } from '@/lib/date-utils';
+
 export type RangeDays = 7 | 30 | 90;
 
 export type Bucket = {
@@ -108,4 +111,48 @@ export const bucketBy = <T>(
         if (idx >= 0) totals[idx]! += valueAccessor(item);
     }
     return totals;
+};
+
+export type ProjectTime = {
+    projectId: number | null;
+    name: string;
+    color: string;
+    seconds: number;
+};
+
+/**
+ * Tracked seconds per project for entries starting inside [windowStart,
+ * windowEnd). Keys on `resolved_project_id`, which the API resolves as the
+ * entry's task's project, that task's parent's project for a subtask, or the
+ * entry's own project for adhoc work - the entry's stored `project_id` is null
+ * on anything task-attached and must not be used here. Sorted by descending
+ * time; anything unresolved falls under "No project".
+ */
+export const timeByProject = (
+    entries: TimeEntryRead[],
+    projects: ProjectRead[],
+    windowStart: number,
+    windowEnd: number
+): ProjectTime[] => {
+    const projectById = new Map(projects.map((p) => [p.id, p]));
+    const secondsByProject = new Map<number | null, number>();
+    for (const e of entries) {
+        if (!e.started_at) continue;
+        const t = parseServerDate(e.started_at).getTime();
+        if (t < windowStart || t >= windowEnd) continue;
+        const key = e.resolved_project_id ?? null;
+        secondsByProject.set(key, (secondsByProject.get(key) ?? 0) + (e.duration_seconds ?? 0));
+    }
+    return [...secondsByProject.entries()]
+        .filter(([, seconds]) => seconds > 0)
+        .map(([pid, seconds]) => {
+            const p = pid != null ? projectById.get(pid) : undefined;
+            return {
+                projectId: pid,
+                name: p?.name ?? 'No project',
+                color: p?.color ?? 'var(--color-text-muted)',
+                seconds
+            };
+        })
+        .sort((a, b) => b.seconds - a.seconds);
 };

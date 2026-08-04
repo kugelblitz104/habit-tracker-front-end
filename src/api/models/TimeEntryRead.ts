@@ -16,5 +16,6 @@ export type TimeEntryRead = {
     created_date: string;
     updated_date?: (string | null);
     is_running?: boolean;
+    resolved_project_id?: (number | null);
 };
 

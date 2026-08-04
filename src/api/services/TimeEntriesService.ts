@@ -18,15 +18,16 @@ export class TimeEntriesService {
      *
      * - **profile_id**: The profile whose time entries to list (required)
      * - **task_id**: Optional. Only entries attached to this task
-     * - **project_id**: Optional. Entries for this project — task-attached entries
-     * whose task is in the project plus adhoc entries attached to it directly
+     * - **project_id**: Optional. Entries for this project - task-attached entries
+     * whose task or that task's parent is in the project, plus adhoc entries
+     * attached to it directly
      * - **kind**: Optional. 0 = stopwatch, 1 = pomodoro
      * - **running**: Optional. true = only running entries, false = only completed
      * - **limit**: Maximum number of entries to return (default: 100, max: 100)
      * - **offset**: Number of entries to skip (default: 0)
      * @param profileId The profile whose time entries to list
      * @param taskId Only entries for this task
-     * @param projectId Only entries for this project: task-attached entries whose task belongs to the project, plus adhoc entries attached to it directly
+     * @param projectId Only entries for this project: task-attached entries whose task (or that task's parent) belongs to the project, plus adhoc entries attached to it directly
      * @param kind Only entries of this kind (0 stopwatch, 1 pomodoro)
      * @param running Filter to running (true) or completed (false) entries
      * @param limit Maximum number of entries to return (1-100)
@@ -164,8 +165,9 @@ export class TimeEntriesService {
      *
      * Returns **per_task** (null task_id = the task-less/adhoc bucket),
      * **per_project** (each entry's project resolves to its task's project when
-     * task-attached, else its direct project_id; null = neither), and the grand
-     * **total_seconds**.
+     * task-attached, or that task's parent's project when the task is a subtask
+     * with none of its own, else its direct project_id; null = neither), and the
+     * grand **total_seconds**.
      * @param profileId The profile whose time to aggregate
      * @returns TimeEntrySummary Successful Response
      * @throws ApiError

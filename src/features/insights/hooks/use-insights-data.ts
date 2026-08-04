@@ -20,7 +20,9 @@ import {
     buildBuckets,
     bucketBy,
     startOfDay,
+    timeByProject,
     type Bucket,
+    type ProjectTime,
     type RangeDays
 } from '../utils/insights-utils';
 
@@ -42,13 +44,6 @@ export type HabitPerf = {
     completionRate: number;
     /** Current streak length (streaks are inherently not windowed). */
     currentStreak: number;
-};
-
-export type ProjectTime = {
-    projectId: number | null;
-    name: string;
-    color: string;
-    seconds: number;
 };
 
 export type InsightsData = {
@@ -177,30 +172,16 @@ export const useInsightsData = (rangeDays: RangeDays): InsightsData => {
         const timeTrackedSeconds = timeTrackedSeries.reduce((a, b) => a + b, 0);
 
         // Time by project, windowed: only entries inside the bucket span count.
+        // Attribution is the API's (resolved_project_id), so subtask time
+        // reaches its parent's project - see timeByProject.
         const windowStart = buckets[0]?.start.getTime() ?? today.getTime();
         const windowEnd = buckets[buckets.length - 1]?.end.getTime() ?? today.getTime();
-        const projects = projectsQuery.data?.projects ?? [];
-        const projectById = new Map(projects.map((p) => [p.id, p]));
-        const secondsByProject = new Map<number | null, number>();
-        for (const e of entries) {
-            if (!e.started_at) continue;
-            const t = parseServerDate(e.started_at).getTime();
-            if (t < windowStart || t >= windowEnd) continue;
-            const key = e.project_id ?? null;
-            secondsByProject.set(key, (secondsByProject.get(key) ?? 0) + (e.duration_seconds ?? 0));
-        }
-        const projectTime: ProjectTime[] = [...secondsByProject.entries()]
-            .filter(([, seconds]) => seconds > 0)
-            .map(([pid, seconds]) => {
-                const p = pid != null ? projectById.get(pid) : undefined;
-                return {
-                    projectId: pid,
-                    name: p?.name ?? 'No project',
-                    color: p?.color ?? 'var(--color-text-muted)',
-                    seconds
-                };
-            })
-            .sort((a, b) => b.seconds - a.seconds);
+        const projectTime = timeByProject(
+            entries,
+            projectsQuery.data?.projects ?? [],
+            windowStart,
+            windowEnd
+        );
 
         // Per-habit performance from the fanned-out trackers.
         const habitPerf: HabitPerf[] = activeHabits.map((h, i) => {

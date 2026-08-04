@@ -216,19 +216,25 @@ export const ProjectAnalytics = ({
                                     </span>
                                 </div>
                                 {data.topTasksByTime.length > 0 && (
-                                    <ul className='mt-2.5 flex flex-col gap-1'>
-                                        {data.topTasksByTime.slice(0, 3).map((t) => (
-                                            <li
-                                                key={t.taskId}
-                                                className='flex items-center justify-between gap-2 font-mono text-[11px] text-text-muted'
-                                            >
-                                                <span className='truncate'>{t.title}</span>
-                                                <span className='shrink-0 tabular-nums text-text-faint'>
-                                                    {formatHumanDuration(t.seconds)}
-                                                </span>
-                                            </li>
-                                        ))}
-                                    </ul>
+                                    <>
+                                        <ul className='mt-2.5 flex flex-col gap-1'>
+                                            {data.topTasksByTime.slice(0, 3).map((t) => (
+                                                <li
+                                                    key={t.taskId}
+                                                    className='flex items-center justify-between gap-2 font-mono text-[11px] text-text-muted'
+                                                >
+                                                    <span className='truncate'>{t.title}</span>
+                                                    <span className='shrink-0 tabular-nums text-text-faint'>
+                                                        {formatHumanDuration(t.seconds)}
+                                                    </span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        <p className='mt-1.5 font-mono text-[10px] text-text-faint'>
+                                            This project&apos;s own tasks; subtask time is included
+                                            above but not broken out here.
+                                        </p>
+                                    </>
                                 )}
                             </div>
                         </div>

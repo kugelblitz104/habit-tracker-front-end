@@ -1,4 +1,4 @@
-import type { HabitRead, ProjectRead, TaskRead, TrackerLite } from '@/api';
+import type { HabitRead, ProjectRead, TaskRead, TimeEntryRead, TrackerLite } from '@/api';
 import { TaskStatus, TrackerStatus } from '@/types/types';
 
 /**
@@ -105,6 +105,30 @@ export const makeTrackerLite = (overrides: Partial<TrackerLite> = {}): TrackerLi
         dated: '2026-03-15',
         status: TrackerStatus.NOT_COMPLETED,
         has_note: false,
+        ...overrides
+    };
+};
+
+export const makeTimeEntry = (overrides: Partial<TimeEntryRead> = {}): TimeEntryRead => {
+    seq += 1;
+    return {
+        id: seq,
+        profile_id: 1,
+        task_id: null,
+        // The API forces this null on any task-attached entry and reports the
+        // rollup in `resolved_project_id` - which is why the Insights donut keys
+        // on the latter. A fixture that sets both must keep them consistent.
+        project_id: null,
+        resolved_project_id: null,
+        kind: 0,
+        label: null,
+        note: null,
+        started_at: `2026-03-01T00:00:${String(seq).padStart(2, '0')}`,
+        ended_at: `2026-03-01T00:30:${String(seq).padStart(2, '0')}`,
+        duration_seconds: 1800,
+        created_date: `2026-03-01T00:00:${String(seq).padStart(2, '0')}`,
+        updated_date: null,
+        is_running: false,
         ...overrides
     };
 };
