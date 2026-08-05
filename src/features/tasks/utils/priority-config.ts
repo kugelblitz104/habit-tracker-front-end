@@ -20,7 +20,7 @@ export const PRIORITY_LEVELS: PriorityLevel[] = [
     {
         value: 0,
         label: 'None',
-        description: 'No urgency. Stays in Whenever unless a due date pulls it up.',
+        description: "No urgency. Not brought up unless there's a due date.",
         accent: 'var(--color-text-faint)'
     },
     {
@@ -38,7 +38,7 @@ export const PRIORITY_LEVELS: PriorityLevel[] = [
     {
         value: 3,
         label: 'High',
-        description: 'Urgent. Always in Needs-you-now.',
+        description: 'Urgent. Always needs you now.',
         accent: 'var(--color-now-meter)'
     }
 ];
