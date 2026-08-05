@@ -5,10 +5,12 @@ import { PageShell } from '@/components/layouts/page-shell';
 import { QueryState } from '@/components/ui/query-state';
 import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
 import { useCreateCountdown } from '@/features/countdowns/api/create-countdowns';
+import { useCountdownCategories } from '@/features/countdowns/api/get-countdown-categories';
 import { useDeleteCountdown } from '@/features/countdowns/api/delete-countdowns';
 import { useCountdowns } from '@/features/countdowns/api/get-countdowns';
 import { useUpdateCountdown } from '@/features/countdowns/api/update-countdowns';
 import { CountdownCard } from '@/features/countdowns/components/countdown-card';
+import { ManageCategoriesModal } from '@/features/countdowns/components/modals/manage-categories-modal';
 import { compactFieldClass, compactFieldStyle } from '@/components/ui/forms/form-field-styles';
 import { SelectOption } from '@/components/ui/forms/select-option';
 import {
@@ -18,11 +20,18 @@ import {
     type Countdown,
     type CountdownRepeat
 } from '@/features/countdowns/utils/countdown';
+import {
+    buildCategoryColorMap,
+    catOf,
+    colorOf,
+    colorOfGroup
+} from '@/features/countdowns/utils/category-colors';
+import { CategoryField } from '@/features/countdowns/components/category-field';
 import { TaskSelect } from '@/features/time-entries/components/task-select';
 import { useAuth } from '@/lib/auth-context';
 import { useNow } from '@/lib/use-now';
 import { useResponsiveLayout } from '@/lib/use-responsive-layout';
-import { Pencil, Plus, Trash2, X } from 'lucide-react';
+import { Pencil, Plus, Tags, Trash2, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -50,8 +59,7 @@ const CountdownForm = ({
     const [date, setDate] = useState(initial?.target_date ?? '');
     const [time, setTime] = useState((initial?.target_time ?? '').slice(0, 5));
     const [taskId, setTaskId] = useState<number | null>(initial?.task_id ?? null);
-    const [category, setCategory] = useState(initial?.category ?? '');
-    const [color, setColor] = useState(initial?.color ?? '');
+    const [categoryId, setCategoryId] = useState<number | null>(initial?.category_id ?? null);
     const [repeat, setRepeat] = useState<CountdownRepeat>(
         (initial?.repeat as CountdownRepeat) ?? 'none'
     );
@@ -68,8 +76,7 @@ const CountdownForm = ({
             target_date: date,
             target_time: time || null,
             task_id: taskId,
-            category: category.trim() || null,
-            color: color || null,
+            category_id: categoryId,
             repeat,
             show_occurrence: showOccurrence
         };
@@ -161,29 +168,7 @@ const CountdownForm = ({
                 )}
             </div>
 
-            <div>
-                <div className={labelCls}>Category / color</div>
-                <div className='flex items-center gap-2'>
-                    <input
-                        type='text'
-                        value={category}
-                        onChange={(e) => setCategory(e.target.value)}
-                        placeholder='e.g. Birthdays'
-                        aria-label='Category'
-                        className={`${inputClass} min-w-0 flex-1`}
-                        style={inputStyle}
-                    />
-                    <input
-                        type='color'
-                        value={color || '#8a8177'}
-                        onChange={(e) => setColor(e.target.value)}
-                        aria-label='Color'
-                        title='Accent color'
-                        className='h-8 w-9 shrink-0 cursor-pointer rounded-button border bg-transparent p-0.5'
-                        style={{ borderColor: 'var(--surface-input-border)' }}
-                    />
-                </div>
-            </div>
+            <CategoryField profileId={profileId} value={categoryId} onChange={setCategoryId} />
 
             <div>
                 <div className={labelCls}>Linked task</div>
@@ -225,12 +210,14 @@ const CountdownGridItem = ({
     countdown,
     calc,
     now,
-    onEdit
+    onEdit,
+    categoryColor
 }: {
     countdown: CountdownRead;
     calc: Countdown;
     now: Date;
     onEdit: () => void;
+    categoryColor?: string;
 }) => {
     const del = useDeleteCountdown();
 
@@ -248,6 +235,7 @@ const CountdownGridItem = ({
             countdown={countdown}
             calc={calc}
             now={now}
+            categoryColor={categoryColor}
             actions={
                 <div className='absolute right-2 top-2 flex items-center gap-1'>
                     <button
@@ -284,9 +272,11 @@ export const CountdownDashboard = () => {
     const now = useNow();
 
     const countdownsQuery = useCountdowns({ profileId });
+    const categoryQuery = useCountdownCategories({ profileId });
     const [creating, setCreating] = useState(false);
     const [editing, setEditing] = useState<CountdownRead | null>(null);
     const [groupMode, setGroupMode] = useState<'time' | 'category'>('time');
+    const [managingCategories, setManagingCategories] = useState(false);
     const closePane = () => {
         setCreating(false);
         setEditing(null);
@@ -317,26 +307,39 @@ export const CountdownDashboard = () => {
         };
     }, [countdownsQuery.data, now]);
 
+    // Shared by the category sections and by every card, which needs its own
+    // category's colour in both group modes.
+    const colorFor = useMemo(
+        () => buildCategoryColorMap(categoryQuery.data?.categories ?? []),
+        [categoryQuery.data]
+    );
+
     const categorySections = useMemo(() => {
-        const map = new Map<string, { color?: string; items: typeof items }>();
+        // Sections come from the countdowns themselves, never from the
+        // categories list, so a group with no countdowns stays invisible. The
+        // name is the group key; the colour comes from the members' category_id.
+        const map = new Map<string, typeof items>();
         for (const item of items) {
-            const name = item.countdown.category?.trim() || 'Other';
-            const entry = map.get(name) ?? { color: item.countdown.color ?? undefined, items: [] };
-            entry.items.push(item);
-            map.set(name, entry);
+            const name = catOf(item.countdown.category);
+            const list = map.get(name) ?? [];
+            list.push(item);
+            map.set(name, list);
         }
         return [...map.entries()]
-            .map(([name, entry]) => {
-                entry.items.sort((a, b) => a.calc.dueMs - b.calc.dueMs);
+            .map(([name, groupItems]) => {
+                groupItems.sort((a, b) => a.calc.dueMs - b.calc.dueMs);
                 return {
                     name,
-                    color: entry.color,
-                    items: entry.items,
-                    soonest: entry.items[0]!.calc.dueMs
+                    color: colorOfGroup(
+                        colorFor,
+                        groupItems.map((i) => i.countdown.category_id)
+                    ),
+                    items: groupItems,
+                    soonest: groupItems[0]!.calc.dueMs
                 };
             })
             .sort((a, b) => a.soonest - b.soonest);
-    }, [items]);
+    }, [items, colorFor]);
 
     const disabled = activeProfile != null && activeProfile.countdowns_enabled === false;
 
@@ -465,6 +468,18 @@ export const CountdownDashboard = () => {
                         {activeProfileId && (
                             <button
                                 type='button'
+                                onClick={() => setManagingCategories(true)}
+                                aria-label='Manage countdown groups'
+                                className='flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11px] text-text-secondary transition-colors hover:text-text-primary'
+                                style={inputStyle}
+                            >
+                                <Tags size={13} />
+                                Manage groups
+                            </button>
+                        )}
+                        {activeProfileId && (
+                            <button
+                                type='button'
                                 onClick={() => setCreating(true)}
                                 className='flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11px] text-text-secondary transition-colors hover:text-text-primary'
                                 style={inputStyle}
@@ -476,6 +491,13 @@ export const CountdownDashboard = () => {
                     </div>
                 )}
             </header>
+            {activeProfileId && (
+                <ManageCategoriesModal
+                    isOpen={managingCategories}
+                    onClose={() => setManagingCategories(false)}
+                    profileId={activeProfileId}
+                />
+            )}
 
             {disabled ? (
                 <p className='font-mono text-[12px] text-text-faint'>
@@ -521,6 +543,10 @@ export const CountdownDashboard = () => {
                                                     calc={calc}
                                                     now={now}
                                                     onEdit={() => setEditing(countdown)}
+                                                    categoryColor={colorOf(
+                                                        colorFor,
+                                                        countdown.category_id
+                                                    )}
                                                 />
                                             ))}
                                         </div>

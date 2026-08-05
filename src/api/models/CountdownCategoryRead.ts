@@ -2,19 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type CountdownRead = {
+export type CountdownCategoryRead = {
     profile_id: number;
-    title: string;
-    target_date: string;
-    target_time?: (string | null);
-    task_id?: (number | null);
-    category?: (string | null);
+    name: string;
     color?: (string | null);
-    repeat?: string;
-    show_occurrence?: boolean;
     id: number;
     created_date: string;
     updated_date?: (string | null);
-    category_id?: (number | null);
 };
 

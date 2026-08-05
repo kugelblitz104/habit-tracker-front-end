@@ -3,14 +3,13 @@ import { useAuth } from '@/lib/auth-context';
 import { useNow } from '@/lib/use-now';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
+import { useCountdownCategories } from '../api/get-countdown-categories';
 import { useCountdowns } from '../api/get-countdowns';
 import { COUNTDOWN_RANGE_PRESETS, useCountdownWindow } from '../hooks/use-countdown-window';
+import { buildCategoryColorMap, catOf, colorOf, colorOfGroup } from '../utils/category-colors';
 import { CountdownCard } from './countdown-card';
 
-const UNCATEGORIZED = 'Other';
 const HIDDEN_KEY = 'countdown_hidden_categories';
-
-const catOf = (category: string | null | undefined) => category?.trim() || UNCATEGORIZED;
 
 /**
  * Today's "Countdowns" section — unboxed like the schedule/habits sections.
@@ -23,6 +22,7 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
     const { activeProfile } = useAuth();
     const now = useNow();
     const query = useCountdowns({ profileId });
+    const categoryQuery = useCountdownCategories({ profileId });
     const { windowDays, changeWindow } = useCountdownWindow();
 
     const [hidden, setHidden] = useState<Set<string>>(new Set());
@@ -47,21 +47,28 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
             return next;
         });
 
-    const { groups, categories, hasAny } = useMemo(() => {
+    const { groups, categories, colorFor, hasAny } = useMemo(() => {
         const all = (query.data?.countdowns ?? []).map((c) => ({
             c,
             calc: getCountdown(c.target_date, c.target_time, now, c.repeat as CountdownRepeat)!
         }));
         const inRange = all.filter((i) => windowDays == null || i.calc.daysUntil <= windowDays);
 
-        const catColor = new Map<string, string | undefined>();
+        // Groups come from the countdowns in range, never from the categories
+        // list, so a group with nothing in range stays invisible. The name is
+        // the group key; the colour comes from the members' category_id.
+        const colorFor = buildCategoryColorMap(categoryQuery.data?.categories ?? []);
+        const idsByName = new Map<string, (typeof inRange)[number]['c']['category_id'][]>();
         for (const i of inRange) {
             const name = catOf(i.c.category);
-            if (!catColor.has(name) || (i.c.color && !catColor.get(name))) {
-                catColor.set(name, catColor.get(name) || i.c.color || undefined);
-            }
+            const ids = idsByName.get(name) ?? [];
+            ids.push(i.c.category_id);
+            idsByName.set(name, ids);
         }
-        const categories = [...catColor.entries()].map(([name, color]) => ({ name, color }));
+        const categories = [...idsByName].map(([name, ids]) => ({
+            name,
+            color: colorOfGroup(colorFor, ids)
+        }));
 
         const byCat = new Map<string, typeof inRange>();
         for (const i of inRange) {
@@ -78,8 +85,8 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
             })
             .sort((a, b) => a.soonest - b.soonest);
 
-        return { groups, categories, hasAny: all.length > 0 };
-    }, [query.data, now, windowDays, hidden]);
+        return { groups, categories, colorFor, hasAny: all.length > 0 };
+    }, [query.data, categoryQuery.data, now, windowDays, hidden]);
 
     // Feature toggle (mirrors calendar/habits) + nothing-to-show guard.
     if (activeProfile != null && activeProfile.countdowns_enabled === false) return null;
@@ -179,6 +186,7 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
                                             c.task_id != null ? `/tasks/${c.task_id}` : '/countdown'
                                         }
                                         linkState={{ from: '/' }}
+                                        categoryColor={colorOf(colorFor, c.category_id)}
                                     />
                                 ))}
                             </div>

@@ -19,5 +19,6 @@ export type ImportSummary = {
     calendar_connections_imported?: number;
     integration_connections_imported?: number;
     warnings?: Array<string>;
+    countdown_categories_imported?: number;
 };
 

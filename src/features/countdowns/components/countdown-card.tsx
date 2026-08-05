@@ -1,5 +1,6 @@
 import type { CountdownRead } from '@/api';
 import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
+import { cardAccent } from '@/features/countdowns/utils/category-colors';
 import {
     countdownHero,
     groupColor,
@@ -22,13 +23,15 @@ type CountdownCardProps = {
     linkState?: unknown;
     /** Action controls rendered top-right (e.g. edit/delete on the page). */
     actions?: ReactNode;
+    /** The countdown's group colour, which drives the left border. */
+    categoryColor?: string;
 };
 
 /**
  * Countdown card with the days-remaining number as the hero — large and up
  * front — over the title + meta (date, category, recurrence, optional Nth
  * occurrence). The hero color reflects urgency; the left border reflects the
- * countdown's own category color.
+ * countdown's group color.
  */
 export const CountdownCard = ({
     countdown,
@@ -36,11 +39,12 @@ export const CountdownCard = ({
     now,
     to,
     linkState,
-    actions
+    actions,
+    categoryColor
 }: CountdownCardProps) => {
     const hero = countdownHero(calc);
     const heroColor = groupColor(calc.group);
-    const accent = countdown.color ?? 'var(--surface-card-border)';
+    const accent = cardAccent(categoryColor);
     const nth = countdown.show_occurrence
         ? occurrenceLabel(countdown.target_date, countdown.repeat, now)
         : null;

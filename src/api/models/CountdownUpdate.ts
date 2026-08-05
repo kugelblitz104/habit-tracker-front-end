@@ -12,5 +12,6 @@ export type CountdownUpdate = {
     color?: (string | null);
     repeat?: (string | null);
     show_occurrence?: (boolean | null);
+    category_id?: (number | null);
 };
 

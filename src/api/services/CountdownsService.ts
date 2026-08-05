@@ -41,7 +41,11 @@ export class CountdownsService {
     /**
      * Create a countdown
      * Create a countdown. `task_id` is optional; when set it must reference a
-     * task in the same profile.
+     * task in the same profile. `category_id` selects an existing group, which must
+     * belong to the same profile; `category` files the countdown by name instead,
+     * creating the group if the name is new, and the first countdown in a new group
+     * seeds its colour from its own `color`. Sending both uses `category_id` and
+     * takes `category` from that record.
      * @param requestBody
      * @returns CountdownRead Successful Response
      * @throws ApiError
@@ -109,6 +113,11 @@ export class CountdownsService {
     }
     /**
      * Update a countdown (partial update)
+     * Update a countdown. `profile_id` moves it to another profile of the same
+     * user. `category_id` re-files it into an existing group in the same profile and
+     * a null clears the group; `category` re-files it by name instead, creating the
+     * group if the name is new. Sending both uses `category_id`. The group also
+     * re-resolves on a profile move, since a group belongs to one profile.
      * @param countdownId
      * @param requestBody
      * @returns CountdownRead Successful Response

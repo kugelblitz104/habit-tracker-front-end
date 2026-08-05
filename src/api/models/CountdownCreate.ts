@@ -12,5 +12,6 @@ export type CountdownCreate = {
     color?: (string | null);
     repeat?: string;
     show_occurrence?: boolean;
+    category_id?: (number | null);
 };
 

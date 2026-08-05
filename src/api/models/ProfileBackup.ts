@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { CalendarConnectionBackup } from './CalendarConnectionBackup';
 import type { CountdownBackup } from './CountdownBackup';
+import type { CountdownCategoryBackup } from './CountdownCategoryBackup';
 import type { HabitBackup } from './HabitBackup';
 import type { IntegrationConnectionBackup } from './IntegrationConnectionBackup';
 import type { ProfileSettings } from './ProfileSettings';
@@ -27,5 +28,6 @@ export type ProfileBackup = {
     trackers?: Array<TrackerBackup>;
     calendar_connections?: Array<CalendarConnectionBackup>;
     integration_connections?: Array<IntegrationConnectionBackup>;
+    countdown_categories?: Array<CountdownCategoryBackup>;
 };
 
