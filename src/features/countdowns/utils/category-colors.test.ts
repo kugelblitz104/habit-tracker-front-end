@@ -1,40 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
     buildCategoryColorMap,
+    buildCategoryNameMap,
     cardAccent,
-    catOf,
     colorOf,
-    colorOfGroup,
+    nameOf,
     UNCATEGORIZED
 } from './category-colors';
 
 const cat = (id: number, name: string, color: string | null) =>
     ({ id, profile_id: 1, name, color }) as never;
-
-describe('catOf', () => {
-    it('passes a plain name through unchanged', () => {
-        expect(catOf('Bills')).toBe('Bills');
-    });
-
-    it('trims surrounding whitespace', () => {
-        expect(catOf('  Bills  ')).toBe('Bills');
-    });
-
-    it('falls back to UNCATEGORIZED for a whitespace-only string', () => {
-        expect(catOf('   ')).toBe(UNCATEGORIZED);
-    });
-
-    it('falls back to UNCATEGORIZED for null and undefined', () => {
-        expect(catOf(null)).toBe(UNCATEGORIZED);
-        expect(catOf(undefined)).toBe(UNCATEGORIZED);
-    });
-
-    it('preserves case, keeping "bills" and "Bills" distinct', () => {
-        expect(catOf('bills')).toBe('bills');
-        expect(catOf('Bills')).toBe('Bills');
-        expect(catOf('bills')).not.toBe(catOf('Bills'));
-    });
-});
 
 describe('buildCategoryColorMap', () => {
     it('maps an id to its colour', () => {
@@ -94,34 +69,27 @@ describe('cardAccent', () => {
     });
 });
 
-describe('colorOfGroup', () => {
-    const map = buildCategoryColorMap([cat(7, 'Other', '#FF0000'), cat(8, 'Empty', null)]);
+describe('buildCategoryNameMap', () => {
+    it('maps id to name', () => {
+        const map = buildCategoryNameMap([cat(1, 'Bills', '#0EA5E9'), cat(2, 'Other', null)]);
+        expect(map.get(1)).toBe('Bills');
+        expect(map.get(2)).toBe('Other');
+    });
+});
 
-    it('takes the colour of the first linked member', () => {
-        expect(colorOfGroup(map, [7])).toBe('#FF0000');
+describe('nameOf', () => {
+    const map = buildCategoryNameMap([cat(1, 'Bills', '#0EA5E9'), cat(2, 'Other', null)]);
+
+    it('returns the record name for a linked countdown', () => {
+        expect(nameOf(map, 1)).toBe('Bills');
     });
 
-    it('finds the linked member when an uncategorised one comes first', () => {
-        expect(colorOfGroup(map, [null, 7])).toBe('#FF0000');
+    it('falls back to Other when the countdown has no group', () => {
+        expect(nameOf(map, null)).toBe(UNCATEGORIZED);
     });
 
-    it('resolves the same colour whichever order the members arrive in', () => {
-        expect(colorOfGroup(map, [null, 7])).toBe(colorOfGroup(map, [7, null]));
-    });
-
-    it('skips undefined as well as null', () => {
-        expect(colorOfGroup(map, [undefined, null, 7])).toBe('#FF0000');
-    });
-
-    it('returns undefined when no member is linked', () => {
-        expect(colorOfGroup(map, [null, null])).toBeUndefined();
-    });
-
-    it('returns undefined for an empty group', () => {
-        expect(colorOfGroup(map, [])).toBeUndefined();
-    });
-
-    it('returns undefined when the linked category has no colour', () => {
-        expect(colorOfGroup(map, [null, 8])).toBeUndefined();
+    it('keeps a group actually named Other distinct from the ungrouped fallback', () => {
+        // Same label, different sections: the section key is the id, not the name.
+        expect(nameOf(map, 2)).toBe('Other');
     });
 });

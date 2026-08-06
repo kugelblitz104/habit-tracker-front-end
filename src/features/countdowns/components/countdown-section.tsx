@@ -6,7 +6,12 @@ import { Link } from 'react-router';
 import { useCountdownCategories } from '../api/get-countdown-categories';
 import { useCountdowns } from '../api/get-countdowns';
 import { COUNTDOWN_RANGE_PRESETS, useCountdownWindow } from '../hooks/use-countdown-window';
-import { buildCategoryColorMap, catOf, colorOf, colorOfGroup } from '../utils/category-colors';
+import {
+    buildCategoryColorMap,
+    buildCategoryNameMap,
+    colorOf,
+    nameOf
+} from '../utils/category-colors';
 import { CountdownCard } from './countdown-card';
 
 const HIDDEN_KEY = 'countdown_hidden_categories';
@@ -34,11 +39,12 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
             /* ignore */
         }
     }, []);
-    const toggleCategory = (name: string) =>
+    const toggleCategory = (categoryId: number | null) => {
+        const key = String(categoryId ?? 'none');
         setHidden((prev) => {
             const next = new Set(prev);
-            if (next.has(name)) next.delete(name);
-            else next.add(name);
+            if (next.has(key)) next.delete(key);
+            else next.add(key);
             try {
                 localStorage.setItem(HIDDEN_KEY, JSON.stringify([...next]));
             } catch {
@@ -46,8 +52,9 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
             }
             return next;
         });
+    };
 
-    const { groups, categories, colorFor, hasAny } = useMemo(() => {
+    const { groups, categories, colorFor, nameFor, hasAny } = useMemo(() => {
         const all = (query.data?.countdowns ?? []).map((c) => ({
             c,
             calc: getCountdown(c.target_date, c.target_time, now, c.repeat as CountdownRepeat)!
@@ -55,37 +62,38 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
         const inRange = all.filter((i) => windowDays == null || i.calc.daysUntil <= windowDays);
 
         // Groups come from the countdowns in range, never from the categories
-        // list, so a group with nothing in range stays invisible. The name is
-        // the group key; the colour comes from the members' category_id.
+        // list, so a group with nothing in range stays invisible. The key is
+        // the category id, so a group named "Other" is its own section rather
+        // than merging with the ungrouped ones.
         const colorFor = buildCategoryColorMap(categoryQuery.data?.categories ?? []);
-        const idsByName = new Map<string, (typeof inRange)[number]['c']['category_id'][]>();
+        const nameFor = buildCategoryNameMap(categoryQuery.data?.categories ?? []);
+        const byCat = new Map<number | null, typeof inRange>();
         for (const i of inRange) {
-            const name = catOf(i.c.category);
-            const ids = idsByName.get(name) ?? [];
-            ids.push(i.c.category_id);
-            idsByName.set(name, ids);
+            const key = i.c.category_id ?? null;
+            const list = byCat.get(key) ?? [];
+            list.push(i);
+            byCat.set(key, list);
         }
-        const categories = [...idsByName].map(([name, ids]) => ({
-            name,
-            color: colorOfGroup(colorFor, ids)
+        const categories = [...byCat.entries()].map(([categoryId]) => ({
+            categoryId,
+            name: nameOf(nameFor, categoryId),
+            color: colorOf(colorFor, categoryId)
         }));
 
-        const byCat = new Map<string, typeof inRange>();
-        for (const i of inRange) {
-            if (hidden.has(catOf(i.c.category))) continue;
-            const name = catOf(i.c.category);
-            const list = byCat.get(name) ?? [];
-            list.push(i);
-            byCat.set(name, list);
-        }
         const groups = [...byCat.entries()]
-            .map(([name, items]) => {
+            .filter(([categoryId]) => !hidden.has(String(categoryId ?? 'none')))
+            .map(([categoryId, items]) => {
                 items.sort((a, b) => a.calc.dueMs - b.calc.dueMs);
-                return { name, items, soonest: items[0]!.calc.dueMs };
+                return {
+                    categoryId,
+                    name: nameOf(nameFor, categoryId),
+                    items,
+                    soonest: items[0]!.calc.dueMs
+                };
             })
             .sort((a, b) => a.soonest - b.soonest);
 
-        return { groups, categories, colorFor, hasAny: all.length > 0 };
+        return { groups, categories, colorFor, nameFor, hasAny: all.length > 0 };
     }, [query.data, categoryQuery.data, now, windowDays, hidden]);
 
     // Feature toggle (mirrors calendar/habits) + nothing-to-show guard.
@@ -126,13 +134,14 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
                     })}
                 </span>
                 <span className='flex-1' />
-                {categories.map(({ name, color }) => {
-                    const isHidden = hidden.has(name);
+                {categories.map(({ categoryId, name, color }) => {
+                    const key = String(categoryId ?? 'none');
+                    const isHidden = hidden.has(key);
                     return (
                         <button
-                            key={name}
+                            key={key}
                             type='button'
-                            onClick={() => toggleCategory(name)}
+                            onClick={() => toggleCategory(categoryId)}
                             aria-pressed={!isHidden}
                             title={isHidden ? 'Show this group' : 'Hide this group'}
                             className='inline-flex items-center gap-1.5 font-mono text-[11px] transition-opacity'
@@ -171,7 +180,7 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
             ) : (
                 <div className='flex flex-col gap-[18px]'>
                     {groups.map((group) => (
-                        <div key={group.name}>
+                        <div key={`cat-${group.categoryId ?? 'none'}`}>
                             <div className='mb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-text-faint'>
                                 {group.name}
                             </div>
@@ -187,6 +196,11 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
                                         }
                                         linkState={{ from: '/' }}
                                         categoryColor={colorOf(colorFor, c.category_id)}
+                                        categoryName={
+                                            c.category_id != null
+                                                ? nameFor.get(c.category_id)
+                                                : undefined
+                                        }
                                     />
                                 ))}
                             </div>

@@ -9,7 +9,6 @@ export type CountdownBackup = {
     target_date: string;
     target_time?: (string | null);
     category?: (string | null);
-    color?: (string | null);
     repeat?: string;
     show_occurrence?: boolean;
     created_date?: (string | null);

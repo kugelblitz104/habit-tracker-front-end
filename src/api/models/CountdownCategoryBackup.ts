@@ -6,7 +6,7 @@
  * A countdown group's name and colour.
  *
  * The `id` is not carried: countdowns resolve their category by name on
- * restore, since `Countdown.category` mirrors it exactly.
+ * restore, matched against `CountdownBackup.category`.
  */
 export type CountdownCategoryBackup = {
     name: string;

@@ -8,8 +8,6 @@ export type CountdownCreate = {
     target_date: string;
     target_time?: (string | null);
     task_id?: (number | null);
-    category?: (string | null);
-    color?: (string | null);
     repeat?: string;
     show_occurrence?: boolean;
     category_id?: (number | null);

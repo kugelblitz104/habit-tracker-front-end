@@ -121,9 +121,7 @@ export class CountdownCategoriesService {
      * Update a countdown category (partial update)
      * Update a countdown category. Only provided fields are updated.
      *
-     * Renaming updates every countdown currently in this category so their
-     * **category** text keeps matching the record's new name. Setting **color**
-     * to null clears it; setting **name** to null is rejected.
+     * Setting **color** to null clears it; setting **name** to null is rejected.
      *
      * Fails with 409 if the new name is already used by another category in the
      * same profile.

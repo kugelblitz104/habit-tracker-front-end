@@ -22,9 +22,9 @@ import {
 } from '@/features/countdowns/utils/countdown';
 import {
     buildCategoryColorMap,
-    catOf,
+    buildCategoryNameMap,
     colorOf,
-    colorOfGroup
+    nameOf
 } from '@/features/countdowns/utils/category-colors';
 import { CategoryField } from '@/features/countdowns/components/category-field';
 import { TaskSelect } from '@/features/time-entries/components/task-select';
@@ -211,13 +211,15 @@ const CountdownGridItem = ({
     calc,
     now,
     onEdit,
-    categoryColor
+    categoryColor,
+    categoryName
 }: {
     countdown: CountdownRead;
     calc: Countdown;
     now: Date;
     onEdit: () => void;
     categoryColor?: string;
+    categoryName?: string;
 }) => {
     const del = useDeleteCountdown();
 
@@ -236,6 +238,7 @@ const CountdownGridItem = ({
             calc={calc}
             now={now}
             categoryColor={categoryColor}
+            categoryName={categoryName}
             actions={
                 <div className='absolute right-2 top-2 flex items-center gap-1'>
                     <button
@@ -313,33 +316,36 @@ export const CountdownDashboard = () => {
         () => buildCategoryColorMap(categoryQuery.data?.categories ?? []),
         [categoryQuery.data]
     );
+    const nameFor = useMemo(
+        () => buildCategoryNameMap(categoryQuery.data?.categories ?? []),
+        [categoryQuery.data]
+    );
 
     const categorySections = useMemo(() => {
-        // Sections come from the countdowns themselves, never from the
-        // categories list, so a group with no countdowns stays invisible. The
-        // name is the group key; the colour comes from the members' category_id.
-        const map = new Map<string, typeof items>();
+        // Sections come from the countdowns themselves, never from the categories
+        // list, so a group with no countdowns stays invisible. The key is the
+        // category id, so a group named "Other" is its own section rather than
+        // merging with the ungrouped ones.
+        const map = new Map<number | null, typeof items>();
         for (const item of items) {
-            const name = catOf(item.countdown.category);
-            const list = map.get(name) ?? [];
+            const key = item.countdown.category_id ?? null;
+            const list = map.get(key) ?? [];
             list.push(item);
-            map.set(name, list);
+            map.set(key, list);
         }
         return [...map.entries()]
-            .map(([name, groupItems]) => {
+            .map(([categoryId, groupItems]) => {
                 groupItems.sort((a, b) => a.calc.dueMs - b.calc.dueMs);
                 return {
-                    name,
-                    color: colorOfGroup(
-                        colorFor,
-                        groupItems.map((i) => i.countdown.category_id)
-                    ),
+                    categoryId,
+                    name: nameOf(nameFor, categoryId),
+                    color: colorOf(colorFor, categoryId),
                     items: groupItems,
                     soonest: groupItems[0]!.calc.dueMs
                 };
             })
             .sort((a, b) => a.soonest - b.soonest);
-    }, [items, colorFor]);
+    }, [items, colorFor, nameFor]);
 
     const disabled = activeProfile != null && activeProfile.countdowns_enabled === false;
 
@@ -352,7 +358,7 @@ export const CountdownDashboard = () => {
                   rows: byGroup.get(g.key) ?? []
               }))
             : categorySections.map((s) => ({
-                  key: `cat-${s.name}`,
+                  key: `cat-${s.categoryId ?? 'none'}`,
                   label: s.name,
                   color: s.color ?? 'var(--color-text-faint)',
                   rows: s.items
@@ -547,6 +553,11 @@ export const CountdownDashboard = () => {
                                                         colorFor,
                                                         countdown.category_id
                                                     )}
+                                                    categoryName={
+                                                        countdown.category_id != null
+                                                            ? nameFor.get(countdown.category_id)
+                                                            : undefined
+                                                    }
                                                 />
                                             ))}
                                         </div>

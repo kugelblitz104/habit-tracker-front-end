@@ -8,8 +8,6 @@ export type CountdownUpdate = {
     target_date?: (string | null);
     target_time?: (string | null);
     task_id?: (number | null);
-    category?: (string | null);
-    color?: (string | null);
     repeat?: (string | null);
     show_occurrence?: (boolean | null);
     category_id?: (number | null);

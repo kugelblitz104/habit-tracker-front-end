@@ -25,6 +25,8 @@ type CountdownCardProps = {
     actions?: ReactNode;
     /** The countdown's group colour, which drives the left border. */
     categoryColor?: string;
+    /** The countdown's group name, shown in the meta line when set. */
+    categoryName?: string;
 };
 
 /**
@@ -40,7 +42,8 @@ export const CountdownCard = ({
     to,
     linkState,
     actions,
-    categoryColor
+    categoryColor,
+    categoryName
 }: CountdownCardProps) => {
     const hero = countdownHero(calc);
     const heroColor = groupColor(calc.group);
@@ -96,7 +99,7 @@ export const CountdownCard = ({
                     {dateLabel}
                     {time ? ` · ${time}` : ''}
                 </span>
-                {countdown.category && <span>· {countdown.category}</span>}
+                {categoryName && <span>· {categoryName}</span>}
                 {rep && (
                     <span className='inline-flex items-center gap-0.5'>
                         · <Repeat size={10} /> {rep}

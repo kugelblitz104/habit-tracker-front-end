@@ -3,15 +3,11 @@ import type { CountdownCategoryRead, CountdownRead } from '@/api';
 /** Group name shown for countdowns with no category. */
 export const UNCATEGORIZED = 'Other';
 
-/** Trimmed group name for a countdown, falling back to "Other". */
-export const catOf = (category: string | null | undefined) => category?.trim() || UNCATEGORIZED;
-
 /**
- * Category id to colour, from the profile's category records. Keyed by id, not
- * by name: the name is renameable and `Countdown.category` only mirrors it, so
- * an id join survives a rename that has not yet reached both caches. A category
- * with no colour is present with `undefined`, which callers render as the faint
- * default.
+ * Category id to colour, from the profile's category records. Keyed by id so a
+ * rename of the category takes effect everywhere without needing a separate
+ * cache update. A category with no colour is present with `undefined`, which
+ * callers render as the faint default.
  */
 export const buildCategoryColorMap = (
     categories: CountdownCategoryRead[]
@@ -36,18 +32,15 @@ export const cardAccent = (categoryColor: string | undefined): string =>
     categoryColor ?? 'var(--surface-card-border)';
 
 /**
- * Colour for a group of countdowns, from the first member that has a
- * `category_id`. `catOf` files both an absent category and a category literally
- * named "Other" into one group, so a group's members can be a mix of linked and
- * uncategorised ones in any order. `undefined` when no member is linked, which
- * callers render as the faint default.
+ * Category id to name, from the profile's category records. The grouped view
+ * keys sections on the id, so a group literally named "Other" stays distinct
+ * from the ungrouped fallback that shares its label.
  */
-export const colorOfGroup = (
-    colorFor: Map<number, string | undefined>,
-    categoryIds: Iterable<CountdownRead['category_id']>
-): string | undefined => {
-    for (const categoryId of categoryIds) {
-        if (categoryId != null) return colorOf(colorFor, categoryId);
-    }
-    return undefined;
-};
+export const buildCategoryNameMap = (categories: CountdownCategoryRead[]): Map<number, string> =>
+    new Map(categories.map((c) => [c.id, c.name]));
+
+/** Group name for a countdown, falling back to "Other" when it has no group. */
+export const nameOf = (
+    nameFor: Map<number, string>,
+    categoryId: CountdownRead['category_id']
+): string => (categoryId == null ? UNCATEGORIZED : (nameFor.get(categoryId) ?? UNCATEGORIZED));
