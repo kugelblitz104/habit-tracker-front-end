@@ -2,7 +2,7 @@ import type { ProfileRead } from '@/api';
 import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
 import { apiErrorMessage } from '@/lib/api-error-message';
 import { TimeEntryKind } from '@/types/types';
-import { Coffee, Pause, Play, SkipForward } from 'lucide-react';
+import { Coffee, Play, SkipForward, Square } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useCreateTimeEntry } from '../api/create-time-entries';
@@ -270,7 +270,7 @@ export const TimerPanel = ({ profile, profileId }: TimerPanelProps) => {
                             color: 'var(--color-danger)'
                         }}
                     >
-                        <Pause size={16} />
+                        <Square size={16} fill='currentColor' />
                         Stop
                     </button>
                 ) : (

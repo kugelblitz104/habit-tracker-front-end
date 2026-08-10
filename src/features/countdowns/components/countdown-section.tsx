@@ -133,44 +133,52 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
                         );
                     })}
                 </span>
-                <span className='flex-1' />
-                {categories.map(({ categoryId, name, color }) => {
-                    const key = String(categoryId ?? 'none');
-                    const isHidden = hidden.has(key);
-                    return (
-                        <button
-                            key={key}
-                            type='button'
-                            onClick={() => toggleCategory(categoryId)}
-                            aria-pressed={!isHidden}
-                            title={isHidden ? 'Show this group' : 'Hide this group'}
-                            className='inline-flex items-center gap-1.5 font-mono text-[11px] transition-opacity'
-                            style={{
-                                color: 'var(--color-text-muted)',
-                                opacity: isHidden ? 0.45 : 1
-                            }}
-                        >
-                            <span
-                                className='h-2.5 w-2.5 rounded-full'
+                {/* One `ml-auto` group rather than a `flex-1` spacer before the
+                    chips: inside a wrapping row the spacer absorbs the first
+                    row's slack, stranding whichever chip still fits out at the
+                    right while its siblings wrap below. `ml-auto` gives the same
+                    right-push on wide screens and keeps the legend together. */}
+                <div className='ml-auto flex flex-wrap items-center gap-3'>
+                    {categories.map(({ categoryId, name, color }) => {
+                        const key = String(categoryId ?? 'none');
+                        const isHidden = hidden.has(key);
+                        return (
+                            <button
+                                key={key}
+                                type='button'
+                                onClick={() => toggleCategory(categoryId)}
+                                aria-pressed={!isHidden}
+                                title={isHidden ? 'Show this group' : 'Hide this group'}
+                                className='inline-flex items-center gap-1.5 font-mono text-[11px] transition-opacity'
                                 style={{
-                                    backgroundColor: isHidden
-                                        ? 'transparent'
-                                        : (color ?? 'var(--color-text-faint)'),
-                                    border: `1.5px solid ${color ?? 'var(--color-text-faint)'}`
+                                    color: 'var(--color-text-muted)',
+                                    opacity: isHidden ? 0.45 : 1
                                 }}
-                            />
-                            <span style={{ textDecoration: isHidden ? 'line-through' : 'none' }}>
-                                {name}
-                            </span>
-                        </button>
-                    );
-                })}
-                <Link
-                    to='/countdown'
-                    className='font-mono text-[11px] text-text-faint transition-colors hover:text-text-secondary'
-                >
-                    View all
-                </Link>
+                            >
+                                <span
+                                    className='h-2.5 w-2.5 rounded-full'
+                                    style={{
+                                        backgroundColor: isHidden
+                                            ? 'transparent'
+                                            : (color ?? 'var(--color-text-faint)'),
+                                        border: `1.5px solid ${color ?? 'var(--color-text-faint)'}`
+                                    }}
+                                />
+                                <span
+                                    style={{ textDecoration: isHidden ? 'line-through' : 'none' }}
+                                >
+                                    {name}
+                                </span>
+                            </button>
+                        );
+                    })}
+                    <Link
+                        to='/countdown'
+                        className='font-mono text-[11px] text-text-faint transition-colors hover:text-text-secondary'
+                    >
+                        View all
+                    </Link>
+                </div>
             </div>
 
             {groups.length === 0 ? (

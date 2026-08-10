@@ -1,4 +1,4 @@
-import { useTasks } from '@/features/tasks/api/get-tasks';
+import { useClosedTasks } from '@/features/tasks/api/get-closed-tasks';
 import { useUpdateTask } from '@/features/tasks/api/update-tasks';
 import { parseLocalDate } from '@/lib/date-utils';
 import { TaskStatus } from '@/types/types';
@@ -46,11 +46,9 @@ export const CompletedSection = ({
     selectedTaskId,
     controls
 }: CompletedSectionProps) => {
-    const query = useTasks({
+    const query = useClosedTasks({
         profileId: profileId ?? undefined,
-        projectId: projectId ?? undefined,
-        includeClosed: true,
-        band: 'hidden'
+        projectId: projectId ?? undefined
     });
     // Subtasks (`parent_id` set) never surface as top-level rows — a closed
     // subtask shows only via its parent's progress count, so the disclosure
@@ -60,6 +58,11 @@ export const CompletedSection = ({
     const tasks = (query.data?.tasks ?? []).filter(
         (task) => task.parent_id == null && (!controls || passesDateFilter(task, controls))
     );
+    // Both filters above are client-side and neither is expressible to the
+    // server (`parent_id` selects one parent's children, not "top level only"),
+    // so an exact total is only knowable once every page is held. Until then the
+    // count says how many it is actually showing and marks that there are more.
+    const countLabel = `${tasks.length}${query.hasNextPage ? '+' : ''}`;
     const updateTask = useUpdateTask();
 
     // Reopen / re-close via the shared status picker. Setting status back to
@@ -86,7 +89,7 @@ export const CompletedSection = ({
                     {({ open }) => (
                         <>
                             Closed
-                            <span className='font-normal text-text-faint'>{tasks.length}</span>
+                            <span className='font-normal text-text-faint'>{countLabel}</span>
                             <ChevronRight
                                 size={14}
                                 className={`transition-transform ${open ? 'rotate-90' : ''}`}
@@ -160,6 +163,17 @@ export const CompletedSection = ({
                                     );
                                 })}
                             </ul>
+                        )}
+                        {query.hasNextPage && (
+                            <button
+                                type='button'
+                                onClick={() => void query.fetchNextPage()}
+                                disabled={query.isFetchingNextPage}
+                                className='mt-3 w-full rounded-button border py-2 font-mono text-[11px] uppercase tracking-[0.08em] text-text-muted transition-colors hover:text-text-secondary disabled:opacity-50'
+                                style={{ borderColor: 'var(--color-whenever-ring)' }}
+                            >
+                                {query.isFetchingNextPage ? 'Loading…' : 'Load more'}
+                            </button>
                         )}
                     </div>
                 </DisclosurePanel>

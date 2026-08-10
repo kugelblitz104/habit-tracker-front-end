@@ -441,7 +441,10 @@ export const CountdownDashboard = () => {
                     </div>
                 </div>
                 {!disabled && (
-                    <div className='flex shrink-0 items-center gap-2'>
+                    // Wraps rather than shrink-0: three controls total ~391px,
+                    // which overhangs a 375px phone column and scrolls the page
+                    // sideways.
+                    <div className='flex flex-wrap items-center justify-end gap-2'>
                         {total > 0 && (
                             <span
                                 className='flex items-center gap-0.5 rounded-chip border p-0.5'

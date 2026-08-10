@@ -1,6 +1,6 @@
 import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
 import { useAuth } from '@/lib/auth-context';
-import { Pause, Timer } from 'lucide-react';
+import { Square, Timer } from 'lucide-react';
 import { Link } from 'react-router';
 import { useActiveTimeEntry } from '../api/get-time-entries';
 import { useEditableEntryLabel } from '../hooks/use-editable-entry-label';
@@ -95,7 +95,7 @@ export const ActiveTimerPanel = () => {
                                 color: 'var(--color-danger)'
                             }}
                         >
-                            <Pause size={13} />
+                            <Square size={13} fill='currentColor' />
                             Stop
                         </button>
                         <Link
