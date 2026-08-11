@@ -5,7 +5,7 @@
     "scripts": {
         "build": "react-router build",
         "dev": "react-router dev",
-        "start": "react-router-serve ./build/server/index.js",
+        "start": "node scripts/preview-static.mjs",
         "typecheck": "react-router typegen && tsc",
         "generate-api": "npx openapi-typescript-codegen --input http://localhost:8080/openapi.json --output ./src/api --client axios",
         "test": "npm run test:unit && npm run test:e2e",

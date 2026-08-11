@@ -43,6 +43,7 @@ import { ToastContainer } from 'react-toastify';
 import '@/lib/api-client';
 import { queryConfig } from '@/lib/react-query';
 import { AuthProvider } from '@/lib/auth-context';
+import { LoadingPage } from '@/components/layouts/loading-page';
 import type { Route } from './+types/root';
 
 // Preload every weight used at first paint (crossOrigin is required for font
@@ -137,6 +138,34 @@ export default function App() {
                 </div>
             </AuthProvider>
         </QueryClientProvider>
+    );
+}
+
+// Default document title. Each route's own `meta` overrides this once the
+// router runs; it exists so the shared SPA-fallback HTML, which every
+// non-prerendered route is served from, does not ship an empty <title>.
+export function meta(_args: Route.MetaArgs) {
+    return [
+        { title: 'Ergosphere' },
+        { name: 'description', content: 'Habits, tasks, projects and time tracking in one place.' }
+    ];
+}
+
+// Rendered into the static HTML for every non-prerendered route, and shown
+// until the client bundle hydrates. Without it those routes ship an empty
+// body and paint white. Mirrors the tone wrapper in App so the spinner sits
+// on the themed surface rather than on the browser default.
+export function HydrateFallback() {
+    return (
+        <div
+            data-tone='ember'
+            data-heat='warm'
+            data-focus='false'
+            className='min-h-screen'
+            style={{ backgroundColor: 'transparent' }}
+        >
+            <LoadingPage />
+        </div>
     );
 }
 

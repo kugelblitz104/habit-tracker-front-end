@@ -1,0 +1,40 @@
+server {
+    # Railway assigns the port at runtime. The nginx image's entrypoint runs
+    # envsubst over /etc/nginx/templates/*.template; NGINX_ENVSUBST_FILTER is
+    # pinned to PORT in the Dockerfile so that nginx's own $uri / $host
+    # variables below are left alone rather than substituted to empty strings.
+    listen ${PORT};
+    server_name _;
+    root /usr/share/nginx/html;
+
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml application/manifest+json;
+    gzip_min_length 1024;
+
+    # Order matters. `$uri` serves real files; `$uri/index.html` serves the
+    # prerendered public routes (/login, /register, /release-notes, ...) without
+    # nginx's default 301 to the trailing-slash form; `/index.html` is the SPA
+    # fallback that every client-routed path depends on. Drop the last entry and
+    # deep links like /tasks/setup-utilities 404 instead of loading the app.
+    location / {
+        try_files $uri $uri/index.html /index.html;
+    }
+
+    # Vite fingerprints everything under /assets/, so these are safe to pin.
+    # =404 rather than falling through: a missing asset must not return HTML.
+    location /assets/ {
+        try_files $uri =404;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # The shell and the service worker are the two files that must never be
+    # served stale, or a client pins itself to a build that no longer exists.
+    location = /index.html {
+        add_header Cache-Control "no-cache";
+    }
+
+    location = /sw.js {
+        add_header Cache-Control "no-cache";
+    }
+}
