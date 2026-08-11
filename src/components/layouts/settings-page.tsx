@@ -1,4 +1,5 @@
 import { AppHeader } from '@/components/layouts/app-header';
+import { AboutCard } from '@/features/settings/components/about-card';
 import { AccountCard } from '@/features/settings/components/account-card';
 import { ChangePasswordCard } from '@/features/settings/components/change-password-card';
 import { ConnectionsCard } from '@/features/settings/components/connections-card';
@@ -14,8 +15,8 @@ import { useState } from 'react';
 
 /**
  * Settings, ember-style: one card per section (Profiles, Profile preferences,
- * Account, Connections, Manage data, Danger zone) in a narrow centered column
- * under the shared AppHeader.
+ * Account, Connections, Manage data, About, Danger zone) in a narrow centered
+ * column under the shared AppHeader.
  *
  * Profile scoping: the "Editing …" pill on Profile preferences selects a
  * single profile that BOTH the preferences card and the Calendars subgroup of
@@ -66,6 +67,7 @@ export const SettingsPage = () => {
                         )}
                         <ManageDataCard />
                         <FullBackupCard />
+                        <AboutCard />
                         <DangerZoneCard />
                     </div>
                 </div>

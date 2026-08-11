@@ -1,0 +1,30 @@
+{
+    "date": "2026-08-11",
+    "summary": "The first set of release notes. Everything before this went undocumented.",
+    "changes": [
+        {
+            "kind": "added",
+            "text": "Countdown groups are now real groups: each one owns its colour, and Manage groups lets you rename, recolour and delete them."
+        },
+        {
+            "kind": "added",
+            "text": "Link a task to any URL without connecting Azure DevOps or GitHub first."
+        },
+        {
+            "kind": "added",
+            "text": "Readable web addresses for tasks, projects and habits. Links you already have keep working."
+        },
+        {
+            "kind": "changed",
+            "text": "Completed and closed tasks load a page at a time instead of all at once."
+        },
+        {
+            "kind": "fixed",
+            "text": "Time logged on a subtask now counts toward its parent task's project, including in Insights."
+        },
+        {
+            "kind": "fixed",
+            "text": "The countdown page no longer scrolls sideways on a phone."
+        }
+    ]
+}

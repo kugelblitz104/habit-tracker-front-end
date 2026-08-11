@@ -9,6 +9,10 @@ export default [
     route('register', 'routes/public/register.tsx'),
     route('forgot-password', 'routes/public/forgot-password.tsx'),
     route('reset-password', 'routes/public/reset-password.tsx'),
+    // Unlisted: absent from the nav and marked noindex, linked only from
+    // Settings. Public because nothing on it is user-specific, so the URL can
+    // be handed to anyone.
+    route('release-notes', 'routes/public/release-notes.tsx'),
 
     // Protected routes
     index('routes/auth/today.tsx'),
