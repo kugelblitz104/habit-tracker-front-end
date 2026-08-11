@@ -169,8 +169,9 @@ export const TaskDetailBody = ({
             {/* Editable time log */}
             <TaskTimeLog profileId={task.profile_id} taskId={task.id} />
 
-            {/* Publish/link this task to Azure DevOps or GitHub. Only top-level
-                tasks carry an external link (subtasks are managed in-app). */}
+            {/* Link this task to an external work item, and publish it out when a
+                connection exists. Only top-level tasks: subtasks stay lean, and one
+                that needs a link can be promoted to a full task. */}
             {task.parent_id == null && <TaskIntegrationActions task={task} />}
 
             {/* Footer: delete */}

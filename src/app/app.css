@@ -230,6 +230,10 @@
     --github-bg: rgba(166, 160, 240, 0.1);
     --github-border: rgba(166, 160, 240, 0.24);
 
+    /* ---- Link surface with no provider behind it (a soft link) ---- */
+    --link-bg: rgba(255, 255, 255, 0.05);
+    --link-border: rgba(255, 255, 255, 0.14);
+
     /* ---- Toggle / primary button / danger ---- */
     --toggle-on-track: linear-gradient(90deg, #c9663f, #e0884a);
     --toggle-off-track: rgba(255, 255, 255, 0.1);

@@ -5,6 +5,7 @@ import { Link } from 'react-router';
 import type { Countdown, CountdownUrgency } from '@/features/countdowns/utils/countdown';
 import { STATUS_META, type StatusMeta } from './status-config';
 import { projectDetailPath } from '@/lib/entity-ref';
+import { externalLinkChipStyle } from '@/lib/external-link';
 
 /** Due-chip styling per urgency: overdue + due-now get a filled chip; the
  *  calmer buckets are colored text only, so urgency reads at a glance. */
@@ -169,19 +170,7 @@ export const TaskCardMetaRow = ({
                     rel='noreferrer'
                     onClick={(e) => e.stopPropagation()}
                     className='rounded-chip px-2 py-0.5'
-                    style={
-                        task.source === 'github'
-                            ? {
-                                  color: 'var(--color-github-text)',
-                                  backgroundColor: 'var(--github-bg)',
-                                  border: '1px solid var(--github-border)'
-                              }
-                            : {
-                                  color: 'var(--color-azure-text)',
-                                  backgroundColor: 'var(--azure-bg)',
-                                  border: '1px solid var(--azure-border)'
-                              }
-                    }
+                    style={externalLinkChipStyle(task.source)}
                 >
                     {task.external_ref} ↗
                 </a>

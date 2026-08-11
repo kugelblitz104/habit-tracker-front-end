@@ -3,6 +3,7 @@ import { useIntegrationConnections } from '@/features/integrations/api/get-integ
 import { usePublishTask } from '@/features/integrations/api/publish-task';
 import { apiErrorMessage } from '@/lib/api-error-message';
 import { useUpdateTask } from '@/features/tasks/api/update-tasks';
+import { externalLinkChipStyle, isLinkableUrl, sourceFromUrl } from '@/lib/external-link';
 import { Link2, Send, Unlink } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
@@ -12,23 +13,19 @@ const PROVIDER_LABEL: Record<string, string> = {
     github: 'GitHub'
 };
 
-// Infer the provider from a pasted work-item/issue URL, so a manual link gets
-// the right chip color. Null when it doesn't look like either host.
-const sourceFromUrl = (url: string): string | null => {
-    if (/dev\.azure\.com|\.visualstudio\.com/i.test(url)) return 'azure_devops';
-    if (/github\.com/i.test(url)) return 'github';
-    return null;
-};
-
 type Props = {
     task: TaskRead;
 };
 
 /**
- * Task-detail integration controls: publish an unlinked task out to a connected
- * Azure DevOps / GitHub as a new work item / issue, or manually link it to an
- * existing item by URL. When already linked, shows the link with an Unlink
- * action. Purely a one-time link — the task's later state is never pushed.
+ * Task-detail link controls: point a task at an existing external work item by
+ * URL, and (when the profile has an Azure DevOps / GitHub connection) publish it
+ * out as a new work item / issue. When already linked, shows the link with an
+ * Unlink action. Purely a one-time link; the task's later state is never pushed.
+ *
+ * Linking needs no connection. It writes the API's source/external_ref/
+ * external_url triple through a plain task update, so an item in any tracker can
+ * be linked. A connection only buys the Publish direction.
  */
 export const TaskIntegrationActions = ({ task }: Props) => {
     const connectionsQuery = useIntegrationConnections({ profileId: task.profile_id });
@@ -37,7 +34,15 @@ export const TaskIntegrationActions = ({ task }: Props) => {
     const [linking, setLinking] = useState(false);
     const [ref, setRef] = useState('');
     const [url, setUrl] = useState('');
+    const [urlError, setUrlError] = useState<string | null>(null);
     const [publishingId, setPublishingId] = useState<number | null>(null);
+
+    const closeLinkForm = () => {
+        setLinking(false);
+        setRef('');
+        setUrl('');
+        setUrlError(null);
+    };
 
     const publish = usePublishTask({
         mutationConfig: {
@@ -69,6 +74,13 @@ export const TaskIntegrationActions = ({ task }: Props) => {
 
     const handleLink = () => {
         if (!ref.trim() || !url.trim()) return;
+        // The API rejects a scheme-less URL; catching it here keeps the message
+        // on the field instead of surfacing a 422 as a toast.
+        if (!isLinkableUrl(url)) {
+            setUrlError('Enter a full URL starting with http:// or https://');
+            return;
+        }
+        setUrlError(null);
         updateTask.mutate(
             {
                 taskId: task.id,
@@ -81,9 +93,7 @@ export const TaskIntegrationActions = ({ task }: Props) => {
             {
                 onSuccess: () => {
                     toast.success('Task linked');
-                    setLinking(false);
-                    setRef('');
-                    setUrl('');
+                    closeLinkForm();
                 }
             }
         );
@@ -102,7 +112,7 @@ export const TaskIntegrationActions = ({ task }: Props) => {
     return (
         <div>
             <h3 className='mb-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-text-faint'>
-                Integrations
+                Link
             </h3>
 
             {isLinked ? (
@@ -112,12 +122,7 @@ export const TaskIntegrationActions = ({ task }: Props) => {
                         target='_blank'
                         rel='noreferrer'
                         className='min-w-0 truncate font-mono text-[12px]'
-                        style={{
-                            color:
-                                task.source === 'github'
-                                    ? 'var(--color-github-text)'
-                                    : 'var(--color-azure-text)'
-                        }}
+                        style={{ color: externalLinkChipStyle(task.source).color }}
                     >
                         {task.external_ref} ↗
                     </a>
@@ -132,10 +137,6 @@ export const TaskIntegrationActions = ({ task }: Props) => {
                         Unlink
                     </button>
                 </div>
-            ) : connections.length === 0 ? (
-                <p className='font-mono text-[11.5px] text-text-faint'>
-                    Connect Azure DevOps or GitHub in Settings to publish or link this task.
-                </p>
             ) : (
                 <div className='flex flex-col gap-2'>
                     <div className='flex flex-wrap items-center gap-1.5'>
@@ -187,14 +188,28 @@ export const TaskIntegrationActions = ({ task }: Props) => {
                             <input
                                 type='text'
                                 value={url}
-                                onChange={(e) => setUrl(e.target.value)}
+                                onChange={(e) => {
+                                    setUrl(e.target.value);
+                                    setUrlError(null);
+                                }}
+                                aria-invalid={urlError ? true : undefined}
                                 placeholder='https://… link to the work item / issue'
                                 className='w-full rounded-button border px-2.5 py-1.5 font-mono text-[12px] text-text-secondary outline-none'
                                 style={{
                                     backgroundColor: 'var(--surface-input-bg)',
-                                    borderColor: 'var(--surface-input-border)'
+                                    borderColor: urlError
+                                        ? 'var(--danger-border)'
+                                        : 'var(--surface-input-border)'
                                 }}
                             />
+                            {urlError && (
+                                <p
+                                    className='font-mono text-[11px]'
+                                    style={{ color: 'var(--color-danger)' }}
+                                >
+                                    {urlError}
+                                </p>
+                            )}
                             <div className='flex items-center justify-end gap-1.5'>
                                 <button
                                     type='button'
@@ -207,7 +222,7 @@ export const TaskIntegrationActions = ({ task }: Props) => {
                                 </button>
                                 <button
                                     type='button'
-                                    onClick={() => setLinking(false)}
+                                    onClick={closeLinkForm}
                                     className='rounded-button border px-2.5 py-1 font-mono text-[11.5px] text-text-muted transition-colors hover:text-text-secondary'
                                     style={{ borderColor: 'rgba(255,255,255,.12)' }}
                                 >
@@ -215,6 +230,12 @@ export const TaskIntegrationActions = ({ task }: Props) => {
                                 </button>
                             </div>
                         </div>
+                    )}
+
+                    {connections.length === 0 && (
+                        <p className='font-mono text-[11.5px] text-text-faint'>
+                            Connect Azure DevOps or GitHub in Settings to also publish tasks out.
+                        </p>
                     )}
                 </div>
             )}
