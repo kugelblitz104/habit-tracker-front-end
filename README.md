@@ -1,135 +1,184 @@
 # Habit Tracker Front-End
 
-A modern web application for tracking habits, built with React Router v7, React 19, and TailwindCSS.
+Web app for a personal productivity system: habits and streaks, tasks and projects, time
+tracking, countdowns, calendar and insights. Built with React Router v7 (SSR), React 19,
+TanStack Query and TailwindCSS v4.
+
+It talks to the FastAPI service in the sibling [habit-tracker](https://github.com/kugelblitz104/habit-tracker)
+repo and generates its entire API client from that service's OpenAPI schema, so the two repos
+are developed together.
 
 ## Features
 
-- **Habit Management**: Create, update, and track habits
-- **User Authentication**: Secure login and registration system
-- **Tracker System**: Monitor habit progress over time
-- **Responsive Design**: Mobile-friendly interface with Tailwind CSS
-- **Type-Safe API**: Auto-generated TypeScript API client from OpenAPI spec
+- **Today** — the default landing surface: habits due, tasks by urgency band, countdowns and
+  calendar events in one place.
+- **Tasks** — urgency bands (now / soon / whenever), statuses and priorities, subtasks,
+  drag-to-reorder, a paged Closed section, detail panes on wide viewports and full-page detail
+  on narrow ones, and Markdown export.
+- **Projects** — group tasks, with open/done counts and a per-project view.
+- **Habits and trackers** — daily toggling with optimistic KPI patches, streaks, completion
+  rates and weekday breakdowns.
+- **Timer** — stopwatch and pomodoro runs attributed to a task or project, with per-profile
+  pomodoro defaults.
+- **Countdowns** — recurring and one-off target dates, grouped into colour-owning categories
+  with a colour picker.
+- **Insights** — a Recharts dashboard over tasks, time and habits.
+- **Settings** — profiles and feature toggles, calendar (ICS) connections, Azure DevOps and
+  GitHub connections, full-profile backup export/import, and data export.
+- **Auth** — register, login, forgot/reset password, with silent JWT refresh on 401.
+- **Readable URLs** — `/tasks/setup-utilities` and the like; numeric ids stay permanently valid
+  so old bookmarks keep working.
 
 ## Tech Stack
 
-- **Framework**: React Router v7 (with server-side rendering)
-- **UI Library**: React 19
-- **Styling**: TailwindCSS v4
-- **State Management**: TanStack Query (React Query)
-- **Form Handling**: React Hook Form
-- **HTTP Client**: Axios
-- **Icons**: Lucide React
-- **Type Safety**: TypeScript
-
-## Prerequisites
-
-- Node.js 20 or higher
-- npm or compatible package manager
-- Backend API running (default: <http://localhost:8080>)
+| Layer         | Choice                                                      |
+| ------------- | ----------------------------------------------------------- |
+| Framework     | React Router v7 (SSR)                                       |
+| UI            | React 19, TailwindCSS v4, Headless UI, Lucide icons         |
+| Data          | TanStack Query, Axios                                       |
+| Forms         | React Hook Form                                             |
+| Charts        | Recharts                                                    |
+| Drag and drop | dnd-kit                                                     |
+| Other         | react-colorful, react-toastify, react-responsive, DOMPurify |
+| Language      | TypeScript (Node 20+)                                       |
+| Tests         | Vitest (unit), Playwright (e2e)                             |
+| Format        | Prettier                                                    |
 
 ## Getting Started
 
-### Installation
+### Prerequisites
+
+- Node.js 20 or higher
+- The backend API running (default `http://localhost:8080`)
+
+### Installation and development
 
 ```bash
 npm install
-```
-
-### Development
-
-Run the development server:
-
-```bash
-npm run dev
-```
-
-The application will be available at `http://localhost:5173` (or the port Vite assigns).
-
-### Building for Production
-
-```bash
+npm run dev          # Vite dev server on :5173
+npm run typecheck    # react-router typegen && tsc
 npm run build
+npm start            # serve the production build
 ```
 
-### Starting Production Server
+### Environment Variables
 
-```bash
-npm run start
-```
-
-### Type Checking
-
-```bash
-npm run typecheck
-```
-
-## API Client Generation
-
-The project uses OpenAPI TypeScript Codegen to automatically generate type-safe API clients from the backend OpenAPI specification.
-
-To regenerate the API client:
-
-```bash
-npm run generate-api
-```
-
-**Note**: Ensure the backend API is running at `http://localhost:8080` before generating the API client.
-
-## Environment Variables
-
-Create a `.env` file in the project root:
+The API base URL is a **build-time** Vite define (`__API_BASE_URL__`), not a runtime variable —
+a server already running keeps whatever base it started with. Create a `.env`:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8080
+API_BASE_URL=http://localhost:8080
 ```
 
-## Docker Support
+It defaults to `http://localhost:8080` when unset. In Docker it's a build arg of the same name.
 
-Build the Docker image:
+### API client generation
+
+`src/api/**` is 100% generated by `openapi-typescript-codegen` from the backend's
+`/openapi.json` — never hand-edit it. To change the client, change the backend endpoint, then:
 
 ```bash
-docker build -t habit-tracker-front-end:latest .
+npm run generate-api    # needs the backend up at http://localhost:8080
 ```
 
-Run the container:
+Regeneration rewrites the three `Profile{Create,Read,Update}.ts` models with CRLF/LF whitespace
+churn and no content change; `git checkout` those afterward to keep the diff clean.
+
+## Tests
+
+Two runners, split by file suffix: `*.test.ts` is Vitest, `*.spec.ts` is Playwright under
+`e2e/`.
 
 ```bash
+npm test              # unit then e2e
+npm run test:unit     # vitest — pure logic, no backend, ~1s
+npm run test:unit:watch
+npm run test:e2e      # Playwright — needs the backend at :8080
+
+npx playwright test flows/task-status --project=wide   # a single spec
+npx playwright test --project=narrow                   # the @narrow-tagged tests
+```
+
+The e2e config auto-starts the dev server (reusing a running one locally); the backend must be
+up separately. Two projects: `wide` (1280×720) runs everything not tagged `@narrow`, `narrow`
+(390×844) runs only the `@narrow` tests, which cover below-`lg` behaviour where detail panes
+navigate to a full page instead of rendering inline.
+
+Specs never hand-roll a login or a seed. `e2e/fixtures/test.ts` exports an extended `test` with
+an `authedPage` fixture, a throwaway `account`, a frozen clock and a golden profile imported in
+a single `POST /backup/profiles` request. Import `test`/`expect` from there, not from
+`@playwright/test`.
+
+**KPI parity.** `src/test-support/kpi-parity-cases.json` is consumed by both repos — by
+`src/features/trackers/utils/kpi-parity.test.ts` here and by `tests/test_habit_stats.py` in the
+backend. The habit KPI maths exists twice (client-side only to optimistically patch caches);
+the backend is the source of truth. Editing the fixture means keeping both suites green.
+
+## Formatting
+
+```bash
+npm run format         # prettier --write .
+npm run format:check   # the repo is clean; keep it that way
+```
+
+There is no ESLint config. Prettier settings live in `package.json` (4-space indent, single
+quotes, width 100, LF). `.prettierignore` carves out the generated `src/api/`, build output,
+and the Playwright aria snapshots, where the exact file content _is_ the assertion.
+
+## Docker
+
+```bash
+docker build --build-arg API_BASE_URL=https://api.example.com -t habit-tracker-front-end:latest .
 docker run -p 3000:3000 habit-tracker-front-end:latest
 ```
 
-Or use with Podman:
-
-```bash
-podman build -t habit-tracker-front-end:latest .
-podman run -p 3000:3000 habit-tracker-front-end:latest
-```
+Podman works the same way.
 
 ## Project Structure
 
-```
+```text
 src/
-├── api/                    # Auto-generated API client
-├── app/                    # React Router app configuration
-│   └── routes/             # Application routes
-├── components/             # Reusable components
-│   ├── layouts/            # Page Layouts
-│   └── ui/                 # UI components
-├── features/               # Feature-based modules
-│   ├── auth/               # Authentication
-│   ├── habits/             # Habit management
-│   ├── trackers/           # Habit tracking
-│   └── users/              # User management
-├── lib/                    # Global Utilities
-└── types/                  # Global Types
+├── api/                    # Generated API client — do not edit
+├── app/
+│   ├── root.tsx
+│   ├── routes.ts           # Route table (does NOT hot-reload; restart the dev server)
+│   └── routes/
+│       ├── public/         # login, register, forgot/reset password, release notes
+│       ├── auth/           # today, tasks, projects, habits, countdown, timer,
+│       │                   # insights, settings, and the detail routes
+│       └── dev/            # debug playground, DEV builds only
+├── components/
+│   ├── layouts/            # page-shell, detail-pane
+│   └── ui/                 # shared primitives, chart theme, query states, forms
+├── features/               # auth, tasks, projects, habits, trackers, countdowns,
+│                           # time-entries, calendar, integrations, insights,
+│                           # settings, profiles, search, release-notes, users
+├── lib/                    # api-client, auth-context, react-query, date-utils,
+│                           # paginate, entity-ref, download, hooks
+├── test-support/           # factories + the shared KPI parity cases
+└── types/
+
+e2e/
+├── fixtures/               # authedPage, golden dataset, frozen clock
+├── flows/                  # behavioural specs
+└── structure/              # className / aria-structure locks
 ```
+
+**Feature-based structure** — each `src/features/<feature>/` has its own `api/`, `components/`
+and often `hooks/`/`utils/`. Feature `api/` modules are thin wrappers over the generated
+services. Cross-cutting hooks go in `src/lib`, shared UI in `src/components`.
+
+**Auth and active profile** — `useAuth()` exposes `user`, `activeProfile` and
+`setActiveProfileId`. The backend is profile-scoped, so nearly every query passes
+`activeProfile.id`, and switching profiles is what most feature hooks key off.
+
+**Mutation hooks come from a factory** — `defineMutationHook(mutationFn, invalidate)` in
+`src/lib/react-query.ts`. Six features own a `query-keys.ts` exporting key builders and an
+`invalidate<Feature>` helper; use those rather than raw key arrays.
 
 ## Related Projects
 
-- [Habit Tracker API](https://github.com/kugelblitz104/habit-tracker) - Backend API service
-
-## Code Style
-
-The project uses Prettier with custom configuration. Settings are defined in `package.json`.
+- [Habit Tracker API](https://github.com/kugelblitz104/habit-tracker) — backend service
 
 ## License
 
