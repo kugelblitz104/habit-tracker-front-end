@@ -30,7 +30,7 @@
 - text: Priority
 - 'button "Priority: All"'
 - text: Status
-- button "Status (8)"
+- button "Status (7)"
 - text: Date
 - 'button "Date: Any"'
 - button "Select"

@@ -76,8 +76,8 @@ const expectStatus = async (page: Page, title: string, label: string) => {
  * for closed statuses; Today always shows it, hence the per-surface flag.
  */
 const revealClosedSection = async (page: Page) => {
-    // 8 of the 10 statuses are selected by default (everything but Done/Cancelled).
-    await page.getByRole('button', { name: 'Status (8)' }).click();
+    // 7 of the 9 statuses are selected by default (everything but Done/Cancelled).
+    await page.getByRole('button', { name: 'Status (7)' }).click();
     await page.getByRole('checkbox', { name: 'Done', exact: true }).click();
     await page.getByRole('checkbox', { name: 'Cancelled', exact: true }).click();
     await page.keyboard.press('Escape');

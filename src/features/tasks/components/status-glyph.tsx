@@ -4,7 +4,6 @@ import {
     CircleDashed,
     CircleDot,
     CircleEllipsis,
-    CircleHelp,
     CircleMinus,
     CircleX,
     type LucideIcon
@@ -23,9 +22,8 @@ const LUCIDE_GLYPH: Partial<Record<TaskStatus, LucideIcon>> = {
     [TaskStatus.OPEN]: Circle, // hollow ring
     [TaskStatus.SCHEDULED]: CircleDot, // ring + centre dot
     [TaskStatus.BLOCKED]: CircleMinus, // ring + horizontal bar
-    [TaskStatus.NEEDS_INFO]: CircleHelp, // ring + "?"
+    [TaskStatus.NEEDS_INFO]: CircleDashed, // dashed ring, waiting on an answer
     [TaskStatus.PENDING]: CircleEllipsis, // ring + "…" — waiting on others
-    [TaskStatus.UNCLEAR]: CircleDashed, // dashed ring — requirements unclear
     [TaskStatus.CANCELLED]: CircleX // ring + "✕"
 };
 

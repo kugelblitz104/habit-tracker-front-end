@@ -41,16 +41,15 @@ describe('status taxonomy', () => {
             TaskStatus.BLOCKED,
             TaskStatus.NEEDS_INFO,
             TaskStatus.DEFERRED,
-            TaskStatus.PENDING,
-            TaskStatus.UNCLEAR
+            TaskStatus.PENDING
         ]) {
             expect(isClosedStatus(status), String(status)).toBe(false);
         }
     });
 
     it('exposes active statuses as all statuses minus the closed pair', () => {
-        expect(ALL_STATUS_VALUES).toHaveLength(10);
-        expect(ACTIVE_STATUS_VALUES).toHaveLength(8);
+        expect(ALL_STATUS_VALUES).toHaveLength(9);
+        expect(ACTIVE_STATUS_VALUES).toHaveLength(7);
         expect(ACTIVE_STATUS_VALUES).not.toContain(TaskStatus.DONE);
         expect(ACTIVE_STATUS_VALUES).not.toContain(TaskStatus.CANCELLED);
     });
@@ -63,7 +62,6 @@ describe('status taxonomy', () => {
             TaskStatus.PENDING,
             TaskStatus.BLOCKED,
             TaskStatus.NEEDS_INFO,
-            TaskStatus.UNCLEAR,
             TaskStatus.DEFERRED,
             TaskStatus.DONE,
             TaskStatus.CANCELLED

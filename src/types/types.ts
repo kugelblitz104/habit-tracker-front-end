@@ -21,6 +21,9 @@ export enum DisplayStatus {
  * Task status constants — mirrors backend `TaskStatus(int, Enum)` in constants.py.
  * Stored on `task.status`; drives the round status control glyph, the meta pill,
  * and whether a task appears in an active band or in "Completed & closed".
+ *
+ * 9 was UNCLEAR and was merged into NEEDS_INFO. The API rejects it on every
+ * write path, so the value is free for a future status.
  */
 export enum TaskStatus {
     OPEN = 0,
@@ -31,8 +34,7 @@ export enum TaskStatus {
     DEFERRED = 5,
     DONE = 6,
     CANCELLED = 7,
-    PENDING = 8,
-    UNCLEAR = 9
+    PENDING = 8
 }
 
 /**

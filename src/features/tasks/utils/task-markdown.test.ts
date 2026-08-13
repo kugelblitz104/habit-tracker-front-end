@@ -58,7 +58,6 @@ describe('renderTaskMarkdown', () => {
             [TaskStatus.NEEDS_INFO, 'Needs info'],
             [TaskStatus.DEFERRED, 'Deferred'],
             [TaskStatus.PENDING, 'Pending'],
-            [TaskStatus.UNCLEAR, 'Unclear'],
             [TaskStatus.CANCELLED, 'Cancelled']
         ] as const;
         for (const [status, label] of labels) {

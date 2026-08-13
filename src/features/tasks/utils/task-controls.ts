@@ -49,15 +49,13 @@ const PRIORITY_ORDER = [3, 2, 1, 0];
  * deferred always last among active statuses and done/cancelled at the very
  * bottom. Within a single rank, tasks fall back to priority + due date.
  *
- *   in progress → open → scheduled → pending → blocked → needs info → unclear
+ *   in progress → open → scheduled → pending → blocked → needs info
  *   → deferred → done → cancelled
  *
  * "Pending" (work done on my end, waiting for others) sits above blocked/needs
  * info: it's not actionable by me, but it's ahead of things I'm actively
- * stuck on. "Unclear" (requirements need clarification) groups with the other
- * waiting-on-something statuses. Done/cancelled only reach the ranking on
- * surfaces that keep them inline (e.g. subtasks); the main list peels them into
- * the Closed section.
+ * stuck on. Done/cancelled only reach the ranking on surfaces that keep them
+ * inline (e.g. subtasks); the main list peels them into the Closed section.
  */
 const STATUS_RANK: Record<number, number> = {
     [TaskStatus.IN_PROGRESS]: 0,
@@ -66,10 +64,9 @@ const STATUS_RANK: Record<number, number> = {
     [TaskStatus.PENDING]: 3,
     [TaskStatus.BLOCKED]: 4,
     [TaskStatus.NEEDS_INFO]: 5,
-    [TaskStatus.UNCLEAR]: 6,
-    [TaskStatus.DEFERRED]: 7,
-    [TaskStatus.DONE]: 8,
-    [TaskStatus.CANCELLED]: 9
+    [TaskStatus.DEFERRED]: 6,
+    [TaskStatus.DONE]: 7,
+    [TaskStatus.CANCELLED]: 8
 };
 /** Rank for the smart sort; unknown statuses sort as OPEN (a safe middle). */
 export const statusRank = (status: number): number =>
@@ -83,7 +80,6 @@ const STATUS_ORDER = [
     TaskStatus.PENDING,
     TaskStatus.BLOCKED,
     TaskStatus.NEEDS_INFO,
-    TaskStatus.UNCLEAR,
     TaskStatus.DEFERRED,
     TaskStatus.DONE,
     TaskStatus.CANCELLED
@@ -145,8 +141,8 @@ export { PRIORITY_LABELS };
 
 export const compareSmart = (a: TaskRead, b: TaskRead): number => {
     // Status rank first (in progress → open → scheduled → pending → blocked →
-    // needs info → unclear → deferred → done → cancelled), then priority + due
-    // date within the same rank so every band is ordered by what's most pressing.
+    // needs info → deferred → done → cancelled), then priority + due date
+    // within the same rank so every band is ordered by what's most pressing.
     const ra = statusRank(a.status ?? 0);
     const rb = statusRank(b.status ?? 0);
     if (ra !== rb) return ra - rb;
