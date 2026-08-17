@@ -13,5 +13,6 @@ export type CountdownBackup = {
     show_occurrence?: boolean;
     created_date?: (string | null);
     updated_date?: (string | null);
+    archived_date?: (string | null);
 };
 

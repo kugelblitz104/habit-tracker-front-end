@@ -14,5 +14,6 @@ export type CountdownRead = {
     created_date: string;
     updated_date?: (string | null);
     category_id?: (number | null);
+    archived_date?: (string | null);
 };
 

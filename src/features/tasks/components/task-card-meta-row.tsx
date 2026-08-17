@@ -16,7 +16,10 @@ const DUE_CHIP_STYLE: Record<CountdownUrgency, React.CSSProperties> = {
         backgroundColor: 'var(--status-duetoday-bg)'
     },
     soon: { color: 'var(--color-soon-label)' },
-    later: { color: 'var(--color-text-muted)' }
+    later: { color: 'var(--color-text-muted)' },
+    // Unreachable here: `past` comes from the countdown-entity rule, and a task
+    // due date always has a task.
+    past: { color: 'var(--color-text-faint)' }
 };
 
 type TaskCardMetaRowProps = {

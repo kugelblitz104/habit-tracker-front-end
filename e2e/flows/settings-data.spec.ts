@@ -45,7 +45,7 @@ test('per-entity export and profile-scoped bulk delete in settings', async ({ au
         [
             GOLDEN.countdowns.future,
             GOLDEN.countdowns.linked,
-            GOLDEN.countdowns.overdue,
+            GOLDEN.countdowns.past,
             GOLDEN.countdowns.yearly
         ].sort()
     );

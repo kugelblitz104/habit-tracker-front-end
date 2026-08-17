@@ -14,8 +14,10 @@ import { ManageCategoriesModal } from '@/features/countdowns/components/modals/m
 import { compactFieldClass, compactFieldStyle } from '@/components/ui/forms/form-field-styles';
 import { SelectOption } from '@/components/ui/forms/select-option';
 import {
+    applyPastRule,
     COUNTDOWN_GROUPS,
     getCountdown,
+    groupColor,
     REPEAT_OPTIONS,
     type Countdown,
     type CountdownRepeat
@@ -31,7 +33,17 @@ import { TaskSelect } from '@/features/time-entries/components/task-select';
 import { useAuth } from '@/lib/auth-context';
 import { useNow } from '@/lib/use-now';
 import { useResponsiveLayout } from '@/lib/use-responsive-layout';
-import { Pencil, Plus, Tags, Trash2, X } from 'lucide-react';
+import {
+    Archive,
+    ArchiveRestore,
+    ChevronDown,
+    ChevronRight,
+    Pencil,
+    Plus,
+    Tags,
+    Trash2,
+    X
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 
@@ -205,7 +217,7 @@ const CountdownForm = ({
     );
 };
 
-/** A read-only countdown card in the grid, with edit/delete controls. */
+/** A read-only countdown card in the grid, with edit/archive/delete controls. */
 const CountdownGridItem = ({
     countdown,
     calc,
@@ -222,6 +234,8 @@ const CountdownGridItem = ({
     categoryName?: string;
 }) => {
     const del = useDeleteCountdown();
+    const update = useUpdateCountdown();
+    const isArchived = countdown.archived_date != null;
 
     const handleDelete = () => {
         if (del.isPending) return;
@@ -230,6 +244,21 @@ const CountdownGridItem = ({
             onSuccess: () => toast.success('Countdown deleted'),
             onError: () => toast.error('Failed to delete countdown.')
         });
+    };
+
+    const handleArchive = () => {
+        if (update.isPending) return;
+        update.mutate(
+            { countdownId: countdown.id, data: { archived: !isArchived } },
+            {
+                onSuccess: () =>
+                    toast.success(isArchived ? 'Countdown restored' : 'Countdown archived'),
+                onError: () =>
+                    toast.error(
+                        isArchived ? 'Failed to restore countdown.' : 'Failed to archive countdown.'
+                    )
+            }
+        );
     };
 
     return (
@@ -248,6 +277,15 @@ const CountdownGridItem = ({
                         className='text-text-faint transition-colors hover:text-text-secondary'
                     >
                         <Pencil size={13} />
+                    </button>
+                    <button
+                        type='button'
+                        onClick={handleArchive}
+                        disabled={update.isPending}
+                        aria-label={isArchived ? 'Restore countdown' : 'Archive countdown'}
+                        className='text-text-faint transition-colors hover:text-text-secondary disabled:opacity-50'
+                    >
+                        {isArchived ? <ArchiveRestore size={13} /> : <Archive size={13} />}
                     </button>
                     <button
                         type='button'
@@ -274,11 +312,13 @@ export const CountdownDashboard = () => {
     const profileId = activeProfileId ?? undefined;
     const now = useNow();
 
-    const countdownsQuery = useCountdowns({ profileId });
+    const [showArchived, setShowArchived] = useState(false);
+    const countdownsQuery = useCountdowns({ profileId, archived: showArchived });
     const categoryQuery = useCountdownCategories({ profileId });
     const [creating, setCreating] = useState(false);
     const [editing, setEditing] = useState<CountdownRead | null>(null);
     const [groupMode, setGroupMode] = useState<'time' | 'category'>('time');
+    const [pastOpen, setPastOpen] = useState(false);
     const [managingCategories, setManagingCategories] = useState(false);
     const closePane = () => {
         setCreating(false);
@@ -293,7 +333,12 @@ export const CountdownDashboard = () => {
     const { items, byGroup, total, overdueCount } = useMemo(() => {
         const items = (countdownsQuery.data?.countdowns ?? []).map((c) => ({
             countdown: c,
-            calc: getCountdown(c.target_date, c.target_time, now, c.repeat as CountdownRepeat)!
+            // applyPastRule is what keeps a task-less countdown out of Overdue
+            // once its day has gone; it lands in the Past band instead.
+            calc: applyPastRule(
+                getCountdown(c.target_date, c.target_time, now, c.repeat as CountdownRepeat)!,
+                c.task_id
+            )
         }));
         const map = new Map<string, typeof items>();
         for (const item of items) {
@@ -328,6 +373,9 @@ export const CountdownDashboard = () => {
         // merging with the ungrouped ones.
         const map = new Map<number | null, typeof items>();
         for (const item of items) {
+            // Past ones collect in their own band instead, so switching group
+            // mode cannot resurrect them into a category section.
+            if (item.calc.group === 'past') continue;
             const key = item.countdown.category_id ?? null;
             const list = map.get(key) ?? [];
             list.push(item);
@@ -349,20 +397,44 @@ export const CountdownDashboard = () => {
 
     const disabled = activeProfile != null && activeProfile.countdowns_enabled === false;
 
-    const sections =
-        groupMode === 'time'
-            ? COUNTDOWN_GROUPS.map((g) => ({
-                  key: g.key,
-                  label: g.label,
-                  color: g.color,
-                  rows: byGroup.get(g.key) ?? []
-              }))
-            : categorySections.map((s) => ({
-                  key: `cat-${s.categoryId ?? 'none'}`,
-                  label: s.name,
-                  color: s.color ?? 'var(--color-text-faint)',
-                  rows: s.items
-              }));
+    const pastSection = {
+        key: 'past',
+        label: 'Past',
+        color: groupColor('past'),
+        rows: byGroup.get('past') ?? []
+    };
+
+    const sections = showArchived
+        ? [
+              {
+                  key: 'archived',
+                  label: 'Archived',
+                  color: 'var(--color-text-faint)',
+                  // Most recently archived first: here the archive date is what
+                  // is being scanned, not the target date the API sorts by.
+                  rows: [...items].sort((a, b) =>
+                      (b.countdown.archived_date ?? '').localeCompare(
+                          a.countdown.archived_date ?? ''
+                      )
+                  )
+              }
+          ]
+        : groupMode === 'time'
+          ? COUNTDOWN_GROUPS.map((g) => ({
+                key: g.key,
+                label: g.label,
+                color: g.color,
+                rows: byGroup.get(g.key) ?? []
+            }))
+          : [
+                ...categorySections.map((s) => ({
+                    key: `cat-${s.categoryId ?? 'none'}`,
+                    label: s.name,
+                    color: s.color ?? 'var(--color-text-faint)',
+                    rows: s.items
+                })),
+                pastSection
+            ];
 
     const paneTitle = editing ? 'Edit countdown' : 'New countdown';
     const formEl = activeProfileId ? (
@@ -428,7 +500,9 @@ export const CountdownDashboard = () => {
                     </h1>
                     <div className='mt-1.5 flex flex-wrap items-center gap-2 font-mono text-[11px]'>
                         <span className='text-text-muted'>
-                            {total} {total === 1 ? 'countdown' : 'countdowns'}
+                            {total}
+                            {showArchived ? ' archived' : ''}{' '}
+                            {total === 1 ? 'countdown' : 'countdowns'}
                         </span>
                         {overdueCount > 0 && (
                             <>
@@ -445,7 +519,7 @@ export const CountdownDashboard = () => {
                     // which overhangs a 375px phone column and scrolls the page
                     // sideways.
                     <div className='flex flex-wrap items-center justify-end gap-2'>
-                        {total > 0 && (
+                        {total > 0 && !showArchived && (
                             <span
                                 className='flex items-center gap-0.5 rounded-chip border p-0.5'
                                 style={{ borderColor: 'var(--surface-input-border)' }}
@@ -477,6 +551,23 @@ export const CountdownDashboard = () => {
                         {activeProfileId && (
                             <button
                                 type='button'
+                                onClick={() => setShowArchived((v) => !v)}
+                                aria-pressed={showArchived}
+                                aria-label={
+                                    showArchived
+                                        ? 'Show live countdowns'
+                                        : 'Show archived countdowns'
+                                }
+                                className='flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11px] text-text-secondary transition-colors hover:text-text-primary'
+                                style={inputStyle}
+                            >
+                                <Archive size={13} />
+                                {showArchived ? 'Live' : 'Archived'}
+                            </button>
+                        )}
+                        {activeProfileId && !showArchived && (
+                            <button
+                                type='button'
                                 onClick={() => setManagingCategories(true)}
                                 aria-label='Manage countdown groups'
                                 className='flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11px] text-text-secondary transition-colors hover:text-text-primary'
@@ -486,7 +577,7 @@ export const CountdownDashboard = () => {
                                 Manage groups
                             </button>
                         )}
-                        {activeProfileId && (
+                        {activeProfileId && !showArchived && (
                             <button
                                 type='button'
                                 onClick={() => setCreating(true)}
@@ -523,47 +614,75 @@ export const CountdownDashboard = () => {
                     />
                     {!countdownsQuery.isError && !countdownsQuery.isLoading && total === 0 && (
                         <p className='font-mono text-[12px] text-text-faint'>
-                            No countdowns yet. Add one to track a deadline — with or without a task.
+                            {showArchived
+                                ? 'Nothing archived yet. Archive a countdown to retire it without deleting it.'
+                                : 'No countdowns yet. Add one to track a deadline — with or without a task.'}
                         </p>
                     )}
                     {!countdownsQuery.isError && !countdownsQuery.isLoading && total > 0 && (
                         <div className='flex flex-col gap-[26px]'>
                             {sections.map((section) => {
                                 if (section.rows.length === 0) return null;
+                                // Past is collapsed by default: it only grows, and
+                                // nothing in it needs acting on.
+                                const collapsible = section.key === 'past';
+                                const heading = (
+                                    <>
+                                        <span
+                                            className='h-2 w-2 rounded-full'
+                                            style={{ backgroundColor: section.color }}
+                                        />
+                                        <h2 className='font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-text-muted'>
+                                            {section.label}
+                                        </h2>
+                                        <span className='font-mono text-[11px] text-text-faint'>
+                                            {section.rows.length}
+                                        </span>
+                                    </>
+                                );
                                 return (
                                     <section key={section.key}>
-                                        <div className='mb-2.5 flex items-center gap-2'>
-                                            <span
-                                                className='h-2 w-2 rounded-full'
-                                                style={{ backgroundColor: section.color }}
-                                            />
-                                            <h2 className='font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-text-muted'>
-                                                {section.label}
-                                            </h2>
-                                            <span className='font-mono text-[11px] text-text-faint'>
-                                                {section.rows.length}
-                                            </span>
-                                        </div>
-                                        <div className={GRID_CLASS}>
-                                            {section.rows.map(({ countdown, calc }) => (
-                                                <CountdownGridItem
-                                                    key={countdown.id}
-                                                    countdown={countdown}
-                                                    calc={calc}
-                                                    now={now}
-                                                    onEdit={() => setEditing(countdown)}
-                                                    categoryColor={colorOf(
-                                                        colorFor,
-                                                        countdown.category_id
-                                                    )}
-                                                    categoryName={
-                                                        countdown.category_id != null
-                                                            ? nameFor.get(countdown.category_id)
-                                                            : undefined
-                                                    }
-                                                />
-                                            ))}
-                                        </div>
+                                        {collapsible ? (
+                                            <button
+                                                type='button'
+                                                onClick={() => setPastOpen((v) => !v)}
+                                                aria-expanded={pastOpen}
+                                                className='mb-2.5 flex items-center gap-2 text-text-faint transition-colors hover:text-text-secondary'
+                                            >
+                                                {heading}
+                                                {pastOpen ? (
+                                                    <ChevronDown size={13} />
+                                                ) : (
+                                                    <ChevronRight size={13} />
+                                                )}
+                                            </button>
+                                        ) : (
+                                            <div className='mb-2.5 flex items-center gap-2'>
+                                                {heading}
+                                            </div>
+                                        )}
+                                        {(!collapsible || pastOpen) && (
+                                            <div className={GRID_CLASS}>
+                                                {section.rows.map(({ countdown, calc }) => (
+                                                    <CountdownGridItem
+                                                        key={countdown.id}
+                                                        countdown={countdown}
+                                                        calc={calc}
+                                                        now={now}
+                                                        onEdit={() => setEditing(countdown)}
+                                                        categoryColor={colorOf(
+                                                            colorFor,
+                                                            countdown.category_id
+                                                        )}
+                                                        categoryName={
+                                                            countdown.category_id != null
+                                                                ? nameFor.get(countdown.category_id)
+                                                                : undefined
+                                                        }
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
                                     </section>
                                 );
                             })}

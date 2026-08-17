@@ -225,15 +225,17 @@ test('the countdown form opens in a narrower pane and remounts when editing', as
     await expect(pane.getByLabel('Countdown title')).toHaveValue('');
     const createAside = await pane.elementHandle();
 
-    // The seeded overdue countdown is the only member of the Overdue group (the
-    // yearly one rolls forward), so its section scopes the Edit control.
-    const overdueSection = authedPage
+    // The seeded past countdown is the only member of the Past band (the yearly
+    // one rolls forward), so its section scopes the Edit control. Past is
+    // collapsed by default, so its cards have to be revealed first.
+    const pastSection = authedPage
         .locator('section')
-        .filter({ has: authedPage.getByRole('heading', { name: 'Overdue' }) });
-    await overdueSection.getByRole('button', { name: 'Edit countdown' }).click();
+        .filter({ has: authedPage.getByRole('heading', { name: 'Past' }) });
+    await pastSection.getByRole('button', { expanded: false }).click();
+    await pastSection.getByRole('button', { name: 'Edit countdown' }).click();
 
     await expect(pane.getByRole('heading', { name: 'Edit countdown' })).toBeVisible();
-    await expect(pane.getByLabel('Countdown title')).toHaveValue(GOLDEN.countdowns.overdue);
+    await expect(pane.getByLabel('Countdown title')).toHaveValue(GOLDEN.countdowns.past);
     expect(
         await createAside!.evaluate((el) => el.isConnected),
         'the countdown pane is keyed by countdown id, so switching targets must replace the <aside>'

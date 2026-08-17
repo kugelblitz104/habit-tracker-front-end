@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+    applyPastRule,
     COUNTDOWN_GROUPS,
     countdownHero,
     getCountdown,
@@ -241,5 +242,48 @@ describe('groupColor', () => {
         for (const { key, color } of COUNTDOWN_GROUPS) {
             expect(groupColor(key)).toBe(color);
         }
+    });
+});
+
+describe('applyPastRule', () => {
+    const past = (date: string, time?: string | null, taskId?: number | null) =>
+        applyPastRule(at(date, time), taskId ?? null);
+
+    it('moves a task-less countdown whose day has gone into the Past band', () => {
+        const c = past('2026-03-12');
+        expect(c.group).toBe('past');
+        expect(c.urgency).toBe('past');
+        expect(c.label).toBe('3d ago');
+        expect(c.overdue).toBe(false);
+    });
+
+    it('leaves a task-linked overdue countdown in the Overdue band', () => {
+        const c = past('2026-03-12', null, 42);
+        expect(c.group).toBe('overdue');
+        expect(c.label).toBe('3d overdue');
+        expect(c.overdue).toBe(true);
+    });
+
+    it('keeps a task-less countdown live for the whole of its target day', () => {
+        // 09:00 has passed by the 12:00 anchor, but the day has not.
+        const c = past('2026-03-15', '09:00');
+        expect(c.group).toBe('today');
+        expect(c.urgency).toBe('now');
+        expect(c.label).toBe('due today');
+        expect(c.overdue).toBe(false);
+    });
+
+    it('leaves an upcoming countdown untouched', () => {
+        expect(past('2026-03-18')).toEqual(at('2026-03-18'));
+    });
+
+    it('leaves a recurring countdown untouched, however old its anchor', () => {
+        const c = getCountdown('2019-01-07', null, NOW, 'yearly')!;
+        expect(applyPastRule(c, null)).toEqual(c);
+    });
+
+    it('reads the hero as days ago rather than days overdue', () => {
+        expect(countdownHero(past('2026-03-12'))).toEqual({ value: '3', unit: 'days ago' });
+        expect(countdownHero(past('2026-03-14'))).toEqual({ value: '1', unit: 'day ago' });
     });
 });

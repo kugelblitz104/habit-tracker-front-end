@@ -11,8 +11,8 @@ import { parseLocalDate, toLocalDateString } from '@/lib/date-utils';
  * bill to next month), so recurring countdowns never read as overdue.
  */
 
-export type CountdownGroup = 'overdue' | 'today' | 'week' | 'later';
-export type CountdownUrgency = 'overdue' | 'now' | 'soon' | 'later';
+export type CountdownGroup = 'overdue' | 'today' | 'week' | 'later' | 'past';
+export type CountdownUrgency = 'overdue' | 'now' | 'soon' | 'later' | 'past';
 export type CountdownRepeat = 'none' | 'weekly' | 'monthly' | 'monthly_weekday' | 'yearly';
 
 export type Countdown = {
@@ -180,7 +180,8 @@ export const URGENCY_META: Record<CountdownUrgency, { label: string; color: stri
     overdue: { label: 'Overdue', color: 'var(--color-danger)' },
     now: { label: 'Due now', color: 'var(--color-now-accent)' },
     soon: { label: 'This week', color: 'var(--color-soon-label)' },
-    later: { label: 'Later', color: 'var(--color-whenever-text)' }
+    later: { label: 'Later', color: 'var(--color-whenever-text)' },
+    past: { label: 'Past', color: 'var(--color-text-faint)' }
 };
 
 /** Section metadata for the time-grouped Countdown view, in display order. */
@@ -188,8 +189,32 @@ export const COUNTDOWN_GROUPS: { key: CountdownGroup; label: string; color: stri
     { key: 'overdue', label: 'Overdue', color: 'var(--color-danger)' },
     { key: 'today', label: 'Today', color: 'var(--color-now-accent)' },
     { key: 'week', label: 'This week', color: 'var(--color-soon-label)' },
-    { key: 'later', label: 'Later', color: 'var(--color-whenever-text)' }
+    { key: 'later', label: 'Later', color: 'var(--color-whenever-text)' },
+    { key: 'past', label: 'Past', color: 'var(--color-text-faint)' }
 ];
+
+/**
+ * A countdown with no linked task has nothing that can ever resolve it, so it
+ * never reads as overdue: it stays live through the whole of its target day and
+ * then drops into the Past band. Task-linked countdowns pass through untouched,
+ * completing the task is what closes those out.
+ *
+ * The result is a presentation view of the calc: `overdue` reflects what the card
+ * should say, not the raw instant comparison `getCountdown` made. Recurring
+ * countdowns are never overdue, so they return unchanged.
+ */
+export const applyPastRule = (calc: Countdown, taskId: number | null | undefined): Countdown => {
+    if (taskId != null || !calc.overdue) return calc;
+    if (calc.daysUntil === 0)
+        return { ...calc, overdue: false, label: 'due today', group: 'today', urgency: 'now' };
+    return {
+        ...calc,
+        overdue: false,
+        label: `${Math.abs(calc.daysUntil)}d ago`,
+        group: 'past',
+        urgency: 'past'
+    };
+};
 
 /** Urgency accent color for a group (the hero number's color). */
 export const groupColor = (group: CountdownGroup): string =>
@@ -201,6 +226,10 @@ export const groupColor = (group: CountdownGroup): string =>
  * a number + "days".
  */
 export const countdownHero = (c: Countdown): { value: string; unit: string | null } => {
+    if (c.group === 'past') {
+        const n = Math.abs(c.daysUntil);
+        return { value: String(n), unit: n === 1 ? 'day ago' : 'days ago' };
+    }
     if (c.overdue) {
         if (c.daysUntil === 0) return { value: 'Overdue', unit: null };
         const n = Math.abs(c.daysUntil);

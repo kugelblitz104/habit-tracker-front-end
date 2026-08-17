@@ -9,7 +9,7 @@ import {
     type Countdown
 } from '@/features/countdowns/utils/countdown';
 import { formatCompactTime, formatShortDate } from '@/features/tasks/utils/task-format';
-import { parseLocalDate } from '@/lib/date-utils';
+import { parseLocalDate, parseServerDate } from '@/lib/date-utils';
 import { ExternalLink, Repeat } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
@@ -100,6 +100,11 @@ export const CountdownCard = ({
                     {time ? ` · ${time}` : ''}
                 </span>
                 {categoryName && <span>· {categoryName}</span>}
+                {countdown.archived_date && (
+                    <span>
+                        · Archived {formatShortDate(parseServerDate(countdown.archived_date))}
+                    </span>
+                )}
                 {rep && (
                     <span className='inline-flex items-center gap-0.5'>
                         · <Repeat size={10} /> {rep}

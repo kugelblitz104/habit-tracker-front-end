@@ -48,7 +48,7 @@ export const GOLDEN = {
     habits: { daily: 'Daily habit', thrice: 'Thrice weekly habit', paused: 'Lapsed habit' },
     countdowns: {
         future: 'Far future countdown',
-        overdue: 'Overdue countdown',
+        past: 'Past countdown',
         yearly: 'Yearly countdown',
         linked: 'Countdown linked to a task'
     }
@@ -280,8 +280,12 @@ export const buildGoldenProfile = (anchor: Date) => {
                 created_date: stamp(-15)
             },
             {
+                // Task-less and 9 days gone, so nothing can ever resolve it: it
+                // renders in the Past band rather than Overdue. A task-linked
+                // countdown is what still reads as overdue, so
+                // countdown-archive.spec.ts seeds its own.
                 id: 41,
-                title: GOLDEN.countdowns.overdue,
+                title: GOLDEN.countdowns.past,
                 target_date: day(-9),
                 color: '#cc3333',
                 repeat: 'none',

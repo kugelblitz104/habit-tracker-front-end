@@ -1,4 +1,8 @@
-import { getCountdown, type CountdownRepeat } from '@/features/countdowns/utils/countdown';
+import {
+    applyPastRule,
+    getCountdown,
+    type CountdownRepeat
+} from '@/features/countdowns/utils/countdown';
 import { useAuth } from '@/lib/auth-context';
 import { useNow } from '@/lib/use-now';
 import { useEffect, useMemo, useState } from 'react';
@@ -55,10 +59,17 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
     };
 
     const { groups, categories, colorFor, nameFor, hasAny } = useMemo(() => {
-        const all = (query.data?.countdowns ?? []).map((c) => ({
-            c,
-            calc: getCountdown(c.target_date, c.target_time, now, c.repeat as CountdownRepeat)!
-        }));
+        const all = (query.data?.countdowns ?? [])
+            .map((c) => ({
+                c,
+                calc: applyPastRule(
+                    getCountdown(c.target_date, c.target_time, now, c.repeat as CountdownRepeat)!,
+                    c.task_id
+                )
+            }))
+            // A look-ahead window has no business holding countdowns that have
+            // already gone; the Past band on /countdown is where they live.
+            .filter((i) => i.calc.group !== 'past');
         const inRange = all.filter((i) => windowDays == null || i.calc.daysUntil <= windowDays);
 
         // Groups come from the countdowns in range, never from the categories

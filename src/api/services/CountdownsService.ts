@@ -12,10 +12,12 @@ import { request as __request } from '../core/request';
 export class CountdownsService {
     /**
      * List countdowns for a profile
-     * List a profile's countdowns, soonest target first.
+     * List a profile's countdowns, soonest target first. Archived countdowns are
+     * excluded unless `archived` is true, which lists those and only those.
      * @param profileId The profile whose countdowns to list
      * @param limit
      * @param offset
+     * @param archived True lists the archived countdowns instead of the live ones
      * @returns CountdownList Successful Response
      * @throws ApiError
      */
@@ -23,6 +25,7 @@ export class CountdownsService {
         profileId: number,
         limit: number = 100,
         offset?: number,
+        archived: boolean = false,
     ): CancelablePromise<CountdownList> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -31,6 +34,7 @@ export class CountdownsService {
                 'profile_id': profileId,
                 'limit': limit,
                 'offset': offset,
+                'archived': archived,
             },
             errors: {
                 404: `Not found`,
@@ -115,7 +119,8 @@ export class CountdownsService {
      * user. `category_id` files it into an existing group in the same profile and a
      * null clears the group. The group also re-resolves on a profile move, since a
      * group belongs to one profile: it is recreated in the target profile under the
-     * same name.
+     * same name. `archived` retires the countdown or restores it; the archive
+     * timestamp is server-stamped, and re-archiving keeps the original one.
      * @param countdownId
      * @param requestBody
      * @returns CountdownRead Successful Response

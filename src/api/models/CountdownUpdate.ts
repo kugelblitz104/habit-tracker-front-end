@@ -11,5 +11,6 @@ export type CountdownUpdate = {
     repeat?: (string | null);
     show_occurrence?: (boolean | null);
     category_id?: (number | null);
+    archived?: (boolean | null);
 };
 
