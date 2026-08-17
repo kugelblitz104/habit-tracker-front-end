@@ -13,5 +13,7 @@ export type TrackerLiteList = {
     days: number;
     has_previous?: boolean;
     auto_skipped_dates?: Array<string>;
+    limit?: number;
+    offset?: number;
 };
 

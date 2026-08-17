@@ -29,7 +29,7 @@ export const LabelInput = ({
     onBlur
 }: LabelInputProps) => {
     const listId = useId();
-    const entriesQuery = useTimeEntries({ profileId, limit: 100 });
+    const entriesQuery = useTimeEntries({ profileId, maxRows: 100 });
 
     const suggestions = useMemo(() => {
         const seen = new Set<string>();

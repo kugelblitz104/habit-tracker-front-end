@@ -10,7 +10,6 @@ import { habitKeys } from '@/features/habits/api/query-keys';
 import { getTrackersLite } from '@/features/trackers/api/get-trackers';
 import { calculateCompletionRate } from '@/features/trackers/utils/kpi-utils';
 import { parseLocalDate, parseServerDate } from '@/lib/date-utils';
-import { fetchAllPages } from '@/lib/paginate';
 import { TaskStatus } from '@/types/types';
 import type { TrackerLite } from '@/api';
 import {
@@ -28,8 +27,8 @@ import {
  * The list endpoints have no date-range filter, so this reads rows and buckets
  * them locally. Deliberately bounded at `MAX_ROWS`: if a profile has more, the
  * UI shows a "most recent 500" note rather than silently undercounting — the
- * one place that reads a partial list on purpose. `fetchAllPages` walks the
- * API's 100-row pages up to that bound.
+ * one place that reads a partial list on purpose. `getTasks`/`getTimeEntries`
+ * page internally, so the cap is passed rather than imposed by slicing here.
  */
 const MAX_ROWS = 500;
 const CLOSED_STATUSES = new Set<number>([TaskStatus.DONE, TaskStatus.CANCELLED]);
@@ -98,14 +97,7 @@ export const useInsightsData = (rangeDays: RangeDays): InsightsData => {
     });
     const timeQuery = useQuery({
         queryKey: ['insights-time', { profileId }],
-        queryFn: () =>
-            fetchAllPages(
-                async ({ offset, limit }) => {
-                    const res = await getTimeEntries({ profileId, limit, offset });
-                    return { items: res.time_entries ?? [], total: res.total };
-                },
-                { maxRows: MAX_ROWS }
-            ),
+        queryFn: () => getTimeEntries({ profileId, maxRows: MAX_ROWS }),
         enabled: !!profileId,
         staleTime: 1000 * 60
     });
@@ -115,7 +107,7 @@ export const useInsightsData = (rangeDays: RangeDays): InsightsData => {
         queryKey: habitKeys.list(activeProfileId),
         queryFn: () => {
             if (!activeProfileId) throw new Error('profileId is required');
-            return getHabits(activeProfileId, 100);
+            return getHabits(activeProfileId);
         },
         enabled: !!activeProfileId,
         staleTime: 1000 * 60
@@ -187,7 +179,7 @@ export const useInsightsData = (rangeDays: RangeDays): InsightsData => {
         ).length;
 
         // Tracked time per bucket (seconds, bucketed by started_at).
-        const entries = timeQuery.data?.items ?? [];
+        const entries = timeQuery.data?.time_entries ?? [];
         const timeTrackedSeries = bucketBy(
             entries,
             buckets,

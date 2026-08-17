@@ -2,14 +2,30 @@ import type { HabitList, HabitRead } from '@/api';
 import { HabitsService } from '@/api';
 import { getBrowserTimeZone } from '@/lib/date-utils';
 import type { QueryConfig } from '@/lib/react-query';
+import { pagedList } from '@/lib/paginate';
 import { queryOptions, useQuery } from '@tanstack/react-query';
 import { habitKeys } from './query-keys';
 
-export const getHabits = async (profileId: number, limit = 100): Promise<HabitList> => {
+/**
+ * Fetch a profile's habits, all of them.
+ *
+ * Today's panel and the habits dashboard both filter this list in memory, so a
+ * truncated page reads as missing habits.
+ */
+export const getHabits = async (profileId: number): Promise<HabitList> => {
     // tz keeps completed_today/skipped_today aligned with the USER's day, not
     // the server's (UTC) clock. Intentionally not part of any query key: the
     // browser zone is stable for a session, so keys stay unchanged.
-    return await HabitsService.listHabitsHabitsGet(profileId, limit, getBrowserTimeZone());
+    const tz = getBrowserTimeZone();
+
+    const { items, ...envelope } = await pagedList<HabitRead>(({ offset, limit }) =>
+        HabitsService.listHabitsHabitsGet(profileId, limit, tz, offset).then((page) => ({
+            items: page.habits ?? [],
+            total: page.total
+        }))
+    );
+
+    return { habits: items, ...envelope };
 };
 
 export const getHabit = async (habitId: number): Promise<HabitRead> => {
@@ -58,14 +74,14 @@ export const useHabitBySlug = ({ slug, profileId, queryConfig }: UseHabitBySlugO
     });
 };
 
-const getHabitsQueryOptions = (profileId: number | null | undefined, limit = 100) => {
+const getHabitsQueryOptions = (profileId: number | null | undefined) => {
     return queryOptions({
         queryKey: habitKeys.list(profileId),
         queryFn: () => {
             // `enabled` below keeps this from firing without a profile, but the
-            // guard also narrows profileId to `number` for getHabits without a cast.
+            // guard also narrows profileId to `number` for getHabits.
             if (!profileId) throw new Error('profileId is required');
-            return getHabits(profileId, limit);
+            return getHabits(profileId);
         },
         enabled: !!profileId,
         staleTime: 1000 * 60 // 1 minute
@@ -74,13 +90,12 @@ const getHabitsQueryOptions = (profileId: number | null | undefined, limit = 100
 
 type UseHabitsOptions = {
     profileId: number | null | undefined;
-    limit?: number;
     queryConfig?: QueryConfig<typeof getHabitsQueryOptions>;
 };
 
-export const useHabits = ({ profileId, limit = 100, queryConfig }: UseHabitsOptions) => {
+export const useHabits = ({ profileId, queryConfig }: UseHabitsOptions) => {
     return useQuery({
-        ...getHabitsQueryOptions(profileId, limit),
+        ...getHabitsQueryOptions(profileId),
         ...queryConfig
     });
 };

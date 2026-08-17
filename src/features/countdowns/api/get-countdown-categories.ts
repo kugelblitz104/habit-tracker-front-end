@@ -1,6 +1,6 @@
 import type { CountdownCategoryList, CountdownCategoryRead } from '@/api';
 import { CountdownCategoriesService } from '@/api';
-import { fetchAllPages, PAGE_SIZE } from '@/lib/paginate';
+import { pagedList } from '@/lib/paginate';
 import type { QueryConfig } from '@/lib/react-query';
 import { queryOptions, useQuery } from '@tanstack/react-query';
 import { countdownCategoryKeys } from './query-keys';
@@ -14,9 +14,7 @@ import { countdownCategoryKeys } from './query-keys';
  * deliberately not caller-facing: paging is this function's business.
  */
 export const getCountdownCategories = async (profileId: number): Promise<CountdownCategoryList> => {
-    // No dedupeById: a category list fits in one page, so the multi-page
-    // race getTasks guards against cannot occur here.
-    const { items, total } = await fetchAllPages<CountdownCategoryRead>(
+    const { items, ...envelope } = await pagedList<CountdownCategoryRead>(
         async ({ offset, limit }) => {
             const page =
                 await CountdownCategoriesService.listCountdownCategoriesCountdownCategoriesGet(
@@ -28,9 +26,7 @@ export const getCountdownCategories = async (profileId: number): Promise<Countdo
         }
     );
 
-    // `limit` is the page size the walk asked for, not the row count it ended
-    // up with; `total` already reports how many rows there are.
-    return { categories: items, total, limit: PAGE_SIZE, offset: 0 };
+    return { categories: items, ...envelope };
 };
 
 export const getCountdownCategoriesQueryOptions = (profileId: number | null | undefined) =>

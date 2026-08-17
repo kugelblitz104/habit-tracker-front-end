@@ -12,7 +12,7 @@ type RecentEntriesProps = {
 
 /** Recent time entries for the profile — editable, date-grouped, with a total. */
 export const RecentEntries = ({ profileId }: RecentEntriesProps) => {
-    const entriesQuery = useTimeEntries({ profileId, limit: 50 });
+    const entriesQuery = useTimeEntries({ profileId, maxRows: 50 });
     const summaryQuery = useTimeEntrySummary({ profileId });
     const contextNameFor = useEntryContextName({ profileId, includeProjects: true });
     const projectFor = useEntryProject({ profileId });

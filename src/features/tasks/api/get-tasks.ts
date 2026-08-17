@@ -1,6 +1,6 @@
 import type { TaskList, TaskRead } from '@/api';
 import { TasksService } from '@/api';
-import { fetchAllPages } from '@/lib/paginate';
+import { pagedList } from '@/lib/paginate';
 import type { QueryConfig } from '@/lib/react-query';
 import type { TaskBand } from '@/types/types';
 import { queryOptions, useQuery } from '@tanstack/react-query';
@@ -22,15 +22,6 @@ export type TaskListParams = {
     maxRows?: number;
 };
 
-/** First occurrence of each id wins. */
-const dedupeById = (tasks: TaskRead[]): TaskRead[] => {
-    const byId = new Map<number, TaskRead>();
-    for (const task of tasks) {
-        if (!byId.has(task.id)) byId.set(task.id, task);
-    }
-    return [...byId.values()];
-};
-
 /**
  * Fetch a profile's tasks — all of them.
  *
@@ -43,7 +34,7 @@ const dedupeById = (tasks: TaskRead[]): TaskRead[] => {
 export const getTasks = async (params: TaskListParams): Promise<TaskList> => {
     const { profileId, projectId, band, status, includeClosed, parentId, maxRows } = params;
 
-    const { items, total } = await fetchAllPages<TaskRead>(
+    const { items, total } = await pagedList<TaskRead>(
         async ({ offset, limit }) => {
             const page = await TasksService.listTasksTasksGet(
                 profileId!,
@@ -57,18 +48,10 @@ export const getTasks = async (params: TaskListParams): Promise<TaskList> => {
             );
             return { items: page.tasks ?? [], total: page.total };
         },
-        { maxRows }
+        { maxRows, identify: (task) => task.id }
     );
 
-    // Offset paging can repeat a row when the list shifts mid-walk (a task
-    // created between requests reorders it), and duplicate ids would collide as
-    // React keys.
-    const tasks = dedupeById(items);
-
-    // `total` stays as the server reported it, so a `maxRows` caller can still
-    // see `total > tasks.length` and say so. Without `maxRows` the walk is
-    // complete and the two agree.
-    return { tasks, total, limit: tasks.length, offset: 0 };
+    return { tasks: items, total, limit: items.length, offset: 0 };
 };
 
 export const getTask = async (taskId: number): Promise<TaskRead> => {

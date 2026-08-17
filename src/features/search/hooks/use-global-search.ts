@@ -71,7 +71,7 @@ export const useGlobalSearch = (open: boolean, query: string): GlobalSearchGroup
         queryKey: habitKeys.list(activeProfileId),
         queryFn: () => {
             if (!activeProfileId) throw new Error('profileId is required');
-            return getHabits(activeProfileId, 100);
+            return getHabits(activeProfileId);
         },
         enabled: open && !!activeProfileId && habitsEnabled,
         staleTime: 1000 * 60

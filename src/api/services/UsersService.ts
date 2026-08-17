@@ -17,20 +17,24 @@ export class UsersService {
      * Admins can see all users.
      *
      * - **limit**: Maximum number of users to return (default: 5, max: 100)
+     * - **offset**: Number of users to skip (default: 0)
      *
      * Returns a list of users with pagination metadata including total count.
      * @param limit Maximum number of users to return (1-100)
+     * @param offset Number of users to skip
      * @returns UserList Successful Response
      * @throws ApiError
      */
     public static listUsersUsersGet(
         limit: number = 5,
+        offset?: number,
     ): CancelablePromise<UserList> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/users/',
             query: {
                 'limit': limit,
+                'offset': offset,
             },
             errors: {
                 404: `Not found`,

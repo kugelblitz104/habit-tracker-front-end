@@ -60,9 +60,11 @@ export class HabitsService {
      * - **profile_id**: The profile whose habits to list (required)
      * - **limit**: Maximum number of habits to return (default: 5, max: 100)
      * - **tz**: Optional IANA timezone for determining "today" (invalid name -> 422)
+     * - **offset**: Number of habits to skip (default: 0)
      * @param profileId The profile whose habits to list
      * @param limit Maximum number of habits to return (1-100)
      * @param tz IANA timezone name (e.g. 'America/New_York'). When provided, 'today' for completed_today/skipped_today is today in this zone; when omitted, the server's local date is used.
+     * @param offset Number of habits to skip
      * @returns HabitList Successful Response
      * @throws ApiError
      */
@@ -70,6 +72,7 @@ export class HabitsService {
         profileId: number,
         limit: number = 5,
         tz?: (string | null),
+        offset?: number,
     ): CancelablePromise<HabitList> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -78,6 +81,7 @@ export class HabitsService {
                 'profile_id': profileId,
                 'limit': limit,
                 'tz': tz,
+                'offset': offset,
             },
             errors: {
                 404: `Not found`,
@@ -327,16 +331,19 @@ export class HabitsService {
      *
      * - **habit_id**: The unique identifier of the habit
      * - **limit**: Maximum number of trackers to return (default: 5, max: 1000)
+     * - **offset**: Number of trackers to skip (default: 0)
      *
      * Returns tracker entries showing completion/skip status for each date.
      * @param habitId
      * @param limit Maximum number of trackers to return (1-1000)
+     * @param offset Number of trackers to skip
      * @returns TrackerList Successful Response
      * @throws ApiError
      */
     public static listHabitTrackersHabitsHabitIdTrackersGet(
         habitId: number,
         limit: number = 5,
+        offset?: number,
     ): CancelablePromise<TrackerList> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -346,6 +353,7 @@ export class HabitsService {
             },
             query: {
                 'limit': limit,
+                'offset': offset,
             },
             errors: {
                 404: `Not found`,
@@ -374,10 +382,14 @@ export class HabitsService {
      * - **end_date**: End date for the range (defaults to today)
      * - **days**: Number of days to fetch (1-3660, default: 42 = 6 weeks)
      * - **tz**: Optional IANA timezone for the default end_date (invalid name -> 422)
+     * - **limit**: Maximum number of trackers to return (1-1000, default: 1000)
+     * - **offset**: Number of trackers to skip (default: 0)
      * @param habitId
      * @param endDate End date for the date range (defaults to today). Format: YYYY-MM-DD
      * @param days Number of days to fetch (1-3660, default: 42 = 6 weeks)
      * @param tz IANA timezone name (e.g. 'America/New_York'). When provided, the default end_date is today in this zone; when omitted, the server's local date is used.
+     * @param limit Maximum number of trackers to return (1-1000)
+     * @param offset Number of trackers to skip
      * @returns TrackerLiteList Successful Response
      * @throws ApiError
      */
@@ -386,6 +398,8 @@ export class HabitsService {
         endDate?: (string | null),
         days: number = 42,
         tz?: (string | null),
+        limit: number = 1000,
+        offset?: number,
     ): CancelablePromise<TrackerLiteList> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -397,6 +411,8 @@ export class HabitsService {
                 'end_date': endDate,
                 'days': days,
                 'tz': tz,
+                'limit': limit,
+                'offset': offset,
             },
             errors: {
                 404: `Not found`,

@@ -1,13 +1,27 @@
 import type { ProjectList, ProjectRead } from '@/api';
 import { ProjectsService } from '@/api';
 import type { QueryConfig } from '@/lib/react-query';
+import { pagedList } from '@/lib/paginate';
 import { queryOptions, useQuery } from '@tanstack/react-query';
 
+/**
+ * Fetch a profile's projects, all of them.
+ *
+ * Twelve surfaces look a project up by id from this list (`useProjectsById`,
+ * the project picker, global search), so a truncated page renders a card with
+ * no project name rather than reading as page one of many.
+ */
 export const getProjects = async (
     profileId: number,
     includeArchived = false
 ): Promise<ProjectList> => {
-    return await ProjectsService.listProjectsProjectsGet(profileId, includeArchived);
+    const { items, ...envelope } = await pagedList<ProjectRead>(({ offset, limit }) =>
+        ProjectsService.listProjectsProjectsGet(profileId, includeArchived, limit, offset).then(
+            (page) => ({ items: page.projects ?? [], total: page.total })
+        )
+    );
+
+    return { projects: items, ...envelope };
 };
 
 export const getProject = async (projectId: number): Promise<ProjectRead> => {

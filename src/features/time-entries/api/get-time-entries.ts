@@ -1,5 +1,6 @@
 import type { TimeEntryList, TimeEntryRead, TimeEntrySummary } from '@/api';
 import { TimeEntriesService } from '@/api';
+import { pagedList } from '@/lib/paginate';
 import type { QueryConfig } from '@/lib/react-query';
 import type { TimeEntryKind } from '@/types/types';
 import { queryOptions, useQuery } from '@tanstack/react-query';
@@ -11,27 +12,51 @@ export type TimeEntryListParams = {
     projectId?: number | null;
     kind?: TimeEntryKind | null;
     running?: boolean | null;
-    limit?: number;
-    offset?: number;
+    /**
+     * Stop after this many rows instead of fetching the whole list. Only for
+     * consumers that bound their read on purpose and surface it; leave unset
+     * everywhere else, or a client-side sum operates on a partial list.
+     */
+    maxRows?: number;
 };
 
+/**
+ * Fetch a profile's time entries, all of them by default.
+ *
+ * `TaskTimeLog` and `ProjectTimeLog` sum `duration_seconds` over what comes
+ * back, so a truncated page renders a wrong total rather than a short list.
+ */
 export const getTimeEntries = async (params: TimeEntryListParams): Promise<TimeEntryList> => {
-    const { profileId, taskId, projectId, kind, running, limit, offset } = params;
-    return await TimeEntriesService.listTimeEntriesTimeEntriesGet(
-        profileId!,
-        taskId,
-        projectId,
-        kind,
-        running,
-        limit,
-        offset
+    const { profileId, taskId, projectId, kind, running, maxRows } = params;
+
+    const { items, ...envelope } = await pagedList<TimeEntryRead>(
+        ({ offset, limit }) =>
+            TimeEntriesService.listTimeEntriesTimeEntriesGet(
+                profileId!,
+                taskId,
+                projectId,
+                kind,
+                running,
+                limit,
+                offset
+            ).then((page) => ({ items: page.time_entries ?? [], total: page.total })),
+        { maxRows, identify: (item) => item.id }
     );
+
+    return { time_entries: items, ...envelope };
 };
 
 export const getTimeEntriesQueryOptions = (params: TimeEntryListParams) => {
-    const { profileId, taskId = null, projectId = null, kind = null, running = null } = params;
+    const {
+        profileId,
+        taskId = null,
+        projectId = null,
+        kind = null,
+        running = null,
+        maxRows = null
+    } = params;
     return queryOptions({
-        queryKey: timeEntryKeys.list({ profileId, taskId, projectId, kind, running }),
+        queryKey: timeEntryKeys.list({ profileId, taskId, projectId, kind, running, maxRows }),
         queryFn: () => getTimeEntries(params),
         enabled: !!profileId
     });

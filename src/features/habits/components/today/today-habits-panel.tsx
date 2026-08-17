@@ -32,7 +32,7 @@ export const TodayHabitsPanel = ({ profile, onSelectHabit }: TodayHabitsPanelPro
         queryKey: habitKeys.list(profileId),
         queryFn: () => {
             if (!profileId) throw new Error('profileId is required');
-            return getHabits(profileId, 100);
+            return getHabits(profileId);
         },
         enabled: !!profileId && profile?.habits_enabled !== false,
         staleTime: 1000 * 60

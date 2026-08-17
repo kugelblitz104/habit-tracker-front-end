@@ -1,12 +1,24 @@
-import type { IntegrationConnectionList } from '@/api';
+import type { IntegrationConnectionList, IntegrationConnectionRead } from '@/api';
 import { IntegrationsService } from '@/api';
 import type { QueryConfig } from '@/lib/react-query';
+import { pagedList } from '@/lib/paginate';
 import { queryOptions, useQuery } from '@tanstack/react-query';
 
 export const getIntegrationConnections = async (
     profileId: number
 ): Promise<IntegrationConnectionList> => {
-    return await IntegrationsService.listIntegrationConnectionsIntegrationsGet(profileId);
+    const { items, ...envelope } = await pagedList<IntegrationConnectionRead>(({ offset, limit }) =>
+        IntegrationsService.listIntegrationConnectionsIntegrationsGet(
+            profileId,
+            limit,
+            offset
+        ).then((page) => ({
+            items: page.integration_connections ?? [],
+            total: page.total
+        }))
+    );
+
+    return { integration_connections: items, ...envelope };
 };
 
 export const getIntegrationConnectionsQueryOptions = (profileId: number | null | undefined) => {
