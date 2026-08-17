@@ -8,7 +8,7 @@ import {
     DialogBackdrop,
     DialogPanel
 } from '@headlessui/react';
-import { CheckSquare, Flame, Search } from 'lucide-react';
+import { CheckSquare, Flame, Search, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { habitDetailPath, projectDetailPath, taskDetailPath } from '@/lib/entity-ref';
@@ -90,15 +90,23 @@ export const SearchPalette = ({ open, onClose }: SearchPaletteProps) => {
             <DialogBackdrop className='fixed inset-0 bg-black/60' />
             <div className='fixed inset-0 flex justify-center sm:p-4 sm:pt-[12vh]'>
                 <DialogPanel
-                    className='flex h-[100dvh] w-full flex-col overflow-hidden border shadow-popover sm:h-fit sm:max-h-[70vh] sm:max-w-xl sm:rounded-card'
+                    className='relative flex h-[100dvh] w-full flex-col overflow-hidden border shadow-popover sm:h-fit sm:max-h-[70vh] sm:max-w-xl sm:rounded-card'
                     style={{
                         backgroundColor: 'var(--bg)',
                         borderColor: 'var(--surface-card-border)'
                     }}
                 >
+                    <button
+                        type='button'
+                        onClick={onClose}
+                        aria-label='Close search'
+                        className='absolute right-2.5 top-2.5 z-10 rounded-full p-1.5 text-text-faint transition-colors hover:text-text-secondary sm:hidden'
+                    >
+                        <X size={18} />
+                    </button>
                     <Combobox<SearchResult | null> immediate value={null} onChange={handleSelect}>
                         <div
-                            className='flex items-center gap-2.5 border-b px-3.5 py-3'
+                            className='flex items-center gap-2.5 border-b py-3 pl-3.5 pr-12 sm:pr-3.5'
                             style={{ borderColor: 'var(--surface-card-border)' }}
                         >
                             <Search
@@ -115,7 +123,17 @@ export const SearchPalette = ({ open, onClose }: SearchPaletteProps) => {
                             />
                         </div>
 
-                        <ComboboxOptions static className='min-h-0 flex-1 overflow-y-auto p-1'>
+                        {/* `modal={false}`: an open ComboboxOptions otherwise
+                            inerts everything outside the input and this list —
+                            which here means the close button and the Dialog's
+                            own backdrop. The Dialog is already the modal
+                            boundary, so the list does not need to be a second
+                            one. */}
+                        <ComboboxOptions
+                            static
+                            modal={false}
+                            className='min-h-0 flex-1 overflow-y-auto p-1'
+                        >
                             {!hasQuery ? (
                                 <p className='px-3 py-6 text-center font-mono text-[12px] text-text-faint'>
                                     Type to search across tasks, habits and projects.
