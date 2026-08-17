@@ -23,7 +23,8 @@ const Card = ({ label, value, sub }: { label: string; value: string; sub?: strin
  * habits, so the row doesn't show hollow zeros.
  */
 export const InsightsSummaryCards = ({ data }: { data: InsightsData }) => {
-    const hasHabits = data.habitPerf.length > 0;
+    // habitCount, not habitPerf.length: the latter is the chart's capped top N.
+    const hasHabits = data.habitCount > 0;
     return (
         <div className='grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5'>
             <Card
@@ -51,7 +52,7 @@ export const InsightsSummaryCards = ({ data }: { data: InsightsData }) => {
                 <Card
                     label='Habits on streak'
                     value={String(data.habitsOnStreak)}
-                    sub={`of ${data.habitPerf.length}`}
+                    sub={`of ${data.habitCount}`}
                 />
             )}
             <Card

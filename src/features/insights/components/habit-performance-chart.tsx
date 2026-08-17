@@ -4,14 +4,29 @@ import { ChartCard } from './chart-card';
 
 /**
  * Per-habit completion rate over the window as horizontal bars (each in the
- * habit's own color), with the current streak flagged alongside. Div bars keep
- * this light — no chart lib needed for a simple ranked list.
+ * habit's own color), with the full-history current streak flagged alongside.
+ * Div bars keep this light: no chart lib needed for a simple ranked list.
+ *
+ * `habits` is already ranked and capped by `useInsightsData`; `totalHabits` is
+ * the profile's active count, so a capped list says so instead of reading as
+ * the whole set.
  */
-export const HabitPerformanceChart = ({ habits }: { habits: HabitPerf[] }) => {
+export const HabitPerformanceChart = ({
+    habits,
+    totalHabits
+}: {
+    habits: HabitPerf[];
+    totalHabits: number;
+}) => {
+    const capped = totalHabits > habits.length;
     return (
         <ChartCard
             title='Habit completion'
-            meta={`${habits.length} ${habits.length === 1 ? 'habit' : 'habits'}`}
+            meta={
+                capped
+                    ? `top ${habits.length} of ${totalHabits}`
+                    : `${habits.length} ${habits.length === 1 ? 'habit' : 'habits'}`
+            }
             isEmpty={habits.length === 0}
             emptyMessage='No active habits.'
         >

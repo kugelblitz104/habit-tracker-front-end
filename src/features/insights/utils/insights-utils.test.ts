@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { timeByProject } from './insights-utils';
+import { rankHabits, timeByProject } from './insights-utils';
 import { makeProject, makeTimeEntry } from '@/test-support/factories';
 
 const WINDOW_START = new Date(2026, 7, 1).getTime();
@@ -128,5 +128,50 @@ describe('timeByProject', () => {
         const result = timeByProject(entries, [small, big], WINDOW_START, WINDOW_END);
 
         expect(result.map((p) => p.name)).toEqual(['Big', 'Small']);
+    });
+});
+
+describe('rankHabits', () => {
+    const habit = (name: string, currentStreak: number, completionRate: number) => ({
+        name,
+        currentStreak,
+        completionRate
+    });
+
+    it('ranks by streak ahead of completion rate', () => {
+        const result = rankHabits(
+            [habit('perfect-no-streak', 0, 100), habit('short-streak', 3, 20)],
+            5
+        );
+
+        expect(result.map((h) => h.name)).toEqual(['short-streak', 'perfect-no-streak']);
+    });
+
+    it('ranks by completion rate when nothing is on a streak', () => {
+        const result = rankHabits([habit('low', 0, 10), habit('high', 0, 90)], 5);
+
+        expect(result.map((h) => h.name)).toEqual(['high', 'low']);
+    });
+
+    it('breaks a streak tie with the completion rate', () => {
+        const result = rankHabits([habit('worse', 4, 30), habit('better', 4, 80)], 5);
+
+        expect(result.map((h) => h.name)).toEqual(['better', 'worse']);
+    });
+
+    it('keeps only the first `limit` habits', () => {
+        const habits = [1, 2, 3, 4, 5, 6, 7].map((n) => habit(`h${n}`, n, 0));
+
+        const result = rankHabits(habits, 5);
+
+        expect(result.map((h) => h.name)).toEqual(['h7', 'h6', 'h5', 'h4', 'h3']);
+    });
+
+    it('leaves the input array untouched', () => {
+        const habits = [habit('a', 0, 10), habit('b', 5, 10)];
+
+        rankHabits(habits, 5);
+
+        expect(habits.map((h) => h.name)).toEqual(['a', 'b']);
     });
 });

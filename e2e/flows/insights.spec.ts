@@ -1,6 +1,9 @@
 import type { APIRequestContext, Locator, Page } from '@playwright/test';
 
+import { TrackerStatus } from '@/types/types';
+
 import { authHeaders, type Account } from '../fixtures/api';
+import { dayFrom } from '../fixtures/clock';
 import { GOLDEN, GOLDEN_PROFILE_NAME } from '../fixtures/golden-profile';
 import { appHeader, expect, gotoAppRoute, test } from '../fixtures/test';
 
@@ -36,6 +39,9 @@ import { appHeader, expect, gotoAppRoute, test } from '../fixtures/test';
  *      the 30-day window -> 0 actual -> 0%.
  *    Average (47+23+0)/3 = 23.33% -> 23%. Only the thrice-weekly habit's
  *    streak reaches today (auto-skip), so exactly one habit is "on streak".
+ *  - Streaks, unlike the rates, come from the SERVER KPI over full history, so
+ *    they do not shrink with the range toggle. Golden's streaks all sit inside
+ *    the 7-day window, so the last test seeds a longer one of its own.
  *
  * The chart `<section>`s are the only sections on the page, so a section
  * containing a given `<h2>` is an exact, testid-free handle on one chart card —
@@ -44,6 +50,12 @@ import { appHeader, expect, gotoAppRoute, test } from '../fixtures/test';
 
 const EMPTY_PROFILE = 'E2E Empty';
 const SPARSE_PROFILE = 'E2E Sparse';
+const RANKED_PROFILE = 'E2E Ranked';
+
+/** The habit chart's cap. Mirrors `HABIT_ROWS` in `use-insights-data.ts`. */
+const HABIT_ROWS = 5;
+/** Days in the seeded streak: longer than the 7-day range, which is the point. */
+const STREAK_DAYS = 12;
 
 const CHART_TITLES = [
     'Tasks completed',
@@ -93,6 +105,52 @@ const createProfile = async (
     return (await response.json()).id;
 };
 
+/**
+ * Create a daily habit (frequency 1 / range 1, so auto-skip never applies and a
+ * streak survives only while today is completed) with one COMPLETED tracker per
+ * entry in `daysBack`.
+ */
+const seedHabit = async (
+    api: APIRequestContext,
+    account: Account,
+    profileId: number,
+    anchor: Date,
+    name: string,
+    daysBack: number[]
+): Promise<void> => {
+    const habit = await api.post('/habits/', {
+        headers: authHeaders(account),
+        data: {
+            profile_id: profileId,
+            name,
+            question: `Did you do ${name}?`,
+            color: '#33cc88',
+            frequency: 1,
+            range: 1
+        }
+    });
+    expect(
+        habit.ok(),
+        `POST /habits/ failed: ${habit.status()} ${await habit.text()}`
+    ).toBeTruthy();
+    const habitId: number = (await habit.json()).id;
+
+    for (const back of daysBack) {
+        const tracker = await api.post('/trackers/', {
+            headers: authHeaders(account),
+            data: {
+                habit_id: habitId,
+                dated: dayFrom(anchor, -back),
+                status: TrackerStatus.COMPLETED
+            }
+        });
+        expect(
+            tracker.ok(),
+            `POST /trackers/ failed: ${tracker.status()} ${await tracker.text()}`
+        ).toBeTruthy();
+    }
+};
+
 /** Switch the active profile through the header pill, as a user would. */
 const switchProfile = async (page: Page, from: string, to: string): Promise<void> => {
     await appHeader(page).getByRole('button', { name: from }).click();
@@ -129,19 +187,20 @@ test('all four charts render with their titles and figures', async ({ authedPage
     await expect(chartFigure(authedPage, 'Habit completion')).toHaveText('3 habits');
     const habitRows = chartCard(authedPage, 'Habit completion').getByRole('listitem');
     await expect(habitRows).toHaveCount(3);
-    // Sorted by completion rate, descending.
-    await expect(habitRows.nth(0)).toContainText(GOLDEN.habits.daily);
-    await expect(habitRows.nth(0)).toContainText('47%');
-    await expect(habitRows.nth(1)).toContainText(GOLDEN.habits.thrice);
-    await expect(habitRows.nth(1)).toContainText('23%');
+    // Sorted by streak descending, completion rate breaking ties. Only the
+    // thrice-weekly habit's streak reaches today (today is auto-skipped because
+    // three completions already sit inside its 7-day window), so it leads
+    // despite the lower rate; the other two are ranked by rate alone.
+    await expect(habitRows.nth(0)).toContainText(GOLDEN.habits.thrice);
+    await expect(habitRows.nth(0)).toContainText('23%');
+    await expect(habitRows.nth(1)).toContainText(GOLDEN.habits.daily);
+    await expect(habitRows.nth(1)).toContainText('47%');
     await expect(habitRows.nth(2)).toContainText(GOLDEN.habits.paused);
     await expect(habitRows.nth(2)).toContainText('0%');
 
-    // Only the thrice-weekly habit's streak reaches today (today is auto-skipped
-    // because three completions already sit inside its 7-day window), so it is
-    // the only row wearing a flame.
-    await expect(habitRows.nth(1).getByTitle('3-day streak')).toBeVisible();
-    await expect(habitRows.nth(0).getByTitle(/-day streak$/)).toHaveCount(0);
+    // ...so it is the only row wearing a flame.
+    await expect(habitRows.nth(0).getByTitle('3-day streak')).toBeVisible();
+    await expect(habitRows.nth(1).getByTitle(/-day streak$/)).toHaveCount(0);
     await expect(habitRows.nth(2).getByTitle(/-day streak$/)).toHaveCount(0);
     await expect(summaryValue(authedPage, 'Habit completion')).toHaveText('23%');
     await expect(summaryValue(authedPage, 'Habits on streak')).toHaveText('1');
@@ -245,4 +304,59 @@ test('each chart renders its own empty message when the window holds no data', a
     await expect(
         authedPage.getByRole('heading', { name: 'Habits on streak', exact: true, level: 3 })
     ).toHaveCount(0);
+});
+
+test('the habit chart keeps the top 5 by streak and shows the streak in full', async ({
+    api,
+    account,
+    anchor,
+    authedPage
+}) => {
+    const profileId = await createProfile(api, account, RANKED_PROFILE);
+    // Six habits for five rows, so the cap has something to drop. The leader is
+    // the only one completed TODAY, so it is the only one with a live streak and
+    // must lead despite `Ranked five` having the same rate over the window.
+    const leaderDays = [...Array(STREAK_DAYS).keys()]; // 0 (today) .. 11
+    await seedHabit(api, account, profileId, anchor, 'Ranked leader', leaderDays);
+    for (const [name, completions] of [
+        ['Ranked five', 5],
+        ['Ranked four', 4],
+        ['Ranked three', 3],
+        ['Ranked two', 2],
+        ['Ranked one', 1]
+    ] as const) {
+        // Starts at yesterday, so today is never completed and none of these
+        // carries a streak, so they rank by completion rate alone.
+        const days = [...Array(completions).keys()].map((i) => i + 1);
+        await seedHabit(api, account, profileId, anchor, name, days);
+    }
+
+    await gotoAppRoute(authedPage, '/insights');
+    await expect(chartFigure(authedPage, 'Time tracked')).toHaveText('2h 15m');
+    await switchProfile(authedPage, GOLDEN_PROFILE_NAME, RANKED_PROFILE);
+
+    const habitRows = chartCard(authedPage, 'Habit completion').getByRole('listitem');
+    await expect(chartFigure(authedPage, 'Habit completion')).toHaveText('top 5 of 6');
+    await expect(habitRows).toHaveCount(HABIT_ROWS);
+    // Streak first, then completion rate, so the one-completion habit is the
+    // row that falls off the end.
+    await expect(habitRows.nth(0)).toContainText('Ranked leader');
+    await expect(habitRows.nth(1)).toContainText('Ranked five');
+    await expect(habitRows.nth(2)).toContainText('Ranked four');
+    await expect(habitRows.nth(3)).toContainText('Ranked three');
+    await expect(habitRows.nth(4)).toContainText('Ranked two');
+    await expect(chartCard(authedPage, 'Habit completion').getByText('Ranked one')).toHaveCount(0);
+
+    // The cap is the chart's alone: the stat cards still average and count over
+    // all six habits.
+    await expect(summaryValue(authedPage, 'Habits on streak')).toHaveText('1');
+    await expect(summarySub(authedPage, 'Habits on streak')).toHaveText('of 6');
+
+    // The streak is server-computed over full history, so it survives a range
+    // narrower than itself. Reading it off the `rangeDays` tracker window would
+    // clip it to 7 here.
+    await expect(habitRows.nth(0).getByTitle(`${STREAK_DAYS}-day streak`)).toBeVisible();
+    await authedPage.getByRole('tab', { name: '7 days' }).click();
+    await expect(authedPage.getByText('Your last 7 days at a glance')).toBeVisible();
+    await expect(habitRows.nth(0).getByTitle(`${STREAK_DAYS}-day streak`)).toBeVisible();
 });

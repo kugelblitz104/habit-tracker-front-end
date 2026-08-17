@@ -113,6 +113,20 @@ export const bucketBy = <T>(
     return totals;
 };
 
+/**
+ * Rank habits for the Insights chart and keep the first `limit`: longest current
+ * streak first, completion rate breaking ties, so a profile with no live streaks
+ * ranks purely by completion. Copies rather than sorting in place: the caller's
+ * array still feeds the whole-profile summary aggregates.
+ */
+export const rankHabits = <T extends { currentStreak: number; completionRate: number }>(
+    habits: T[],
+    limit: number
+): T[] =>
+    [...habits]
+        .sort((a, b) => b.currentStreak - a.currentStreak || b.completionRate - a.completionRate)
+        .slice(0, limit);
+
 export type ProjectTime = {
     projectId: number | null;
     name: string;

@@ -104,7 +104,10 @@ export const InsightsPage = () => {
                                 totalSeconds={data.timeTrackedSeconds}
                                 animate={animate}
                             />
-                            <HabitPerformanceChart habits={data.habitPerf} />
+                            <HabitPerformanceChart
+                                habits={data.habitPerf}
+                                totalHabits={data.habitCount}
+                            />
                             <TimeByProjectChart projects={data.projectTime} animate={animate} />
                         </div>
                     </div>
