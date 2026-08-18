@@ -29,7 +29,7 @@ import { useMemo, useState } from 'react';
 /**
  * Dedicated "All tasks" surface: the active profile's tasks (top-level only,
  * including closed) with sort / group / filter controls — the flat counterpart
- * to Today's band grouping. Reuses the same capture bar, TaskCard rows and
+ * to Today's band grouping. Reuses the same capture bar, TaskRow rows and
  * detail pane as the other task surfaces.
  */
 export const AllTasksDashboard = () => {

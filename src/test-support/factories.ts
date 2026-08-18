@@ -46,6 +46,8 @@ export const makeTask = (overrides: Partial<TaskRead> = {}): TaskRead => {
         // Monotonic so `created_date` is a deterministic final tiebreaker in the
         // smart sort; padded so string comparison matches numeric order past 9.
         created_date: `2026-03-01T00:00:${String(seq).padStart(2, '0')}`,
+        // Same instant as created_date by default: a fresh fixture task is not stale.
+        updated_date: `2026-03-01T00:00:${String(seq).padStart(2, '0')}`,
         ...overrides
     };
 };

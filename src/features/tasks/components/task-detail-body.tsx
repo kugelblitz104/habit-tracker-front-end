@@ -3,8 +3,7 @@ import { useProjects } from '@/features/projects/api/get-projects';
 import { TaskTimeLog } from '@/features/time-entries/components/task-time-log';
 import { useAuth } from '@/lib/auth-context';
 import { sanitizeMultilineText } from '@/lib/input-sanitization';
-import { TaskStatus } from '@/types/types';
-import { Ban, Trash2, X } from 'lucide-react';
+import { Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router';
 import { toast } from 'react-toastify';
@@ -113,7 +112,6 @@ export const TaskDetailBody = ({
         );
     }
 
-    const status = (task.status ?? TaskStatus.OPEN) as TaskStatus;
     const notes = sanitizeMultilineText(task.notes ?? '');
 
     const handleDelete = () => deleteWithConfirm(task.id, { onSuccess: onClose });
@@ -130,24 +128,6 @@ export const TaskDetailBody = ({
                 onClose={onClose}
                 onCopy={handleCopy}
             />
-
-            {/* Block reason — only while the task is actually blocked, in a
-                hard-to-miss red banner. */}
-            {status === TaskStatus.BLOCKED && task.block_reason && (
-                <div
-                    className='flex items-start gap-2 rounded-button border px-3 py-2'
-                    style={{
-                        borderColor: 'var(--danger-border)',
-                        backgroundColor: 'var(--danger-bg, rgba(193,78,106,0.12))',
-                        color: 'var(--color-danger)'
-                    }}
-                >
-                    <Ban size={14} className='mt-0.5 shrink-0' />
-                    <span className='font-mono text-[12px] leading-snug'>
-                        Blocked: {task.block_reason}
-                    </span>
-                </div>
-            )}
 
             {/* Notes */}
             {notes && (

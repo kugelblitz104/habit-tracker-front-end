@@ -77,7 +77,10 @@ export const CompletedSection = ({
     };
 
     return (
-        <section className='mb-[30px]' style={{ opacity: 'var(--quiet)' }}>
+        // The top margin is what separates this from the active list above it,
+        // which ends flush with its own last row. It collapses against the band
+        // sections' `mb-[30px]` on Today rather than adding to it.
+        <section className='mt-[34px] mb-[30px]' style={{ opacity: 'var(--quiet)' }}>
             {/* `open` comes off DisclosureButton, not Disclosure: Disclosure
                 renders a Fragment, and a render-prop child of a Fragment-rendering
                 Headless UI component gets cloned with `data-headlessui-state` —
@@ -101,7 +104,7 @@ export const CompletedSection = ({
                     instead of popping; `transition` keeps the panel
                     mounted through the leave so it can glide shut. The
                     explicit minmax(0,1fr) column stops a nowrap row title
-                    from widening the track (see note in task-card.tsx). */}
+                    from widening the track (see note in task-row.tsx). */}
                 <DisclosurePanel
                     transition
                     className='grid grid-cols-[minmax(0,1fr)] grid-rows-[1fr] transition-all duration-300 ease-out data-closed:grid-rows-[0fr] data-closed:opacity-0'

@@ -2,7 +2,7 @@ import type { APIRequestContext, Locator, Page } from '@playwright/test';
 
 import { authHeaders, type Account } from '../fixtures/api';
 import { GOLDEN } from '../fixtures/golden-profile';
-import { expect, gotoAppRoute, test } from '../fixtures/test';
+import { expect, gotoAppRoute, taskRowTitle, test } from '../fixtures/test';
 
 /**
  * The two bespoke destructive confirmations — `DeleteHabitModal` and
@@ -227,7 +227,7 @@ test('confirming the project delete removes it and leaves its tasks unassigned',
 
     // And it still shows up in the UI, now with no project tag.
     await gotoAppRoute(authedPage, '/tasks');
-    const taskTitle = authedPage.getByRole('button', { name: GOLDEN.tasks.now, exact: true });
+    const taskTitle = taskRowTitle(authedPage, GOLDEN.tasks.now);
     await expect(taskTitle).toBeVisible();
     await expect(authedPage.getByText(GOLDEN.projects.alpha, { exact: true })).toHaveCount(0);
 });

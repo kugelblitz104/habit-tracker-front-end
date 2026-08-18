@@ -1,9 +1,9 @@
-import type { APIRequestContext, Page } from '@playwright/test';
+import type { APIRequestContext, Locator, Page } from '@playwright/test';
 
 import { authHeaders, type Account } from '../fixtures/api';
 import { dayFrom } from '../fixtures/clock';
 import { GOLDEN } from '../fixtures/golden-profile';
-import { expect, gotoAppRoute, test } from '../fixtures/test';
+import { expect, gotoAppRoute, taskRowTitle, test } from '../fixtures/test';
 
 /**
  * Guards the mobile layout against horizontal blowout: long task/project/
@@ -41,6 +41,10 @@ const alphaProjectId = async (
     expect(alpha, `no project named ${GOLDEN.projects.alpha}`).toBeTruthy();
     return alpha.id as number;
 };
+
+/** The priority column (bars + optional label) beside a task's title. */
+const priorityColumn = (page: Page, title: string): Locator =>
+    taskRowTitle(page, title).locator('xpath=..');
 
 /**
  * Fails if the document is wider than the viewport, naming the widest elements
@@ -112,7 +116,7 @@ test('long titles truncate instead of widening the page on mobile @narrow', asyn
 
     // Today, with the Now/Soon cards visible.
     await gotoAppRoute(authedPage, '/');
-    const nowTitle = authedPage.getByRole('button', { name: GOLDEN.tasks.longTitle, exact: true });
+    const nowTitle = taskRowTitle(authedPage, GOLDEN.tasks.longTitle);
     await expect(nowTitle).toBeVisible();
     await expectNoHorizontalOverflow(authedPage, 'Today');
 
@@ -146,4 +150,24 @@ test('long titles truncate instead of widening the page on mobile @narrow', asyn
         await authedPage.waitForLoadState('networkidle');
         await expectNoHorizontalOverflow(authedPage, label);
     }
+});
+
+test('the priority column keeps its bars and drops only the text label below sm @narrow', async ({
+    authedPage
+}) => {
+    await gotoAppRoute(authedPage, '/');
+    // Now-band task, priority 3 -> the 'High' short label.
+    const column = priorityColumn(authedPage, GOLDEN.tasks.now);
+
+    // Below the `sm` breakpoint (640px): the bars stay, addressed via the
+    // meter's `data-testid` rather than its Tailwind classes; the text label
+    // is dropped, not the whole column.
+    await authedPage.setViewportSize({ width: 375, height: 812 });
+    await expect(column.getByTestId('priority-meter')).toBeVisible();
+    await expect(column.getByText('High', { exact: true })).toBeHidden();
+
+    // At/above `sm`: both the bars and the label are visible.
+    await authedPage.setViewportSize({ width: 1280, height: 800 });
+    await expect(column.getByTestId('priority-meter')).toBeVisible();
+    await expect(column.getByText('High', { exact: true })).toBeVisible();
 });

@@ -2,7 +2,7 @@ import type { APIRequestContext, Page } from '@playwright/test';
 
 import { authHeaders, type Account } from '../fixtures/api';
 import { GOLDEN } from '../fixtures/golden-profile';
-import { expect, gotoAppRoute, test } from '../fixtures/test';
+import { expect, gotoAppRoute, taskRowTitle, test } from '../fixtures/test';
 
 /**
  * Locks multi-select on the All-tasks surface, ahead of extracting the duplicated
@@ -35,17 +35,21 @@ const taskTitles = async (
     return tasks.map((task: { title: string }) => task.title);
 };
 
-const cardTitle = (page: Page, title: string) =>
-    page.getByRole('button', { name: title, exact: true });
+const cardTitle = (page: Page, title: string) => taskRowTitle(page, title);
 
 const selectionCheckbox = (page: Page, title: string) =>
     page.getByRole('checkbox', { name: `Select task: ${title}`, exact: true });
 
-/** That card's round status control — scoped via the title button's card row. */
+/**
+ * That card's round status control, scoped via the title button's row. Three
+ * levels up: the title's parent is the line-1 (title/due/priority) wrapper,
+ * its parent is the content column, and ITS parent is the row that also holds
+ * the StatusControl.
+ */
 const expectCardStatus = async (page: Page, title: string, status: string) => {
     await expect(
         cardTitle(page, title)
-            .locator('xpath=../..')
+            .locator('xpath=../../..')
             .getByRole('button', { name: /^Status: / })
     ).toHaveAttribute('aria-label', new RegExp(`^Status: ${status}\\.`));
 };
@@ -57,18 +61,26 @@ const enterSelectMode = async (page: Page) => {
 };
 
 /**
- * The controls bar's Project filter. Not reachable by label: the `<select>` sits
- * INSIDE its `<label>`, so the label's text (and the control's accessible name)
- * swallows every option — "Project All projects No project Alpha Project Beta
- * Project" — and a loose match would also hit the Group select. Its own options
- * identify it unambiguously instead.
+ * The controls bar's Filters popover trigger. Its accessible name gains a
+ * `(n)` suffix once a filter is active, so the match is a prefix rather than
+ * exact.
+ */
+const filtersButton = (page: Page) => page.getByRole('button', { name: /^Filters/ });
+
+/**
+ * The controls bar's Project filter, reachable only once the Filters popover
+ * is open. Not reachable by label: the `<select>` sits inside a plain `<div>`
+ * with no label association, so its own options identify it instead of its
+ * (nonexistent) accessible name.
  */
 const projectFilter = (page: Page) =>
     page.getByRole('combobox').filter({ has: page.getByRole('option', { name: 'All projects' }) });
 
 /** Narrow the list to the Beta project via the controls bar's Project filter. */
 const filterToBeta = async (page: Page) => {
+    await filtersButton(page).click();
     await projectFilter(page).selectOption({ label: GOLDEN.projects.beta });
+    await page.keyboard.press('Escape');
     for (const title of betaTasks) await expect(cardTitle(page, title)).toBeVisible();
     await expect(cardTitle(page, GOLDEN.tasks.now)).toHaveCount(0);
 };
@@ -98,6 +110,24 @@ test('"All" selects only the tasks visible under the current filters', async ({
     for (const title of betaTasks) await expect(selectionCheckbox(authedPage, title)).toBeChecked();
 });
 
+test('clicking the selection checkbox does not also open the detail pane', async ({
+    authedPage
+}) => {
+    // The row itself is now a click target (task-row-redesign final fixes, item
+    // 2), so this pins that the checkbox's own click handler still swallows the
+    // click rather than letting it bubble and also select the row for the
+    // detail pane.
+    await gotoAppRoute(authedPage, '/tasks');
+    await expect(cardTitle(authedPage, GOLDEN.tasks.now)).toBeVisible();
+
+    await enterSelectMode(authedPage);
+    await expect(authedPage.getByRole('complementary')).toHaveCount(0);
+
+    await selectionCheckbox(authedPage, GOLDEN.tasks.now).click();
+    await expect(selectionCheckbox(authedPage, GOLDEN.tasks.now)).toBeChecked();
+    await expect(authedPage.getByRole('complementary')).toHaveCount(0);
+});
+
 test('a bulk status change applies to the selection', async ({ authedPage }) => {
     await gotoAppRoute(authedPage, '/tasks');
     await expect(cardTitle(authedPage, GOLDEN.tasks.now)).toBeVisible();
@@ -118,7 +148,9 @@ test('a bulk status change applies to the selection', async ({ authedPage }) => 
     for (const title of betaTasks) await expectCardStatus(authedPage, title, 'Blocked');
 
     // …and nothing outside the selection moved: the rest are still Open.
+    await filtersButton(authedPage).click();
     await projectFilter(authedPage).selectOption({ label: 'All projects' });
+    await authedPage.keyboard.press('Escape');
     await expect(cardTitle(authedPage, GOLDEN.tasks.now)).toBeVisible();
     await expectCardStatus(authedPage, GOLDEN.tasks.now, 'Open');
     await expectCardStatus(authedPage, GOLDEN.tasks.soon, 'Open');
@@ -162,4 +194,55 @@ test('bulk delete removes the selection after the native confirm', async ({
     expect(remaining).not.toContain(GOLDEN.tasks.subtaskOpen);
     expect(remaining).toContain(GOLDEN.tasks.now);
     expect(remaining.length).toBe(7);
+});
+
+/**
+ * Priority/Status/Date render their filter bodies inline inside the Filters
+ * popover rather than as their own nested Headless UI `Popover`s, precisely so
+ * that an inner interaction doesn't trigger the outer popover's dismiss
+ * handler. A regression here (e.g. reintroducing a nested `Popover`) would
+ * close the panel on the very first click, so this pins that it stays open.
+ * That's the load-bearing guarantee the whole body-extraction exists for.
+ * Filed alongside the other filter-bar mechanics in this file rather than in
+ * its own spec, since `filtersButton` already lives here.
+ */
+test('the Filters popover stays open across an inner checkbox toggle, and a chip clears only itself', async ({
+    authedPage
+}) => {
+    await gotoAppRoute(authedPage, '/tasks');
+    await expect(cardTitle(authedPage, GOLDEN.tasks.now)).toBeVisible();
+
+    await filtersButton(authedPage).click();
+    const highCheckbox = authedPage.getByRole('checkbox', { name: 'High', exact: true });
+    await expect(highCheckbox).toBeVisible();
+
+    // High is checked by default (ALL_PRIORITY_VALUES); unchecking it is a
+    // real filter change. If this click closed the popover, the assertions
+    // below would fail because the checkbox would no longer be in the DOM.
+    await highCheckbox.click();
+    await expect(highCheckbox).not.toBeChecked();
+
+    const openCheckbox = authedPage.getByRole('checkbox', { name: 'Open', exact: true });
+    await expect(openCheckbox).toBeVisible();
+    await openCheckbox.click();
+    await expect(openCheckbox).not.toBeChecked();
+
+    await authedPage.keyboard.press('Escape');
+
+    // Both toggles landed: two active filters, one chip each.
+    await expect(
+        authedPage.getByRole('button', { name: 'Filters (2)', exact: true })
+    ).toBeVisible();
+    const priorityChip = authedPage.getByText(/^Priority: /);
+    const statusChip = authedPage.getByText(/^Status: /);
+    await expect(priorityChip).toBeVisible();
+    await expect(statusChip).toBeVisible();
+
+    // The chip's X decrements the badge and leaves the other chip in place.
+    await authedPage.getByRole('button', { name: /^Remove filter: Priority:/ }).click();
+    await expect(
+        authedPage.getByRole('button', { name: 'Filters (1)', exact: true })
+    ).toBeVisible();
+    await expect(priorityChip).toHaveCount(0);
+    await expect(statusChip).toBeVisible();
 });

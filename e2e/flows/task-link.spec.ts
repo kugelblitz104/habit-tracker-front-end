@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 
 import { GOLDEN } from '../fixtures/golden-profile';
-import { expect, gotoAppRoute, test } from '../fixtures/test';
+import { expect, gotoAppRoute, taskRowTitle, test } from '../fixtures/test';
 
 /**
  * Linking a task to an external work item with NO Azure DevOps or GitHub
@@ -30,7 +30,7 @@ const JIRA_URL = 'https://example.atlassian.net/browse/PROJ-412';
 /** Open the Now-band task's detail pane from Today. */
 const openTaskPane = async (page: Page): Promise<Locator> => {
     await gotoAppRoute(page, '/');
-    await page.getByRole('button', { name: GOLDEN.tasks.now, exact: true }).click();
+    await taskRowTitle(page, GOLDEN.tasks.now).click();
     const pane = detailPane(page);
     await expect(pane.getByRole('heading', { name: GOLDEN.tasks.now, exact: true })).toBeVisible();
     return pane;

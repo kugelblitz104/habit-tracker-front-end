@@ -1,11 +1,12 @@
 import type { ProjectRead, TaskRead } from '@/api';
 import type { TaskStatus } from '@/types/types';
 import { useMemo } from 'react';
-import { toActiveBand, upwardFrom } from '../utils/task-bands';
+import { computeBand, toActiveBand } from '../utils/compute-band';
+import { upwardFrom } from '../utils/task-bands';
 import { buildTaskSections, type TaskControlsState } from '../utils/task-controls';
 import type { SluggedEntity } from '@/lib/entity-ref';
 import { SectionHeader } from './section-header';
-import { TaskCard } from './task-card';
+import { TaskRow } from './task-row';
 
 type TaskListViewProps = {
     tasks: TaskRead[];
@@ -37,7 +38,7 @@ type TaskListViewProps = {
 
 /**
  * Flat task surface renderer: applies the sort/group/filter controls and paints
- * the resulting sections with the same TaskCard used on Today. Grouping headers
+ * the resulting sections with the same TaskRow used on Today. Grouping headers
  * carry an optional color dot (project color / status accent).
  */
 export const TaskListView = ({
@@ -64,10 +65,9 @@ export const TaskListView = ({
         [tasks, controls, projectsById]
     );
 
-    // Band styling (Now's orange glow, Whenever's dim) only reads right when the
-    // list is in urgency order. Under any other sort it looks arbitrary, so the
-    // cards render in the neutral "Soon" style instead.
-    const uniformBand = controls.sortBy !== 'smart';
+    // Prominence only reads as ranking when the list is in band order, so any
+    // other sort renders every row at the neutral `soon` tier.
+    const flattenTiers = controls.sortBy !== 'smart';
 
     const total = sections.reduce((sum, section) => sum + section.tasks.length, 0);
     if (total === 0) {
@@ -93,39 +93,54 @@ export const TaskListView = ({
                                 />
                             </div>
                         )}
-                        <div className='flex flex-col' style={{ gap: 'var(--space-band-gap)' }}>
+                        <div
+                            className='overflow-hidden rounded-card border'
+                            style={{
+                                backgroundColor: 'var(--surface-card-bg)',
+                                borderColor: 'var(--surface-card-border)'
+                            }}
+                        >
                             {section.tasks.map((task, i) => (
-                                <TaskCard
+                                <div
                                     key={task.id}
-                                    task={task}
-                                    band={uniformBand ? 'soon' : toActiveBand(task.band)}
-                                    project={
-                                        task.project_id != null
-                                            ? projectsById.get(task.project_id)
-                                            : undefined
-                                    }
-                                    showProject={showProject}
-                                    onStatusChange={(status) => onStatusChange(task.id, status)}
-                                    notesOpen={notesTaskId === task.id}
-                                    editing={selectedEditTaskId === task.id}
-                                    onToggleNotes={() => onToggleNotes(task.id)}
-                                    onSelectEdit={(editing) => onSelectEdit(task, editing)}
-                                    subtasksOpen={subtasksTaskId === task.id}
-                                    onToggleSubtasks={
-                                        onToggleSubtasks
-                                            ? () => onToggleSubtasks(task.id)
-                                            : undefined
-                                    }
-                                    onStartTimer={
-                                        onStartTimer ? () => onStartTimer(task.id) : undefined
-                                    }
-                                    openUpward={i >= upwardIdx}
-                                    selectable={selectionMode}
-                                    selected={selectedIds?.has(task.id) ?? false}
-                                    onToggleSelect={
-                                        onToggleSelect ? () => onToggleSelect(task.id) : undefined
-                                    }
-                                />
+                                    className={i === 0 ? '' : 'border-t'}
+                                    style={{ borderColor: 'var(--surface-card-border)' }}
+                                >
+                                    <TaskRow
+                                        task={task}
+                                        band={
+                                            flattenTiers ? 'soon' : toActiveBand(computeBand(task))
+                                        }
+                                        project={
+                                            task.project_id != null
+                                                ? projectsById.get(task.project_id)
+                                                : undefined
+                                        }
+                                        showProject={showProject}
+                                        onStatusChange={(status) => onStatusChange(task.id, status)}
+                                        notesOpen={notesTaskId === task.id}
+                                        editing={selectedEditTaskId === task.id}
+                                        onToggleNotes={() => onToggleNotes(task.id)}
+                                        onSelectEdit={(editing) => onSelectEdit(task, editing)}
+                                        subtasksOpen={subtasksTaskId === task.id}
+                                        onToggleSubtasks={
+                                            onToggleSubtasks
+                                                ? () => onToggleSubtasks(task.id)
+                                                : undefined
+                                        }
+                                        onStartTimer={
+                                            onStartTimer ? () => onStartTimer(task.id) : undefined
+                                        }
+                                        openUpward={i >= upwardIdx}
+                                        selectable={selectionMode}
+                                        selected={selectedIds?.has(task.id) ?? false}
+                                        onToggleSelect={
+                                            onToggleSelect
+                                                ? () => onToggleSelect(task.id)
+                                                : undefined
+                                        }
+                                    />
+                                </div>
                             ))}
                         </div>
                     </section>

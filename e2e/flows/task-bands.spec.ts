@@ -1,9 +1,9 @@
-import type { APIRequestContext, Page } from '@playwright/test';
+import type { APIRequestContext, Locator, Page } from '@playwright/test';
 
 import { authHeaders, type Account } from '../fixtures/api';
 import { dayFrom } from '../fixtures/clock';
 import { TaskStatus } from '@/types/types';
-import { expect, gotoAppRoute, test } from '../fixtures/test';
+import { expect, gotoAppRoute, taskRowTitle, test } from '../fixtures/test';
 
 /**
  * The ONE place date-driven task banding is asserted deliberately.
@@ -108,10 +108,20 @@ const bandSection = (page: Page, band: Band) =>
  * have zero height. Presence in the right section is the thing being asserted;
  * whether that section happens to be collapsed is a different test's business.
  */
+/**
+ * The row's fixed-width due column (line 1, immediately after the title). Its
+ * wording is pinned exhaustively at the unit layer (`due-column.test.ts`);
+ * this only guards the WIRING: that the row actually renders what
+ * `formatDueColumn` returns for the task's real `due_date`, not a dropped
+ * column or the wrong field.
+ */
+const dueColumnText = (page: Page, title: string): Locator =>
+    taskRowTitle(page, title).locator('xpath=following-sibling::span[1]');
+
 const expectBand = async (page: Page, title: string, band: Band | null) => {
     for (const candidate of ['now', 'soon', 'whenever'] as const) {
         await expect(
-            bandSection(page, candidate).getByRole('button', { name: title, exact: true }),
+            taskRowTitle(bandSection(page, candidate), title),
             `"${title}" in the ${candidate} band`
         ).toHaveCount(candidate === band ? 1 : 0);
     }
@@ -157,10 +167,7 @@ test('closed tasks are hidden, and DEFERRED overrides urgency', async ({
     // Wait for the seeded rows to have rendered before counting absences,
     // otherwise every `toHaveCount(0)` passes against an empty list.
     await expect(
-        bandSection(authedPage, 'whenever').getByRole('button', {
-            name: `${P} deferred overdue p3`,
-            exact: true
-        })
+        taskRowTitle(bandSection(authedPage, 'whenever'), `${P} deferred overdue p3`)
     ).toHaveCount(1);
 
     for (const [seed, expected] of seeds) {
@@ -201,13 +208,19 @@ test('dates and priority band a task, and priority 3 / 2 short-circuit', async (
     }
 
     await gotoAppRoute(authedPage, '/');
-    await expect(
-        bandSection(authedPage, 'now').getByRole('button', { name: `${P} due today`, exact: true })
-    ).toHaveCount(1);
+    await expect(taskRowTitle(bandSection(authedPage, 'now'), `${P} due today`)).toHaveCount(1);
 
     for (const [seed, expected] of seeds) {
         await expectBand(authedPage, seed.title, expected);
     }
+
+    // Wiring check: the row's due column actually renders `formatDueColumn`'s
+    // output for these two seeds' real due_date, derived from the same
+    // run-time anchor rather than a hardcoded date. `due today` -> `dueIn: 0`,
+    // not overdue, no due_time -> 'Today'. `due yesterday` -> `dueIn: -1`,
+    // one whole day overdue -> '1d late'.
+    await expect(dueColumnText(authedPage, `${P} due today`)).toHaveText('Today');
+    await expect(dueColumnText(authedPage, `${P} due yesterday`)).toHaveText('1d late');
 });
 
 test('the EARLIER of due_date and scheduled_date decides the band', async ({
@@ -275,10 +288,7 @@ test('the EARLIER of due_date and scheduled_date decides the band', async ({
 
     await gotoAppRoute(authedPage, '/');
     await expect(
-        bandSection(authedPage, 'now').getByRole('button', {
-            name: `${P} scheduled yesterday, due in 60`,
-            exact: true
-        })
+        taskRowTitle(bandSection(authedPage, 'now'), `${P} scheduled yesterday, due in 60`)
     ).toHaveCount(1);
 
     for (const [seed, expected] of seeds) {

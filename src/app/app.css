@@ -39,15 +39,16 @@
  *   data-heat=calm|warm|blazing     -> --wash, --glow (ambient warm wash + Now glow alpha)
  *   data-focus=true|false           -> --quiet       (opacity for quiet bands; .38 vs 1)
  *   Defaults: tone=ember, heat=warm, focus=false.
- *   Usage in 2b: Now-band glow alpha = var(--glow); dim quiet sections with
- *   `opacity: var(--quiet)`; ambient wash overlay alpha = var(--wash).
+ *   Usage: dim quiet sections with `opacity: var(--quiet)`. --wash and --glow
+ *   are currently unconsumed — their Now-band glow and ambient wash overlay
+ *   were retired with the row redesign's per-band card decoration.
  *
  * COLOR TOKENS (Tailwind utilities `bg-*` / `text-*` / `border-*`)
  *   Surfaces: surface-ember, surface-cool, surface-espresso, titlebar
  *   Text ramp: text-primary, text-now, text-secondary, text-secondary-soft,
- *              text-muted, text-faint, text-faint-soft
- *   Now band:  now-accent, now-dot, now-meter (borders/gradients/glow -> :root vars)
- *   Soon band: soon-label, soon-dot, soon-surface, soon-meter
+ *              text-muted, text-faint
+ *   Now band:  now-accent, now-meter
+ *   Soon band: soon-label, soon-dot, soon-meter
  *   Whenever:  whenever-label, whenever-text, whenever-ring
  *   Status:    status-inprogress, status-blocked, status-scheduled,
  *              status-needsinfo, status-deferred, status-cancelled,
@@ -56,16 +57,16 @@
  *   Azure:     azure, azure-text
  *   Controls:  danger, danger-solid
  *
- * RAW CSS VARS (:root — gradients, alphas, palettes not expressible as a single
- * Tailwind color): input surfaces, band gradients/borders/glow, status pill
+ * RAW CSS VARS (:root — alphas, palettes not expressible as a single
+ * Tailwind color): input surfaces, status pill
  * text+bg pairs, habit container, toggle/primary-button gradients, radii,
  * spacing, shadows. (Per-entity/per-user colors — project, calendar, profile —
  * are NOT tokens here; they come from DB data via inline styles.)
  *
  * RADII:   --radius-card, --radius-row, --radius-chip, --radius-button, --radius-cell
  *          (Tailwind `rounded-card`, `rounded-row`, `rounded-chip`, `rounded-button`, `rounded-cell`)
- * SHADOWS: --shadow-frame, --shadow-now-glow, --shadow-popover
- *          (Tailwind `shadow-frame`, `shadow-now-glow`, `shadow-popover`)
+ * SHADOWS: --shadow-frame, --shadow-popover
+ *          (Tailwind `shadow-frame`, `shadow-popover`)
  * SPACING: --space-frame, --space-card, --space-band-gap, --space-section
  * ============================================================================
  */
@@ -88,7 +89,7 @@
     --color-titlebar: #0f0c07;
 
     /* Text ramp.
-       Subtitle/secondary greys (muted/faint/faint-soft) were nudged lighter on
+       Subtitle/secondary greys (muted/faint) were nudged lighter on
        2026-07-10 for readability — still clearly grey, just higher contrast on
        the dark surfaces. ADJUST THESE THREE if subheaders read too bright/dim. */
     --color-text-primary: #f6ece1;
@@ -97,17 +98,14 @@
     --color-text-secondary-soft: #ccc1b3;
     --color-text-muted: #a69c8f;
     --color-text-faint: #8c8377;
-    --color-text-faint-soft: #6d665c;
 
     /* Now band */
     --color-now-accent: #ff8a45;
-    --color-now-dot: #ff6a35;
     --color-now-meter: #ff5a36;
 
     /* Soon band */
     --color-soon-label: #c99a5f;
     --color-soon-dot: #d99a56;
-    --color-soon-surface: #1c1813;
     --color-soon-meter: #c98f4e;
 
     /* Whenever band */
@@ -152,7 +150,6 @@
 
     /* Shadows */
     --shadow-frame: 0 40px 80px -24px rgba(30, 18, 6, 0.55), 0 10px 26px rgba(0, 0, 0, 0.22);
-    --shadow-now-glow: 0 0 44px -12px rgba(255, 110, 40, 0.4);
     --shadow-popover: 0 -18px 44px -14px rgba(0, 0, 0, 0.6);
 }
 
@@ -178,6 +175,23 @@
     /* ---- Card (settings/generic) surfaces ---- */
     --surface-card-bg: rgba(255, 255, 255, 0.03);
     --surface-card-border: rgba(255, 255, 255, 0.08);
+    /* Row hover needs a visible step; card-bg 0.03 -> input-bg 0.045 is not one. */
+    --surface-row-hover: rgba(255, 255, 255, 0.07);
+    /* The one row open in the detail pane. A white wash, so it stays distinct
+       from the warm Now wash below rather than reading as a hotter version of
+       it. */
+    --surface-row-selected: rgba(255, 255, 255, 0.11);
+    /* Needs-attention rows carry a warm wash the other two bands don't. */
+    --surface-row-now: rgba(255, 138, 69, 0.07);
+
+    /* ---- Row band rails (the 3px left edge; Whenever has none) ---- */
+    --rail-now: rgba(255, 90, 54, 0.8);
+    --rail-soon: rgba(217, 154, 86, 0.45);
+
+    /* ---- Due-column chip fills. Only the two urgent states get one, so a
+            filled chip always means "this needs a decision today". ---- */
+    --due-late-bg: rgba(193, 78, 106, 0.16);
+    --due-now-bg: rgba(255, 138, 69, 0.14);
 
     /* ---- Traffic-light window dots ---- */
     --traffic-red: #ff5f57;
@@ -185,16 +199,7 @@
     --traffic-green: #28c840;
 
     /* ---- Now band decoration ---- */
-    --now-gradient-primary: linear-gradient(180deg, #2c1a0f, #1d1410);
-    --now-gradient-rest: linear-gradient(180deg, #2a190e, #1d1410);
-    --now-border: rgba(255, 140, 60, 0.24);
-    --now-glow: 0 0 44px -12px rgba(255, 110, 40, var(--glow));
-    --now-dot-glow: 0 0 10px 1px rgba(255, 106, 53, 0.7);
-    --priority-dim: #3a2a1e;
     --priority-dim-soft: #3a332a;
-
-    /* ---- Soon band decoration ---- */
-    --soon-border: rgba(230, 180, 110, 0.12);
 
     /* ---- Task status pill text + bg pairs ---- */
     --status-inprogress-pill-text: #f0b45f;
@@ -205,7 +210,8 @@
     --status-scheduled-pill-bg: rgba(111, 168, 229, 0.14);
     --status-needsinfo-pill-text: #c6a6ec;
     --status-needsinfo-pill-bg: rgba(169, 127, 224, 0.14);
-    --status-deferred-pill-text: #8a8177;
+    --status-deferred-pill-text: #a69c8f;
+    --status-deferred-pill-bg: rgba(138, 129, 119, 0.14);
     --status-pending-pill-text: #6fd0c2;
     --status-pending-pill-bg: rgba(79, 176, 163, 0.14);
     --status-duetoday-bg: rgba(255, 90, 54, 0.14);
@@ -238,6 +244,7 @@
     --button-primary-gradient: linear-gradient(90deg, #c9663f, #e0884a);
     --button-primary-text: #1c0f07;
     --danger-border: rgba(209, 136, 154, 0.3);
+    --danger-bg: rgba(193, 78, 106, 0.14);
 
     /* ---- Spacing scale ---- */
     --space-frame: 28px;

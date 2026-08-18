@@ -114,7 +114,7 @@ function ProjectContent({ projectId }: { projectId: number }) {
     const showPane = isWide && selectedEditTaskId !== null;
 
     // Every task here belongs to this one project, so a single-entry map is all
-    // TaskCard needs to render its project tag. Deliberately NOT the shared
+    // TaskRow needs to render its project tag. Deliberately NOT the shared
     // `useProjectsById` (Today/All tasks): that hook takes a list, and wrapping
     // this single `project` as `[project]` would allocate a new array every
     // render, defeating its memo.

@@ -2,7 +2,7 @@ import type { APIRequestContext, Locator, Page } from '@playwright/test';
 
 import { authHeaders, type Account } from '../fixtures/api';
 import { GOLDEN } from '../fixtures/golden-profile';
-import { appHeader, expect, gotoAppRoute, test } from '../fixtures/test';
+import { appHeader, expect, gotoAppRoute, taskRowTitle, test } from '../fixtures/test';
 
 /**
  * # Structure locks — BRITTLE BY DESIGN
@@ -119,7 +119,7 @@ const firstProjectId = async (
  * commit as the pane appearing. Waiting for the aside is therefore enough.
  */
 const openTaskPane = async (page: Page, title: string) => {
-    await page.getByRole('button', { name: title, exact: true }).click();
+    await taskRowTitle(page, title).click();
     await expect(page.locator('aside')).toHaveCount(1);
 };
 
@@ -309,9 +309,7 @@ test('the shared card surface, chart card and query-state line', async ({ authed
 
 test('the All tasks list keeps its accessible structure', async ({ authedPage }) => {
     await gotoAppRoute(authedPage, '/tasks');
-    await expect(
-        authedPage.getByRole('button', { name: GOLDEN.tasks.now, exact: true })
-    ).toBeVisible();
+    await expect(taskRowTitle(authedPage, GOLDEN.tasks.now)).toBeVisible();
 
     // Complements the class literals above: this pins the DOM order and every
     // accessible name without coupling to styling at all, so a restructure that

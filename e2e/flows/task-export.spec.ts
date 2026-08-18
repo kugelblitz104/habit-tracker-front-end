@@ -6,7 +6,7 @@ import path from 'node:path';
 import { authHeaders, type Account } from '../fixtures/api';
 import { isoDate } from '../fixtures/clock';
 import { GOLDEN, GOLDEN_PROFILE_NAME } from '../fixtures/golden-profile';
-import { expect, gotoAppRoute, test } from '../fixtures/test';
+import { expect, gotoAppRoute, taskRowTitle, test } from '../fixtures/test';
 
 /**
  * Locks the client-side Markdown export on both flat task surfaces. Two things
@@ -69,9 +69,7 @@ test('the two task surfaces export distinct, correctly-named Markdown documents'
 
     // --- All tasks: the whole profile, slugged from the PROFILE name ------------
     await gotoAppRoute(authedPage, '/tasks');
-    await expect(
-        authedPage.getByRole('button', { name: GOLDEN.tasks.now, exact: true })
-    ).toBeVisible();
+    await expect(taskRowTitle(authedPage, GOLDEN.tasks.now)).toBeVisible();
 
     const all = await exportMarkdown(authedPage);
     expect(all.filename).toBe(`tasks-${slugify(GOLDEN_PROFILE_NAME)}-${stamp}.md`);
@@ -98,9 +96,7 @@ test('the two task surfaces export distinct, correctly-named Markdown documents'
 
     // --- Project view: one project, slugged from the PROJECT name ---------------
     await gotoAppRoute(authedPage, `/projects/${projectId}`);
-    await expect(
-        authedPage.getByRole('button', { name: GOLDEN.tasks.now, exact: true })
-    ).toBeVisible();
+    await expect(taskRowTitle(authedPage, GOLDEN.tasks.now)).toBeVisible();
 
     const project = await exportMarkdown(authedPage);
     expect(project.filename).toBe(`tasks-${slugify(GOLDEN.projects.alpha)}-${stamp}.md`);

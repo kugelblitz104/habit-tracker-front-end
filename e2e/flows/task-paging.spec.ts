@@ -2,7 +2,7 @@ import type { APIRequestContext, Locator, Page } from '@playwright/test';
 
 import { authHeaders, type Account } from '../fixtures/api';
 import { GOLDEN } from '../fixtures/golden-profile';
-import { expect, gotoAppRoute, test } from '../fixtures/test';
+import { expect, gotoAppRoute, taskRowTitle, test } from '../fixtures/test';
 
 /**
  * What happens once a profile outgrows one page of `GET /tasks/`.
@@ -87,8 +87,7 @@ const assertSubtasksPastPageOne = async (
 };
 
 /** A task title in a list or pane. */
-const taskTitle = (scope: Page | Locator, title: string): Locator =>
-    scope.getByRole('button', { name: title, exact: true });
+const taskTitle = (scope: Page | Locator, title: string): Locator => taskRowTitle(scope, title);
 
 test.beforeEach(async ({ api, account, goldenProfileId }) => {
     await seedFiller(api, account, goldenProfileId);

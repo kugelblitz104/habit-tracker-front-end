@@ -10,15 +10,16 @@ import {
     PopoverButton,
     PopoverPanel
 } from '@headlessui/react';
-import { ArrowDown, ArrowUp, Check, ChevronDown, Download, ListChecks } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, ChevronDown, Download, ListChecks, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { STATUS_ORDER, STATUS_META } from './status-config';
 import {
+    activeFilterChips,
+    activeFilterCount,
     ALL_PRIORITY_VALUES,
     ALL_STATUS_VALUES,
     DEFAULT_TASK_CONTROLS,
     PRIORITY_LABELS,
-    TASK_DATE_FIELD_LABELS,
     isDefaultControls,
     type TaskControlsState,
     type TaskDateField,
@@ -62,15 +63,28 @@ const SelectField = ({ label, children }: { label: string; children: ReactNode }
     </label>
 );
 
-/** Same mono caption as `SelectField`, but in a `<div>` — for the Priority and
- *  Status popovers (buttons, not native `<select>`s) and the date filter
- *  popover, none of which may be wrapped in a `<label>`. */
-const FilterField = ({ label, children }: { label: string; children: ReactNode }) => (
-    <div className='flex flex-col gap-1'>
+/** Same mono caption as `SelectField`, but in a `<div>`, for the Filters
+ *  trigger and the Priority / Status / Date bodies inside it, none of which may
+ *  be wrapped in a `<label>` (a popover trigger button is not a labelable
+ *  element). */
+const FilterField = ({
+    label,
+    className = '',
+    children
+}: {
+    label: string;
+    className?: string;
+    children: ReactNode;
+}) => (
+    <div className={`flex flex-col gap-1 ${className}`}>
         <span className={labelClass}>{label}</span>
         {children}
     </div>
 );
+
+/** The Filters panel body. One column on a phone, four across from `sm`, with
+ *  Date taking the slack since its inputs are the widest. */
+const filterGridClass = 'flex flex-col gap-3 p-2 sm:flex-row sm:items-start sm:gap-5';
 
 /** Same chrome as the native `<select>`s above, but as a button that opens a
  *  checkbox popover instead of a listbox. */
@@ -85,8 +99,7 @@ const quickActionClass =
 
 type CheckboxOption = { value: number; label: string; color?: string };
 
-type CheckboxFilterPopoverProps = {
-    label: string;
+type CheckboxFilterListProps = {
     options: CheckboxOption[];
     allValues: number[];
     selected: number[];
@@ -94,76 +107,59 @@ type CheckboxFilterPopoverProps = {
 };
 
 /**
- * Themed checkbox-list popover — used for the multi-select Status and
- * Priority filters. Reuses the app's shared popover panel chrome
- * (POPOVER_PANEL_CLASS/popoverPanelStyle); toggling a row updates the
- * `selected` array via set membership, not index.
+ * Themed checkbox list, the body shared by the multi-select Status and
+ * Priority filters. Rendered inline inside the Filters popover panel rather
+ * than in its own `Popover`, since a nested Headless UI `Popover` would fight
+ * the outer one's dismiss handler. Toggling a row updates the `selected`
+ * array via set membership, not index.
  */
-const CheckboxFilterPopover = ({
-    label,
+const CheckboxFilterList = ({
     options,
     allValues,
     selected,
     onChange
-}: CheckboxFilterPopoverProps) => {
+}: CheckboxFilterListProps) => {
     const toggle = (value: number, checked: boolean) => {
         onChange(checked ? [...selected, value] : selected.filter((v) => v !== value));
     };
 
-    const summary =
-        selected.length === 0
-            ? `${label}: None`
-            : selected.length === allValues.length
-              ? `${label}: All`
-              : `${label} (${selected.length})`;
-
     return (
-        <Popover className='relative'>
-            <PopoverButton className={filterButtonClass} style={selectStyle}>
-                {summary}
-                <ChevronDown size={12} />
-            </PopoverButton>
-            <PopoverPanel
-                anchor='bottom start'
-                className={`${POPOVER_PANEL_CLASS} mt-1 w-48`}
-                style={popoverPanelStyle}
-            >
-                <div className='flex items-center justify-between gap-2 px-2 pb-1'>
-                    <button
-                        type='button'
-                        className={quickActionClass}
-                        onClick={() => onChange([...allValues])}
+        <div>
+            <div className='flex items-center justify-between gap-2 px-2 pb-1'>
+                <button
+                    type='button'
+                    className={quickActionClass}
+                    onClick={() => onChange([...allValues])}
+                >
+                    All
+                </button>
+                <button type='button' className={quickActionClass} onClick={() => onChange([])}>
+                    None
+                </button>
+            </div>
+            {options.map((option) => (
+                <Field key={option.value} className={checkboxRowClass}>
+                    <Checkbox
+                        checked={selected.includes(option.value)}
+                        onChange={(checked) => toggle(option.value, checked)}
+                        className='group flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-[3px] border data-checked:border-now-accent data-checked:bg-now-accent'
+                        style={{ borderColor: 'var(--surface-input-border)' }}
                     >
-                        All
-                    </button>
-                    <button type='button' className={quickActionClass} onClick={() => onChange([])}>
-                        None
-                    </button>
-                </div>
-                {options.map((option) => (
-                    <Field key={option.value} className={checkboxRowClass}>
-                        <Checkbox
-                            checked={selected.includes(option.value)}
-                            onChange={(checked) => toggle(option.value, checked)}
-                            className='group flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-[3px] border data-checked:border-now-accent data-checked:bg-now-accent'
-                            style={{ borderColor: 'var(--surface-input-border)' }}
-                        >
-                            <Check
-                                size={10}
-                                className='hidden text-bg group-data-checked:block'
-                                style={{ color: 'var(--bg)' }}
-                            />
-                        </Checkbox>
-                        <HeadlessLabel
-                            className='min-w-0 flex-1 cursor-pointer truncate select-none'
-                            style={option.color ? { color: option.color } : undefined}
-                        >
-                            {option.label}
-                        </HeadlessLabel>
-                    </Field>
-                ))}
-            </PopoverPanel>
-        </Popover>
+                        <Check
+                            size={10}
+                            className='hidden text-bg group-data-checked:block'
+                            style={{ color: 'var(--bg)' }}
+                        />
+                    </Checkbox>
+                    <HeadlessLabel
+                        className='min-w-0 flex-1 cursor-pointer truncate select-none'
+                        style={option.color ? { color: option.color } : undefined}
+                    >
+                        {option.label}
+                    </HeadlessLabel>
+                </Field>
+            ))}
+        </div>
     );
 };
 
@@ -212,109 +208,92 @@ const DATE_PRESETS: { label: string; range: () => { dateFrom: string; dateTo: st
 const presetButtonClass =
     'rounded-button border px-1.5 py-1 font-mono text-[10px] uppercase tracking-[0.06em] text-text-secondary transition-colors hover:text-text-primary';
 
-type DateFilterPopoverProps = {
+type DateFilterFieldsProps = {
     controls: TaskControlsState;
     onChange: (patch: Partial<TaskControlsState>) => void;
 };
 
 /**
- * Date-range filter popover: pick a date field (Due / Scheduled / Completed /
+ * Date-range filter body: pick a date field (Due / Scheduled / Completed /
  * Created), then a preset window or a custom From/To range (inclusive). No
- * field selected = no date filtering. Follows the same popover chrome as the
- * checkbox filters.
+ * field selected = no date filtering. Rendered inline inside the Filters
+ * popover panel rather than in its own `Popover`, same as `CheckboxFilterList`.
  */
-const DateFilterPopover = ({ controls, onChange }: DateFilterPopoverProps) => {
+const DateFilterFields = ({ controls, onChange }: DateFilterFieldsProps) => {
     const { dateField, dateFrom, dateTo } = controls;
-    const summary = !dateField
-        ? 'Date: Any'
-        : `${TASK_DATE_FIELD_LABELS[dateField]}${
-              dateFrom || dateTo ? `: ${dateFrom || '…'} → ${dateTo || '…'}` : ''
-          }`;
 
     return (
-        <Popover className='relative'>
-            <PopoverButton className={filterButtonClass} style={selectStyle}>
-                {summary}
-                <ChevronDown size={12} />
-            </PopoverButton>
-            <PopoverPanel
-                anchor='bottom start'
-                className={`${POPOVER_PANEL_CLASS} mt-1 w-64`}
-                style={popoverPanelStyle}
-            >
-                <div className='flex flex-col gap-2 p-2'>
-                    <SelectField label='Filter by'>
-                        <select
+        <div className='flex flex-col gap-2'>
+            <SelectField label='Filter by'>
+                <select
+                    className={selectClass}
+                    style={selectStyle}
+                    value={dateField ?? 'none'}
+                    onChange={(e) => {
+                        const v = e.target.value;
+                        onChange(
+                            v === 'none'
+                                ? { dateField: null, dateFrom: '', dateTo: '' }
+                                : { dateField: v as TaskDateField }
+                        );
+                    }}
+                >
+                    <SelectOption value='none'>No date filter</SelectOption>
+                    {DATE_FIELD_OPTIONS.map((o) => (
+                        <SelectOption key={o.value} value={o.value}>
+                            {o.label}
+                        </SelectOption>
+                    ))}
+                </select>
+            </SelectField>
+
+            {dateField && (
+                <>
+                    <div className='flex flex-wrap gap-1'>
+                        {DATE_PRESETS.map((preset) => (
+                            <button
+                                key={preset.label}
+                                type='button'
+                                className={presetButtonClass}
+                                style={selectStyle}
+                                onClick={() => onChange(preset.range())}
+                            >
+                                {preset.label}
+                            </button>
+                        ))}
+                    </div>
+                    <label className='flex items-center justify-between gap-2'>
+                        <span className={labelClass}>From</span>
+                        <input
+                            type='date'
                             className={selectClass}
                             style={selectStyle}
-                            value={dateField ?? 'none'}
-                            onChange={(e) => {
-                                const v = e.target.value;
-                                onChange(
-                                    v === 'none'
-                                        ? { dateField: null, dateFrom: '', dateTo: '' }
-                                        : { dateField: v as TaskDateField }
-                                );
-                            }}
-                        >
-                            <SelectOption value='none'>No date filter</SelectOption>
-                            {DATE_FIELD_OPTIONS.map((o) => (
-                                <SelectOption key={o.value} value={o.value}>
-                                    {o.label}
-                                </SelectOption>
-                            ))}
-                        </select>
-                    </SelectField>
-
-                    {dateField && (
-                        <>
-                            <div className='flex flex-wrap gap-1'>
-                                {DATE_PRESETS.map((preset) => (
-                                    <button
-                                        key={preset.label}
-                                        type='button'
-                                        className={presetButtonClass}
-                                        style={selectStyle}
-                                        onClick={() => onChange(preset.range())}
-                                    >
-                                        {preset.label}
-                                    </button>
-                                ))}
-                            </div>
-                            <label className='flex items-center justify-between gap-2'>
-                                <span className={labelClass}>From</span>
-                                <input
-                                    type='date'
-                                    className={selectClass}
-                                    style={selectStyle}
-                                    value={dateFrom}
-                                    aria-label='From date'
-                                    onChange={(e) => onChange({ dateFrom: e.target.value })}
-                                />
-                            </label>
-                            <label className='flex items-center justify-between gap-2'>
-                                <span className={labelClass}>To</span>
-                                <input
-                                    type='date'
-                                    className={selectClass}
-                                    style={selectStyle}
-                                    value={dateTo}
-                                    aria-label='To date'
-                                    onChange={(e) => onChange({ dateTo: e.target.value })}
-                                />
-                            </label>
-                            <button
-                                type='button'
-                                className={`${quickActionClass} self-start`}
-                                onClick={() => onChange({ dateFrom: '', dateTo: '' })}
-                            >
-                                Clear range
-                            </button>
-                        </>
-                    )}
-                </div>
-            </PopoverPanel>
-        </Popover>
+                            value={dateFrom}
+                            aria-label='From date'
+                            onChange={(e) => onChange({ dateFrom: e.target.value })}
+                        />
+                    </label>
+                    <label className='flex items-center justify-between gap-2'>
+                        <span className={labelClass}>To</span>
+                        <input
+                            type='date'
+                            className={selectClass}
+                            style={selectStyle}
+                            value={dateTo}
+                            aria-label='To date'
+                            onChange={(e) => onChange({ dateTo: e.target.value })}
+                        />
+                    </label>
+                    <button
+                        type='button'
+                        className={`${quickActionClass} self-start`}
+                        onClick={() => onChange({ dateFrom: '', dateTo: '' })}
+                    >
+                        Clear range
+                    </button>
+                </>
+            )}
+        </div>
     );
 };
 
@@ -335,155 +314,208 @@ export const TaskControlsBar = ({
 }: TaskControlsBarProps) => {
     const set = (patch: Partial<TaskControlsState>) => onChange({ ...controls, ...patch });
 
-    return (
-        <div className='mb-5 flex flex-wrap items-end gap-x-4 gap-y-3'>
-            {/* Group by */}
-            <SelectField label='Group'>
-                <select
-                    className={selectClass}
-                    style={selectStyle}
-                    value={controls.groupBy}
-                    onChange={(e) => set({ groupBy: e.target.value as TaskGroupBy })}
-                >
-                    <SelectOption value='none'>None</SelectOption>
-                    {showProjectOptions && <SelectOption value='project'>Project</SelectOption>}
-                    <SelectOption value='priority'>Priority</SelectOption>
-                    <SelectOption value='status'>Status</SelectOption>
-                </select>
-            </SelectField>
+    const count = activeFilterCount(controls);
+    const chips = activeFilterChips(controls, projects);
 
-            {/* Sort by (+ direction) */}
-            <SelectField label='Sort'>
-                <div className='flex items-center gap-1'>
+    return (
+        <div className='mb-5 flex flex-col gap-2'>
+            <div className='flex flex-wrap items-center gap-2'>
+                {/* Filters: Project (view-dependent) + Priority + Status + Date, all
+                    collapsed behind one popover with an honest active-filter count.
+                    The bodies below render inline rather than as their own nested
+                    `Popover`s, which would fight this one's dismiss handler. */}
+                <FilterField label='Filter'>
+                    <Popover className='relative'>
+                        <PopoverButton className={filterButtonClass} style={selectStyle}>
+                            Filters
+                            {count > 0 && (
+                                <span className='font-semibold text-now-accent'>({count})</span>
+                            )}
+                            <ChevronDown size={12} />
+                        </PopoverButton>
+                        <PopoverPanel
+                            anchor='bottom start'
+                            // One column on a phone; from `sm` the four categories run
+                            // across so the panel fits on screen instead of running off
+                            // the bottom of a 720px viewport.
+                            className={`${POPOVER_PANEL_CLASS} mt-1 w-64 sm:w-[680px] sm:max-w-[calc(100vw-2rem)]`}
+                            style={popoverPanelStyle}
+                        >
+                            <div className={filterGridClass}>
+                                {showProjectOptions && (
+                                    <FilterField label='Project' className='sm:w-[140px]'>
+                                        <select
+                                            className={selectClass}
+                                            style={selectStyle}
+                                            value={String(controls.filterProjectId)}
+                                            onChange={(e) => {
+                                                const v = e.target.value;
+                                                set({
+                                                    filterProjectId:
+                                                        v === 'all' || v === 'none' ? v : Number(v)
+                                                });
+                                            }}
+                                        >
+                                            <SelectOption value='all'>All projects</SelectOption>
+                                            <SelectOption value='none'>No project</SelectOption>
+                                            {projects.map((project) => (
+                                                <SelectOption key={project.id} value={project.id}>
+                                                    {project.name}
+                                                    {project.archived ? ' (archived)' : ''}
+                                                </SelectOption>
+                                            ))}
+                                        </select>
+                                    </FilterField>
+                                )}
+
+                                <FilterField label='Priority' className='sm:w-[120px]'>
+                                    <CheckboxFilterList
+                                        options={[3, 2, 1, 0].map((p) => ({
+                                            value: p,
+                                            label: PRIORITY_LABELS[p]!
+                                        }))}
+                                        allValues={ALL_PRIORITY_VALUES}
+                                        selected={controls.filterPriorities}
+                                        onChange={(next) => set({ filterPriorities: next })}
+                                    />
+                                </FilterField>
+
+                                {/* Done/Cancelled default off, closed tasks live in the
+                                    separate Closed section instead. */}
+                                <FilterField label='Status' className='sm:w-[140px]'>
+                                    <CheckboxFilterList
+                                        options={STATUS_ORDER.map((s) => ({
+                                            value: s,
+                                            label: STATUS_META[s].label,
+                                            color: STATUS_META[s].color
+                                        }))}
+                                        allValues={ALL_STATUS_VALUES}
+                                        selected={controls.filterStatuses}
+                                        onChange={(next) => set({ filterStatuses: next })}
+                                    />
+                                </FilterField>
+
+                                <FilterField label='Date' className='sm:min-w-[200px] sm:flex-1'>
+                                    <DateFilterFields controls={controls} onChange={set} />
+                                </FilterField>
+                            </div>
+                        </PopoverPanel>
+                    </Popover>
+                </FilterField>
+
+                {/* Sort and Group stay visible: both arrange the list rather than
+                    filter it, and neither counts toward the Filters badge. */}
+                <SelectField label='Sort'>
+                    <div className='flex items-center gap-1'>
+                        <select
+                            className={selectClass}
+                            style={selectStyle}
+                            value={controls.sortBy}
+                            onChange={(e) => set({ sortBy: e.target.value as TaskSortBy })}
+                        >
+                            <SelectOption value='smart'>Smart</SelectOption>
+                            <SelectOption value='priority'>Priority</SelectOption>
+                            <SelectOption value='due'>Due date</SelectOption>
+                            <SelectOption value='created'>Created</SelectOption>
+                            <SelectOption value='title'>Title</SelectOption>
+                            <SelectOption value='status'>Status</SelectOption>
+                        </select>
+                        <button
+                            type='button'
+                            onClick={() =>
+                                set({ sortDir: controls.sortDir === 'asc' ? 'desc' : 'asc' })
+                            }
+                            aria-label={`Sort ${
+                                controls.sortDir === 'asc' ? 'ascending' : 'descending'
+                            }`}
+                            title={controls.sortDir === 'asc' ? 'Ascending' : 'Descending'}
+                            className='rounded-button border p-1 text-text-secondary transition-colors hover:text-text-primary'
+                            style={selectStyle}
+                        >
+                            {controls.sortDir === 'asc' ? (
+                                <ArrowUp size={13} />
+                            ) : (
+                                <ArrowDown size={13} />
+                            )}
+                        </button>
+                    </div>
+                </SelectField>
+
+                <SelectField label='Group'>
                     <select
                         className={selectClass}
                         style={selectStyle}
-                        value={controls.sortBy}
-                        onChange={(e) => set({ sortBy: e.target.value as TaskSortBy })}
+                        value={controls.groupBy}
+                        onChange={(e) => set({ groupBy: e.target.value as TaskGroupBy })}
                     >
-                        <SelectOption value='smart'>Smart</SelectOption>
+                        <SelectOption value='none'>None</SelectOption>
+                        {showProjectOptions && <SelectOption value='project'>Project</SelectOption>}
                         <SelectOption value='priority'>Priority</SelectOption>
-                        <SelectOption value='due'>Due date</SelectOption>
-                        <SelectOption value='created'>Created</SelectOption>
-                        <SelectOption value='title'>Title</SelectOption>
                         <SelectOption value='status'>Status</SelectOption>
                     </select>
-                    <button
-                        type='button'
-                        onClick={() =>
-                            set({ sortDir: controls.sortDir === 'asc' ? 'desc' : 'asc' })
-                        }
-                        aria-label={`Sort ${
-                            controls.sortDir === 'asc' ? 'ascending' : 'descending'
-                        }`}
-                        title={controls.sortDir === 'asc' ? 'Ascending' : 'Descending'}
-                        className='rounded-button border p-1 text-text-secondary transition-colors hover:text-text-primary'
-                        style={selectStyle}
-                    >
-                        {controls.sortDir === 'asc' ? (
-                            <ArrowUp size={13} />
-                        ) : (
-                            <ArrowDown size={13} />
-                        )}
-                    </button>
-                </div>
-            </SelectField>
-
-            {/* Filter: project */}
-            {showProjectOptions && (
-                <SelectField label='Project'>
-                    <select
-                        className={selectClass}
-                        style={selectStyle}
-                        value={String(controls.filterProjectId)}
-                        onChange={(e) => {
-                            const v = e.target.value;
-                            set({
-                                filterProjectId: v === 'all' || v === 'none' ? v : Number(v)
-                            });
-                        }}
-                    >
-                        <SelectOption value='all'>All projects</SelectOption>
-                        <SelectOption value='none'>No project</SelectOption>
-                        {projects.map((project) => (
-                            <SelectOption key={project.id} value={project.id}>
-                                {project.name}
-                                {project.archived ? ' (archived)' : ''}
-                            </SelectOption>
-                        ))}
-                    </select>
                 </SelectField>
-            )}
 
-            {/* Filter: priority (multi-select checkboxes) */}
-            <FilterField label='Priority'>
-                <CheckboxFilterPopover
-                    label='Priority'
-                    options={[3, 2, 1, 0].map((p) => ({ value: p, label: PRIORITY_LABELS[p]! }))}
-                    allValues={ALL_PRIORITY_VALUES}
-                    selected={controls.filterPriorities}
-                    onChange={(next) => set({ filterPriorities: next })}
-                />
-            </FilterField>
-
-            {/* Filter: status (multi-select checkboxes; Done/Cancelled default off —
-                closed tasks live in the separate Closed section instead). */}
-            <FilterField label='Status'>
-                <CheckboxFilterPopover
-                    label='Status'
-                    options={STATUS_ORDER.map((s) => ({
-                        value: s,
-                        label: STATUS_META[s].label,
-                        color: STATUS_META[s].color
-                    }))}
-                    allValues={ALL_STATUS_VALUES}
-                    selected={controls.filterStatuses}
-                    onChange={(next) => set({ filterStatuses: next })}
-                />
-            </FilterField>
-
-            {/* Filter: date range (Due / Scheduled / Completed / Created). */}
-            <FilterField label='Date'>
-                <DateFilterPopover controls={controls} onChange={set} />
-            </FilterField>
-
-            {/* Trailing actions: Select + Reset (only when something's changed) + Export. */}
-            <div className='ml-auto flex items-end gap-3'>
-                {!isDefaultControls(controls) && (
-                    <button
-                        type='button'
-                        onClick={() => onChange(DEFAULT_TASK_CONTROLS)}
-                        className={`${quickActionClass} pb-1.5`}
-                        title='Reset grouping, sort and filters to defaults'
-                    >
-                        Reset
-                    </button>
-                )}
-                {onToggleSelection && (
-                    <button
-                        type='button'
-                        onClick={onToggleSelection}
-                        className={filterButtonClass}
-                        style={selectStyle}
-                        title={selectionActive ? 'Exit multi-select' : 'Select multiple tasks'}
-                    >
-                        <ListChecks size={12} />
-                        {selectionActive ? 'Done' : 'Select'}
-                    </button>
-                )}
-                {onExport && (
-                    <button
-                        type='button'
-                        onClick={onExport}
-                        className={filterButtonClass}
-                        style={selectStyle}
-                        title='Export this view as Markdown'
-                    >
-                        <Download size={12} />
-                        Export
-                    </button>
-                )}
+                {/* Trailing actions: Reset (only when something's changed) + Select + Export. */}
+                <div className='ml-auto flex items-center gap-3'>
+                    {!isDefaultControls(controls) && (
+                        <button
+                            type='button'
+                            onClick={() => onChange(DEFAULT_TASK_CONTROLS)}
+                            className={quickActionClass}
+                            title='Reset grouping, sort and filters to defaults'
+                        >
+                            Reset
+                        </button>
+                    )}
+                    {onToggleSelection && (
+                        <button
+                            type='button'
+                            onClick={onToggleSelection}
+                            className={filterButtonClass}
+                            style={selectStyle}
+                            title={selectionActive ? 'Exit multi-select' : 'Select multiple tasks'}
+                        >
+                            <ListChecks size={12} />
+                            {selectionActive ? 'Done' : 'Select'}
+                        </button>
+                    )}
+                    {onExport && (
+                        <button
+                            type='button'
+                            onClick={onExport}
+                            className={filterButtonClass}
+                            style={selectStyle}
+                            title='Export this view as Markdown'
+                        >
+                            <Download size={12} />
+                            Export
+                        </button>
+                    )}
+                </div>
             </div>
+
+            {count > 0 && (
+                <div className='flex flex-wrap gap-[6px]'>
+                    {chips.map((chip) => (
+                        <span
+                            key={chip.key}
+                            className='inline-flex max-w-[240px] items-center gap-[6px] rounded-chip border py-[2px] pr-[6px] pl-[10px] text-[12px] text-text-secondary'
+                            style={{ borderColor: 'var(--surface-input-border)' }}
+                            title={chip.label}
+                        >
+                            <span className='truncate'>{chip.label}</span>
+                            <button
+                                type='button'
+                                aria-label={`Remove filter: ${chip.label}`}
+                                onClick={() => set(chip.reset)}
+                                className='text-text-muted hover:text-text-primary'
+                            >
+                                <X size={12} />
+                            </button>
+                        </span>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

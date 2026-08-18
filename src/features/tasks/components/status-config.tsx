@@ -63,7 +63,7 @@ export const STATUS_META: Record<TaskStatus, StatusMeta> = {
         label: 'Deferred',
         color: 'var(--color-status-deferred)',
         pillText: 'var(--status-deferred-pill-text)',
-        pillBg: 'rgba(138, 129, 119, 0.14)'
+        pillBg: 'var(--status-deferred-pill-bg)'
     },
     [TaskStatus.DONE]: {
         status: TaskStatus.DONE,

@@ -3,8 +3,12 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { makeProject, makeTask, projectMap, resetSeq } from '@/test-support/factories';
 import { TaskStatus } from '@/types/types';
 
+import { startOfToday } from './compute-band';
+import { groupTasksByBand } from './task-bands';
 import {
     ACTIVE_STATUS_VALUES,
+    activeFilterChips,
+    activeFilterCount,
     ALL_PRIORITY_VALUES,
     ALL_STATUS_VALUES,
     buildTaskSections,
@@ -14,6 +18,7 @@ import {
     isDefaultControls,
     passesDateFilter,
     showClosedSection,
+    sortTasks,
     splitTasksForControls,
     statusRank,
     type TaskControlsState
@@ -124,6 +129,44 @@ describe('compareSmart', () => {
     });
 });
 
+describe('smart sort parity with Today', () => {
+    const TODAY = startOfToday(new Date(2026, 7, 13));
+
+    // The fixture must vary the band INPUTS. makeTask's `band` field is ignored
+    // by the UI now, and its defaults (no dates, priority 0) would land every
+    // task in `whenever`, making the band key inert and this test vacuous.
+    const fixture = () => [
+        makeTask({ title: 'inprogress undated', status: TaskStatus.IN_PROGRESS }),
+        makeTask({ title: 'open overdue', due_date: '2026-07-01' }),
+        makeTask({ title: 'open high', priority: 3 }),
+        makeTask({ title: 'open next week', due_date: '2026-08-18' }),
+        makeTask({ title: 'open medium', priority: 2 }),
+        makeTask({ title: 'open undated' }),
+        makeTask({ title: 'blocked undated', status: TaskStatus.BLOCKED })
+    ];
+
+    it('orders identically to the flattened Today grouping', () => {
+        const tasks = fixture();
+        const flat = sortTasks(tasks, 'smart', 'asc', TODAY).map((t) => t.title);
+        const today = groupTasksByBand(tasks, TODAY)
+            .flatMap((group) => group.tasks)
+            .map((t) => t.title);
+        expect(flat).toEqual(today);
+    });
+
+    it('puts an open now task above an in-progress whenever task', () => {
+        // The exact inversion that was wrong: status rank used to win outright.
+        const tasks = [
+            makeTask({ title: 'inprogress whenever', status: TaskStatus.IN_PROGRESS }),
+            makeTask({ title: 'open now', due_date: '2026-07-01' })
+        ];
+        expect(sortTasks(tasks, 'smart', 'asc', TODAY).map((t) => t.title)).toEqual([
+            'open now',
+            'inprogress whenever'
+        ]);
+    });
+});
+
 describe('isDefaultControls', () => {
     it('accepts the defaults', () => {
         expect(isDefaultControls(DEFAULT_TASK_CONTROLS)).toBe(true);
@@ -163,6 +206,158 @@ describe('isDefaultControls', () => {
         // sets — recorded so the quirk isn't mistaken for intent, and so that
         // tightening `sameSet` later shows up here as a deliberate change.
         expect(isDefaultControls(controls({ filterPriorities: [3, 3, 2, 1] }))).toBe(true);
+    });
+});
+
+describe('activeFilterCount', () => {
+    it('counts nothing at the defaults', () => {
+        // The old bar read "Status (7)" at rest, which is 7 selected statuses,
+        // not 7 active filters.
+        expect(activeFilterCount(controls())).toBe(0);
+    });
+
+    it('counts a project filter', () => {
+        expect(activeFilterCount(controls({ filterProjectId: 3 }))).toBe(1);
+        expect(activeFilterCount(controls({ filterProjectId: 'none' }))).toBe(1);
+    });
+
+    it('counts a narrowed priority or status set', () => {
+        expect(activeFilterCount(controls({ filterPriorities: [3] }))).toBe(1);
+        expect(activeFilterCount(controls({ filterStatuses: [TaskStatus.OPEN] }))).toBe(1);
+    });
+
+    it('counts checking a closed status, since the default is active-only', () => {
+        expect(activeFilterCount(controls({ filterStatuses: [...ALL_STATUS_VALUES] }))).toBe(1);
+    });
+
+    it('counts a date filter and combines counts', () => {
+        expect(activeFilterCount(controls({ dateField: 'due' }))).toBe(1);
+        expect(activeFilterCount(controls({ dateField: 'due', filterProjectId: 3 }))).toBe(2);
+    });
+
+    it('ignores group and sort, which are not filters', () => {
+        expect(activeFilterCount(controls({ groupBy: 'project', sortBy: 'due' }))).toBe(0);
+    });
+});
+
+describe('activeFilterChips', () => {
+    it('produces no chips at the defaults', () => {
+        expect(activeFilterChips(controls(), [])).toEqual([]);
+    });
+
+    it('produces one chip per active filter, in bar order, and none for the rest', () => {
+        const chips = activeFilterChips(
+            controls({
+                filterProjectId: 3,
+                filterPriorities: [3],
+                filterStatuses: [TaskStatus.OPEN],
+                dateField: 'due'
+            }),
+            []
+        );
+        expect(chips.map((c) => c.key)).toEqual(['project', 'priority', 'status', 'date']);
+    });
+
+    it('labels the project chip with the resolved name, or "None" for no-project', () => {
+        const beta = makeProject({ name: 'Beta Project' });
+        expect(activeFilterChips(controls({ filterProjectId: beta.id }), [beta])).toEqual([
+            { key: 'project', label: 'Project: Beta Project', reset: { filterProjectId: 'all' } }
+        ]);
+        expect(activeFilterChips(controls({ filterProjectId: 'none' }), [])).toEqual([
+            { key: 'project', label: 'Project: None', reset: { filterProjectId: 'all' } }
+        ]);
+    });
+
+    it('falls back to "Unknown" for a project id absent from the given list', () => {
+        expect(activeFilterChips(controls({ filterProjectId: 404 }), [])).toEqual([
+            { key: 'project', label: 'Project: Unknown', reset: { filterProjectId: 'all' } }
+        ]);
+    });
+
+    it('lists priority names in PRIORITY_ORDER (high to none), not selection order', () => {
+        // Deliberately the reverse of the picker order: if the implementation
+        // echoed input order instead of PRIORITY_ORDER, this would read
+        // "None, Low, High" instead.
+        const chips = activeFilterChips(controls({ filterPriorities: [0, 1, 3] }), []);
+        expect(chips).toEqual([
+            {
+                key: 'priority',
+                label: 'Priority: High, Low, None',
+                reset: { filterPriorities: [...DEFAULT_TASK_CONTROLS.filterPriorities] }
+            }
+        ]);
+    });
+
+    it('lists status names in STATUS_ORDER (smart-rank order), not selection order', () => {
+        // Deliberately out of both selection order and TaskStatus numeric order.
+        const chips = activeFilterChips(
+            controls({
+                filterStatuses: [TaskStatus.DEFERRED, TaskStatus.OPEN, TaskStatus.IN_PROGRESS]
+            }),
+            []
+        );
+        expect(chips).toEqual([
+            {
+                key: 'status',
+                label: 'Status: In progress, Open, Deferred',
+                reset: { filterStatuses: [...DEFAULT_TASK_CONTROLS.filterStatuses] }
+            }
+        ]);
+    });
+
+    it('labels the date chip with just the field when no range is set', () => {
+        expect(activeFilterChips(controls({ dateField: 'due' }), [])).toEqual([
+            {
+                key: 'date',
+                label: 'Date: Due',
+                reset: { dateField: null, dateFrom: '', dateTo: '' }
+            }
+        ]);
+    });
+
+    it('appends the range to the date chip label when one is set', () => {
+        expect(
+            activeFilterChips(
+                controls({ dateField: 'due', dateFrom: '2026-08-01', dateTo: '2026-08-31' }),
+                []
+            )
+        ).toEqual([
+            {
+                key: 'date',
+                label: 'Date: Due 2026-08-01 → 2026-08-31',
+                reset: { dateField: null, dateFrom: '', dateTo: '' }
+            }
+        ]);
+    });
+
+    it("each chip's reset returns exactly that filter to default and leaves the other three alone", () => {
+        const narrowed = controls({
+            filterProjectId: 3,
+            filterPriorities: [3],
+            filterStatuses: [TaskStatus.OPEN],
+            dateField: 'due',
+            dateFrom: '2026-08-01',
+            dateTo: '2026-08-31'
+        });
+        const before = activeFilterChips(narrowed, []).map((c) => c.key);
+        expect(before).toEqual(['project', 'priority', 'status', 'date']);
+
+        for (const chip of activeFilterChips(narrowed, [])) {
+            const after: TaskControlsState = { ...narrowed, ...chip.reset };
+            const afterKeys = activeFilterChips(after, []).map((c) => c.key);
+            expect(afterKeys, `resetting ${chip.key}`).toEqual(
+                before.filter((k) => k !== chip.key)
+            );
+        }
+
+        // The date reset specifically clears all three date fields together.
+        // A lingering range with no field selected would leave no chip to
+        // remove it, since `dateFilterActive` only looks at `dateField`.
+        const dateChip = activeFilterChips(narrowed, []).find((c) => c.key === 'date')!;
+        const afterDateReset = { ...narrowed, ...dateChip.reset };
+        expect(afterDateReset.dateField).toBeNull();
+        expect(afterDateReset.dateFrom).toBe('');
+        expect(afterDateReset.dateTo).toBe('');
     });
 });
 

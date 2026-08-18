@@ -1,4 +1,11 @@
-import { expect, request, test as base, type APIRequestContext, type Page } from '@playwright/test';
+import {
+    expect,
+    request,
+    test as base,
+    type APIRequestContext,
+    type Locator,
+    type Page
+} from '@playwright/test';
 
 import { anchorNow } from './clock';
 import { API_BASE, deleteUser, importGoldenProfile, register, type Account } from './api';
@@ -128,3 +135,26 @@ export const gotoAppRoute = async (page: Page, path: string): Promise<void> => {
     await page.goto(path);
     await expect(appHeader(page)).toBeVisible();
 };
+
+const escapeForRegExp = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * A task's title button, in a top-level list (TaskRow) or a subtask checklist
+ * (SubtaskRow). TaskRow's title carries an `aria-label` of
+ * `"<title>, <due>, <priority> priority"` with either suffix omitted when
+ * absent, so an exact match against the bare title breaks the moment a due
+ * date or a priority is set. The anchored `^title(,.*)?$` pattern accepts that
+ * optional suffix while still requiring the name to START with the title,
+ * which keeps it from also matching another control whose name merely quotes
+ * the title inside its own text (e.g. `Delete subtask "<title>"`). SubtaskRow
+ * carries no such suffix, so the pattern is an exact match there.
+ *
+ * Collision this does NOT prevent: a task titled exactly `X` and another
+ * titled `X, <anything>` (e.g. `Ship it` and `Ship it, Low priority`) would
+ * both match the pattern built for `X`, since the second is indistinguishable
+ * from the first plus an appended suffix. No current fixture collides like
+ * this; keep it that way when adding titles that share a comma-separated
+ * prefix.
+ */
+export const taskRowTitle = (scope: Page | Locator, title: string): Locator =>
+    scope.getByRole('button', { name: new RegExp(`^${escapeForRegExp(title)}(,.*)?$`) });

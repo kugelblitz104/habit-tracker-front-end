@@ -2,7 +2,7 @@ import type { APIRequestContext, Page } from '@playwright/test';
 
 import { API_BASE, authHeaders, type Account } from '../fixtures/api';
 import { GOLDEN } from '../fixtures/golden-profile';
-import { expect, gotoAppRoute, test } from '../fixtures/test';
+import { expect, gotoAppRoute, taskRowTitle, test } from '../fixtures/test';
 
 /**
  * Locks the per-surface "change a task's status from the list" behaviour that
@@ -43,18 +43,18 @@ const alphaProjectId = async (
 };
 
 /** The card whose title is `title` — task cards carry no test ids. */
-const cardTitle = (page: Page, title: string) =>
-    page.getByRole('button', { name: title, exact: true });
+const cardTitle = (page: Page, title: string) => taskRowTitle(page, title);
 
 /**
- * The round status control on that card. Anchored off the title button (whose
- * accessible name IS the title) and stepped up two levels to the card's flex row,
- * which also holds the status picker — every card renders a "Status: …" button, so
- * it has to be scoped to one card rather than matched page-wide.
+ * The round status control on that card. Anchored off the title button and
+ * stepped up three levels to the card's row (title -> line-1 wrapper ->
+ * content column -> row), which also holds the status picker: every card
+ * renders a "Status: …" button, so it has to be scoped to one card rather
+ * than matched page-wide.
  */
 const statusControl = (page: Page, title: string) =>
     cardTitle(page, title)
-        .locator('xpath=../..')
+        .locator('xpath=../../..')
         .getByRole('button', { name: /^Status: / });
 
 /** Open a card's status picker and pick `label`. */
@@ -76,8 +76,9 @@ const expectStatus = async (page: Page, title: string, label: string) => {
  * for closed statuses; Today always shows it, hence the per-surface flag.
  */
 const revealClosedSection = async (page: Page) => {
-    // 7 of the 9 statuses are selected by default (everything but Done/Cancelled).
-    await page.getByRole('button', { name: 'Status (7)' }).click();
+    // 7 of the 9 statuses are selected by default (everything but Done/Cancelled),
+    // so the Filters button carries no count until this opens the Status checkboxes.
+    await page.getByRole('button', { name: 'Filters', exact: true }).click();
     await page.getByRole('checkbox', { name: 'Done', exact: true }).click();
     await page.getByRole('checkbox', { name: 'Cancelled', exact: true }).click();
     await page.keyboard.press('Escape');
@@ -161,6 +162,33 @@ for (const surface of SURFACES) {
             await expectStatus(authedPage, title, 'Blocked');
         });
     }
+
+    test(`${surface.label}: clicking the status control does not also open the detail pane`, async ({
+        api,
+        account,
+        goldenProfileId,
+        authedPage
+    }) => {
+        // The row itself is now a click target (task-row-redesign final fixes,
+        // item 2), so this pins that the status control's own click handler
+        // still swallows the click rather than letting it bubble and also
+        // select the row for the detail pane.
+        const projectId = await alphaProjectId(api, account, goldenProfileId);
+        await gotoAppRoute(authedPage, surface.path(projectId));
+
+        const title = GOLDEN.tasks.now;
+        await expect(cardTitle(authedPage, title)).toBeVisible();
+        await expect(authedPage.getByRole('complementary')).toHaveCount(0);
+
+        await statusControl(authedPage, title).click();
+        await expect(
+            authedPage.getByRole('button', { name: 'Blocked', exact: true })
+        ).toBeVisible();
+        await expect(authedPage.getByRole('complementary')).toHaveCount(0);
+
+        await authedPage.keyboard.press('Escape');
+        await expect(authedPage.getByRole('complementary')).toHaveCount(0);
+    });
 
     test(`${surface.label}: a failed status change surfaces an error toast`, async ({
         api,

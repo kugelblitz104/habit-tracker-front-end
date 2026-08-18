@@ -67,7 +67,7 @@ const fieldLabelClass =
 
 /**
  * Small secondary "pip" naming the project a row/group belongs to — bold text
- * in the project's own color, matching the task-card project tag. Subtle by
+ * in the project's own color, matching the task row's project tag. Subtle by
  * design: it never competes with the row's primary label/context line.
  */
 const ProjectPip = ({ project }: { project: EntryProject | null | undefined }) => {

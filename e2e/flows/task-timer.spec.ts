@@ -2,7 +2,7 @@ import type { APIRequestContext, Page } from '@playwright/test';
 
 import { authHeaders, type Account } from '../fixtures/api';
 import { GOLDEN } from '../fixtures/golden-profile';
-import { expect, gotoAppRoute, test } from '../fixtures/test';
+import { expect, gotoAppRoute, taskRowTitle, test } from '../fixtures/test';
 
 /**
  * Locks "start a timer for this task" across the surfaces that each own a copy of
@@ -65,8 +65,7 @@ const runningEntries = async (
     return (await response.json()).time_entries;
 };
 
-const cardTitle = (page: Page, title: string) =>
-    page.getByRole('button', { name: title, exact: true });
+const cardTitle = (page: Page, title: string) => taskRowTitle(page, title);
 
 /**
  * The shared post-start assertions: the timer screen renders the running session,

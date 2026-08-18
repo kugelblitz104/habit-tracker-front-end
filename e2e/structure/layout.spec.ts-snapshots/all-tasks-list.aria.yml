@@ -6,12 +6,7 @@
   - /placeholder: Add a task...
 - text: ↵ add ⇧↵ details
 - button "Quick-add token help"
-- text: Group
-- combobox "Group":
-  - option "None" [selected]
-  - option "Project"
-  - option "Priority"
-  - option "Status"
+- button "Filters"
 - text: Sort
 - combobox "Sort Sort ascending":
   - option "Smart" [selected]
@@ -21,58 +16,47 @@
   - option "Title"
   - option "Status"
 - button "Sort ascending"
-- text: Project
-- combobox "Project":
-  - option "All projects" [selected]
-  - option "No project"
-  - option "Alpha Project"
-  - option "Beta Project"
-- text: Priority
-- 'button "Priority: All"'
-- text: Status
-- button "Status (7)"
-- text: Date
-- 'button "Date: Any"'
+- text: Group
+- combobox "Group":
+  - option "None" [selected]
+  - option "Project"
+  - option "Priority"
+  - option "Status"
 - button "Select"
 - button "Export"
+- 'button "Status: Open. Change status"'
+- button "Now band task, High priority"
+- text: High
+- link "Alpha Project":
+  - /url: /projects/alpha-project
+- 'button "Status: Open. Change status"'
+- button "A deliberately very long task title that has to ellipsis-clip rather than widen its row on a narrow viewport, High priority"
+- text: High
+- link "Alpha Project":
+  - /url: /projects/alpha-project
 - 'button "Status: In progress. Change status"'
-- button "Parent with subtasks"
+- button "Parent with subtasks, Med priority"
+- text: Med in progress
 - link "Beta Project":
   - /url: /projects/beta-project
-- text: in progress
 - button "1/2"
-- img "Priority 2 of 3"
 - 'button "Status: Open. Change status"'
-- button "Now band task"
+- button "Soon band task, Med priority"
+- text: Med
 - link "Alpha Project":
   - /url: /projects/alpha-project
-- img "Priority 3 of 3"
-- 'button "Status: Open. Change status"'
-- button "A deliberately very long task title that has to ellipsis-clip rather than widen its row on a narrow viewport"
-- link "Alpha Project":
-  - /url: /projects/alpha-project
-- img "Priority 3 of 3"
-- 'button "Status: Open. Change status"'
-- button "Soon band task"
-- link "Alpha Project":
-  - /url: /projects/alpha-project
-- img "Priority 2 of 3"
 - 'button "Status: Open. Change status"'
 - button "Whenever band task"
 - link "Alpha Project":
   - /url: /projects/alpha-project
-- img "Priority 0 of 3"
 - 'button "Status: Open. Change status"'
 - button "Task with no project"
-- img "Priority 0 of 3"
 - 'button "Status: Open. Change status"'
 - button "Task with an estimate"
 - link "Alpha Project":
   - /url: /projects/alpha-project
-- img "Priority 0 of 3"
 - 'button "Status: Deferred. Change status"'
-- button "Deferred task"
+- button "Deferred task, High priority"
+- text: High deferred
 - link "Beta Project":
   - /url: /projects/beta-project
-- text: deferred
-- img "Priority 3 of 3"

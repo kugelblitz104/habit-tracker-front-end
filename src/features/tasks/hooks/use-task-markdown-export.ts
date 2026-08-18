@@ -1,6 +1,7 @@
 import type { ProjectRead, TaskRead } from '@/api';
 import {
     buildTaskSections,
+    isClosedStatus,
     passesDateFilter,
     showClosedSection,
     type TaskControlsState
@@ -46,7 +47,10 @@ export const useTaskMarkdownExport = ({
         const sections = buildTaskSections(tasks, controls, projectsById);
         const closedTasks = showClosed
             ? allLoadedTasks.filter(
-                  (t) => t.parent_id == null && t.band === 'hidden' && passesDateFilter(t, controls)
+                  (t) =>
+                      t.parent_id == null &&
+                      isClosedStatus(t.status ?? 0) &&
+                      passesDateFilter(t, controls)
               )
             : [];
         const markdown = renderTasksMarkdown({

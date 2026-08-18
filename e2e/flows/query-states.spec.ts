@@ -1,7 +1,7 @@
 import type { Page, Route } from '@playwright/test';
 
 import { GOLDEN } from '../fixtures/golden-profile';
-import { expect, gotoAppRoute, test } from '../fixtures/test';
+import { expect, gotoAppRoute, taskRowTitle, test } from '../fixtures/test';
 
 /**
  * Loading / error / empty line locks for the nine hand-rolled query-state
@@ -171,7 +171,7 @@ test('the task detail pane collapses loading and error into ONE line', async ({ 
             })
     );
     await gotoAppRoute(authedPage, '/');
-    await authedPage.getByRole('button', { name: GOLDEN.tasks.now, exact: true }).click();
+    await taskRowTitle(authedPage, GOLDEN.tasks.now).click();
 
     // The odd one out of the nine: a single node whose TEXT switches between the
     // two states, so there is no separate loading element to assert. Its padding
@@ -242,7 +242,7 @@ test('Countdown has a THIRD, empty branch that is not part of the loading/error 
  */
 const openSubtaskEditor = async (page: Page) => {
     await gotoAppRoute(page, '/');
-    const title = page.getByRole('button', { name: GOLDEN.tasks.parent, exact: true });
+    const title = taskRowTitle(page, GOLDEN.tasks.parent);
     await title.focus();
     await title.press('e');
     await expect(page.getByRole('heading', { name: 'Edit task' })).toBeVisible();

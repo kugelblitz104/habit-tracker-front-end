@@ -1,6 +1,7 @@
 import type { ProjectRead, TaskRead } from '@/api';
 import { TaskStatus } from '@/types/types';
 import { STATUS_META } from '../components/status-config';
+import { bandRank, computeBand, startOfToday } from './compute-band';
 import { PRIORITY_LABELS } from './priority-config';
 
 /**
@@ -112,22 +113,118 @@ export const DEFAULT_TASK_CONTROLS: TaskControlsState = {
 const sameSet = (a: number[], b: number[]): boolean =>
     a.length === b.length && a.every((v) => b.includes(v));
 
+// Named per-filter predicates. `isDefaultControls` and `activeFilterCount`
+// both build on these rather than repeating the comparisons inline, so a
+// change to what counts as "filtering" (e.g. a fifth filter, or a change to
+// what a filter's default is) only has to happen once and both callers move
+// together.
+const projectFilterActive = (c: TaskControlsState): boolean => c.filterProjectId !== 'all';
+const priorityFilterActive = (c: TaskControlsState): boolean =>
+    !sameSet(c.filterPriorities, ALL_PRIORITY_VALUES);
+const statusFilterActive = (c: TaskControlsState): boolean =>
+    !sameSet(c.filterStatuses, ACTIVE_STATUS_VALUES);
+/** True whenever a date field is picked, regardless of whether a range is set
+ *  on top of it. Deliberately blind to `dateFrom`/`dateTo` on their own; see
+ *  `isDefaultControls` for the one caller that also needs those. */
+const dateFilterActive = (c: TaskControlsState): boolean => c.dateField !== null;
+
 /**
  * Whether the controls are still at their defaults (nothing grouped, smart
- * sort, all priorities/active statuses, no project or date filter). Gates the
- * Reset affordance so it only shows once the user has actually changed
- * something.
+ * sort, no priority/status/project/date filter active). Gates the Reset
+ * affordance so it only shows once the user has actually changed something.
+ * Shares the four `*FilterActive` predicates with `activeFilterCount`, so a
+ * change to what counts as filtering can't update one and miss the other.
+ *
+ * The extra `dateFrom`/`dateTo` comparisons below are a deliberate, narrower
+ * exception on top of that shared base: `isDefaultControls` also treats a
+ * lingering range as non-default even with no `dateField` selected, which
+ * `dateFilterActive`/`activeFilterCount` do not (they only ask "is a filter
+ * currently applied", and an unset field applies none). That state isn't
+ * reachable through the shipped `DateFilterFields` UI, which always clears
+ * all three date fields together, and it doesn't affect filtering, since
+ * `passesDateFilter` short-circuits on `!dateField`. It is reachable by
+ * constructing `TaskControlsState` directly, which is reason enough for
+ * `isDefaultControls` to keep the extra check rather than rely on it never
+ * happening.
  */
 export const isDefaultControls = (c: TaskControlsState): boolean =>
     c.groupBy === DEFAULT_TASK_CONTROLS.groupBy &&
     c.sortBy === DEFAULT_TASK_CONTROLS.sortBy &&
     c.sortDir === DEFAULT_TASK_CONTROLS.sortDir &&
-    c.filterProjectId === DEFAULT_TASK_CONTROLS.filterProjectId &&
-    sameSet(c.filterPriorities, DEFAULT_TASK_CONTROLS.filterPriorities) &&
-    sameSet(c.filterStatuses, DEFAULT_TASK_CONTROLS.filterStatuses) &&
-    c.dateField === DEFAULT_TASK_CONTROLS.dateField &&
+    !projectFilterActive(c) &&
+    !priorityFilterActive(c) &&
+    !statusFilterActive(c) &&
+    !dateFilterActive(c) &&
     c.dateFrom === DEFAULT_TASK_CONTROLS.dateFrom &&
     c.dateTo === DEFAULT_TASK_CONTROLS.dateTo;
+
+/**
+ * How many filters are off their default. Counts filters, not selections: 7 of 9
+ * statuses checked is the default and counts zero, which is the thing the old
+ * "Status (7)" button got wrong. Group and sort are arrangement, not filtering,
+ * so they never count.
+ */
+export const activeFilterCount = (c: TaskControlsState): number =>
+    [projectFilterActive, priorityFilterActive, statusFilterActive, dateFilterActive].filter(
+        (active) => active(c)
+    ).length;
+
+export type FilterChip = {
+    key: string;
+    label: string;
+    /** The patch that returns just this filter to its default. */
+    reset: Partial<TaskControlsState>;
+};
+
+/** One removable chip per non-default filter, in bar order. */
+export const activeFilterChips = (c: TaskControlsState, projects: ProjectRead[]): FilterChip[] => {
+    const chips: FilterChip[] = [];
+
+    if (projectFilterActive(c)) {
+        const name =
+            c.filterProjectId === 'none'
+                ? 'None'
+                : (projects.find((p) => p.id === c.filterProjectId)?.name ?? 'Unknown');
+        chips.push({
+            key: 'project',
+            label: `Project: ${name}`,
+            reset: { filterProjectId: DEFAULT_TASK_CONTROLS.filterProjectId }
+        });
+    }
+
+    if (priorityFilterActive(c)) {
+        const names = PRIORITY_ORDER.filter((p) => c.filterPriorities.includes(p)).map(
+            (p) => PRIORITY_LABELS[p]!
+        );
+        chips.push({
+            key: 'priority',
+            label: `Priority: ${names.join(', ') || 'None'}`,
+            reset: { filterPriorities: [...DEFAULT_TASK_CONTROLS.filterPriorities] }
+        });
+    }
+
+    if (statusFilterActive(c)) {
+        const names = STATUS_ORDER.filter((s) => c.filterStatuses.includes(s)).map(
+            (s) => STATUS_META[s]!.label
+        );
+        chips.push({
+            key: 'status',
+            label: `Status: ${names.join(', ') || 'None'}`,
+            reset: { filterStatuses: [...DEFAULT_TASK_CONTROLS.filterStatuses] }
+        });
+    }
+
+    if (dateFilterActive(c)) {
+        const range = c.dateFrom || c.dateTo ? ` ${c.dateFrom || '…'} → ${c.dateTo || '…'}` : '';
+        chips.push({
+            key: 'date',
+            label: `Date: ${TASK_DATE_FIELD_LABELS[c.dateField!]}${range}`,
+            reset: { dateField: null, dateFrom: '', dateTo: '' }
+        });
+    }
+
+    return chips;
+};
 
 export type TaskSection = {
     key: string;
@@ -156,12 +253,38 @@ export const compareSmart = (a: TaskRead, b: TaskRead): number => {
     return a.created_date.localeCompare(b.created_date);
 };
 
-const sortTasks = (tasks: TaskRead[], sortBy: TaskSortBy, dir: TaskSortDir): TaskRead[] => {
+/**
+ * The smart ordering used by the flat surfaces: band first, then the same
+ * within-band ranking Today applies. Band ranks are precomputed per task into
+ * a Map rather than derived inside the comparator, which would recompute them
+ * O(n log n) times.
+ */
+export const compareSmartBanded = (
+    tasks: TaskRead[],
+    today: Date = startOfToday()
+): ((a: TaskRead, b: TaskRead) => number) => {
+    const ranks = new Map<number, number>(
+        tasks.map((task) => [task.id, bandRank(computeBand(task, today))])
+    );
+    return (a, b) => {
+        const rankA = ranks.get(a.id) ?? 2;
+        const rankB = ranks.get(b.id) ?? 2;
+        if (rankA !== rankB) return rankA - rankB;
+        return compareSmart(a, b);
+    };
+};
+
+export const sortTasks = (
+    tasks: TaskRead[],
+    sortBy: TaskSortBy,
+    dir: TaskSortDir,
+    today: Date = startOfToday()
+): TaskRead[] => {
     const asc = dir === 'asc';
     const sorted = [...tasks];
     switch (sortBy) {
         case 'smart':
-            sorted.sort(compareSmart);
+            sorted.sort(compareSmartBanded(sorted, today));
             if (!asc) sorted.reverse();
             break;
         case 'priority':
@@ -281,7 +404,8 @@ export const showClosedSection = (controls: TaskControlsState): boolean =>
 export const buildTaskSections = (
     tasks: TaskRead[],
     controls: TaskControlsState,
-    projectsById: Map<number, ProjectRead>
+    projectsById: Map<number, ProjectRead>,
+    today: Date = startOfToday()
 ): TaskSection[] => {
     const { active: filtered } = splitTasksForControls(tasks, controls);
 
@@ -290,12 +414,13 @@ export const buildTaskSections = (
             {
                 key: 'all',
                 label: null,
-                tasks: sortTasks(filtered, controls.sortBy, controls.sortDir)
+                tasks: sortTasks(filtered, controls.sortBy, controls.sortDir, today)
             }
         ];
     }
 
-    const sortSection = (list: TaskRead[]) => sortTasks(list, controls.sortBy, controls.sortDir);
+    const sortSection = (list: TaskRead[]) =>
+        sortTasks(list, controls.sortBy, controls.sortDir, today);
 
     if (controls.groupBy === 'priority') {
         return PRIORITY_ORDER.map((p) => ({

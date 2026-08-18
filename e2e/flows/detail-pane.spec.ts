@@ -2,7 +2,7 @@ import type { APIRequestContext, Locator, Page } from '@playwright/test';
 
 import { authHeaders, type Account } from '../fixtures/api';
 import { GOLDEN, GOLDEN_HABIT_SLUGS, GOLDEN_TASK_SLUGS } from '../fixtures/golden-profile';
-import { expect, gotoAppRoute, test } from '../fixtures/test';
+import { expect, gotoAppRoute, taskRowTitle, test } from '../fixtures/test';
 
 /**
  * The master-detail side panes: `TaskDetailPane`, `HabitDetailPane` and the
@@ -27,8 +27,7 @@ const COUNTDOWN_PANE_WIDTH = 400;
 const detailPane = (page: Page): Locator => page.getByRole('complementary');
 
 /** A task title in any list (Today bands, All tasks, project view). */
-const taskTitle = (page: Page, title: string): Locator =>
-    page.getByRole('button', { name: title, exact: true });
+const taskTitle = (page: Page, title: string): Locator => taskRowTitle(page, title);
 
 /**
  * A habit row's name link on the /habits dashboard. Deliberately not `exact`:
@@ -107,6 +106,28 @@ test('Today opens a task in a pane beside the list, and closing restores full wi
     await expect(detailPane(authedPage)).toHaveCount(0);
     await expect(listTitle).toBeVisible();
     await expect(listTitle).toHaveAttribute('aria-pressed', 'false');
+});
+
+test('clicking the row itself opens the pane, not only the title text', async ({ authedPage }) => {
+    // task-row-redesign final fixes, item 2: the whole row is the click
+    // target now, not just the title button — the due/priority columns and
+    // the empty space beside a short title must open the pane too.
+    await gotoAppRoute(authedPage, '/');
+
+    const listTitle = taskTitle(authedPage, GOLDEN.tasks.now);
+    await expect(listTitle).toBeVisible();
+    await expect(detailPane(authedPage)).toHaveCount(0);
+
+    // Three levels up from the title is the row that also holds the due and
+    // priority columns (same scoping `statusControl` uses elsewhere).
+    const row = listTitle.locator('xpath=../../..');
+    const rowBox = (await row.boundingBox())!;
+    // The right edge, at line 1's height: past the title's own hit area,
+    // where the due/priority columns and their surrounding padding sit.
+    await authedPage.mouse.click(rowBox.x + rowBox.width - 8, rowBox.y + 10);
+
+    const pane = detailPane(authedPage);
+    await expect(pane.getByRole('heading', { name: GOLDEN.tasks.now, exact: true })).toBeVisible();
 });
 
 test('selecting a different task remounts the pane with the new task', async ({ authedPage }) => {
