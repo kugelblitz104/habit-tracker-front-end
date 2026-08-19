@@ -46,6 +46,12 @@ export const GOLDEN = {
             'A deliberately very long task title that has to ellipsis-clip rather than widen its row on a narrow viewport'
     },
     habits: { daily: 'Daily habit', thrice: 'Thrice weekly habit', paused: 'Lapsed habit' },
+    /** Each habit's check-in prompt, rendered under the name on the habit detail. */
+    habitQuestions: {
+        daily: 'Did you do the daily habit?',
+        thrice: 'Did you do it three times this week?',
+        paused: 'Did you keep it up?'
+    },
     countdowns: {
         future: 'Far future countdown',
         past: 'Past countdown',
@@ -358,7 +364,7 @@ export const buildGoldenProfile = (anchor: Date) => {
             {
                 id: IDS.habitDaily,
                 name: GOLDEN.habits.daily,
-                question: 'Did you do the daily habit?',
+                question: GOLDEN.habitQuestions.daily,
                 category: 'Health',
                 color: '#33cc88',
                 frequency: 1,
@@ -373,7 +379,7 @@ export const buildGoldenProfile = (anchor: Date) => {
                 // daily habit's.
                 id: IDS.habitThrice,
                 name: GOLDEN.habits.thrice,
-                question: 'Did you do it three times this week?',
+                question: GOLDEN.habitQuestions.thrice,
                 category: 'Work',
                 color: '#3366cc',
                 frequency: 3,
@@ -386,7 +392,7 @@ export const buildGoldenProfile = (anchor: Date) => {
             {
                 id: IDS.habitPaused,
                 name: GOLDEN.habits.paused,
-                question: 'Did you keep it up?',
+                question: GOLDEN.habitQuestions.paused,
                 color: '#cc8833',
                 frequency: 1,
                 range: 1,

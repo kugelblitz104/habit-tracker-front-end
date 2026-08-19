@@ -169,6 +169,8 @@ test("Today's habit rows open the habit pane, evicting the task pane", async ({ 
     await expect(
         pane.getByRole('heading', { name: GOLDEN.habits.daily, exact: true })
     ).toBeVisible();
+    // The check-in prompt, whose only read surface is this line under the name.
+    await expect(pane.getByText(GOLDEN.habitQuestions.daily, { exact: true })).toBeVisible();
     await expect(pane.getByRole('button', { name: 'Close habit' })).toBeVisible();
     // One pane slot, shared: the task detail is gone.
     await expect(detailPane(authedPage)).toHaveCount(1);

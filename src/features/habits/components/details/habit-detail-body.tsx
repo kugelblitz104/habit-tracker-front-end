@@ -7,7 +7,7 @@ import { DeleteHabitModal } from '@/features/habits/components/modals/delete-hab
 import { useHabitDetailData } from '@/features/habits/hooks/use-habit-detail-data';
 import { useAuth } from '@/lib/auth-context';
 import { parseLocalDate } from '@/lib/date-utils';
-import { Archive, ArchiveRestore, Pencil, Trash } from 'lucide-react';
+import { Archive, ArchiveRestore, MessageCircleQuestion, Pencil, Trash } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
 
@@ -165,6 +165,21 @@ export const HabitDetailBody = ({
                     <h1 className='font-display text-[20px] font-bold tracking-[-0.01em] text-text-primary'>
                         {habit?.name}
                     </h1>
+                    {/* The check-in prompt. Quick-capture creates habits with an
+                        empty question, so only render when there is one. */}
+                    {habit?.question && (
+                        <p
+                            className='mt-1.5 flex items-start gap-1.5 font-display text-[13px] leading-snug text-text-secondary'
+                            title='Check-in prompt, used by reminders'
+                        >
+                            <MessageCircleQuestion
+                                size={13}
+                                aria-hidden
+                                className='mt-[3px] shrink-0 text-text-faint'
+                            />
+                            <span>{habit.question}</span>
+                        </p>
+                    )}
                     {habit && (
                         <div className='mt-1.5 flex flex-wrap items-center gap-2 font-mono text-[11.5px] text-[#8ba3b5]'>
                             <span
