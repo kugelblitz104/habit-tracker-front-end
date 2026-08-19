@@ -1,5 +1,5 @@
 import type { UserRead, UserUpdate } from '@/api';
-import { primaryButtonClass, primaryButtonStyle } from '@/components/ui/buttons/button-styles';
+import { Button } from '@/components/ui/buttons/button';
 import {
     fieldLabelClass,
     fieldLabelStyle,
@@ -123,9 +123,9 @@ export const UpdateUserForm = ({ user, handleUpdateUser }: UpdateUserFormProps) 
                     );
                 })}
             </div>
-            <button type='submit' className={primaryButtonClass} style={primaryButtonStyle}>
+            <Button type='submit' variant='primary' size='lg'>
                 Save changes
-            </button>
+            </Button>
         </form>
     );
 };

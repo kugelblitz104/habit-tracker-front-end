@@ -1,4 +1,5 @@
 import type { TaskRead } from '@/api';
+import { Input } from '@/components/ui/forms/input';
 import { TaskStatus } from '@/types/types';
 import type { DraggableAttributes } from '@dnd-kit/core';
 import {
@@ -117,16 +118,17 @@ export const SubtaskRow = ({
                     disabled={disabled}
                 />
                 {editing ? (
-                    <input
+                    <Input
                         ref={inputRef}
+                        tier='compact'
                         type='text'
                         value={draft}
                         onChange={(e) => setDraft(e.target.value)}
                         onKeyDown={handleKeyDown}
                         onBlur={commit}
                         aria-label='Rename subtask'
-                        className='min-w-0 flex-1 rounded-[4px] border bg-transparent px-1 py-0.5 font-mono text-[12px] text-text-primary outline-none'
-                        style={{ borderColor: 'var(--surface-input-border)' }}
+                        className='min-w-0 flex-1 bg-transparent'
+                        style={{ backgroundColor: 'transparent' }}
                     />
                 ) : (
                     <button
@@ -150,16 +152,25 @@ export const SubtaskRow = ({
         <div className='flex items-center gap-2 rounded-button px-1.5 py-1'>
             <StatusControl status={status} onSelect={onStatusChange} band='whenever' />
             {editing ? (
-                <input
+                // `style` (not className) forces the font here: the compact tier sets
+                // font-mono/12px via its own classes, and this row's display text is
+                // font-display/13px, so a class-only override risks losing to the
+                // tier depending on generated-stylesheet order. Inline style always wins.
+                <Input
                     ref={inputRef}
+                    tier='compact'
                     type='text'
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     onKeyDown={handleKeyDown}
                     onBlur={commit}
                     aria-label='Rename subtask'
-                    className='min-w-0 flex-1 rounded-[4px] border bg-transparent px-1 py-0.5 font-display text-[13px] text-text-primary outline-none'
-                    style={{ borderColor: 'var(--surface-input-border)' }}
+                    className='min-w-0 flex-1 bg-transparent'
+                    style={{
+                        backgroundColor: 'transparent',
+                        fontFamily: 'var(--font-display)',
+                        fontSize: '13px'
+                    }}
                 />
             ) : (
                 <button

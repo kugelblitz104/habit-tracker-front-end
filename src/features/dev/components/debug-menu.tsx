@@ -77,7 +77,7 @@ export const DebugMenu = () => {
         <Menu as='div' className='relative'>
             <MenuButton
                 title='Debug menu (dev only)'
-                className='flex h-7 w-7 items-center justify-center rounded-chip border text-text-muted outline-none transition-colors hover:bg-white/5 hover:text-text-secondary focus-visible:ring-2 focus-visible:ring-now-accent'
+                className='flex h-7 w-7 items-center justify-center rounded-chip border text-text-muted outline-none transition-colors pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] hover:bg-white/5 hover:text-text-secondary focus-visible:ring-2 focus-visible:ring-now-accent'
                 style={{ borderColor: 'var(--surface-card-border)' }}
             >
                 <FlaskConical size={14} />

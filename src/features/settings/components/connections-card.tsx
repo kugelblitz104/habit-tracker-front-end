@@ -172,7 +172,7 @@ export const ConnectionsCard = ({ profile }: ConnectionsCardProps) => {
                                     onClick={() => setEditingId(connection.id)}
                                     title={`Edit "${connection.name}"`}
                                     aria-label={`Edit calendar "${connection.name}"`}
-                                    className='rounded-[8px] p-1.5 text-text-faint transition-colors hover:text-text-secondary'
+                                    className='inline-flex min-h-[28px] min-w-[28px] items-center justify-center rounded-[8px] p-1.5 text-text-faint transition-colors pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] hover:text-text-secondary'
                                 >
                                     <Pencil size={13} />
                                 </button>
@@ -181,7 +181,7 @@ export const ConnectionsCard = ({ profile }: ConnectionsCardProps) => {
                                     onClick={() => setConfirmDeleteId(connection.id)}
                                     title={`Remove "${connection.name}"`}
                                     aria-label={`Remove calendar "${connection.name}"`}
-                                    className='mr-1 rounded-[8px] p-1.5 text-text-faint transition-colors hover:text-danger'
+                                    className='mr-1 inline-flex min-h-[28px] min-w-[28px] items-center justify-center rounded-[8px] p-1.5 text-text-faint transition-colors pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] hover:text-danger'
                                 >
                                     <Trash2 size={13} />
                                 </button>

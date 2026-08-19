@@ -4,6 +4,7 @@ import { ChevronRight } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { upwardFrom } from '../utils/task-bands';
 import type { SluggedEntity } from '@/lib/entity-ref';
+import { Button } from '@/components/ui/buttons/button';
 import { SectionHeader } from './section-header';
 import { TaskRow, type ActiveBand } from './task-row';
 
@@ -119,6 +120,8 @@ export const BandSection = ({
                             }
                             onStartTimer={onStartTimer ? () => onStartTimer(task.id) : undefined}
                             openUpward={i >= upwardIdx}
+                            isFirst={i === 0}
+                            isLast={i === tasks.length - 1}
                         />
                     </div>
                 ))}
@@ -129,11 +132,12 @@ export const BandSection = ({
         <section className='mb-[30px]' style={isQuiet ? { opacity: 'var(--quiet)' } : undefined}>
             <div className='mb-2.5 flex items-center gap-2'>
                 {collapsible ? (
-                    <button
-                        type='button'
+                    <Button
+                        variant='subtle'
+                        size='sm'
                         onClick={onToggleCollapsed}
                         aria-expanded={!collapsed}
-                        className='flex items-center gap-2 rounded-[6px] py-0.5 pr-1 transition-colors hover:opacity-80'
+                        className='hover:opacity-80'
                     >
                         {label}
                         <ChevronRight
@@ -142,7 +146,7 @@ export const BandSection = ({
                                 collapsed ? '' : 'rotate-90'
                             }`}
                         />
-                    </button>
+                    </Button>
                 ) : (
                     label
                 )}

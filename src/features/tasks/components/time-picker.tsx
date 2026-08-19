@@ -1,3 +1,4 @@
+import { Input } from '@/components/ui/forms/input';
 import { useEffect, useId, useRef, useState } from 'react';
 
 type TimePickerProps = {
@@ -104,7 +105,7 @@ export const TimePicker = ({
 
     return (
         <>
-            <input
+            <Input
                 id={id}
                 type='text'
                 inputMode='numeric'

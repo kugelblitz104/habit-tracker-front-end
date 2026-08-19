@@ -1,4 +1,5 @@
 import type { ProjectRead } from '@/api';
+import { Button } from '@/components/ui/buttons/button';
 import { useProjects } from '@/features/projects/api/get-projects';
 import { TaskTimeLog } from '@/features/time-entries/components/task-time-log';
 import { useAuth } from '@/lib/auth-context';
@@ -92,12 +93,16 @@ export const TaskDetailBody = ({
                     <h2 className='font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-text-muted'>
                         Edit task
                     </h2>
+                    {/* Raw <button>, not <Button>: the icon variant's rounded-button
+                        border replaces the deliberate rounded-full shape and shifts
+                        the hover target from text-secondary to text-primary. Floor
+                        added directly instead. */}
                     <button
                         type='button'
                         onClick={() => setIsEditing(false)}
                         aria-label='Back to task'
                         title='Back to task'
-                        className='shrink-0 rounded-full p-1 text-text-faint transition-colors hover:text-text-secondary'
+                        className='shrink-0 inline-flex items-center justify-center rounded-full p-1 text-text-faint transition-colors hover:text-text-secondary min-h-[28px] min-w-[28px] pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]'
                     >
                         <X size={16} />
                     </button>
@@ -159,16 +164,21 @@ export const TaskDetailBody = ({
                 className='flex justify-start border-t pt-4'
                 style={{ borderColor: 'rgba(255,255,255,.06)' }}
             >
-                <button
-                    type='button'
+                <Button
+                    variant='ghost'
+                    size='sm'
                     onClick={handleDelete}
                     disabled={isDeletePending}
-                    className='inline-flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11.5px] transition-colors hover:brightness-125 disabled:cursor-not-allowed disabled:opacity-50'
-                    style={{ borderColor: 'var(--danger-border)', color: 'var(--color-danger)' }}
+                    className='font-mono hover:brightness-125'
+                    style={{
+                        fontSize: '11.5px',
+                        borderColor: 'var(--danger-border)',
+                        color: 'var(--color-danger)'
+                    }}
                 >
                     <Trash2 size={13} />
                     {isDeletePending ? 'Deleting…' : 'Delete task'}
-                </button>
+                </Button>
             </div>
         </div>
     );

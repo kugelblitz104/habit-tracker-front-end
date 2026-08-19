@@ -1,10 +1,5 @@
-import {
-    ghostButtonBorder,
-    ghostButtonClass,
-    primaryButtonClass,
-    primaryButtonStyle
-} from '@/components/ui/buttons/button-styles';
-import { HexColorSwatchInput } from '@/components/ui/forms/hex-color-swatch-input';
+import { Button } from '@/components/ui/buttons/button';
+import { ColorPicker } from '@/components/ui/forms/color-picker';
 import { themedInputClass, themedInputStyle } from '@/components/ui/forms/input-styles';
 import { useState } from 'react';
 
@@ -68,15 +63,17 @@ export const NewProfileForm = ({ pending, onCreate, onCancel }: NewProfileFormPr
                         Gradient
                     </span>
                     <span className='flex items-center gap-1.5'>
-                        <HexColorSwatchInput
-                            value={colorStart}
-                            onChange={setColorStart}
+                        <ColorPicker
+                            mode='inline'
+                            color={colorStart}
+                            onColorChange={setColorStart}
                             swatchLabel='Gradient start color'
                             swatchSize={38}
                         />
-                        <HexColorSwatchInput
-                            value={colorEnd}
-                            onChange={setColorEnd}
+                        <ColorPicker
+                            mode='inline'
+                            color={colorEnd}
+                            onColorChange={setColorEnd}
                             swatchLabel='Gradient end color'
                             swatchSize={38}
                         />
@@ -90,23 +87,17 @@ export const NewProfileForm = ({ pending, onCreate, onCancel }: NewProfileFormPr
                     </span>
                 </label>
                 <span className='flex items-center gap-1.5'>
-                    <button
-                        type='button'
+                    <Button
+                        variant='primary'
+                        size='lg'
                         onClick={handleCreate}
                         disabled={!name.trim() || pending}
-                        className={primaryButtonClass}
-                        style={primaryButtonStyle}
                     >
                         Create profile
-                    </button>
-                    <button
-                        type='button'
-                        onClick={onCancel}
-                        className={ghostButtonClass}
-                        style={{ borderColor: ghostButtonBorder }}
-                    >
+                    </Button>
+                    <Button variant='ghost' size='md' onClick={onCancel}>
                         Cancel
-                    </button>
+                    </Button>
                 </span>
             </div>
         </div>

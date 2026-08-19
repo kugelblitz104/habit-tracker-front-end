@@ -114,7 +114,8 @@ export const TaskRowMeta = ({
                     <Link
                         to={projectDetailPath(project)}
                         state={{ from: pathname }}
-                        className='transition-opacity hover:opacity-80'
+                        data-target-exempt='inline'
+                        className='inline-flex min-h-[24px] items-center transition-opacity hover:opacity-80'
                         onClick={(e) => e.stopPropagation()}
                     >
                         {project.name}
@@ -134,7 +135,8 @@ export const TaskRowMeta = ({
                         onToggleSubtasks();
                     }}
                     aria-expanded={subtasksOpen}
-                    className='inline-flex items-center gap-1 hover:opacity-80'
+                    data-target-exempt='inline'
+                    className='inline-flex min-h-[24px] items-center gap-1 hover:opacity-80'
                     title={`${subtaskDoneCount} of ${subtaskCount} subtasks done`}
                 >
                     <ListChecks size={12} />
@@ -166,7 +168,8 @@ export const TaskRowMeta = ({
                         onToggleNotes();
                     }}
                     aria-expanded={notesOpen}
-                    className='inline-flex items-center gap-0.5 hover:opacity-80'
+                    data-target-exempt='inline'
+                    className='inline-flex min-h-[24px] items-center gap-0.5 hover:opacity-80'
                 >
                     notes
                     <ChevronRight
@@ -186,7 +189,8 @@ export const TaskRowMeta = ({
                     target='_blank'
                     rel='noreferrer'
                     onClick={(e) => e.stopPropagation()}
-                    className='inline-flex items-center gap-1 hover:opacity-80'
+                    data-target-exempt='inline'
+                    className='inline-flex min-h-[24px] items-center gap-1 hover:opacity-80'
                 >
                     <Link2 size={13} />
                     {task.external_ref}

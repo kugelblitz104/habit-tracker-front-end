@@ -1,10 +1,5 @@
-import {
-    ghostButtonBorder,
-    ghostButtonClass,
-    primaryButtonClass,
-    primaryButtonStyle
-} from '@/components/ui/buttons/button-styles';
-import { HexColorSwatchInput } from '@/components/ui/forms/hex-color-swatch-input';
+import { Button } from '@/components/ui/buttons/button';
+import { ColorPicker } from '@/components/ui/forms/color-picker';
 import { themedInputClass, themedInputStyle } from '@/components/ui/forms/input-styles';
 import { useState } from 'react';
 
@@ -128,9 +123,10 @@ export const ConnectionForm = ({
                 </label>
             </div>
             <div className='mt-3 flex flex-wrap items-center gap-3'>
-                <HexColorSwatchInput
-                    value={values.color}
-                    onChange={(color) => set({ color })}
+                <ColorPicker
+                    mode='inline'
+                    color={values.color}
+                    onColorChange={(color) => set({ color })}
                     swatchLabel='Calendar color'
                     hexLabel='Calendar color hex'
                     error={
@@ -138,23 +134,12 @@ export const ConnectionForm = ({
                     }
                 />
                 <span className='ml-auto flex items-center gap-1.5'>
-                    <button
-                        type='button'
-                        onClick={handleSubmit}
-                        disabled={pending}
-                        className={primaryButtonClass}
-                        style={primaryButtonStyle}
-                    >
+                    <Button variant='primary' size='lg' onClick={handleSubmit} disabled={pending}>
                         {submitLabel}
-                    </button>
-                    <button
-                        type='button'
-                        onClick={onCancel}
-                        className={ghostButtonClass}
-                        style={{ borderColor: ghostButtonBorder }}
-                    >
+                    </Button>
+                    <Button variant='ghost' size='md' onClick={onCancel}>
                         Cancel
-                    </button>
+                    </Button>
                 </span>
             </div>
         </div>

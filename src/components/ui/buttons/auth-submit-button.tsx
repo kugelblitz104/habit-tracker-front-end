@@ -1,5 +1,4 @@
-import { primaryButtonClass, primaryButtonStyle } from '@/components/ui/buttons/button-styles';
-import { Button } from '@headlessui/react';
+import { Button } from '@/components/ui/buttons/button';
 
 type AuthSubmitButtonProps = {
     isSubmitting: boolean;
@@ -18,12 +17,7 @@ export const AuthSubmitButton = ({
     submittingLabel,
     label
 }: AuthSubmitButtonProps) => (
-    <Button
-        disabled={isSubmitting}
-        type='submit'
-        className={`${primaryButtonClass} flex w-full items-center justify-center gap-2`}
-        style={primaryButtonStyle}
-    >
+    <Button disabled={isSubmitting} type='submit' variant='primary' size='lg' className='w-full'>
         {isSubmitting && (
             <span
                 aria-hidden='true'

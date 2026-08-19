@@ -1,4 +1,4 @@
-import { ghostButtonBorder, ghostButtonClass } from '@/components/ui/buttons/button-styles';
+import { Button } from '@/components/ui/buttons/button';
 import type { ReactNode } from 'react';
 
 type InlineConfirmActionProps = {
@@ -20,7 +20,7 @@ type InlineConfirmActionProps = {
 };
 
 const baseConfirmButtonClass =
-    'rounded-[8px] px-2.5 text-[12px] font-semibold transition-opacity hover:opacity-90 disabled:opacity-50';
+    'min-h-[28px] rounded-[8px] px-2.5 text-[12px] font-semibold transition-opacity pointer-coarse:min-h-[44px] hover:opacity-90 disabled:opacity-50';
 
 /**
  * Inline "Delete? / Confirm / Cancel" mini-toolbar shared by the profiles and
@@ -60,14 +60,9 @@ export const InlineConfirmAction = ({
             >
                 {confirmLabel}
             </button>
-            <button
-                type='button'
-                onClick={onCancel}
-                className={ghostButtonClass}
-                style={{ borderColor: ghostButtonBorder }}
-            >
+            <Button variant='ghost' size='md' onClick={onCancel}>
                 {cancelLabel}
-            </button>
+            </Button>
         </span>
     );
 };

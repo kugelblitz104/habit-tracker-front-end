@@ -1,13 +1,7 @@
+import { Input } from '@/components/ui/forms/input';
 import { parseLocalDate, toLocalDateString } from '@/lib/date-utils';
 import { formatShortDate } from '../../utils/task-format';
-import {
-    DATE_QUICK_SETS,
-    Divider,
-    SubHeader,
-    dateInputClass,
-    dateInputStyle,
-    itemClass
-} from './shared';
+import { DATE_QUICK_SETS, Divider, SubHeader, itemClass } from './shared';
 
 const quickDate = (offsetDays: number): string => {
     const d = new Date();
@@ -62,13 +56,12 @@ export const DateSubmenu = ({
             );
         })}
         <div className='px-2 py-1.5'>
-            <input
+            <Input
                 type='date'
                 defaultValue={currentDate ?? ''}
                 onChange={(e) => e.target.value && onPick(e.target.value)}
                 aria-label={dateAriaLabel}
-                className={dateInputClass}
-                style={dateInputStyle}
+                style={{ colorScheme: 'dark' }}
             />
         </div>
         {currentDate && onClear && (

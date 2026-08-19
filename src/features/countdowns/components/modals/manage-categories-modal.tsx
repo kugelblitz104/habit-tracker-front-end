@@ -1,5 +1,6 @@
 import type { CountdownCategoryRead } from '@/api';
 import { BaseModal } from '@/components/ui/modals/base-modal';
+import { Button } from '@/components/ui/buttons/button';
 import { InlineConfirmAction } from '@/components/ui/inline-confirm-action';
 import { QueryState } from '@/components/ui/query-state';
 import { compactFieldClass, compactFieldStyle } from '@/components/ui/forms/form-field-styles';
@@ -206,13 +207,14 @@ export const ManageCategoriesModal = ({
                 </ul>
             )}
             <div className='mt-4 flex justify-end'>
-                <button
-                    type='button'
+                <Button
+                    size='sm'
+                    variant='subtle'
                     onClick={onClose}
-                    className='rounded-button px-3.5 py-1.5 font-mono text-[11.5px] uppercase tracking-[0.12em] text-text-muted transition-colors hover:text-text-secondary'
+                    className='font-mono uppercase tracking-[0.12em] text-text-muted'
                 >
                     Close
-                </button>
+                </Button>
             </div>
         </BaseModal>
     );

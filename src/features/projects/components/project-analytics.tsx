@@ -161,7 +161,7 @@ export const ProjectAnalytics = ({
                 type='button'
                 onClick={toggle}
                 aria-expanded={!collapsed}
-                className='flex w-full items-center justify-between'
+                className='flex min-h-[24px] w-full items-center justify-between pointer-coarse:min-h-[44px]'
             >
                 <h2 className={sectionLabelClass}>Analytics</h2>
                 <ChevronDown

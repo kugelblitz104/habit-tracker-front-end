@@ -131,7 +131,7 @@ export const TaskDetailHeader = ({
 
             {reasons.length > 0 && (
                 <div
-                    className='mt-3 flex flex-wrap items-center gap-[9px] rounded-cell px-[11px] py-[7px]'
+                    className='flex flex-wrap items-center gap-[9px] rounded-cell px-[11px] py-[7px]'
                     style={{ backgroundColor: 'var(--danger-bg)' }}
                 >
                     <span
@@ -166,7 +166,7 @@ export const TaskDetailHeader = ({
                 the first thing to read, before its status/due/priority facts. */}
             {blockReason && (
                 <div
-                    className='mt-3 flex items-start gap-2 rounded-button border px-3 py-2'
+                    className='flex items-start gap-2 rounded-button border px-3 py-2'
                     style={{
                         borderColor: 'var(--danger-border)',
                         backgroundColor: 'var(--danger-bg)',
@@ -181,7 +181,7 @@ export const TaskDetailHeader = ({
             )}
 
             <div
-                className='mt-[13px] flex flex-wrap gap-[20px] border-t pt-[12px]'
+                className=' flex flex-wrap gap-[20px] border-t pt-[12px]'
                 style={{ borderColor: 'var(--surface-card-border)' }}
             >
                 <Field label='Status'>

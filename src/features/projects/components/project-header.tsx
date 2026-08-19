@@ -1,5 +1,6 @@
 import type { ProjectRead } from '@/api';
 import { BackLink } from '@/components/ui/back-link';
+import { Button } from '@/components/ui/buttons/button';
 import { Pencil } from 'lucide-react';
 
 type ProjectHeaderProps = {
@@ -54,16 +55,17 @@ export const ProjectHeader = ({
                 )}
             </div>
             {project && (
-                <button
-                    type='button'
+                <Button
+                    variant='icon'
+                    size='sm'
                     onClick={onEdit}
                     aria-label='Edit project'
                     title='Edit project'
-                    className='shrink-0 rounded-button border p-1.5 text-text-secondary transition-colors hover:text-text-primary'
+                    className='shrink-0'
                     style={{ borderColor: 'var(--habit-container-border)' }}
                 >
                     <Pencil size={14} />
-                </button>
+                </Button>
             )}
         </div>
 

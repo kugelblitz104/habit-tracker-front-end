@@ -342,7 +342,7 @@ export const TaskCaptureBar = ({
                     disabled={!canAct}
                     aria-label='Add details'
                     title='Add details'
-                    className='shrink-0 rounded-full p-0.5 text-text-muted transition-colors hover:text-text-primary disabled:cursor-not-allowed'
+                    className='inline-flex min-h-[28px] min-w-[28px] shrink-0 items-center justify-center rounded-full p-0.5 text-text-muted transition-colors pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] hover:text-text-primary disabled:cursor-not-allowed'
                 >
                     <Plus size={18} />
                 </button>
@@ -374,7 +374,7 @@ export const TaskCaptureBar = ({
                 {/* Token cheatsheet — mirrors the placeholder examples. */}
                 <Popover className='relative shrink-0'>
                     <PopoverButton
-                        className='rounded-full p-0.5 text-text-faint outline-none transition-colors hover:text-text-secondary focus-visible:ring-1 focus-visible:ring-now-accent'
+                        className='inline-flex min-h-[28px] min-w-[28px] items-center justify-center rounded-full p-0.5 text-text-faint outline-none transition-colors pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] hover:text-text-secondary focus-visible:ring-1 focus-visible:ring-now-accent'
                         aria-label='Quick-add token help'
                         title='Quick-add tokens'
                     >

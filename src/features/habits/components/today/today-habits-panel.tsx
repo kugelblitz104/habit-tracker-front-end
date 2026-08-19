@@ -130,7 +130,10 @@ export const TodayHabitsPanel = ({ profile, onSelectHabit }: TodayHabitsPanelPro
                             checked={showAutoSkipped}
                             onChange={setShowAutoSkipped}
                             aria-label='Show auto-skipped habits'
-                            className='relative inline-flex h-[18px] w-8 shrink-0 items-center rounded-full border transition-colors outline-none focus-visible:opacity-80'
+                            // hit-target: last element in this row, with only the
+                            // (non-target) caption text to its left, so the
+                            // expanded area has no neighboring control to collide with.
+                            className='hit-target relative inline-flex h-[18px] w-8 shrink-0 items-center rounded-full border transition-colors outline-none focus-visible:opacity-80'
                             style={{
                                 borderColor: showAutoSkipped
                                     ? 'var(--color-habit-accent)'

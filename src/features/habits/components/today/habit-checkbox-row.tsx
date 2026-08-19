@@ -99,7 +99,11 @@ export const HabitCheckboxRow = ({
                 type='button'
                 onClick={toggle}
                 aria-label={`Toggle status for ${habit.name}`}
-                className='shrink-0 outline-none focus-visible:opacity-80'
+                // hit-target rather than a Button conversion: the status glyph's
+                // 16px box and per-status colors live on the inner span, and a
+                // Button variant's border/background chrome would visually grow
+                // this isolated control on every row of the Today panel.
+                className='hit-target shrink-0 outline-none focus-visible:opacity-80'
             >
                 <span
                     className='flex h-4 w-4 items-center justify-center rounded-[5px] border'
@@ -111,6 +115,9 @@ export const HabitCheckboxRow = ({
             <Link
                 to={habitDetailPath(habit)}
                 state={{ from: 'today' }}
+                // Its height is the line box of its own 13px label, and growing
+                // it to 44 would set the height of every habit row on Today.
+                data-target-exempt='inline'
                 onClick={(e) => {
                     // Wide master-detail: open the side pane in place instead of
                     // navigating (mirrors habit-list-element). When the callback
@@ -120,7 +127,7 @@ export const HabitCheckboxRow = ({
                         onSelectHabit(habit.id);
                     }
                 }}
-                className={`min-w-0 flex-1 truncate font-display text-[13px] underline-offset-2 outline-none transition-opacity hover:underline focus-visible:underline ${
+                className={`flex min-h-[24px] min-w-0 flex-1 items-center truncate font-display text-[13px] underline-offset-2 outline-none transition-opacity hover:underline focus-visible:underline ${
                     isSkipped ? 'line-through' : ''
                 }`}
                 style={{ color: habit.color }}

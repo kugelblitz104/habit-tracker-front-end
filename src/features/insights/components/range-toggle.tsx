@@ -33,7 +33,7 @@ export const RangeToggle = ({
                         role='tab'
                         aria-selected={active}
                         onClick={() => onChange(opt.value)}
-                        className='rounded-chip px-3 py-1.5 font-display text-[13px] font-semibold transition-opacity hover:opacity-90'
+                        className='min-h-[30px] rounded-chip px-3 py-1.5 font-display text-[13px] font-semibold transition-opacity pointer-coarse:min-h-[44px] hover:opacity-90'
                         style={
                             active
                                 ? {

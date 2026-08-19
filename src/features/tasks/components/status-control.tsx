@@ -43,7 +43,11 @@ export const StatusControl = ({
             <PopoverButton
                 disabled={disabled}
                 aria-label={`Status: ${current.label}. Change status`}
-                className='flex items-center justify-center rounded-full outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-now-accent disabled:cursor-not-allowed disabled:opacity-50'
+                // hit-target rather than a Button conversion: the per-status color
+                // lives on the glyph, not the button, and Button's variant chrome
+                // (border/background) would visually grow an isolated round glyph
+                // that every task row repeats.
+                className='hit-target flex items-center justify-center rounded-full outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-now-accent disabled:cursor-not-allowed disabled:opacity-50'
             >
                 <StatusGlyph status={status} size={size} color={current.color} />
             </PopoverButton>

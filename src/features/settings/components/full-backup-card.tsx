@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/buttons/button';
 import { exportProfileBackup, importProfileBackup } from '@/features/settings/api/profile-backup';
 import { apiErrorMessage } from '@/lib/api-error-message';
 import { useAuth } from '@/lib/auth-context';
@@ -6,11 +7,6 @@ import { Download, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { SettingsCard } from './settings-card';
-
-const dataButtonClass =
-    'inline-flex items-center gap-2 rounded-[9px] border px-[15px] py-[9px] text-[13px] ' +
-    'text-text-secondary transition-colors hover:text-text-primary ' +
-    'disabled:cursor-not-allowed disabled:opacity-50';
 
 const dataButtonStyle = {
     backgroundColor: 'rgba(255,255,255,.05)',
@@ -87,26 +83,22 @@ export const FullBackupCard = () => {
                 aren&apos;t included &mdash; re-enter them after importing.
             </div>
             <div className='flex flex-wrap gap-2.5'>
-                <button
-                    type='button'
+                <Button
                     onClick={handleImportClick}
                     disabled={isImporting || isExporting}
-                    className={dataButtonClass}
                     style={dataButtonStyle}
                 >
                     <Upload size={14} />
                     Import backup
-                </button>
-                <button
-                    type='button'
+                </Button>
+                <Button
                     onClick={handleExport}
                     disabled={isExporting || isImporting || !activeProfile}
-                    className={dataButtonClass}
                     style={dataButtonStyle}
                 >
                     <Download size={14} />
                     Export backup
-                </button>
+                </Button>
             </div>
             <input
                 ref={fileInputRef}

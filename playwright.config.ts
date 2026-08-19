@@ -57,6 +57,18 @@ export default defineConfig({
             name: 'narrow',
             use: { ...devices['Desktop Chrome'], viewport: { width: 390, height: 844 } },
             grep: /@narrow/
+        },
+        {
+            // Coarse-pointer probe for the 44px target floor. Separate from
+            // `narrow` because `hasTouch` changes event dispatch, which would
+            // put every existing spec at risk. Only @touch specs run here.
+            name: 'touch',
+            use: {
+                ...devices['Desktop Chrome'],
+                viewport: { width: 390, height: 844 },
+                hasTouch: true
+            },
+            grep: /@touch/
         }
     ],
     webServer: {

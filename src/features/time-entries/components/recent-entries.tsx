@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/buttons/button';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useTimeEntries, useTimeEntrySummary } from '../api/get-time-entries';
@@ -24,16 +25,17 @@ export const RecentEntries = ({ profileId }: RecentEntriesProps) => {
                 variant='recent'
                 title='Recent entries'
                 headerActions={
-                    <button
-                        type='button'
+                    <Button
+                        variant='subtle'
+                        size='sm'
                         onClick={() => setAddOpen(true)}
                         aria-label='Add time entry'
                         title='Add entry'
-                        className='rounded-button border p-1 text-text-faint transition-colors hover:text-text-secondary'
+                        className='border min-w-[28px] pointer-coarse:min-w-[44px]'
                         style={{ borderColor: 'var(--surface-input-border)' }}
                     >
-                        <Plus size={12} />
-                    </button>
+                        <Plus size={14} />
+                    </Button>
                 }
                 entriesQuery={entriesQuery}
                 totalSeconds={summaryQuery.data?.total_seconds ?? 0}

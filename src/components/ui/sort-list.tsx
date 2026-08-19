@@ -23,7 +23,7 @@ export const SortList = ({
             <Listbox value={selectedSort} onChange={onSortChange}>
                 <div className='relative w-full md:w-64'>
                     <ListboxButton
-                        className='relative flex w-full justify-start rounded-button border px-3 py-2 font-mono text-[12px] text-text-secondary outline-none transition-colors focus-visible:ring-1 focus-visible:ring-[var(--color-habit-accent)]'
+                        className='relative flex min-h-[36px] w-full items-center justify-start rounded-button border px-3 py-2 font-mono text-[12px] text-text-secondary outline-none transition-colors pointer-coarse:min-h-[44px] focus-visible:ring-1 focus-visible:ring-[var(--color-habit-accent)]'
                         style={{
                             backgroundColor: 'var(--surface-input-bg)',
                             borderColor: 'var(--surface-input-border)'

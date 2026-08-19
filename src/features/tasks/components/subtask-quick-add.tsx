@@ -1,3 +1,4 @@
+import { Input } from '@/components/ui/forms/input';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-toastify';
@@ -90,7 +91,7 @@ export const SubtaskQuickAdd = ({ profileId, parentId, point, onClose }: Subtask
                     </span>
                 )}
             </div>
-            <input
+            <Input
                 type='text'
                 autoFocus
                 value={title}
@@ -107,11 +108,7 @@ export const SubtaskQuickAdd = ({ profileId, parentId, point, onClose }: Subtask
                 }}
                 placeholder='Subtask title… (Enter)'
                 aria-label='New subtask title'
-                className='w-full rounded-button border px-2 py-1.5 font-mono text-[12px] text-text-secondary outline-none placeholder:text-text-faint focus-visible:ring-1 focus-visible:ring-now-accent disabled:opacity-50'
-                style={{
-                    backgroundColor: 'var(--surface-input-bg)',
-                    borderColor: 'var(--surface-input-border)'
-                }}
+                className='disabled:opacity-50'
             />
         </div>
     );

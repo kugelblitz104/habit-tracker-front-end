@@ -1,4 +1,4 @@
-import { formFieldClass, formFieldStyle } from '@/components/ui/forms/form-field-styles';
+import { Select } from '@/components/ui/forms/select';
 import { SelectOption } from '@/components/ui/forms/select-option';
 
 export type EntitySelectOption = {
@@ -32,13 +32,12 @@ export const EntitySelect = ({
     options,
     placeholder
 }: EntitySelectProps) => (
-    <select
+    <Select
         id={id}
         value={value ?? ''}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))}
-        className={`${formFieldClass} disabled:cursor-not-allowed disabled:opacity-60`}
-        style={{ ...formFieldStyle, colorScheme: 'dark' }}
+        className='disabled:cursor-not-allowed disabled:opacity-60'
     >
         <SelectOption value=''>{placeholder}</SelectOption>
         {options.map((option) => (
@@ -46,5 +45,5 @@ export const EntitySelect = ({
                 {option.indent ? `  └ ${option.label}` : option.label}
             </SelectOption>
         ))}
-    </select>
+    </Select>
 );

@@ -1,9 +1,4 @@
-import {
-    ghostButtonBorder,
-    ghostButtonClass,
-    primaryButtonClass,
-    primaryButtonStyle
-} from '@/components/ui/buttons/button-styles';
+import { Button } from '@/components/ui/buttons/button';
 import { themedInputClass, themedInputStyle } from '@/components/ui/forms/input-styles';
 import { useState } from 'react';
 
@@ -134,7 +129,10 @@ export const IntegrationForm = ({
                                 key={value}
                                 type='button'
                                 onClick={() => set({ provider: value })}
-                                className='rounded-[8px] border px-3 py-1.5 text-[12.5px] transition-colors'
+                                // Not a <Button variant>: its active-state tint
+                                // is a meaningful colour no ghost/subtle variant
+                                // reproduces, so the floor is added directly.
+                                className='min-h-[36px] rounded-[8px] border px-3 py-1.5 text-[12.5px] transition-colors pointer-coarse:min-h-[44px]'
                                 style={{
                                     borderColor: active
                                         ? 'rgba(120,168,205,.5)'
@@ -290,23 +288,12 @@ export const IntegrationForm = ({
             </div>
 
             <div className='mt-3 flex items-center justify-end gap-1.5'>
-                <button
-                    type='button'
-                    onClick={handleSubmit}
-                    disabled={pending}
-                    className={primaryButtonClass}
-                    style={primaryButtonStyle}
-                >
+                <Button variant='primary' size='lg' onClick={handleSubmit} disabled={pending}>
                     {submitLabel}
-                </button>
-                <button
-                    type='button'
-                    onClick={onCancel}
-                    className={ghostButtonClass}
-                    style={{ borderColor: ghostButtonBorder }}
-                >
+                </Button>
+                <Button variant='ghost' size='md' onClick={onCancel}>
                     Cancel
-                </button>
+                </Button>
             </div>
         </div>
     );

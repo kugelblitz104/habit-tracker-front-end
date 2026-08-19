@@ -1,4 +1,5 @@
 import { useRef, type KeyboardEvent, type Ref } from 'react';
+import { Input } from '@/components/ui/forms/input';
 import type { TaskInputSegment, TaskTokenType } from '../utils/parse-task-input';
 
 /**
@@ -21,6 +22,12 @@ const TOKEN_COLOR: Record<TaskTokenType, string> = {
 
 // Shared with the input so the overlay glyphs sit exactly under the real text.
 const SHARED_TEXT_CLASS = 'font-display text-[14px] leading-normal tracking-normal';
+
+// Shared with the input's `task` tier (border + px-2.5/py-1.5) so the overlay's
+// content box has the same left offset as the real input's; a tier change here
+// needs the same change in the overlay's className below. Pinned against
+// `fieldClass('task')` by field-tiers.test.ts.
+export const SHARED_BOX_CLASS = 'border border-transparent px-2.5 py-1.5';
 
 type HighlightedTaskInputProps = {
     value: string;
@@ -67,7 +74,7 @@ export const HighlightedTaskInput = ({
             <div
                 ref={overlayRef}
                 aria-hidden='true'
-                className={`pointer-events-none absolute inset-0 overflow-hidden whitespace-pre ${SHARED_TEXT_CLASS}`}
+                className={`pointer-events-none absolute inset-0 flex items-center overflow-hidden whitespace-pre ${SHARED_BOX_CLASS} ${SHARED_TEXT_CLASS}`}
             >
                 {value.length === 0 ? (
                     <span className='text-text-faint'>{placeholder}</span>
@@ -86,8 +93,12 @@ export const HighlightedTaskInput = ({
                     ))
                 )}
             </div>
-            <input
+            {/* `style` (not className) forces color/background/border/font here: it's
+                the only thing guaranteed to beat the task tier's own classes and its
+                inline background/border colors, which className ordering can't. */}
+            <Input
                 ref={inputRef}
+                tier='task'
                 type='text'
                 value={value}
                 disabled={disabled}
@@ -104,8 +115,15 @@ export const HighlightedTaskInput = ({
                 }
                 onScroll={(e) => syncScroll(e.currentTarget)}
                 placeholder={placeholder}
-                className={`relative w-full bg-transparent whitespace-pre text-transparent caret-text-primary outline-none ${SHARED_TEXT_CLASS}`}
-                style={{ caretColor: 'var(--color-text-primary)' }}
+                className={`relative w-full bg-transparent whitespace-pre caret-text-primary ${SHARED_TEXT_CLASS}`}
+                style={{
+                    caretColor: 'var(--color-text-primary)',
+                    color: 'transparent',
+                    backgroundColor: 'transparent',
+                    borderColor: 'transparent',
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '14px'
+                }}
             />
         </div>
     );

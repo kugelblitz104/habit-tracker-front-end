@@ -24,10 +24,10 @@ type ConfirmModalProps = {
 };
 
 const cancelClass =
-    'rounded-button px-3.5 py-1.5 font-mono text-[11.5px] uppercase tracking-[0.12em] text-text-muted transition-colors hover:text-text-secondary';
+    'min-h-[28px] rounded-button px-3.5 py-1.5 font-mono text-[11.5px] uppercase tracking-[0.12em] text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary';
 
 const confirmClass =
-    'rounded-button px-3.5 py-1.5 font-mono text-[11.5px] font-semibold uppercase tracking-[0.12em] transition-opacity hover:opacity-90';
+    'min-h-[28px] rounded-button px-3.5 py-1.5 font-mono text-[11.5px] font-semibold uppercase tracking-[0.12em] transition-opacity pointer-coarse:min-h-[44px] hover:opacity-90';
 
 /**
  * Confirm dialog on top of BaseModal: a body plus a Cancel / confirm button

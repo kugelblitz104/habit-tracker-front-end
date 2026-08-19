@@ -3,6 +3,7 @@ import {
     getCountdown,
     type CountdownRepeat
 } from '@/features/countdowns/utils/countdown';
+import { Button } from '@/components/ui/buttons/button';
 import { useAuth } from '@/lib/auth-context';
 import { useNow } from '@/lib/use-now';
 import { useEffect, useMemo, useState } from 'react';
@@ -21,7 +22,7 @@ import { CountdownCard } from './countdown-card';
 const HIDDEN_KEY = 'countdown_hidden_categories';
 
 /**
- * Today's "Countdowns" section — unboxed like the schedule/habits sections.
+ * Today's "Countdowns" section - unboxed like the schedule/habits sections.
  * Countdowns (standalone or task-linked) are grouped by category and rendered
  * as cards with the days-remaining number up front. A segmented control sets
  * the look-ahead range and a legend toggles which category groups are shown
@@ -117,20 +118,31 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
                 <h2 className='font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-text-muted'>
                     Countdowns
                 </h2>
+                {/* gap-1 (not the original gap-0.5) so the grown `sm` buttons don't
+                    visually touch - these grow in place rather than via
+                    expandHitArea, since eight overlapping 44px hit areas in one
+                    pill would misroute taps. */}
                 <span
-                    className='flex items-center gap-0.5 rounded-chip border p-0.5'
+                    className='flex items-center gap-1 rounded-chip border p-0.5'
                     style={{ borderColor: 'var(--surface-input-border)' }}
                 >
                     {COUNTDOWN_RANGE_PRESETS.map((preset) => {
                         const selected = preset.days === windowDays;
                         return (
-                            <button
+                            <Button
                                 key={preset.label}
-                                type='button'
+                                variant='subtle'
+                                size='sm'
                                 onClick={() => changeWindow(preset.days)}
                                 aria-pressed={selected}
-                                className='rounded-chip px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] transition-colors'
+                                className='min-w-[28px] font-mono uppercase tracking-[0.08em] pointer-coarse:min-w-[44px]'
+                                // borderRadius forced here too: the variant's own
+                                // rounded-button would otherwise replace the
+                                // deliberate pill shape (radius has no hover state,
+                                // so overriding it via style loses nothing).
                                 style={{
+                                    fontSize: '10px',
+                                    borderRadius: 'var(--radius-chip)',
                                     backgroundColor: selected
                                         ? 'rgba(255,255,255,.06)'
                                         : 'transparent',
@@ -140,7 +152,7 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
                                 }}
                             >
                                 {preset.label}
-                            </button>
+                            </Button>
                         );
                     })}
                 </span>
@@ -160,7 +172,7 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
                                 onClick={() => toggleCategory(categoryId)}
                                 aria-pressed={!isHidden}
                                 title={isHidden ? 'Show this group' : 'Hide this group'}
-                                className='inline-flex items-center gap-1.5 font-mono text-[11px] transition-opacity'
+                                className='inline-flex min-h-[24px] items-center gap-1.5 font-mono text-[11px] transition-opacity pointer-coarse:min-h-[44px]'
                                 style={{
                                     color: 'var(--color-text-muted)',
                                     opacity: isHidden ? 0.45 : 1
@@ -185,7 +197,7 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
                     })}
                     <Link
                         to='/countdown'
-                        className='font-mono text-[11px] text-text-faint transition-colors hover:text-text-secondary'
+                        className='inline-flex min-h-[24px] items-center font-mono text-[11px] text-text-faint transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary'
                     >
                         View all
                     </Link>

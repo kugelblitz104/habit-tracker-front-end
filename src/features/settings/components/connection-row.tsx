@@ -97,7 +97,7 @@ export const AddConnectionButton = ({ label, onClick }: { label: string; onClick
     <button
         type='button'
         onClick={onClick}
-        className='flex items-center justify-center gap-2 rounded-[10px] border border-dashed p-2.5 text-[12.5px] text-text-muted transition-colors hover:text-text-secondary'
+        className='flex min-h-[36px] items-center justify-center gap-2 rounded-[10px] border border-dashed p-2.5 text-[12.5px] text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary'
         style={{ borderColor: 'rgba(255,255,255,.12)' }}
     >
         <Plus size={14} />

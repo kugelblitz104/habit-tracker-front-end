@@ -1,4 +1,4 @@
-import { primaryButtonClass, primaryButtonStyle } from '@/components/ui/buttons/button-styles';
+import { Button } from '@/components/ui/buttons/button';
 import {
     fieldLabelClass,
     fieldLabelStyle,
@@ -109,14 +109,9 @@ export const ChangePasswordCard = () => {
                         </div>
                     ))}
                 </div>
-                <button
-                    type='submit'
-                    disabled={isSubmitting}
-                    className={primaryButtonClass}
-                    style={primaryButtonStyle}
-                >
+                <Button type='submit' variant='primary' size='lg' disabled={isSubmitting}>
                     {isSubmitting ? 'Changing...' : 'Change password'}
-                </button>
+                </Button>
             </form>
             <p className='mt-3 font-mono text-[11px] text-text-faint'>
                 Changing your password signs you out so you can log back in with it.

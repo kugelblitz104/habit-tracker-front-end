@@ -88,7 +88,7 @@ export const CountdownCard = ({
                         state={{ from: '/countdown' }}
                         aria-label='Open linked task'
                         title='Open linked task'
-                        className='shrink-0 text-text-faint transition-colors hover:text-text-secondary'
+                        className='hit-target inline-flex shrink-0 items-center justify-center text-text-faint transition-colors hover:text-text-secondary'
                     >
                         <ExternalLink size={12} />
                     </Link>

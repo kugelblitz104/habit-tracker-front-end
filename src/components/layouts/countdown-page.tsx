@@ -1,5 +1,6 @@
 import type { CountdownRead } from '@/api';
 import { BaseModal } from '@/components/ui/modals/base-modal';
+import { Button } from '@/components/ui/buttons/button';
 import { DetailPane } from '@/components/layouts/detail-pane';
 import { PageShell } from '@/components/layouts/page-shell';
 import { QueryState } from '@/components/ui/query-state';
@@ -195,23 +196,24 @@ const CountdownForm = ({
 
             <div className='flex items-center justify-end gap-2 pt-1'>
                 {onCancel && (
-                    <button
-                        type='button'
+                    <Button
+                        size='sm'
+                        variant='subtle'
                         onClick={onCancel}
-                        className='rounded-button px-3 py-1 font-mono text-[11px] uppercase tracking-[0.08em] text-text-muted transition-colors hover:text-text-secondary'
+                        className='font-mono uppercase tracking-[0.08em] text-text-muted'
                     >
                         Cancel
-                    </button>
+                    </Button>
                 )}
-                <button
-                    type='button'
+                <Button
+                    size='sm'
+                    variant='primary'
                     onClick={submit}
                     disabled={!canSave}
-                    className='rounded-button px-3 py-1 font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-bg transition-opacity disabled:opacity-40'
-                    style={{ background: 'var(--button-primary-gradient)' }}
+                    className='font-mono uppercase tracking-[0.08em]'
                 >
                     {initial ? 'Save' : 'Add'}
-                </button>
+                </Button>
             </div>
         </div>
     );
@@ -269,33 +271,30 @@ const CountdownGridItem = ({
             categoryColor={categoryColor}
             categoryName={categoryName}
             actions={
-                <div className='absolute right-2 top-2 flex items-center gap-1'>
-                    <button
-                        type='button'
-                        onClick={onEdit}
-                        aria-label='Edit countdown'
-                        className='text-text-faint transition-colors hover:text-text-secondary'
-                    >
-                        <Pencil size={13} />
-                    </button>
-                    <button
-                        type='button'
+                // gap-2, not gap-1: each control is now a 44px touch target on a
+                // coarse pointer, and the old 8px gap would overlap them.
+                <div className='absolute right-2 top-2 flex items-center gap-2'>
+                    <Button size='sm' variant='icon' onClick={onEdit} aria-label='Edit countdown'>
+                        <Pencil size={14} />
+                    </Button>
+                    <Button
+                        size='sm'
+                        variant='icon'
                         onClick={handleArchive}
                         disabled={update.isPending}
                         aria-label={isArchived ? 'Restore countdown' : 'Archive countdown'}
-                        className='text-text-faint transition-colors hover:text-text-secondary disabled:opacity-50'
                     >
-                        {isArchived ? <ArchiveRestore size={13} /> : <Archive size={13} />}
-                    </button>
-                    <button
-                        type='button'
+                        {isArchived ? <ArchiveRestore size={14} /> : <Archive size={14} />}
+                    </Button>
+                    <Button
+                        size='sm'
+                        variant='icon'
                         onClick={handleDelete}
                         disabled={del.isPending}
                         aria-label='Delete countdown'
-                        className='text-text-faint transition-colors hover:text-danger disabled:opacity-50'
                     >
-                        <Trash2 size={13} />
-                    </button>
+                        <Trash2 size={14} />
+                    </Button>
                 </div>
             }
         />
@@ -515,9 +514,10 @@ export const CountdownDashboard = () => {
                     </div>
                 </div>
                 {!disabled && (
-                    // Wraps rather than shrink-0: three controls total ~391px,
-                    // which overhangs a 375px phone column and scrolls the page
-                    // sideways.
+                    // Wraps rather than overhanging: up to four controls (the
+                    // time/category toggle, Archived, Manage groups, New
+                    // countdown) share this row, more than a 375px phone
+                    // column holds on one line.
                     <div className='flex flex-wrap items-center justify-end gap-2'>
                         {total > 0 && !showArchived && (
                             <span
@@ -527,13 +527,15 @@ export const CountdownDashboard = () => {
                                 {(['time', 'category'] as const).map((mode) => {
                                     const selected = groupMode === mode;
                                     return (
-                                        <button
+                                        <Button
                                             key={mode}
-                                            type='button'
+                                            size='sm'
+                                            variant='subtle'
                                             onClick={() => setGroupMode(mode)}
                                             aria-pressed={selected}
-                                            className='rounded-chip px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] transition-colors'
+                                            className='rounded-chip font-mono uppercase tracking-[0.08em]'
                                             style={{
+                                                borderRadius: 'var(--radius-chip)',
                                                 backgroundColor: selected
                                                     ? 'rgba(255,255,255,.06)'
                                                     : 'transparent',
@@ -543,14 +545,15 @@ export const CountdownDashboard = () => {
                                             }}
                                         >
                                             {mode}
-                                        </button>
+                                        </Button>
                                     );
                                 })}
                             </span>
                         )}
                         {activeProfileId && (
-                            <button
-                                type='button'
+                            <Button
+                                size='md'
+                                variant='icon'
                                 onClick={() => setShowArchived((v) => !v)}
                                 aria-pressed={showArchived}
                                 aria-label={
@@ -558,35 +561,38 @@ export const CountdownDashboard = () => {
                                         ? 'Show live countdowns'
                                         : 'Show archived countdowns'
                                 }
-                                className='flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11px] text-text-secondary transition-colors hover:text-text-primary'
+                                className='font-mono'
                                 style={inputStyle}
                             >
-                                <Archive size={13} />
-                                {showArchived ? 'Live' : 'Archived'}
-                            </button>
+                                {showArchived ? <X size={15} /> : <Archive size={15} />}
+                                <span>{showArchived ? 'Exit archived' : 'Archived'}</span>
+                            </Button>
                         )}
                         {activeProfileId && !showArchived && (
-                            <button
-                                type='button'
+                            <Button
+                                size='md'
+                                variant='icon'
                                 onClick={() => setManagingCategories(true)}
                                 aria-label='Manage countdown groups'
-                                className='flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11px] text-text-secondary transition-colors hover:text-text-primary'
+                                className='font-mono'
                                 style={inputStyle}
                             >
-                                <Tags size={13} />
-                                Manage groups
-                            </button>
+                                <Tags size={15} />
+                                <span>Manage groups</span>
+                            </Button>
                         )}
                         {activeProfileId && !showArchived && (
-                            <button
-                                type='button'
+                            <Button
+                                size='md'
+                                variant='icon'
                                 onClick={() => setCreating(true)}
-                                className='flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11px] text-text-secondary transition-colors hover:text-text-primary'
+                                aria-label='New countdown'
+                                className='font-mono'
                                 style={inputStyle}
                             >
-                                <Plus size={13} />
-                                New countdown
-                            </button>
+                                <Plus size={15} />
+                                <span>New countdown</span>
+                            </Button>
                         )}
                     </div>
                 )}
@@ -643,11 +649,13 @@ export const CountdownDashboard = () => {
                                 return (
                                     <section key={section.key}>
                                         {collapsible ? (
-                                            <button
-                                                type='button'
+                                            <Button
+                                                size='sm'
+                                                variant='subtle'
                                                 onClick={() => setPastOpen((v) => !v)}
                                                 aria-expanded={pastOpen}
-                                                className='mb-2.5 flex items-center gap-2 text-text-faint transition-colors hover:text-text-secondary'
+                                                className='mb-2.5'
+                                                style={{ padding: 0, gap: '0.5rem' }}
                                             >
                                                 {heading}
                                                 {pastOpen ? (
@@ -655,7 +663,7 @@ export const CountdownDashboard = () => {
                                                 ) : (
                                                     <ChevronRight size={13} />
                                                 )}
-                                            </button>
+                                            </Button>
                                         ) : (
                                             <div className='mb-2.5 flex items-center gap-2'>
                                                 {heading}

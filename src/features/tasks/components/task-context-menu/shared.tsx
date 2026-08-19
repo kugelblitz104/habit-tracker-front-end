@@ -4,15 +4,6 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 export const itemClass =
     'flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-left font-display text-[13px] hover:bg-white/5';
 
-export const dateInputClass =
-    'w-full rounded-button border px-2 py-1 font-mono text-[12px] text-text-secondary outline-none focus-visible:ring-1 focus-visible:ring-now-accent';
-
-export const dateInputStyle: React.CSSProperties = {
-    backgroundColor: 'var(--surface-input-bg)',
-    borderColor: 'var(--surface-input-border)',
-    colorScheme: 'dark'
-};
-
 /** Highlight background for the current value in a submenu list. */
 export const CURRENT_BG = 'rgba(255,255,255,0.05)';
 

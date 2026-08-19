@@ -1,5 +1,5 @@
 import type { ProfileRead } from '@/api';
-import { ghostButtonBorder, ghostButtonClass } from '@/components/ui/buttons/button-styles';
+import { Button } from '@/components/ui/buttons/button';
 import { InlineConfirmAction } from '@/components/ui/inline-confirm-action';
 import { useCreateProfile } from '@/features/profiles/api/create-profiles';
 import { useDeleteProfile } from '@/features/profiles/api/delete-profiles';
@@ -115,20 +115,19 @@ export const ProfilesCard = () => {
                                     onCancel={() => setConfirmDeleteId(null)}
                                     pending={deleteProfile.isPending}
                                 >
-                                    <button
-                                        type='button'
+                                    <Button
+                                        variant='ghost'
+                                        size='md'
                                         onClick={() => setActiveProfileId(profile.id)}
-                                        className={ghostButtonClass}
-                                        style={{ borderColor: ghostButtonBorder }}
                                     >
                                         Switch
-                                    </button>
+                                    </Button>
                                     <button
                                         type='button'
                                         onClick={() => setConfirmDeleteId(profile.id)}
                                         title={`Delete profile "${profile.name}"`}
                                         aria-label={`Delete profile "${profile.name}"`}
-                                        className='rounded-[8px] p-1.5 text-text-faint transition-colors hover:text-danger'
+                                        className='inline-flex min-h-[28px] min-w-[28px] items-center justify-center rounded-[8px] p-1.5 text-text-faint transition-colors pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] hover:text-danger'
                                     >
                                         <Trash2 size={14} />
                                     </button>
@@ -148,7 +147,7 @@ export const ProfilesCard = () => {
                     <button
                         type='button'
                         onClick={() => setCreating(true)}
-                        className='flex items-center justify-center gap-2 rounded-row border border-dashed p-3 text-[13px] text-text-muted transition-colors hover:text-text-secondary'
+                        className='flex min-h-[36px] items-center justify-center gap-2 rounded-row border border-dashed p-3 text-[13px] text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary'
                         style={{ borderColor: 'rgba(255,255,255,.12)' }}
                     >
                         <Plus size={15} />

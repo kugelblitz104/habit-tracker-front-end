@@ -1,3 +1,4 @@
+import { buttonClass, buttonStyle } from '@/components/ui/buttons/button-styles';
 import { useClosedTasks } from '@/features/tasks/api/get-closed-tasks';
 import { useUpdateTask } from '@/features/tasks/api/update-tasks';
 import { parseLocalDate } from '@/lib/date-utils';
@@ -88,7 +89,16 @@ export const CompletedSection = ({
                 React.Fragment"). DisclosureButton renders a real <button>, so the
                 same state is available there without the warning. */}
             <Disclosure>
-                <DisclosureButton className='flex w-full items-center gap-2 font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-whenever-label outline-none'>
+                {/* Styled via the Button variant='subtle' size='sm' tokens directly
+                    (not the <Button> element) so DisclosureButton keeps owning the
+                    native button and its {open} render prop for aria-expanded and
+                    the chevron rotation. Color forced via style, not a competing
+                    text-* class, since the variant's own text color class would
+                    otherwise win or lose unpredictably by stylesheet order. */}
+                <DisclosureButton
+                    className={`${buttonClass({ variant: 'subtle', size: 'sm' })} w-full justify-start gap-2 font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em]`}
+                    style={{ ...buttonStyle('subtle'), color: 'var(--color-whenever-label)' }}
+                >
                     {({ open }) => (
                         <>
                             Closed

@@ -1,3 +1,5 @@
+import { fieldClass, fieldStyle } from '@/components/ui/forms/field-tiers';
+import { formLabelClass } from '@/components/ui/forms/form-field-styles';
 import { Field, Input, Label } from '@headlessui/react';
 import { useFormContext, type RegisterOptions } from 'react-hook-form';
 
@@ -11,15 +13,6 @@ type TextFieldProps = {
     validation?: RegisterOptions;
     errorMessage?: string;
 };
-
-// Shared theme tokens so form fields read like the task editor surface
-// (mono uppercase micro-labels + themed input treatment) instead of the old
-// black-background inputs.
-const labelClass =
-    'mb-1 block font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-text-faint';
-
-const fieldClass =
-    'block w-full rounded-button border px-2.5 py-1.5 font-mono text-[12px] text-text-secondary outline-none transition-colors placeholder:text-text-faint focus-visible:ring-1 focus-visible:ring-now-accent';
 
 export const TextField = ({
     name,
@@ -40,11 +33,11 @@ export const TextField = ({
 
     return (
         <Field className='mb-3'>
-            {label && <Label className={labelClass}>{label}</Label>}
+            {label && <Label className={formLabelClass}>{label}</Label>}
             <Input
-                className={fieldClass}
+                className={fieldClass('task')}
                 style={{
-                    backgroundColor: 'var(--surface-input-bg)',
+                    ...fieldStyle('task'),
                     borderColor: isValid ? 'var(--surface-input-border)' : 'var(--color-danger)'
                 }}
                 {...register(name, {

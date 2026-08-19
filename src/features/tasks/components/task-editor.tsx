@@ -1,4 +1,5 @@
 import type { TaskRead, TaskUpdate } from '@/api';
+import { Button } from '@/components/ui/buttons/button';
 import {
     formFieldClass,
     formFieldStyle,
@@ -281,39 +282,38 @@ export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
             {/* Footer: destructive Delete on the left (mirrors the habit detail
                 footer), Cancel / Save on the right. */}
             <div className='mt-1 flex items-center justify-between gap-2'>
-                <button
-                    type='button'
+                <Button
+                    variant='ghost'
+                    size='sm'
                     onClick={handleDelete}
                     disabled={isDeletePending}
-                    className='inline-flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11.5px] transition-colors hover:brightness-125 disabled:cursor-not-allowed disabled:opacity-50'
+                    className='font-mono hover:brightness-125'
                     style={{
+                        fontSize: '11.5px',
                         borderColor: 'var(--danger-border)',
                         color: 'var(--color-danger)'
                     }}
                 >
                     <Trash2 size={13} />
                     {isDeletePending ? 'Deleting…' : 'Delete task'}
-                </button>
+                </Button>
                 <div className='flex items-center gap-2'>
-                    <button
-                        type='button'
-                        onClick={onClose}
-                        className='rounded-button px-3 py-1.5 font-display text-[12px] text-text-muted transition-colors hover:text-text-secondary'
-                    >
+                    {/* variant='subtle' base color (text-faint) is close to but not
+                        identical to the original text-muted; left as the variant's
+                        default rather than forced via style, so the hover transition
+                        to text-secondary still works. */}
+                    <Button variant='subtle' size='md' onClick={onClose} className='font-display'>
                         Cancel
-                    </button>
-                    <button
-                        type='button'
+                    </Button>
+                    <Button
+                        variant='primary'
+                        size='md'
                         onClick={handleSave}
                         disabled={!canSave}
-                        className='rounded-button px-3 py-1.5 font-display text-[12px] font-semibold transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50'
-                        style={{
-                            background: 'var(--button-primary-gradient)',
-                            color: 'var(--button-primary-text)'
-                        }}
+                        className='font-display'
                     >
                         {updateTask.isPending ? 'Saving…' : 'Save'}
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/buttons/button';
 import { exportHabits, importHabits } from '@/features/habits/api/import-export-habits';
 import { invalidateHabits } from '@/features/habits/api/query-keys';
 import { exportProfileEntity, type BackupEntity } from '@/features/settings/api/profile-backup';
@@ -25,11 +26,6 @@ const JSON_EXPORTS: { entity: BackupEntity; label: string }[] = [
     { entity: 'calendar_connections', label: 'Calendars' },
     { entity: 'integration_connections', label: 'Integrations' }
 ];
-
-const dataButtonClass =
-    'inline-flex items-center gap-2 rounded-[9px] border px-[15px] py-[9px] text-[13px] ' +
-    'text-text-secondary transition-colors hover:text-text-primary ' +
-    'disabled:cursor-not-allowed disabled:opacity-50';
 
 const dataButtonStyle = {
     backgroundColor: 'rgba(255,255,255,.05)',
@@ -130,41 +126,35 @@ export const ManageDataCard = () => {
     return (
         <SettingsCard label='Manage data' labelGapClass='mb-3.5'>
             <div className='flex flex-wrap gap-2.5'>
-                <button
-                    type='button'
+                <Button
                     onClick={handleImportClick}
                     disabled={isImporting || isExporting || !activeProfile}
-                    className={dataButtonClass}
                     style={dataButtonStyle}
                 >
                     <Upload size={14} />
                     Import data
-                </button>
-                <button
-                    type='button'
+                </Button>
+                <Button
                     onClick={handleExportHabits}
                     disabled={isExporting || isImporting || !activeProfile}
-                    className={dataButtonClass}
                     style={dataButtonStyle}
                 >
                     <Download size={14} />
                     Export data
-                </button>
+                </Button>
             </div>
             <div className='mt-4'>
                 <div className='mb-2 text-[12px]' style={{ color: '#9a8f81' }}>
                     Export tasks &mdash; download this profile&apos;s tasks as a Markdown checklist
                 </div>
-                <button
-                    type='button'
+                <Button
                     onClick={handleExportTasks}
                     disabled={isExportingTasks || !activeProfile}
-                    className={dataButtonClass}
                     style={dataButtonStyle}
                 >
                     <Download size={14} />
                     Export tasks
-                </button>
+                </Button>
             </div>
             <div className='mt-5'>
                 <div className='mb-1 text-[12px]' style={{ color: '#9a8f81' }}>
@@ -176,17 +166,15 @@ export const ManageDataCard = () => {
                 </div>
                 <div className='flex flex-wrap gap-2.5'>
                     {JSON_EXPORTS.map(({ entity, label }) => (
-                        <button
+                        <Button
                             key={entity}
-                            type='button'
                             onClick={() => handleExportEntity(entity, label)}
                             disabled={exportingEntity !== null || !activeProfile}
-                            className={dataButtonClass}
                             style={dataButtonStyle}
                         >
                             <Download size={14} />
                             {label}
-                        </button>
+                        </Button>
                     ))}
                 </div>
             </div>

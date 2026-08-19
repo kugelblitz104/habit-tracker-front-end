@@ -1,5 +1,9 @@
 import type { ProjectRead } from '@/api';
 import { POPOVER_PANEL_CLASS, popoverPanelStyle } from '@/components/ui/menu';
+import { Button } from '@/components/ui/buttons/button';
+import { fieldClass } from '@/components/ui/forms/field-tiers';
+import { Input } from '@/components/ui/forms/input';
+import { Select } from '@/components/ui/forms/select';
 import { SelectOption } from '@/components/ui/forms/select-option';
 import { toLocalDateString } from '@/lib/date-utils';
 import {
@@ -42,8 +46,6 @@ type TaskControlsBarProps = {
     selectionActive?: boolean;
 };
 
-const selectClass =
-    'rounded-button border px-2 py-1 font-mono text-[11px] text-text-secondary outline-none transition-colors focus-visible:ring-1 focus-visible:ring-now-accent';
 const selectStyle = {
     backgroundColor: 'var(--surface-input-bg)',
     borderColor: 'var(--surface-input-border)',
@@ -86,10 +88,10 @@ const FilterField = ({
  *  Date taking the slack since its inputs are the widest. */
 const filterGridClass = 'flex flex-col gap-3 p-2 sm:flex-row sm:items-start sm:gap-5';
 
-/** Same chrome as the native `<select>`s above, but as a button that opens a
- *  checkbox popover instead of a listbox. */
-const filterButtonClass =
-    'flex items-center gap-1 rounded-button border px-2 py-1 font-mono text-[11px] text-text-secondary outline-none transition-colors hover:text-text-primary focus-visible:ring-1 focus-visible:ring-now-accent';
+/** Same chrome as the native `<select>`s above (`fieldClass('compact')`), plus
+ *  the flex layout for a button's icon/badge and the hover treatment a select
+ *  doesn't need. */
+const filterButtonClass = `${fieldClass('compact')} flex items-center gap-1 hover:text-text-primary`;
 
 const checkboxRowClass =
     'flex w-full cursor-pointer items-center gap-2 rounded-[6px] px-2 py-1.5 text-left font-display text-[13px] text-text-secondary hover:bg-white/5';
@@ -126,16 +128,24 @@ const CheckboxFilterList = ({
     return (
         <div>
             <div className='flex items-center justify-between gap-2 px-2 pb-1'>
-                <button
-                    type='button'
+                <Button
+                    variant='subtle'
+                    size='sm'
                     className={quickActionClass}
+                    style={{ fontSize: '10px' }}
                     onClick={() => onChange([...allValues])}
                 >
                     All
-                </button>
-                <button type='button' className={quickActionClass} onClick={() => onChange([])}>
+                </Button>
+                <Button
+                    variant='subtle'
+                    size='sm'
+                    className={quickActionClass}
+                    style={{ fontSize: '10px' }}
+                    onClick={() => onChange([])}
+                >
                     None
-                </button>
+                </Button>
             </div>
             {options.map((option) => (
                 <Field key={option.value} className={checkboxRowClass}>
@@ -225,9 +235,8 @@ const DateFilterFields = ({ controls, onChange }: DateFilterFieldsProps) => {
     return (
         <div className='flex flex-col gap-2'>
             <SelectField label='Filter by'>
-                <select
-                    className={selectClass}
-                    style={selectStyle}
+                <Select
+                    tier='compact'
                     value={dateField ?? 'none'}
                     onChange={(e) => {
                         const v = e.target.value;
@@ -244,7 +253,7 @@ const DateFilterFields = ({ controls, onChange }: DateFilterFieldsProps) => {
                             {o.label}
                         </SelectOption>
                     ))}
-                </select>
+                </Select>
             </SelectField>
 
             {dateField && (
@@ -264,10 +273,9 @@ const DateFilterFields = ({ controls, onChange }: DateFilterFieldsProps) => {
                     </div>
                     <label className='flex items-center justify-between gap-2'>
                         <span className={labelClass}>From</span>
-                        <input
+                        <Input
+                            tier='compact'
                             type='date'
-                            className={selectClass}
-                            style={selectStyle}
                             value={dateFrom}
                             aria-label='From date'
                             onChange={(e) => onChange({ dateFrom: e.target.value })}
@@ -275,22 +283,23 @@ const DateFilterFields = ({ controls, onChange }: DateFilterFieldsProps) => {
                     </label>
                     <label className='flex items-center justify-between gap-2'>
                         <span className={labelClass}>To</span>
-                        <input
+                        <Input
+                            tier='compact'
                             type='date'
-                            className={selectClass}
-                            style={selectStyle}
                             value={dateTo}
                             aria-label='To date'
                             onChange={(e) => onChange({ dateTo: e.target.value })}
                         />
                     </label>
-                    <button
-                        type='button'
+                    <Button
+                        variant='subtle'
+                        size='sm'
                         className={`${quickActionClass} self-start`}
+                        style={{ fontSize: '10px' }}
                         onClick={() => onChange({ dateFrom: '', dateTo: '' })}
                     >
                         Clear range
-                    </button>
+                    </Button>
                 </>
             )}
         </div>
@@ -344,9 +353,8 @@ export const TaskControlsBar = ({
                             <div className={filterGridClass}>
                                 {showProjectOptions && (
                                     <FilterField label='Project' className='sm:w-[140px]'>
-                                        <select
-                                            className={selectClass}
-                                            style={selectStyle}
+                                        <Select
+                                            tier='compact'
                                             value={String(controls.filterProjectId)}
                                             onChange={(e) => {
                                                 const v = e.target.value;
@@ -364,7 +372,7 @@ export const TaskControlsBar = ({
                                                     {project.archived ? ' (archived)' : ''}
                                                 </SelectOption>
                                             ))}
-                                        </select>
+                                        </Select>
                                     </FilterField>
                                 )}
 
@@ -407,9 +415,8 @@ export const TaskControlsBar = ({
                     filter it, and neither counts toward the Filters badge. */}
                 <SelectField label='Sort'>
                     <div className='flex items-center gap-1'>
-                        <select
-                            className={selectClass}
-                            style={selectStyle}
+                        <Select
+                            tier='compact'
                             value={controls.sortBy}
                             onChange={(e) => set({ sortBy: e.target.value as TaskSortBy })}
                         >
@@ -419,9 +426,10 @@ export const TaskControlsBar = ({
                             <SelectOption value='created'>Created</SelectOption>
                             <SelectOption value='title'>Title</SelectOption>
                             <SelectOption value='status'>Status</SelectOption>
-                        </select>
-                        <button
-                            type='button'
+                        </Select>
+                        <Button
+                            variant='icon'
+                            size='sm'
                             onClick={() =>
                                 set({ sortDir: controls.sortDir === 'asc' ? 'desc' : 'asc' })
                             }
@@ -429,7 +437,6 @@ export const TaskControlsBar = ({
                                 controls.sortDir === 'asc' ? 'ascending' : 'descending'
                             }`}
                             title={controls.sortDir === 'asc' ? 'Ascending' : 'Descending'}
-                            className='rounded-button border p-1 text-text-secondary transition-colors hover:text-text-primary'
                             style={selectStyle}
                         >
                             {controls.sortDir === 'asc' ? (
@@ -437,14 +444,13 @@ export const TaskControlsBar = ({
                             ) : (
                                 <ArrowDown size={13} />
                             )}
-                        </button>
+                        </Button>
                     </div>
                 </SelectField>
 
                 <SelectField label='Group'>
-                    <select
-                        className={selectClass}
-                        style={selectStyle}
+                    <Select
+                        tier='compact'
                         value={controls.groupBy}
                         onChange={(e) => set({ groupBy: e.target.value as TaskGroupBy })}
                     >
@@ -452,44 +458,46 @@ export const TaskControlsBar = ({
                         {showProjectOptions && <SelectOption value='project'>Project</SelectOption>}
                         <SelectOption value='priority'>Priority</SelectOption>
                         <SelectOption value='status'>Status</SelectOption>
-                    </select>
+                    </Select>
                 </SelectField>
 
                 {/* Trailing actions: Reset (only when something's changed) + Select + Export. */}
                 <div className='ml-auto flex items-center gap-3'>
                     {!isDefaultControls(controls) && (
-                        <button
-                            type='button'
+                        <Button
+                            variant='subtle'
+                            size='sm'
                             onClick={() => onChange(DEFAULT_TASK_CONTROLS)}
                             className={quickActionClass}
+                            style={{ fontSize: '10px' }}
                             title='Reset grouping, sort and filters to defaults'
                         >
                             Reset
-                        </button>
+                        </Button>
                     )}
                     {onToggleSelection && (
-                        <button
-                            type='button'
+                        <Button
+                            variant='icon'
+                            size='sm'
                             onClick={onToggleSelection}
-                            className={filterButtonClass}
                             style={selectStyle}
                             title={selectionActive ? 'Exit multi-select' : 'Select multiple tasks'}
                         >
                             <ListChecks size={12} />
                             {selectionActive ? 'Done' : 'Select'}
-                        </button>
+                        </Button>
                     )}
                     {onExport && (
-                        <button
-                            type='button'
+                        <Button
+                            variant='icon'
+                            size='sm'
                             onClick={onExport}
-                            className={filterButtonClass}
                             style={selectStyle}
                             title='Export this view as Markdown'
                         >
                             <Download size={12} />
                             Export
-                        </button>
+                        </Button>
                     )}
                 </div>
             </div>

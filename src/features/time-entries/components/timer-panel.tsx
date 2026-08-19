@@ -134,7 +134,7 @@ export const TimerPanel = ({ profile, profileId }: TimerPanelProps) => {
                                 type='button'
                                 onClick={() => setSelectedMode(option.kind)}
                                 aria-pressed={selected}
-                                className='rounded-chip px-4 py-1.5 font-display text-[13px] font-medium transition-colors'
+                                className='min-h-[24px] rounded-chip px-4 py-1.5 font-display text-[13px] font-medium transition-colors pointer-coarse:min-h-[44px]'
                                 style={{
                                     backgroundColor: selected
                                         ? 'rgba(255,255,255,.06)'
@@ -191,7 +191,7 @@ export const TimerPanel = ({ profile, profileId }: TimerPanelProps) => {
                                     type='button'
                                     onClick={() => setTargetType(option.type)}
                                     aria-pressed={selected}
-                                    className='rounded-chip px-3 py-1 font-mono text-[11px] uppercase tracking-[0.08em] transition-colors'
+                                    className='min-h-[24px] rounded-chip px-3 py-1 font-mono text-[11px] uppercase tracking-[0.08em] transition-colors pointer-coarse:min-h-[44px]'
                                     style={{
                                         backgroundColor: selected
                                             ? 'rgba(255,255,255,.06)'
@@ -253,7 +253,7 @@ export const TimerPanel = ({ profile, profileId }: TimerPanelProps) => {
                     <button
                         type='button'
                         onClick={skipBreak}
-                        className='inline-flex items-center gap-2 rounded-button border px-5 py-2.5 font-display text-[14px] font-semibold text-text-secondary transition-colors hover:text-text-primary'
+                        className='inline-flex min-h-[44px] items-center gap-2 rounded-button border px-5 py-2.5 font-display text-[14px] font-semibold text-text-secondary transition-colors hover:text-text-primary'
                         style={{ borderColor: 'var(--surface-input-border)' }}
                     >
                         <SkipForward size={16} />
@@ -264,7 +264,7 @@ export const TimerPanel = ({ profile, profileId }: TimerPanelProps) => {
                         type='button'
                         onClick={handleStop}
                         disabled={isStopping}
-                        className='inline-flex items-center gap-2 rounded-button border px-6 py-2.5 font-display text-[14px] font-semibold transition-colors hover:brightness-125 disabled:opacity-50'
+                        className='inline-flex min-h-[44px] items-center gap-2 rounded-button border px-6 py-2.5 font-display text-[14px] font-semibold transition-colors hover:brightness-125 disabled:opacity-50'
                         style={{
                             borderColor: 'var(--danger-border)',
                             color: 'var(--color-danger)'
@@ -278,7 +278,7 @@ export const TimerPanel = ({ profile, profileId }: TimerPanelProps) => {
                         type='button'
                         onClick={handleStart}
                         disabled={!profileId || createTimeEntry.isPending}
-                        className='inline-flex items-center gap-2 rounded-button px-7 py-2.5 font-display text-[14px] font-semibold transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50'
+                        className='inline-flex min-h-[44px] items-center gap-2 rounded-button px-7 py-2.5 font-display text-[14px] font-semibold transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50'
                         style={{
                             background: 'var(--button-primary-gradient)',
                             color: 'var(--button-primary-text)'

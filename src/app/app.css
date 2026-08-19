@@ -443,3 +443,23 @@ html[data-vt-nav] * {
         animation: none;
     }
 }
+
+/*
+ * Expands a small control's touch target to 44x44 without changing its ink,
+ * for WCAG 2.2 SC 2.5.8. Only safe where the control has no near neighbour:
+ * two of these within 44px of each other overlap, and a tap then lands on the
+ * wrong control. Adjacent controls must grow visually instead.
+ */
+@utility hit-target {
+    position: relative;
+
+    &::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 44px;
+        height: 44px;
+        transform: translate(-50%, -50%);
+    }
+}

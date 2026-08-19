@@ -1,5 +1,6 @@
 import type { ProjectRead, ProjectUpdate } from '@/api';
 import { ColorPicker } from '@/components/ui/forms/color-picker';
+import { formLabelClass } from '@/components/ui/forms/form-field-styles';
 import { TextField } from '@/components/ui/forms/text-field';
 import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
 import {
@@ -81,7 +82,7 @@ export const ProjectEditor = ({
                     type='button'
                     onClick={onCancel}
                     aria-label='Close editor'
-                    className='rounded-full p-1 text-text-faint transition-colors hover:text-text-secondary'
+                    className='min-h-[24px] min-w-[24px] rounded-full p-1 text-text-faint transition-colors pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] hover:text-text-secondary'
                 >
                     <X size={16} />
                 </button>
@@ -116,6 +117,7 @@ export const ProjectEditor = ({
                                 render={({ field }) => (
                                     <>
                                         <ColorPicker
+                                            mode='full'
                                             color={field.value}
                                             onColorChange={field.onChange}
                                         />
@@ -128,9 +130,7 @@ export const ProjectEditor = ({
                                 )}
                             />
                             <Field className='mb-3'>
-                                <Label className='mb-1 block font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-text-faint'>
-                                    Notes
-                                </Label>
+                                <Label className={formLabelClass}>Notes</Label>
                                 <Textarea
                                     {...methods.register('notes', validationPatterns.notes)}
                                     rows={4}
@@ -158,7 +158,7 @@ export const ProjectEditor = ({
                                 <button
                                     type='button'
                                     onClick={onDelete}
-                                    className='inline-flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11.5px] transition-colors hover:brightness-125'
+                                    className='inline-flex min-h-[28px] items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11.5px] transition-colors pointer-coarse:min-h-[44px] hover:brightness-125'
                                     style={{
                                         borderColor: 'var(--danger-border)',
                                         color: 'var(--color-danger)'
@@ -174,14 +174,14 @@ export const ProjectEditor = ({
                                 <button
                                     type='button'
                                     onClick={onCancel}
-                                    className='rounded-button px-3 py-1.5 font-display text-[12px] text-text-muted transition-colors hover:text-text-secondary'
+                                    className='min-h-[28px] rounded-button px-3 py-1.5 font-display text-[12px] text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary'
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type='submit'
                                     disabled={isSaving}
-                                    className='rounded-button px-3 py-1.5 font-display text-[12px] font-semibold transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50'
+                                    className='min-h-[28px] rounded-button px-3 py-1.5 font-display text-[12px] font-semibold transition-opacity pointer-coarse:min-h-[44px] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50'
                                     style={{
                                         background: 'var(--button-primary-gradient)',
                                         color: 'var(--button-primary-text)'

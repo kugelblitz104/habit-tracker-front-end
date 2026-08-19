@@ -1,5 +1,6 @@
 import type { HabitRead, HabitUpdate } from '@/api';
 import { ColorPicker } from '@/components/ui/forms/color-picker';
+import { formLabelClass } from '@/components/ui/forms/form-field-styles';
 import { FrequencyPicker } from '@/components/ui/forms/frequency-picker';
 import { LabeledSwitch } from '@/components/ui/forms/labeled-switch';
 import { TextField } from '@/components/ui/forms/text-field';
@@ -151,6 +152,7 @@ export const HabitEditor = ({
                                 control={methods.control}
                                 render={({ field }) => (
                                     <ColorPicker
+                                        mode='full'
                                         color={field.value}
                                         onColorChange={field.onChange}
                                     />
@@ -178,9 +180,7 @@ export const HabitEditor = ({
                                 )}
                             />
                             <Field className='mb-3'>
-                                <Label className='mb-1 block font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-text-faint'>
-                                    Notes
-                                </Label>
+                                <Label className={formLabelClass}>Notes</Label>
                                 <Textarea
                                     {...methods.register('notes', validationPatterns.notes)}
                                     rows={4}

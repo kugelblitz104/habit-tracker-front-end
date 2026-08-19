@@ -1,3 +1,4 @@
+import { Input } from '@/components/ui/forms/input';
 import {
     formFieldClass,
     formFieldStyle,
@@ -147,20 +148,19 @@ export const DateTimeField = ({
         <div>
             <span className={formLabelClass}>{label}</span>
             <div className='flex flex-wrap items-center gap-2'>
-                <input
+                <Input
                     type='date'
                     value={date}
                     onChange={(e) => onDateChange(e.target.value)}
                     aria-label={dateAriaLabel}
-                    className={formFieldClass}
-                    style={{ ...formFieldStyle, colorScheme: 'dark', width: 'auto' }}
+                    style={{ colorScheme: 'dark', width: 'auto' }}
                 />
                 <TimePicker
                     value={time}
                     disabled={!date}
                     onChange={onTimeChange}
                     aria-label={timeAriaLabel}
-                    className={`${formFieldClass} disabled:cursor-not-allowed disabled:opacity-50`}
+                    className='disabled:cursor-not-allowed disabled:opacity-50'
                     style={{ ...formFieldStyle, colorScheme: 'dark', width: '7rem' }}
                 />
                 {(date || time) && (

@@ -114,7 +114,7 @@ export const ManualEntryForm = ({ isOpen, onClose, profileId }: ManualEntryFormP
                                     type='button'
                                     onClick={() => setTargetType(option.type)}
                                     aria-pressed={selected}
-                                    className='rounded-chip px-3 py-1 font-mono text-[11px] uppercase tracking-[0.08em] transition-colors'
+                                    className='min-h-[24px] rounded-chip px-3 py-1 font-mono text-[11px] uppercase tracking-[0.08em] transition-colors pointer-coarse:min-h-[44px]'
                                     style={{
                                         backgroundColor: selected
                                             ? 'rgba(255,255,255,.06)'
@@ -197,7 +197,7 @@ export const ManualEntryForm = ({ isOpen, onClose, profileId }: ManualEntryFormP
                         type='button'
                         onClick={handleClose}
                         disabled={createTimeEntry.isPending}
-                        className='inline-flex items-center gap-1.5 rounded-button px-3 py-1.5 font-mono text-[11.5px] text-text-muted transition-colors hover:text-text-secondary disabled:opacity-50'
+                        className='inline-flex min-h-[36px] items-center gap-1.5 rounded-button px-3 py-1.5 font-mono text-[11.5px] text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary disabled:opacity-50'
                     >
                         Cancel
                     </button>
@@ -205,7 +205,7 @@ export const ManualEntryForm = ({ isOpen, onClose, profileId }: ManualEntryFormP
                         type='button'
                         onClick={handleSubmit}
                         disabled={!canSubmit || createTimeEntry.isPending}
-                        className='inline-flex items-center gap-1.5 rounded-button px-3.5 py-1.5 font-display text-[12.5px] font-semibold transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50'
+                        className='inline-flex min-h-[36px] items-center gap-1.5 rounded-button px-3.5 py-1.5 font-display text-[12.5px] font-semibold transition-opacity pointer-coarse:min-h-[44px] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50'
                         style={{
                             background: 'var(--button-primary-gradient)',
                             color: 'var(--button-primary-text)'

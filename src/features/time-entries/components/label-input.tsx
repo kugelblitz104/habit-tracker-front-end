@@ -1,4 +1,4 @@
-import { formFieldClass, formFieldStyle } from '@/components/ui/forms/form-field-styles';
+import { Input } from '@/components/ui/forms/input';
 import { useId, useMemo } from 'react';
 import { useTimeEntries } from '../api/get-time-entries';
 
@@ -47,7 +47,7 @@ export const LabelInput = ({
 
     return (
         <>
-            <input
+            <Input
                 type='text'
                 list={listId}
                 value={value}
@@ -62,8 +62,7 @@ export const LabelInput = ({
                 }}
                 placeholder={placeholder}
                 aria-label='Time entry label'
-                className={`${formFieldClass} placeholder:text-text-faint disabled:opacity-60`}
-                style={formFieldStyle}
+                className='disabled:opacity-60'
             />
             <datalist id={listId}>
                 {suggestions.map((label) => (

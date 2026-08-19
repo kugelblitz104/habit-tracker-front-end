@@ -245,7 +245,7 @@ export const IntegrationConnectionsSection = ({ profile }: Props) => {
                                     disabled={syncingId === connection.id}
                                     title={`Sync "${connection.name}" now`}
                                     aria-label={`Sync "${connection.name}" now`}
-                                    className='flex items-center gap-1 rounded-[8px] px-2 py-1 text-[11.5px] text-text-secondary transition-colors hover:text-text-primary disabled:opacity-50'
+                                    className='flex min-h-[28px] items-center gap-1 rounded-[8px] px-2 py-1 text-[11.5px] text-text-secondary transition-colors pointer-coarse:min-h-[44px] hover:text-text-primary disabled:opacity-50'
                                 >
                                     <RefreshCw
                                         size={13}
@@ -260,7 +260,7 @@ export const IntegrationConnectionsSection = ({ profile }: Props) => {
                                     onClick={() => setEditingId(connection.id)}
                                     title={`Edit "${connection.name}"`}
                                     aria-label={`Edit "${connection.name}"`}
-                                    className='rounded-[8px] p-1.5 text-text-faint transition-colors hover:text-text-secondary'
+                                    className='inline-flex min-h-[28px] min-w-[28px] items-center justify-center rounded-[8px] p-1.5 text-text-faint transition-colors pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] hover:text-text-secondary'
                                 >
                                     <Pencil size={13} />
                                 </button>
@@ -269,7 +269,7 @@ export const IntegrationConnectionsSection = ({ profile }: Props) => {
                                     onClick={() => setConfirmDeleteId(connection.id)}
                                     title={`Remove "${connection.name}"`}
                                     aria-label={`Remove "${connection.name}"`}
-                                    className='mr-1 rounded-[8px] p-1.5 text-text-faint transition-colors hover:text-danger'
+                                    className='mr-1 inline-flex min-h-[28px] min-w-[28px] items-center justify-center rounded-[8px] p-1.5 text-text-faint transition-colors pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] hover:text-danger'
                                 >
                                     <Trash2 size={13} />
                                 </button>

@@ -227,7 +227,7 @@ const EntryEditor = ({ entry }: { entry: TimeEntryRead }) => {
                                 type='button'
                                 onClick={() => setTargetType(option.type)}
                                 aria-pressed={selected}
-                                className='rounded-chip px-2.5 py-0.5 font-mono text-[10.5px] uppercase tracking-[0.08em] transition-colors'
+                                className='min-h-[24px] rounded-chip px-2.5 py-0.5 font-mono text-[10.5px] uppercase tracking-[0.08em] transition-colors pointer-coarse:min-h-[44px]'
                                 style={{
                                     backgroundColor: selected
                                         ? 'rgba(255,255,255,.06)'
@@ -261,7 +261,7 @@ const EntryEditor = ({ entry }: { entry: TimeEntryRead }) => {
                     disabled={deleteEntry.isPending}
                     aria-label='Delete entry'
                     title='Delete'
-                    className='shrink-0 text-text-faint transition-colors hover:text-danger disabled:opacity-50'
+                    className='inline-flex min-h-[24px] min-w-[24px] shrink-0 items-center justify-center rounded-[6px] text-text-faint transition-colors pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] hover:text-danger disabled:opacity-50'
                 >
                     <Trash2 size={14} />
                 </button>
@@ -351,7 +351,7 @@ const EntryRow = ({
                 type='button'
                 onClick={() => setEditing((v) => !v)}
                 aria-expanded={editing}
-                className='flex w-full items-center gap-2 text-left'
+                className='flex w-full items-center gap-2 text-left pointer-coarse:min-h-[44px]'
             >
                 <div className='min-w-0 flex-1'>
                     <div className='truncate font-display text-[13px] text-text-secondary'>
@@ -459,7 +459,7 @@ export const EditableTimeLog = ({
                                 })
                             }
                             aria-expanded={open}
-                            className='flex w-full items-center gap-2 text-left'
+                            className='flex w-full items-center gap-2 text-left pointer-coarse:min-h-[44px]'
                         >
                             <span
                                 className='inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-chip px-1 font-mono text-[10.5px] text-text-secondary'

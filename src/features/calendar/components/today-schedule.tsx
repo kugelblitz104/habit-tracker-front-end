@@ -189,7 +189,14 @@ export const TodaySchedule = () => {
                                 type='button'
                                 onClick={() => changeWindow(preset.days)}
                                 aria-pressed={selected}
-                                className='rounded-chip px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] transition-colors'
+                                // Segments of one pill, so they stay wider than
+                                // tall: a 44x44 floor on a 10px label renders a
+                                // row of circles, and they sit flush against each
+                                // other so a hit area cannot grow past the box.
+                                // 36px clears the 24px AA minimum; the 44px
+                                // enhanced target is waived for the same reason.
+                                data-target-exempt='essential'
+                                className='inline-flex min-h-[28px] items-center justify-center rounded-chip px-3 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] transition-colors pointer-coarse:min-h-[36px]'
                                 style={{
                                     backgroundColor: selected
                                         ? 'rgba(255,255,255,.06)'

@@ -1,4 +1,5 @@
 import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
+import { Input } from '@/components/ui/forms/input';
 import { useAuth } from '@/lib/auth-context';
 import { Square, Timer } from 'lucide-react';
 import { Link } from 'react-router';
@@ -64,7 +65,7 @@ export const ActiveTimerPanel = () => {
                                 {formatClock(elapsed)}
                             </div>
                             <div className='mt-0.5 flex min-w-0 items-center gap-1.5'>
-                                <input
+                                <Input
                                     type='text'
                                     value={labelDraft}
                                     onChange={(e) => setLabelDraft(e.target.value)}
@@ -74,7 +75,11 @@ export const ActiveTimerPanel = () => {
                                     }}
                                     placeholder='Add a label…'
                                     aria-label='Timer label'
-                                    className='min-w-0 flex-1 bg-transparent font-mono text-[11px] text-text-secondary outline-none placeholder:text-text-faint'
+                                    className='min-w-0 flex-1'
+                                    style={{
+                                        backgroundColor: 'transparent',
+                                        borderColor: 'transparent'
+                                    }}
                                 />
                                 {context && (
                                     <span className='shrink-0 truncate font-mono text-[11px] text-text-faint'>
@@ -89,7 +94,7 @@ export const ActiveTimerPanel = () => {
                             type='button'
                             onClick={handleStop}
                             disabled={isStopping}
-                            className='inline-flex items-center gap-1.5 rounded-button border px-3 py-1.5 font-display text-[12.5px] font-semibold transition-colors hover:brightness-125 disabled:opacity-50'
+                            className='inline-flex min-h-[30px] items-center gap-1.5 rounded-button border px-3 py-1.5 font-display text-[12.5px] font-semibold transition-colors pointer-coarse:min-h-[44px] hover:brightness-125 disabled:opacity-50'
                             style={{
                                 borderColor: 'var(--danger-border)',
                                 color: 'var(--color-danger)'
@@ -100,7 +105,7 @@ export const ActiveTimerPanel = () => {
                         </button>
                         <Link
                             to='/timer'
-                            className='rounded-button px-3 py-1.5 font-display text-[12.5px] text-text-muted transition-colors hover:text-text-secondary'
+                            className='inline-flex min-h-[30px] items-center rounded-button px-3 py-1.5 font-display text-[12.5px] text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary'
                         >
                             Open
                         </Link>

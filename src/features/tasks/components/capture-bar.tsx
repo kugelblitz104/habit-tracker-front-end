@@ -1,3 +1,4 @@
+import { Input } from '@/components/ui/forms/input';
 import { Plus } from 'lucide-react';
 import { useState, type KeyboardEvent } from 'react';
 
@@ -64,7 +65,7 @@ export const CaptureBar = ({
             }}
         >
             <Plus size={18} className='shrink-0 text-text-muted' />
-            <input
+            <Input
                 type='text'
                 value={value}
                 disabled={disabled || isPending}
@@ -72,7 +73,14 @@ export const CaptureBar = ({
                 onKeyDown={handleKeyDown}
                 placeholder={placeholder}
                 aria-label='Add a task'
-                className='min-w-0 flex-1 bg-transparent font-display text-[14px] text-text-primary outline-none placeholder:text-text-faint'
+                className='min-w-0 flex-1 bg-transparent'
+                style={{
+                    backgroundColor: 'transparent',
+                    borderColor: 'transparent',
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '14px',
+                    color: 'var(--color-text-primary)'
+                }}
             />
             {onExpand ? (
                 <span className='flex shrink-0 items-center gap-2 font-mono text-[10px] text-text-faint'>

@@ -49,6 +49,10 @@ export type TaskRowProps = {
     selected?: boolean;
     /** Toggle this row's selection (only meaningful when selectable). */
     onToggleSelect?: () => void;
+    /** Whether this is the first row in its list container (rounds the rail's top-left corner). */
+    isFirst?: boolean;
+    /** Whether this is the last row in its list container (rounds the rail's bottom-left corner). */
+    isLast?: boolean;
 };
 
 /**
@@ -82,7 +86,9 @@ export const TaskRow = ({
     openUpward,
     selectable = false,
     selected = false,
-    onToggleSelect
+    onToggleSelect,
+    isFirst = false,
+    isLast = false
 }: TaskRowProps) => {
     const { pathname } = useLocation();
     const status = (task.status ?? TaskStatus.OPEN) as TaskStatus;
@@ -259,7 +265,13 @@ export const TaskRow = ({
                         // The fills go through custom properties rather than an inline
                         // `backgroundColor`, which would outrank the hover class and leave the
                         // washed Now rows with no hover state at all.
-                        className='border-l-[3px] bg-[var(--row-bg)] transition-colors hover:bg-[var(--row-bg-hover)]'
+                        //
+                        // The top-left/bottom-left radius on the first/last row matches the
+                        // list container's own radius, so the rail follows the container's
+                        // rounded corner instead of being clipped square by it.
+                        className={`border-l-[3px] bg-[var(--row-bg)] transition-colors hover:bg-[var(--row-bg-hover)] ${
+                            isFirst ? 'rounded-tl-card' : ''
+                        } ${isLast ? 'rounded-bl-card' : ''}`}
                         style={
                             {
                                 borderLeftColor: editing ? 'var(--color-now-accent)' : tier.rail,
@@ -321,9 +333,13 @@ export const TaskRow = ({
                                                 ? `, ${priorityLabel} priority`
                                                 : ''
                                         }`}
+                                        // Equivalent exception: the row container below (onClick
+                                        // at line ~286) opens the same detail view and is far
+                                        // larger than the 44px coarse-pointer floor.
+                                        data-target-exempt='equivalent'
                                         // The focus ring lives on the title, not on the row: the
                                         // list container clips a full-row ring's corners.
-                                        className={`min-w-0 flex-1 truncate rounded-[4px] text-left font-display leading-snug outline-none hover:opacity-90 focus-visible:ring-2 focus-visible:ring-now-accent ${
+                                        className={`min-h-[24px] min-w-0 flex-1 truncate rounded-[4px] text-left font-display leading-snug outline-none hover:opacity-90 focus-visible:ring-2 focus-visible:ring-now-accent ${
                                             tier.title
                                         } ${isDone ? 'text-text-muted line-through' : ''}`}
                                         title={task.title}

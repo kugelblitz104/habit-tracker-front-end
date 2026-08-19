@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/buttons/button';
 import { formFieldClass, formFieldStyle } from '@/components/ui/forms/form-field-styles';
 import { TaskStatus } from '@/types/types';
 import { useQueryClient } from '@tanstack/react-query';
@@ -19,7 +20,7 @@ type TaskDetailSubtasksProps = {
 };
 
 /**
- * TaskDetailBody's subtasks list — an inline manager so subtasks can be added,
+ * TaskDetailBody's subtasks list - an inline manager so subtasks can be added,
  * renamed, completed and deleted without opening the edit form. (Re-parenting a
  * subtask is a more structural change, so it lives in the editor's
  * SubtaskSection instead.) Fetches this parent's subtasks directly via
@@ -111,13 +112,15 @@ export const TaskDetailSubtasks = ({ profileId, parentId }: TaskDetailSubtasksPr
                     Subtasks{allSubtasks.length > 0 ? ` · ${doneCount}/${allSubtasks.length}` : ''}
                 </h3>
                 {doneCount > 0 && (
-                    <button
-                        type='button'
+                    <Button
+                        variant='subtle'
+                        size='sm'
                         onClick={() => setHideDone((v) => !v)}
-                        className='font-mono text-[10px] uppercase tracking-[0.12em] text-text-faint transition-colors hover:text-text-secondary'
+                        className='font-mono uppercase tracking-[0.12em]'
+                        style={{ fontSize: '10px' }}
                     >
                         {hideDone ? 'Show done' : 'Hide done'}
-                    </button>
+                    </Button>
                 )}
             </div>
 
@@ -130,13 +133,21 @@ export const TaskDetailSubtasks = ({ profileId, parentId }: TaskDetailSubtasksPr
                         onStatusChange={(status) => changeStatus(subtask.id, status)}
                         onRename={(title) => renameSubtask(subtask.id, title)}
                         actions={
+                            // Raw <button>, not <Button>: the danger-red hover is
+                            // the affordance that this is destructive, and a
+                            // variant's own hover class competes with a caller's
+                            // hover class of the same type (unpredictable winner by
+                            // stylesheet order) - style would freeze the hover
+                            // entirely. The row's title/rename button sits only
+                            // ~12px away, too close for expandHitArea, so the floor
+                            // is added as a visible min-h/min-w instead.
                             <button
                                 type='button'
                                 onClick={() => deleteSubtask(subtask.id)}
                                 disabled={deleteTask.isPending}
                                 aria-label={`Delete subtask "${subtask.title}"`}
                                 title='Delete subtask'
-                                className='shrink-0 rounded-full p-1 text-text-faint transition-colors hover:text-[var(--color-danger)] disabled:cursor-not-allowed disabled:opacity-50'
+                                className='shrink-0 inline-flex items-center justify-center rounded-full p-1 text-text-faint transition-colors hover:text-[var(--color-danger)] disabled:cursor-not-allowed disabled:opacity-50 min-h-[28px] min-w-[28px] pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]'
                             >
                                 <Trash2 size={13} />
                             </button>

@@ -1,0 +1,22 @@
+{
+    "date": "2026-08-15",
+    "summary": "Various improvements and Enhancements",
+    "changes": [
+        {
+            "kind": "changed",
+            "text": "Task row visual overhaul, grouped related tasks together and moved information to improve visual hierarchy"
+        },
+        {
+            "kind": "changed",
+            "text": "Standardized button sizes to meet WCAG tagets across interactive controls"
+        },
+        {
+            "kind": "changed",
+            "text": "Unclear and Needs info are now a single task status: Needs info. Tasks that were Unclear now show as Needs info."
+        },
+        {
+            "kind": "fixed",
+            "text": "Added an X backout button on the search pallette when using from mobile."
+        }
+    ]
+}

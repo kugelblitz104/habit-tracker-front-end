@@ -132,6 +132,8 @@ export const TaskListView = ({
                                             onStartTimer ? () => onStartTimer(task.id) : undefined
                                         }
                                         openUpward={i >= upwardIdx}
+                                        isFirst={i === 0}
+                                        isLast={i === section.tasks.length - 1}
                                         selectable={selectionMode}
                                         selected={selectedIds?.has(task.id) ?? false}
                                         onToggleSelect={

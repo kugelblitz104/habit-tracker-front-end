@@ -19,7 +19,8 @@ import { useSortHabits } from '@/features/habits/api/update-habits';
 import { toast } from 'react-toastify';
 
 const ghostButton =
-    'inline-flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11.5px] text-text-secondary transition-colors';
+    'inline-flex min-h-[36px] items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono ' +
+    'text-[11.5px] text-text-secondary transition-colors pointer-coarse:min-h-[44px]';
 
 // Follows the active_profile localStorage key naming (see auth-context.tsx).
 const GROUP_BY_CATEGORY_STORAGE_KEY = 'habits_group_by_category';

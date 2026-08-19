@@ -69,8 +69,11 @@ type StepperProps = {
 };
 
 const Stepper = ({ value, unit, min, max, disabled, onStep }: StepperProps) => {
+    // Not converted to <Button variant='icon'>: its rounded-button (9px) and
+    // border alpha don't match this stepper's rounded-[7px] / .12 border, so
+    // the floor is added directly instead of swapping the chrome.
     const buttonClass =
-        'inline-flex h-7 w-7 items-center justify-center rounded-[7px] border text-text-secondary transition-colors hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-40';
+        'inline-flex h-7 w-7 pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] items-center justify-center rounded-[7px] border text-text-secondary transition-colors hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-40';
     const buttonStyle = { borderColor: 'rgba(255,255,255,.12)' } as const;
     return (
         <div className='flex items-center gap-2'>

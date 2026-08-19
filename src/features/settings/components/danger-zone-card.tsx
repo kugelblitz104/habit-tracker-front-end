@@ -74,7 +74,8 @@ const PROFILE_DELETES: ProfileDelete[] = [
 ];
 
 const outlineDangerButtonClass =
-    'rounded-[9px] border px-[15px] py-[9px] text-[13px] transition-colors hover:brightness-110 ' +
+    'inline-flex min-h-[36px] items-center justify-center rounded-[9px] border px-[15px] py-[9px] ' +
+    'text-[13px] transition-colors pointer-coarse:min-h-[44px] hover:brightness-110 ' +
     'disabled:cursor-not-allowed disabled:opacity-50';
 
 const outlineDangerButtonStyle = {
@@ -191,7 +192,7 @@ export const DangerZoneCard = () => {
                                 'data across every profile.'
                         })
                     }
-                    className='rounded-[9px] px-[15px] py-[9px] text-[13px] font-semibold transition-opacity hover:opacity-90'
+                    className='inline-flex min-h-[36px] items-center justify-center rounded-[9px] px-[15px] py-[9px] text-[13px] font-semibold transition-opacity pointer-coarse:min-h-[44px] hover:opacity-90'
                     style={{
                         backgroundColor: 'var(--color-danger-solid)',
                         color: 'var(--button-primary-text)'

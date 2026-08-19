@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/buttons/button';
+import { ColorPicker } from '@/components/ui/forms/color-picker';
 import {
     formFieldClass,
     formFieldStyle,
@@ -104,38 +106,38 @@ export const CategoryField = ({ profileId, value, onChange, id }: CategoryFieldP
                         className={`${formFieldClass} placeholder:text-text-faint disabled:opacity-50`}
                         style={formFieldStyle}
                     />
-                    <input
-                        type='color'
-                        value={newColor}
+                    <ColorPicker
+                        mode='inline'
+                        color={newColor}
+                        onColorChange={setNewColor}
+                        swatchLabel='New group colour'
                         disabled={createCategory.isPending}
-                        onChange={(e) => setNewColor(e.target.value)}
-                        aria-label='New group colour'
                         title='Group colour'
-                        className='h-8 w-9 shrink-0 cursor-pointer rounded-button border bg-transparent p-0.5 disabled:opacity-50'
-                        style={{ borderColor: 'var(--surface-input-border)' }}
                     />
-                    <button
-                        type='button'
+                    <Button
+                        variant='icon'
+                        size='sm'
                         onClick={confirmCreate}
                         disabled={!newName.trim() || createCategory.isPending}
                         aria-label='Create group'
                         title='Create group'
-                        className='shrink-0 rounded-button border p-1.5 text-text-secondary transition-colors hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50'
+                        className='shrink-0'
                         style={{ borderColor: 'var(--surface-input-border)' }}
                     >
                         <Check size={14} />
-                    </button>
-                    <button
-                        type='button'
+                    </Button>
+                    <Button
+                        variant='subtle'
+                        size='sm'
                         onClick={cancelCreate}
                         disabled={createCategory.isPending}
                         aria-label='Cancel new group'
                         title='Cancel'
-                        className='shrink-0 rounded-button border p-1.5 text-text-faint transition-colors hover:text-text-secondary disabled:opacity-50'
+                        className='shrink-0 border min-w-[28px] pointer-coarse:min-w-[44px]'
                         style={{ borderColor: 'var(--surface-input-border)' }}
                     >
                         <X size={14} />
-                    </button>
+                    </Button>
                 </div>
             ) : (
                 <select

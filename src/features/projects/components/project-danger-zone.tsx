@@ -26,7 +26,7 @@ export const ProjectDangerZone = ({
             type='button'
             onClick={onToggleArchive}
             disabled={isArchiving}
-            className='inline-flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11.5px] text-text-secondary transition-colors hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50'
+            className='inline-flex min-h-[28px] items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11.5px] text-text-secondary transition-colors pointer-coarse:min-h-[44px] hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50'
             style={{ borderColor: 'var(--habit-container-border)' }}
         >
             {project.archived ? <ArchiveRestore size={13} /> : <Archive size={13} />}
@@ -35,7 +35,7 @@ export const ProjectDangerZone = ({
         <button
             type='button'
             onClick={onDeleteClick}
-            className='inline-flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11.5px] transition-colors hover:brightness-125'
+            className='inline-flex min-h-[28px] items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11.5px] transition-colors pointer-coarse:min-h-[44px] hover:brightness-125'
             style={{ borderColor: 'var(--habit-container-border)', color: 'var(--color-danger)' }}
         >
             <Trash size={13} />

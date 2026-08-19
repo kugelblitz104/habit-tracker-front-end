@@ -1,4 +1,5 @@
 import type { TaskRead } from '@/api';
+import { Input } from '@/components/ui/forms/input';
 import { useIntegrationConnections } from '@/features/integrations/api/get-integration-connections';
 import { usePublishTask } from '@/features/integrations/api/publish-task';
 import { apiErrorMessage } from '@/lib/api-error-message';
@@ -174,18 +175,13 @@ export const TaskIntegrationActions = ({ task }: Props) => {
                             className='flex flex-col gap-2 rounded-[10px] border border-dashed p-3'
                             style={{ borderColor: 'rgba(255,255,255,.12)' }}
                         >
-                            <input
+                            <Input
                                 type='text'
                                 value={ref}
                                 onChange={(e) => setRef(e.target.value)}
                                 placeholder='Reference, e.g. AB#2841 or owner/repo#42'
-                                className='w-full rounded-button border px-2.5 py-1.5 font-mono text-[12px] text-text-secondary outline-none'
-                                style={{
-                                    backgroundColor: 'var(--surface-input-bg)',
-                                    borderColor: 'var(--surface-input-border)'
-                                }}
                             />
-                            <input
+                            <Input
                                 type='text'
                                 value={url}
                                 onChange={(e) => {
@@ -194,9 +190,7 @@ export const TaskIntegrationActions = ({ task }: Props) => {
                                 }}
                                 aria-invalid={urlError ? true : undefined}
                                 placeholder='https://… link to the work item / issue'
-                                className='w-full rounded-button border px-2.5 py-1.5 font-mono text-[12px] text-text-secondary outline-none'
                                 style={{
-                                    backgroundColor: 'var(--surface-input-bg)',
                                     borderColor: urlError
                                         ? 'var(--danger-border)'
                                         : 'var(--surface-input-border)'

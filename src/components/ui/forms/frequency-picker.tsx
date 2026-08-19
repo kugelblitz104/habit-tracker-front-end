@@ -1,3 +1,4 @@
+import { formLabelClass } from '@/components/ui/forms/form-field-styles';
 import { type Frequency } from '@/types/types';
 import { Field, Input, Label, Radio, RadioGroup } from '@headlessui/react';
 import { useState } from 'react';
@@ -14,9 +15,6 @@ type FrequencyPickerProps = {
     onSelectedChange: (newFrequency: Frequency) => void;
     frequencies?: Frequency[];
 };
-
-const labelClass =
-    'mb-1 block font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-text-faint';
 
 const InlineNumberField = ({
     name,
@@ -62,7 +60,7 @@ export const FrequencyPicker = ({
 
     return (
         <Field className='mb-3'>
-            <Label className={labelClass}>Frequency</Label>
+            <Label className={formLabelClass}>Frequency</Label>
             <RadioGroup value={selected} onChange={onSelectedChange} className='flex gap-2'>
                 {frequencies.map((freq) => {
                     const isSelected = selected.name === freq.name;

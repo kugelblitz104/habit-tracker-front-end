@@ -187,7 +187,7 @@ export const ProfilePreferencesCard = ({
                 </div>
                 <Menu as='div' className='relative'>
                     <MenuButton
-                        className='inline-flex items-center gap-1.5 rounded-[8px] border px-3 py-[7px] text-[12.5px] text-text-secondary-soft outline-none transition-colors hover:text-text-primary focus-visible:ring-2 focus-visible:ring-now-accent disabled:opacity-50'
+                        className='inline-flex min-h-[36px] items-center gap-1.5 rounded-[8px] border px-3 py-[7px] text-[12.5px] text-text-secondary-soft outline-none transition-colors pointer-coarse:min-h-[44px] hover:text-text-primary focus-visible:ring-2 focus-visible:ring-now-accent disabled:opacity-50'
                         style={{
                             backgroundColor: 'rgba(255,255,255,.04)',
                             borderColor: 'rgba(255,255,255,.1)'
