@@ -228,7 +228,7 @@ export const TaskContextMenu = ({
                         onClick={() => setView('priority')}
                     />
                     <RootRow
-                        label='Move to project'
+                        label='Project'
                         hint={currentProject?.name ?? 'No project'}
                         onClick={() => setView('project')}
                     />
