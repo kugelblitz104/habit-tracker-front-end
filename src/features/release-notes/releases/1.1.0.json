@@ -1,7 +1,11 @@
 {
-    "date": "2026-08-15",
-    "summary": "Various improvements and Enhancements",
+    "date": "2026-08-21",
+    "summary": "Visual Overhaul",
     "changes": [
+        {
+            "kind": "added",
+            "text": "Added new capture forms with shift + enter on all entity types0"
+        },
         {
             "kind": "changed",
             "text": "Task row visual overhaul, grouped related tasks together and moved information to improve visual hierarchy"
