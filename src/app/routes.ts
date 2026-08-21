@@ -30,7 +30,7 @@ export default [
     // These sit AFTER their list routes above ('tasks', 'projects', 'habits') so
     // the static path wins over the parameterised one.
     route('tasks/:taskRef', 'routes/auth/task-detail.tsx'),
-    route('projects/:projectRef', 'routes/auth/project.tsx'),
+    route('projects/:projectRef', 'routes/auth/project-detail.tsx'),
     route('habits/:habitRef', 'routes/auth/habit-detail.tsx'),
     // Habit detail used to live at /details/:habitId, kept as a redirect.
     route('details/:habitId', 'routes/auth/habit-detail-legacy-redirect.tsx'),

@@ -3,7 +3,6 @@ import { ErrorPage } from '@/components/layouts/error-page';
 import { LoadingPage } from '@/components/layouts/loading-page';
 import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
 import { QueryState } from '@/components/ui/query-state';
-import { ProtectedRoute } from '@/features/auth/components/protected-route';
 import { useDeleteProject } from '@/features/projects/api/delete-projects';
 import {
     getProjectQueryOptions,
@@ -45,11 +44,6 @@ import { useSlugResolution } from '@/lib/use-slug-resolution';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
-import type { Route } from './+types/project';
-
-export function meta({}: Route.MetaArgs) {
-    return [{ title: 'Project' }, { name: 'description', content: 'Project view' }];
-}
 
 function ProjectContent({ projectId }: { projectId: number }) {
     const { activeProfileId } = useAuth();
@@ -418,28 +412,16 @@ function ProjectBySlug({ slug }: { slug: string }) {
     return <ProjectContent projectId={id} />;
 }
 
-export default function Project({
-    params
-}: Route.ComponentProps & { params: { projectRef: string } }) {
-    const ref = parseEntityRef(params.projectRef);
+export const ProjectDetailPage = ({ projectRef }: { projectRef: string }) => {
+    const ref = parseEntityRef(projectRef);
 
     if (ref === null) {
         return (
-            <ProtectedRoute>
-                <ProjectStateShell>
-                    <ErrorPage message='Invalid project URL' />
-                </ProjectStateShell>
-            </ProtectedRoute>
+            <ProjectStateShell>
+                <ErrorPage message='Invalid project URL' />
+            </ProjectStateShell>
         );
     }
 
-    return (
-        <ProtectedRoute>
-            {'id' in ref ? (
-                <ProjectContent projectId={ref.id} />
-            ) : (
-                <ProjectBySlug slug={ref.slug} />
-            )}
-        </ProtectedRoute>
-    );
-}
+    return 'id' in ref ? <ProjectContent projectId={ref.id} /> : <ProjectBySlug slug={ref.slug} />;
+};

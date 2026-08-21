@@ -22,13 +22,6 @@
 @import 'tailwindcss';
 
 /*
- * ============================================================================
- * Task System Overhaul — Design tokens (Phase 2a foundation)
- * ----------------------------------------------------------------------------
- * Source of truth: design_handoff_task_system_overhaul/README.md.
- * Later waves (2b/2c) should consume the SEMANTIC tokens below, never raw
- * hexes. Vocabulary map:
- *
  * FONTS
  *   --font-display  -> Tailwind `font-display` (Space Grotesk; UI/titles)
  *   --font-mono     -> Tailwind `font-mono`    (JetBrains Mono; meta/dates/chips)

@@ -31,7 +31,7 @@ type PageShellProps = {
  * animates as the pane opens, the two-track pane row, and the `min-w-0 flex-1`
  * content column.
  *
- * `insights-page.tsx` and `app/routes/auth/projects.tsx` look similar but stay
+ * `insights-page.tsx` and `projects-page.tsx` look similar but stay
  * OUT of this component deliberately: they have no `PAGE_WIDTH_TRANSITION` and
  * no pane row / `min-w-0 flex-1` wrappers, so folding them in would add DOM
  * nodes they don't have or a `transition-[max-width]` they don't animate on
