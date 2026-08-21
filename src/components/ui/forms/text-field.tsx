@@ -2,6 +2,7 @@ import { fieldClass, fieldStyle } from '@/components/ui/forms/field-tiers';
 import { formLabelClass } from '@/components/ui/forms/form-field-styles';
 import { Field, Input, Label } from '@headlessui/react';
 import { useFormContext, type RegisterOptions } from 'react-hook-form';
+import type { KeyboardEvent } from 'react';
 
 type TextFieldProps = {
     name: string;
@@ -12,6 +13,8 @@ type TextFieldProps = {
     type?: string;
     validation?: RegisterOptions;
     errorMessage?: string;
+    onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
+    autoFocus?: boolean;
 };
 
 export const TextField = ({
@@ -22,7 +25,9 @@ export const TextField = ({
     isValid = true,
     type = 'text',
     validation,
-    errorMessage
+    errorMessage,
+    onKeyDown,
+    autoFocus = false
 }: TextFieldProps) => {
     const {
         register,
@@ -46,6 +51,8 @@ export const TextField = ({
                 })}
                 type={type}
                 placeholder={placeholder}
+                onKeyDown={onKeyDown}
+                autoFocus={autoFocus}
                 aria-invalid={!isValid}
                 aria-describedby={`${name}-error`}
             />

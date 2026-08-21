@@ -239,18 +239,19 @@ test('the countdown form opens in a narrower pane and remounts when editing', as
     await expect(authedPage.getByText(GOLDEN.countdowns.future, { exact: true })).toBeVisible();
     await expect(detailPane(authedPage)).toHaveCount(0);
 
-    await authedPage.getByRole('button', { name: 'New countdown' }).click();
+    await authedPage.getByRole('button', { name: 'Edit countdown' }).first().click();
 
     const pane = detailPane(authedPage);
-    await expect(pane.getByRole('heading', { name: 'New countdown' })).toBeVisible();
+    await expect(pane.getByRole('heading', { name: 'Edit countdown' })).toBeVisible();
     // 400px, not the task/habit panes' 480px.
     expect(await assertPaneWidth(authedPage, COUNTDOWN_PANE_WIDTH)).toBe(COUNTDOWN_PANE_WIDTH);
-    await expect(pane.getByLabel('Countdown title')).toHaveValue('');
-    const createAside = await pane.elementHandle();
+    const firstTitle = await pane.getByLabel('Countdown title').inputValue();
+    const firstAside = await pane.elementHandle();
 
     // The seeded past countdown is the only member of the Past band (the yearly
-    // one rolls forward), so its section scopes the Edit control. Past is
-    // collapsed by default, so its cards have to be revealed first.
+    // one rolls forward), so its section scopes the Edit control and gives a
+    // second, distinct target. Past is collapsed by default, so its card has to
+    // be revealed first.
     const pastSection = authedPage
         .locator('section')
         .filter({ has: authedPage.getByRole('heading', { name: 'Past' }) });
@@ -259,8 +260,9 @@ test('the countdown form opens in a narrower pane and remounts when editing', as
 
     await expect(pane.getByRole('heading', { name: 'Edit countdown' })).toBeVisible();
     await expect(pane.getByLabel('Countdown title')).toHaveValue(GOLDEN.countdowns.past);
+    expect(GOLDEN.countdowns.past, 'the two edit targets must be distinct').not.toBe(firstTitle);
     expect(
-        await createAside!.evaluate((el) => el.isConnected),
+        await firstAside!.evaluate((el) => el.isConnected),
         'the countdown pane is keyed by countdown id, so switching targets must replace the <aside>'
     ).toBe(false);
 
@@ -397,14 +399,14 @@ test('@narrow the countdown form opens as a modal instead of a pane', async ({ a
     await gotoAppRoute(authedPage, '/countdown');
     await expect(authedPage.getByText(GOLDEN.countdowns.future, { exact: true })).toBeVisible();
 
-    await authedPage.getByRole('button', { name: 'New countdown' }).click();
+    await authedPage.getByRole('button', { name: 'Edit countdown' }).first().click();
 
     // `toBeAttached`, not `toBeVisible`: the element carrying role=dialog is the
     // Headless UI `Dialog` root, which is `position: relative` with only `fixed`
     // children — so it has an empty box even while the panel is on screen.
     const dialog = authedPage.getByRole('dialog');
     await expect(dialog).toBeAttached();
-    await expect(dialog.getByRole('heading', { name: 'New countdown' })).toBeVisible();
+    await expect(dialog.getByRole('heading', { name: 'Edit countdown' })).toBeVisible();
     await expect(detailPane(authedPage)).toHaveCount(0);
 
     await dialog.getByRole('button', { name: 'Cancel' }).click();

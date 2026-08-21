@@ -1,19 +1,10 @@
 import type { ProjectRead, ProjectUpdate } from '@/api';
-import { ColorPicker } from '@/components/ui/forms/color-picker';
-import { formLabelClass } from '@/components/ui/forms/form-field-styles';
-import { TextField } from '@/components/ui/forms/text-field';
 import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
-import {
-    sanitizeFormData,
-    sanitizeMultilineText,
-    sanitizeText,
-    validationPatterns
-} from '@/lib/input-sanitization';
+import { sanitizeFormData, sanitizeMultilineText, sanitizeText } from '@/lib/input-sanitization';
 import { useRecentColors } from '@/lib/use-recent-colors';
-import { isHexColor } from '@/features/projects/utils/project-colors';
-import { Field, Fieldset, Label, Textarea } from '@headlessui/react';
 import { Trash2, X } from 'lucide-react';
-import { Controller, FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
+import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
+import { ProjectFormFields, type ProjectFormValues } from './project-form-fields';
 
 type ProjectEditorProps = {
     project: ProjectRead;
@@ -26,12 +17,6 @@ type ProjectEditorProps = {
     /** Reflects the parent mutation's pending state. */
     isSaving?: boolean;
 };
-
-interface IProjectEditorFormInput {
-    name: string;
-    color: string;
-    notes: string;
-}
 
 /**
  * Inline project editor rendered in place of the project read-view, mirroring
@@ -46,16 +31,15 @@ export const ProjectEditor = ({
     isSaving = false
 }: ProjectEditorProps) => {
     const { addRecentColor } = useRecentColors();
-    const methods = useForm<IProjectEditorFormInput>({
+    const methods = useForm<ProjectFormValues>({
         values: {
             name: project.name,
             color: project.color,
             notes: project.notes ?? ''
         }
     });
-    const errors = methods.formState.errors;
 
-    const onSubmit: SubmitHandler<IProjectEditorFormInput> = (data) => {
+    const onSubmit: SubmitHandler<ProjectFormValues> = (data) => {
         const sanitized = sanitizeFormData(data, {
             name: sanitizeText,
             notes: sanitizeMultilineText
@@ -90,67 +74,7 @@ export const ProjectEditor = ({
             <div className='flex flex-col gap-3 rounded-card border p-5' style={CARD_SURFACE_STYLE}>
                 <FormProvider {...methods}>
                     <form onSubmit={methods.handleSubmit(onSubmit)}>
-                        <Fieldset>
-                            <TextField
-                                isRequired
-                                label='Project name'
-                                name='name'
-                                placeholder='What is this project called?'
-                                isValid={!errors.name}
-                                validation={{
-                                    validate: (value: string) =>
-                                        sanitizeText(value).length > 0 ||
-                                        'Project name is required',
-                                    maxLength: {
-                                        value: 100,
-                                        message: 'Project name must be less than 100 characters'
-                                    }
-                                }}
-                            />
-                            <Controller
-                                name='color'
-                                control={methods.control}
-                                rules={{
-                                    validate: (value) =>
-                                        isHexColor(value) || 'Use a 6-digit hex color, e.g. #e0884a'
-                                }}
-                                render={({ field }) => (
-                                    <>
-                                        <ColorPicker
-                                            mode='full'
-                                            color={field.value}
-                                            onColorChange={field.onChange}
-                                        />
-                                        {errors.color && (
-                                            <span className='-mt-2 mb-3 block text-[11px] text-red-400'>
-                                                {errors.color.message as string}
-                                            </span>
-                                        )}
-                                    </>
-                                )}
-                            />
-                            <Field className='mb-3'>
-                                <Label className={formLabelClass}>Notes</Label>
-                                <Textarea
-                                    {...methods.register('notes', validationPatterns.notes)}
-                                    rows={4}
-                                    placeholder='Optional project notes…'
-                                    className='block w-full resize-y rounded-button border px-2.5 py-1.5 font-mono text-[12px] leading-relaxed text-text-secondary outline-none transition-colors placeholder:text-text-faint focus-visible:ring-1 focus-visible:ring-now-accent'
-                                    style={{
-                                        backgroundColor: 'var(--surface-input-bg)',
-                                        borderColor: errors.notes
-                                            ? 'var(--color-danger)'
-                                            : 'var(--surface-input-border)'
-                                    }}
-                                    wrap='soft'
-                                />
-                                {errors.notes && (
-                                    <span className='mt-1 block text-[11px] text-red-400'>
-                                        {errors.notes.message as string}
-                                    </span>
-                                )}
-                            </Field>
-                        </Fieldset>
+                        <ProjectFormFields />
                         {/* Footer: destructive Delete on the left (mirrors the habit
                             editor), Cancel / Save on the right. */}
                         <div className='mt-3 flex items-center justify-between gap-2'>

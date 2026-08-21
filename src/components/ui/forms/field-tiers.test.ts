@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SHARED_BOX_CLASS } from '@/features/tasks/components/highlighted-task-input';
+import { SHARED_BOX_CLASS } from '@/components/ui/forms/highlighted-input';
 import { fieldClass, fieldStyle } from './field-tiers';
 
 describe('fieldClass', () => {
@@ -48,7 +48,7 @@ describe('fieldClass', () => {
     });
 
     it('keeps the quick-add overlay box in sync with the task tier', () => {
-        // highlighted-task-input.tsx hand-mirrors the task tier's padding and
+        // highlighted-input.tsx hand-mirrors the task tier's padding and
         // border so its highlight overlay lines up under the real input; this
         // pins the two together so a tier change can't silently misalign it.
         const taskTokens = fieldClass('task').split(/\s+/);

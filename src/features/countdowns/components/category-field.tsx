@@ -21,6 +21,9 @@ type CategoryFieldProps = {
     value: number | null;
     onChange: (value: number | null) => void;
     id?: string;
+    /** Open straight into inline-create mode with this name pre-filled (used by
+     *  quick-add when an `@name` token matched no existing group). */
+    initialCreatingName?: string;
 };
 
 /** Sentinel option value that swaps the select for the inline create input. */
@@ -34,13 +37,19 @@ const CREATE_CATEGORY_OPTION = '__create-category__';
  * typo forking a duplicate group. The created group is selected on success and
  * its colour stays editable in Manage groups.
  */
-export const CategoryField = ({ profileId, value, onChange, id }: CategoryFieldProps) => {
+export const CategoryField = ({
+    profileId,
+    value,
+    onChange,
+    id,
+    initialCreatingName
+}: CategoryFieldProps) => {
     const generatedId = useId();
     const fieldId = id ?? `countdown-category-${generatedId}`;
     const categoriesQuery = useCountdownCategories({ profileId });
     const createCategory = useCreateCountdownCategory();
-    const [isCreating, setIsCreating] = useState(false);
-    const [newName, setNewName] = useState('');
+    const [isCreating, setIsCreating] = useState(!!initialCreatingName);
+    const [newName, setNewName] = useState(initialCreatingName ?? '');
     const [newColor, setNewColor] = useState(randomProjectColor);
 
     const categories = categoriesQuery.data?.categories ?? [];

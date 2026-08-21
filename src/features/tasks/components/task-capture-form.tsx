@@ -1,6 +1,6 @@
 import type { TaskCreate } from '@/api';
+import { CaptureFormCard } from '@/components/ui/forms/capture-form-card';
 import { formLabelClass } from '@/components/ui/forms/form-field-styles';
-import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
 import { useAuth } from '@/lib/auth-context';
 import { sanitizeMultilineText } from '@/lib/input-sanitization';
 import { TaskStatus } from '@/types/types';
@@ -9,7 +9,8 @@ import { toast } from 'react-toastify';
 import { useCreateTask } from '../api/create-tasks';
 import { parseTaskInput } from '../utils/parse-task-input';
 import type { TaskCaptureDraft } from './task-capture-bar';
-import { HighlightedTaskInput } from './highlighted-task-input';
+import { HighlightedInput } from '@/components/ui/forms/highlighted-input';
+import { TASK_TOKEN_COLORS } from './task-token-colors';
 import {
     DateTimeField,
     EstimatedEffortField,
@@ -121,14 +122,6 @@ export const TaskCaptureForm = ({ profileId, initial, onClose }: TaskCaptureForm
         });
     };
 
-    // Escape anywhere inside the form collapses it, discarding the draft.
-    const handleFormKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-        if (e.key === 'Escape' && !createTask.isPending) {
-            e.preventDefault();
-            onClose();
-        }
-    };
-
     // Enter in the title submits the FULL form — never a title-only create.
     const handleTitleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -138,10 +131,13 @@ export const TaskCaptureForm = ({ profileId, initial, onClose }: TaskCaptureForm
     };
 
     return (
-        <div
-            className='mb-[30px] flex flex-col gap-3 rounded-button border p-4'
-            style={CARD_SURFACE_STYLE}
-            onKeyDown={handleFormKeyDown}
+        <CaptureFormCard
+            onCancel={onClose}
+            onSubmit={handleSubmit}
+            canSubmit={canSubmit}
+            isPending={createTask.isPending}
+            submitLabel='Add task'
+            pendingLabel='Adding…'
         >
             {/* Title (keeps highlighting/parsing tokens live) */}
             <div>
@@ -155,15 +151,15 @@ export const TaskCaptureForm = ({ profileId, initial, onClose }: TaskCaptureForm
                         borderColor: 'var(--surface-input-border)'
                     }}
                 >
-                    <HighlightedTaskInput
+                    <HighlightedInput
                         value={title}
                         segments={parsed.segments}
+                        tokenColors={TASK_TOKEN_COLORS}
                         onChange={handleTitleChange}
                         onKeyDown={handleTitleKeyDown}
                         placeholder='What needs doing?'
                         autoFocus
                         ariaLabel='Task title'
-                        inputRef={undefined}
                     />
                 </div>
             </div>
@@ -209,29 +205,6 @@ export const TaskCaptureForm = ({ profileId, initial, onClose }: TaskCaptureForm
                     />
                 </div>
             </div>
-
-            {/* Footer: ghost Cancel, primary Add task (mirrors TaskEditor's footer). */}
-            <div className='mt-1 flex items-center justify-end gap-2'>
-                <button
-                    type='button'
-                    onClick={onClose}
-                    className='rounded-button px-3 py-1.5 font-display text-[12px] text-text-muted transition-colors hover:text-text-secondary'
-                >
-                    Cancel
-                </button>
-                <button
-                    type='button'
-                    onClick={handleSubmit}
-                    disabled={!canSubmit}
-                    className='rounded-button px-3 py-1.5 font-display text-[12px] font-semibold transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50'
-                    style={{
-                        background: 'var(--button-primary-gradient)',
-                        color: 'var(--button-primary-text)'
-                    }}
-                >
-                    {createTask.isPending ? 'Adding…' : 'Add task'}
-                </button>
-            </div>
-        </div>
+        </CaptureFormCard>
     );
 };

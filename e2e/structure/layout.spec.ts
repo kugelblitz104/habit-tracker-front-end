@@ -201,7 +201,7 @@ test('the countdown form pane opens a 400px track, not 480px', async ({ authedPa
     await gotoAppRoute(authedPage, '/countdown');
     await expectClosedShell(authedPage);
 
-    await authedPage.getByRole('button', { name: 'New countdown' }).click();
+    await authedPage.getByRole('button', { name: 'Edit countdown' }).first().click();
     await expect(authedPage.locator('aside')).toHaveCount(1);
 
     await expect(container(authedPage)).toHaveClass(CONTAINER_OPEN);
@@ -264,7 +264,7 @@ test('the habit detail pane card is NOT the same surface as the task pane', asyn
 
 test('the countdown form pane fuses its 400px width into the card node', async ({ authedPage }) => {
     await gotoAppRoute(authedPage, '/countdown');
-    await authedPage.getByRole('button', { name: 'New countdown' }).click();
+    await authedPage.getByRole('button', { name: 'Edit countdown' }).first().click();
     await expect(authedPage.locator('aside')).toHaveCount(1);
 
     const aside = authedPage.locator('aside');
@@ -273,7 +273,7 @@ test('the countdown form pane fuses its 400px width into the card node', async (
     // fixed-width wrapper — this one node is both the width and the card.
     await expect(aside.locator('xpath=./div[1]')).toHaveClass(PANE_INNER_400_CARD);
     await expect(
-        aside.getByRole('heading', { level: 2, name: 'New countdown', exact: true })
+        aside.getByRole('heading', { level: 2, name: 'Edit countdown', exact: true })
     ).toBeVisible();
 });
 

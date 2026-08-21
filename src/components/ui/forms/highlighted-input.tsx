@@ -1,24 +1,16 @@
 import { useRef, type KeyboardEvent, type Ref } from 'react';
 import { Input } from '@/components/ui/forms/input';
-import type { TaskInputSegment, TaskTokenType } from '../utils/parse-task-input';
 
 /**
- * Single-line text input that renders recognized quick-add tokens in accent
+ * Single-line text input that renders caller-supplied segments in accent
  * colors. The technique: a color overlay sits behind a transparent-text input
  * (caret still visible); both share identical typography so the styled glyphs
  * line up exactly under what the user types. Horizontal scroll is mirrored so
- * long input stays aligned. The parsing lives in the parent (it also needs the
- * extracted fields); this component just paints the segments it's handed.
+ * long input stays aligned. Parsing segments and mapping types to colors are
+ * both the caller's job; this component just paints the segments it's handed.
  */
 
-const TOKEN_COLOR: Record<TaskTokenType, string> = {
-    priority: 'var(--color-now-accent)',
-    scheduled: 'var(--color-status-scheduled)',
-    due: 'var(--color-status-duetoday)',
-    project: 'var(--color-status-needsinfo)',
-    estimate: 'var(--color-soon-label)',
-    notes: 'var(--color-text-muted)'
-};
+export type HighlightSegment = { text: string; type: string };
 
 // Shared with the input so the overlay glyphs sit exactly under the real text.
 const SHARED_TEXT_CLASS = 'font-display text-[14px] leading-normal tracking-normal';
@@ -29,14 +21,16 @@ const SHARED_TEXT_CLASS = 'font-display text-[14px] leading-normal tracking-norm
 // `fieldClass('task')` by field-tiers.test.ts.
 export const SHARED_BOX_CLASS = 'border border-transparent px-2.5 py-1.5';
 
-type HighlightedTaskInputProps = {
+type HighlightedInputProps = {
     value: string;
-    segments: TaskInputSegment[];
+    segments: HighlightSegment[];
+    /** Accent color per segment type; a type with no entry renders as plain text. */
+    tokenColors: Record<string, string>;
     onChange: (value: string) => void;
     onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
     /**
      * Fired whenever the caret/selection position changes (typing, arrow
-     * keys, click) so a parent can do caret-relative work — e.g. detecting an
+     * keys, click) so a parent can do caret-relative work, e.g. detecting an
      * in-progress `@project` token for autocomplete. Reports `selectionStart`.
      */
     onCaretChange?: (position: number) => void;
@@ -48,9 +42,10 @@ type HighlightedTaskInputProps = {
     className?: string;
 };
 
-export const HighlightedTaskInput = ({
+export const HighlightedInput = ({
     value,
     segments,
+    tokenColors,
     onChange,
     onKeyDown,
     onCaretChange,
@@ -60,7 +55,7 @@ export const HighlightedTaskInput = ({
     ariaLabel,
     inputRef,
     className
-}: HighlightedTaskInputProps) => {
+}: HighlightedInputProps) => {
     const overlayRef = useRef<HTMLDivElement>(null);
 
     // Keep the overlay's horizontal scroll in lock-step with the input's so
@@ -79,18 +74,21 @@ export const HighlightedTaskInput = ({
                 {value.length === 0 ? (
                     <span className='text-text-faint'>{placeholder}</span>
                 ) : (
-                    segments.map((segment, index) => (
-                        <span
-                            key={index}
-                            style={
-                                segment.type === 'text'
-                                    ? { color: 'var(--color-text-primary)' }
-                                    : { color: TOKEN_COLOR[segment.type], fontWeight: 600 }
-                            }
-                        >
-                            {segment.text}
-                        </span>
-                    ))
+                    segments.map((segment, index) => {
+                        const color = tokenColors[segment.type];
+                        return (
+                            <span
+                                key={index}
+                                style={
+                                    color
+                                        ? { color, fontWeight: 600 }
+                                        : { color: 'var(--color-text-primary)' }
+                                }
+                            >
+                                {segment.text}
+                            </span>
+                        );
+                    })
                 )}
             </div>
             {/* `style` (not className) forces color/background/border/font here: it's

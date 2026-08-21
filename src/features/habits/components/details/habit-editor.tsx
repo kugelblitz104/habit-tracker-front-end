@@ -1,21 +1,10 @@
 import type { HabitRead, HabitUpdate } from '@/api';
-import { ColorPicker } from '@/components/ui/forms/color-picker';
-import { formLabelClass } from '@/components/ui/forms/form-field-styles';
-import { FrequencyPicker } from '@/components/ui/forms/frequency-picker';
-import { LabeledSwitch } from '@/components/ui/forms/labeled-switch';
-import { TextField } from '@/components/ui/forms/text-field';
 import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
-import {
-    sanitizeFormData,
-    sanitizeMultilineText,
-    sanitizeText,
-    validationPatterns
-} from '@/lib/input-sanitization';
+import { sanitizeFormData, sanitizeMultilineText, sanitizeText } from '@/lib/input-sanitization';
 import { useRecentColors } from '@/lib/use-recent-colors';
-import type { Frequency } from '@/types/types';
-import { Field, Fieldset, Label, Textarea } from '@headlessui/react';
 import { Trash2, X } from 'lucide-react';
-import { Controller, FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
+import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
+import { HabitFormFields, frequencyPresetName, type HabitFormValues } from './habit-form-fields';
 
 type HabitEditorProps = {
     habit: HabitRead;
@@ -27,29 +16,6 @@ type HabitEditorProps = {
     onDelete?: () => void;
     /** Reflects the parent mutation's pending state. */
     isSaving?: boolean;
-};
-
-interface IHabitEditorFormInput {
-    name: string;
-    question: string;
-    color: string;
-    frequency: Frequency;
-    category: string;
-    reminder: boolean;
-    notes: string;
-}
-
-/**
- * Map a habit's (frequency, range) to the FrequencyPicker's PRESET name key
- * ('daily' | 'weekly' | 'monthly' | 'custom'). This must be a preset key — not a
- * human display string — so the picker highlights the right radio and only shows
- * the "N times every M days" row for 'custom'.
- */
-const frequencyPresetName = (frequency: number, range: number): string => {
-    if (frequency === range) return 'daily';
-    if (frequency === 1 && range === 7) return 'weekly';
-    if (frequency === 1 && range === 30) return 'monthly';
-    return 'custom';
 };
 
 /**
@@ -66,7 +32,7 @@ export const HabitEditor = ({
     isSaving = false
 }: HabitEditorProps) => {
     const { addRecentColor } = useRecentColors();
-    const methods = useForm<IHabitEditorFormInput>({
+    const methods = useForm<HabitFormValues>({
         values: {
             name: habit.name,
             question: habit.question,
@@ -81,9 +47,7 @@ export const HabitEditor = ({
             notes: habit.notes ?? ''
         }
     });
-    const errors = methods.formState.errors;
-
-    const onSubmit: SubmitHandler<IHabitEditorFormInput> = (data) => {
+    const onSubmit: SubmitHandler<HabitFormValues> = (data) => {
         const sanitized = sanitizeFormData(data, {
             name: sanitizeText,
             question: sanitizeText,
@@ -125,81 +89,7 @@ export const HabitEditor = ({
             <div className='flex flex-col gap-3 rounded-card border p-5' style={CARD_SURFACE_STYLE}>
                 <FormProvider {...methods}>
                     <form onSubmit={methods.handleSubmit(onSubmit)}>
-                        <Fieldset>
-                            <TextField
-                                isRequired
-                                label='Habit name'
-                                name='name'
-                                placeholder='What will you do?'
-                                isValid={!errors.name}
-                                validation={validationPatterns.habitName}
-                            />
-                            <TextField
-                                label='Question'
-                                name='question'
-                                placeholder='What signifies completion?'
-                                isValid={!errors.question}
-                                validation={validationPatterns.question}
-                            />
-                            <TextField
-                                label='Category'
-                                name='category'
-                                placeholder='Optional grouping'
-                                isValid={!errors.category}
-                            />
-                            <Controller
-                                name='color'
-                                control={methods.control}
-                                render={({ field }) => (
-                                    <ColorPicker
-                                        mode='full'
-                                        color={field.value}
-                                        onColorChange={field.onChange}
-                                    />
-                                )}
-                            />
-                            <Controller
-                                name='frequency'
-                                control={methods.control}
-                                render={({ field }) => (
-                                    <FrequencyPicker
-                                        selected={field.value}
-                                        onSelectedChange={field.onChange}
-                                    />
-                                )}
-                            />
-                            <Controller
-                                name='reminder'
-                                control={methods.control}
-                                render={({ field }) => (
-                                    <LabeledSwitch
-                                        label='Reminder'
-                                        checked={field.value}
-                                        onChange={field.onChange}
-                                    />
-                                )}
-                            />
-                            <Field className='mb-3'>
-                                <Label className={formLabelClass}>Notes</Label>
-                                <Textarea
-                                    {...methods.register('notes', validationPatterns.notes)}
-                                    rows={4}
-                                    className='block w-full resize-y rounded-button border px-2.5 py-1.5 font-mono text-[12px] leading-relaxed text-text-secondary outline-none transition-colors placeholder:text-text-faint focus-visible:ring-1 focus-visible:ring-now-accent'
-                                    style={{
-                                        backgroundColor: 'var(--surface-input-bg)',
-                                        borderColor: errors.notes
-                                            ? 'var(--color-danger)'
-                                            : 'var(--surface-input-border)'
-                                    }}
-                                    wrap='soft'
-                                />
-                                {errors.notes && (
-                                    <span className='mt-1 block text-[11px] text-red-400'>
-                                        {errors.notes.message as string}
-                                    </span>
-                                )}
-                            </Field>
-                        </Fieldset>
+                        <HabitFormFields />
                         {/* Footer: destructive Delete on the left (mirrors the task
                             editor), Cancel / Save on the right. */}
                         <div className='mt-3 flex items-center justify-between gap-2'>

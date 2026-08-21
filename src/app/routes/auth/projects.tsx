@@ -6,6 +6,7 @@ import { Switch } from '@headlessui/react';
 import { ProtectedRoute } from '@/features/auth/components/protected-route';
 import { useCreateProject } from '@/features/projects/api/create-projects';
 import { useProjects } from '@/features/projects/api/get-projects';
+import { ProjectCaptureForm } from '@/features/projects/components/project-capture-form';
 import { randomProjectColor } from '@/features/projects/utils/project-colors';
 import { CaptureBar } from '@/features/tasks/components/capture-bar';
 import { useAuth } from '@/lib/auth-context';
@@ -55,6 +56,9 @@ function ProjectsContent() {
     const projectsQuery = useProjects({ profileId: activeProfileId, includeArchived: true });
     const createProject = useCreateProject();
     const [showArchived, setShowArchived] = useState(false);
+    // Set by the capture bar's Shift+Enter / + path; swaps the bar for the
+    // expanded ProjectCaptureForm.
+    const [captureName, setCaptureName] = useState<string | null>(null);
 
     const allProjects = projectsQuery.data?.projects ?? [];
     const projects = allProjects.filter((p) => !p.archived);
@@ -70,7 +74,7 @@ function ProjectsContent() {
                 name,
                 color: randomProjectColor()
             });
-            toast.success('Project created!');
+            toast.success('Project created');
         } catch (error) {
             toast.error('Failed to create project. Please try again.');
             // Re-throw so the capture bar keeps the typed text for a retry.
@@ -121,12 +125,21 @@ function ProjectsContent() {
                     </div>
                 )}
 
-                <CaptureBar
-                    onCapture={handleCaptureProject}
-                    disabled={!activeProfileId}
-                    isPending={createProject.isPending}
-                    placeholder='Add a project'
-                />
+                {captureName !== null && activeProfileId ? (
+                    <ProjectCaptureForm
+                        profileId={activeProfileId}
+                        initialName={captureName}
+                        onClose={() => setCaptureName(null)}
+                    />
+                ) : (
+                    <CaptureBar
+                        onCapture={handleCaptureProject}
+                        onExpand={setCaptureName}
+                        disabled={!activeProfileId}
+                        isPending={createProject.isPending}
+                        placeholder='Add a project'
+                    />
+                )}
 
                 <QueryState
                     isError={projectsQuery.isError}

@@ -11,7 +11,8 @@ import { useProjects } from '@/features/projects/api/get-projects';
 import { useCreateTask } from '../api/create-tasks';
 import { parseTaskInput, type TaskTokenType } from '../utils/parse-task-input';
 import { PRIORITY_LABELS } from '../utils/priority-config';
-import { HighlightedTaskInput } from './highlighted-task-input';
+import { HighlightedInput } from '@/components/ui/forms/highlighted-input';
+import { TASK_TOKEN_COLORS } from './task-token-colors';
 import { ProjectAutocomplete } from './project-autocomplete';
 
 /** The quick-add token reference shown in the capture bar's `?` popover. */
@@ -347,9 +348,10 @@ export const TaskCaptureBar = ({
                     <Plus size={18} />
                 </button>
                 <div className='relative min-w-0 flex-1'>
-                    <HighlightedTaskInput
+                    <HighlightedInput
                         value={value}
                         segments={parsed.segments}
+                        tokenColors={TASK_TOKEN_COLORS}
                         onChange={setValue}
                         onKeyDown={handleKeyDown}
                         onCaretChange={setCaretPos}
@@ -425,7 +427,7 @@ export const TaskCaptureBar = ({
                                 type='button'
                                 onClick={() => removeToken(pill.type)}
                                 aria-label={`Remove ${pill.label}`}
-                                className='rounded-full p-0.5 text-text-faint transition-colors hover:text-text-primary'
+                                className='min-h-[28px] min-w-[28px] rounded-full p-0.5 text-text-faint transition-colors pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] hover:text-text-primary'
                             >
                                 <X size={11} />
                             </button>

@@ -1,6 +1,7 @@
 import type { HabitRead } from '@/api';
 import { useCreateHabit } from '@/features/habits/api/create-habits';
 import { useHabits } from '@/features/habits/api/get-habits';
+import { HabitCaptureForm } from '@/features/habits/components/habit-capture-form';
 import { HabitDetailPane } from '@/features/habits/components/details/habit-detail-pane';
 import { HabitList } from '@/features/habits/components/dashboard/habit-list';
 import { SortHabitModal } from '@/features/habits/components/modals/sort-habit-modal';
@@ -43,6 +44,9 @@ export const HabitsDashboard = () => {
     // Group-by-category display mode; hydrated from localStorage after mount
     // (SSR renders the default flat list, same pattern as active_profile).
     const [groupByCategory, setGroupByCategory] = useState(false);
+    // Draft name from the capture bar's Shift+Enter; non-null swaps the bar for
+    // the expanded HabitCaptureForm.
+    const [captureName, setCaptureName] = useState<string | null>(null);
     // "Habits left today" count reported up from HabitList, computed with the
     // same logic as the Incomplete filter (auto-skip aware). null until settled.
     const [incompleteCount, setIncompleteCount] = useState<number | null>(null);
@@ -64,8 +68,7 @@ export const HabitsDashboard = () => {
         mutationConfig: {
             onSuccess: (data) => {
                 setHabits((prev) => [...prev, data]);
-                habitsQuery.refetch();
-                toast.success('Habit added successfully!');
+                toast.success('Habit created');
             }
         }
     });
@@ -182,12 +185,21 @@ export const HabitsDashboard = () => {
                 </button>
             </header>
 
-            <CaptureBar
-                onCapture={handleCaptureHabit}
-                disabled={!activeProfileId}
-                isPending={habitsAdd.isPending}
-                placeholder='Add a habit'
-            />
+            {captureName !== null && activeProfileId ? (
+                <HabitCaptureForm
+                    profileId={activeProfileId}
+                    initialName={captureName}
+                    onClose={() => setCaptureName(null)}
+                />
+            ) : (
+                <CaptureBar
+                    onCapture={handleCaptureHabit}
+                    onExpand={setCaptureName}
+                    disabled={!activeProfileId}
+                    isPending={habitsAdd.isPending}
+                    placeholder='Add a habit'
+                />
+            )}
 
             <HabitList
                 habits={habits}

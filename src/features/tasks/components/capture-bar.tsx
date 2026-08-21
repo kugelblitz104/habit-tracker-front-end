@@ -6,9 +6,8 @@ type CaptureBarProps = {
     /** Create a task from the typed title. Resolve clears the field; reject keeps it. */
     onCapture: (title: string) => Promise<void>;
     /**
-     * When provided, Shift+Enter hands the typed text off to an expanded
-     * details form (and the trailing hint advertises it). Omitted on surfaces
-     * without a rich form (e.g. habit capture), where Shift+Enter just submits.
+     * Shift+Enter (or the leading + button) hands the typed text off to an
+     * expanded details form, and the trailing hint advertises it.
      */
     onExpand?: (draftTitle: string) => void;
     disabled?: boolean;
@@ -43,13 +42,17 @@ export const CaptureBar = ({
         }
     };
 
+    const expand = () => {
+        if (!onExpand || disabled || isPending) return;
+        onExpand(value.trim());
+        setValue('');
+    };
+
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
         if (e.key !== 'Enter') return;
         e.preventDefault();
         if (e.shiftKey && onExpand) {
-            if (disabled || isPending) return;
-            onExpand(value.trim());
-            setValue('');
+            expand();
             return;
         }
         submit();
@@ -64,7 +67,20 @@ export const CaptureBar = ({
                 opacity: disabled ? 0.5 : 1
             }}
         >
-            <Plus size={18} className='shrink-0 text-text-muted' />
+            {onExpand ? (
+                <button
+                    type='button'
+                    onClick={expand}
+                    disabled={disabled || isPending}
+                    aria-label='Add details'
+                    title='Add details'
+                    className='inline-flex min-h-[28px] min-w-[28px] shrink-0 items-center justify-center rounded-full p-0.5 text-text-muted transition-colors pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] hover:text-text-primary disabled:cursor-not-allowed'
+                >
+                    <Plus size={18} />
+                </button>
+            ) : (
+                <Plus size={18} className='shrink-0 text-text-muted' />
+            )}
             <Input
                 type='text'
                 value={value}
@@ -72,7 +88,7 @@ export const CaptureBar = ({
                 onChange={(e) => setValue(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={placeholder}
-                aria-label='Add a task'
+                aria-label={placeholder}
                 className='min-w-0 flex-1 bg-transparent'
                 style={{
                     backgroundColor: 'transparent',

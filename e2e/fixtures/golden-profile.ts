@@ -57,7 +57,9 @@ export const GOLDEN = {
         past: 'Past countdown',
         yearly: 'Yearly countdown',
         linked: 'Countdown linked to a task'
-    }
+    },
+    /** The one countdown group in the golden profile, for the quick-add `@group` token. */
+    countdownGroups: { family: 'Family' }
 } as const;
 
 /**
@@ -321,6 +323,11 @@ export const buildGoldenProfile = (anchor: Date) => {
                 created_date: stamp(-15)
             }
         ],
+
+        // One group, unreferenced by any golden countdown: the quick-add
+        // `@group` token has something existing to match against, without
+        // changing any countdown's rendered category.
+        countdown_categories: [{ name: GOLDEN.countdownGroups.family, color: '#5588cc' }],
 
         // Durations are round numbers so the time-log summaries and the Insights
         // totals are assertable: 1h + 30m on Alpha, 45m on Beta = 2h 15m overall.
