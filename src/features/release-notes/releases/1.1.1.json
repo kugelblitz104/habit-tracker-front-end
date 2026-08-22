@@ -1,0 +1,14 @@
+{
+    "date": "2026-08-22",
+    "summary": "Bug Fixes and Improvements",
+    "changes": [
+        {
+            "kind": "changed",
+            "text": "Low priority tasks will now propogate into 'Soon' when it would be otherwise empty or less populated"
+        },
+        {
+            "kind": "fixed",
+            "text": "Stop status pikcer from also opening up task detail"
+        }
+    ]
+}
