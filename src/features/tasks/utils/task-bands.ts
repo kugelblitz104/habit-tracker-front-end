@@ -1,11 +1,42 @@
 import type { TaskRead } from '@/api';
-import { ACTIVE_TASK_BANDS, type TaskBand } from '@/types/types';
+import { ACTIVE_TASK_BANDS, TaskStatus, type TaskBand } from '@/types/types';
 import { computeBand, startOfToday } from './compute-band';
+import { PRIORITY_LOW } from './priority-config';
 import { compareSmart } from './task-controls';
 
+type ActiveBand = Exclude<TaskBand, 'hidden'>;
+
 type BandGroup = {
-    band: Exclude<TaskBand, 'hidden'>;
+    band: ActiveBand;
     tasks: TaskRead[];
+};
+
+/**
+ * Soon is topped up to this many rows from Low-priority tasks. A ceiling on
+ * filler rather than a guarantee: with fewer eligible Low tasks Soon stays
+ * short. Making it per-profile means a new property on three Profile schemas,
+ * so it is a schema break rather than a settings change.
+ */
+export const SOON_MIN_ROWS = 5;
+
+/**
+ * The Low-priority tasks to pull up into Soon, in the order they were given.
+ *
+ * This is the only effect priority 1 has anywhere, and the only thing that
+ * distinguishes it from priority 0 - None is never a candidate. Candidates come
+ * from Whenever alone, so a Low task already banded Soon or Now by its own date
+ * stays where it is. Deferred is excluded because `computeBand` forces those to
+ * Whenever precisely to keep them out of the way; promoting one would undo the
+ * only thing Deferred means.
+ */
+const soonFiller = (soonCount: number, wheneverTasks: TaskRead[]): TaskRead[] => {
+    const deficit = SOON_MIN_ROWS - soonCount;
+    if (deficit <= 0) return [];
+    return wheneverTasks
+        .filter(
+            (task) => (task.priority ?? 0) === PRIORITY_LOW && task.status !== TaskStatus.DEFERRED
+        )
+        .slice(0, deficit);
 };
 
 /**
@@ -14,16 +45,32 @@ type BandGroup = {
  * excluded entirely: they render nested under their parent in the task
  * editor, never as top-level cards. Within each band, tasks follow the shared
  * smart ranking (in progress → open → scheduled → pending → blocked → needs
- * info → deferred), then priority + due date. Shared by the Today and Project
- * band surfaces.
+ * info → deferred), then priority + due date.
+ *
+ * A thin Soon is then topped up from Low-priority Whenever tasks (see
+ * `soonFiller`). The filler is **moved**, not copied - it leaves Whenever - so
+ * `countGroupedTasks` cannot count it twice into Today's "N open" figure. It is
+ * appended after Soon's own members rather than merged into the sort, because
+ * `compareSmart` ranks status ahead of priority and would otherwise let an
+ * in-progress Low task outrank a genuinely-Soon one.
  */
-export const groupTasksByBand = (tasks: TaskRead[], today: Date = startOfToday()): BandGroup[] =>
-    ACTIVE_TASK_BANDS.map((band) => ({
-        band,
-        tasks: tasks
-            .filter((task) => task.parent_id == null && computeBand(task, today) === band)
-            .sort(compareSmart)
-    }));
+export const groupTasksByBand = (tasks: TaskRead[], today: Date = startOfToday()): BandGroup[] => {
+    const topLevel = tasks.filter((task) => task.parent_id == null);
+    const inBand = (band: ActiveBand): TaskRead[] =>
+        topLevel.filter((task) => computeBand(task, today) === band).sort(compareSmart);
+
+    const soon = inBand('soon');
+    const whenever = inBand('whenever');
+    const promoted = soonFiller(soon.length, whenever);
+    const promotedIds = new Set(promoted.map((task) => task.id));
+
+    const tasksFor: Record<ActiveBand, TaskRead[]> = {
+        now: inBand('now'),
+        soon: [...soon, ...promoted],
+        whenever: whenever.filter((task) => !promotedIds.has(task.id))
+    };
+    return ACTIVE_TASK_BANDS.map((band) => ({ band, tasks: tasksFor[band] }));
+};
 
 /**
  * Count only tasks that actually land in a rendered band, so open/empty-state

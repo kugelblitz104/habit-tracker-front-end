@@ -2,6 +2,7 @@ import type { APIRequestContext, Locator, Page } from '@playwright/test';
 
 import { authHeaders, type Account } from '../fixtures/api';
 import { dayFrom } from '../fixtures/clock';
+import { GOLDEN } from '../fixtures/golden-profile';
 import { TaskStatus } from '@/types/types';
 import { expect, gotoAppRoute, taskRowTitle, test } from '../fixtures/test';
 
@@ -210,7 +211,13 @@ test('dates and priority band a task, and priority 3 / 2 short-circuit', async (
     await gotoAppRoute(authedPage, '/');
     await expect(taskRowTitle(bandSection(authedPage, 'now'), `${P} due today`)).toHaveCount(1);
 
+    // `p1 no dates` is deliberately left out of the UI loop. Its API band is
+    // whenever (rule 5, asserted above) and stays that way, but the client tops
+    // a thin Soon section up from exactly these tasks, so which section renders
+    // it depends on how many others are in Soon rather than on the task itself.
+    // That rule has its own test below.
     for (const [seed, expected] of seeds) {
+        if (seed.title === `${P} p1 no dates`) continue;
         await expectBand(authedPage, seed.title, expected);
     }
 
@@ -290,6 +297,60 @@ test('the EARLIER of due_date and scheduled_date decides the band', async ({
     await expect(
         taskRowTitle(bandSection(authedPage, 'now'), `${P} scheduled yesterday, due in 60`)
     ).toHaveCount(1);
+
+    for (const [seed, expected] of seeds) {
+        await expectBand(authedPage, seed.title, expected);
+    }
+});
+
+/**
+ * The client-side fill rule, which is NOT part of `compute_band`: a thin Soon
+ * section is topped up from Low-priority tasks the API banded whenever. It lives
+ * in `task-bands.ts` because it is set-level - it depends on how many other
+ * tasks are already in Soon - so the API cannot express it per task.
+ *
+ * Every seed is asserted to arrive from the API as `whenever`, so a promotion
+ * seen on screen can only have come from the client rule. Which rows are
+ * eligible, and the fact that filler is appended rather than interleaved, are
+ * pinned exhaustively at the unit layer (`task-bands.test.ts`); this guards the
+ * WIRING, that a promoted row really renders inside the Soon section.
+ */
+test('a thin Soon section is topped up from Low-priority tasks', async ({
+    api,
+    account,
+    anchor,
+    goldenProfileId,
+    authedPage
+}) => {
+    const seeds: Array<[TaskSeed, Band]> = [
+        // Promoted: Low, undated, not deferred.
+        [{ title: `${P} fill low a`, priority: 1 }, 'soon'],
+        [{ title: `${P} fill low b`, priority: 1 }, 'soon'],
+        // Not promoted: priority None. This is the only thing that distinguishes
+        // priority 0 from priority 1 anywhere in the app.
+        [{ title: `${P} fill none`, priority: 0 }, 'whenever'],
+        // Not promoted: DEFERRED is forced to whenever precisely to keep a task
+        // out of the way, so the fill must not undo it.
+        [{ title: `${P} fill low deferred`, priority: 1, status: TaskStatus.DEFERRED }, 'whenever']
+    ];
+
+    for (const [seed] of seeds) {
+        const band = await createTask(api, account, goldenProfileId, anchor, seed);
+        expect(band, `API band for "${seed.title}"`).toBe('whenever');
+    }
+
+    await gotoAppRoute(authedPage, '/');
+
+    // Guard rather than assume the deficit: the golden profile contributes these
+    // two genuine Soon members (both priority 2), which leaves room for both Low
+    // seeds. If a fixture change ever fills Soon to its minimum, this fails here
+    // instead of below as a confusing band mismatch.
+    for (const title of [GOLDEN.tasks.soon, GOLDEN.tasks.parent]) {
+        await expect(
+            taskRowTitle(bandSection(authedPage, 'soon'), title),
+            `"${title}" is a genuine Soon member`
+        ).toHaveCount(1);
+    }
 
     for (const [seed, expected] of seeds) {
         await expectBand(authedPage, seed.title, expected);

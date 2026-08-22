@@ -30,14 +30,14 @@ export const PRIORITY_LEVELS: PriorityLevel[] = [
     {
         value: 0,
         label: 'None',
-        description: "No urgency. Not brought up unless there's a due date.",
+        description: 'No urgency. Only a due or scheduled date brings it up.',
         accent: 'var(--color-text-faint)',
         labelStyle: { color: 'var(--color-text-muted)' }
     },
     {
         value: 1,
         label: 'Low',
-        description: 'Minor. Usually Whenever.',
+        description: 'Minor. Fills out Soon when nothing more pressing does.',
         accent: 'var(--color-whenever-text)',
         labelStyle: { color: 'var(--color-text-muted)', fontWeight: 400 }
     },
@@ -56,6 +56,13 @@ export const PRIORITY_LEVELS: PriorityLevel[] = [
         labelStyle: { color: 'var(--color-now-accent)', fontWeight: 600 }
     }
 ];
+
+/**
+ * Named because Low is the one level with a rule attached to its exact value:
+ * `task-bands.ts` tops Soon up from Low tasks and from no other level. The rest
+ * are read positionally out of PRIORITY_LEVELS.
+ */
+export const PRIORITY_LOW = 1;
 
 /** Labels only, indexed by priority value — convenience view for chips/sections. */
 export const PRIORITY_LABELS: string[] = PRIORITY_LEVELS.map((level) => level.label);

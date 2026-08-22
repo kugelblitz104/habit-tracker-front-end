@@ -51,7 +51,8 @@ export type BandSectionProps = {
  * dimmed via `opacity: var(--quiet)` so Focus mode can hush it. Empty bands are
  * hidden unless an `emptyHint` is supplied (Now only, per the README).
  *
- * Exported for reuse by the /projects/:id view (wave 2c).
+ * Today is the only surface that renders bands as sections; /tasks and
+ * /projects/:id both go through TaskListView instead.
  */
 export const BandSection = ({
     band,
