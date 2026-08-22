@@ -27,6 +27,9 @@ const CONTROL_SIZE: Record<Exclude<TaskBand, 'hidden'>, number> = {
  * Round status control. Clicking it opens a popover listing the 8 task statuses
  * (glyph + label); the current one is highlighted with its color and a check.
  * Selecting a status calls `onSelect`.
+ *
+ * Both the trigger and the options keep their click to themselves, because every
+ * consumer nests this inside a row that is itself a click target.
  */
 export const StatusControl = ({
     status,
@@ -65,7 +68,14 @@ export const StatusControl = ({
                                 <li key={s}>
                                     <button
                                         type='button'
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                            // Headless UI portals this panel out
+                                            // of the row, but React routes events
+                                            // through the component tree rather
+                                            // than the DOM tree, so the click
+                                            // still reaches an ancestor row's
+                                            // onClick unless it is stopped here.
+                                            e.stopPropagation();
                                             onSelect(s);
                                             close();
                                         }}

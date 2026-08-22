@@ -163,23 +163,29 @@ for (const surface of SURFACES) {
         });
     }
 
-    test(`${surface.label}: clicking the status control does not also open the detail pane`, async ({
+    test(`${surface.label}: neither the status control nor picking a status opens the detail pane`, async ({
         api,
         account,
         goldenProfileId,
         authedPage
     }) => {
-        // The row itself is now a click target (task-row-redesign final fixes,
-        // item 2), so this pins that the status control's own click handler
-        // still swallows the click rather than letting it bubble and also
-        // select the row for the detail pane.
+        // The row itself is a click target (task-row-redesign final fixes, item
+        // 2), so both halves of a status change have to swallow their click
+        // rather than let it bubble and also select the row.
+        //
+        // Picking an option is the half that is easy to miss: the options live
+        // in a PopoverPanel that Headless UI portals out of the row, but React
+        // routes events through the COMPONENT tree rather than the DOM tree, so
+        // an option click still reaches the row's onClick.
         const projectId = await alphaProjectId(api, account, goldenProfileId);
         await gotoAppRoute(authedPage, surface.path(projectId));
 
         const title = GOLDEN.tasks.now;
         await expect(cardTitle(authedPage, title)).toBeVisible();
         await expect(authedPage.getByRole('complementary')).toHaveCount(0);
+        const listUrl = authedPage.url();
 
+        // Opening the picker.
         await statusControl(authedPage, title).click();
         await expect(
             authedPage.getByRole('button', { name: 'Blocked', exact: true })
@@ -188,6 +194,21 @@ for (const surface of SURFACES) {
 
         await authedPage.keyboard.press('Escape');
         await expect(authedPage.getByRole('complementary')).toHaveCount(0);
+
+        // Picking a non-closing status, so the row stays put.
+        await setStatus(authedPage, title, 'Blocked');
+        await expectStatus(authedPage, title, 'Blocked');
+        await expect(authedPage.getByRole('complementary')).toHaveCount(0);
+
+        // Picking Done, the reported case: the row closes and leaves its band,
+        // which must not be mistaken for a click on the row.
+        await setStatus(authedPage, title, 'Done');
+        await expect(authedPage.getByText('Task completed')).toBeVisible();
+        await expect(authedPage.getByRole('complementary')).toHaveCount(0);
+
+        // The URL is the narrow-layout symptom of the same bubble: there
+        // `onSelectEdit` navigates to /tasks/:ref instead of opening a pane.
+        expect(authedPage.url()).toBe(listUrl);
     });
 
     test(`${surface.label}: a failed status change surfaces an error toast`, async ({
