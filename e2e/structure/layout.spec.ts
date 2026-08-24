@@ -62,7 +62,7 @@ const PANE_ROW_OPEN_400 =
 // --- detail pane ------------------------------------------------------------
 
 const PANE_ASIDE =
-    'pane-rise sticky top-7 max-h-[calc(100vh-3.5rem)] w-full min-w-0 overflow-x-hidden overflow-y-auto';
+    'pane-rise sticky top-[var(--pane-sticky-top)] max-h-[var(--pane-max-h)] w-full min-w-0 overflow-x-hidden overflow-y-auto';
 const PANE_INNER_480 = 'w-[480px]';
 /** The countdown form pane fuses the width and the card surface into one node. */
 const PANE_INNER_400_CARD = 'w-[400px] rounded-card border p-4';

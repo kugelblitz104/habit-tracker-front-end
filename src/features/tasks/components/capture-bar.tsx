@@ -98,13 +98,18 @@ export const CaptureBar = ({
                     color: 'var(--color-text-primary)'
                 }}
             />
+            {/* Hidden below sm, matching both token bars: these are keyboard hints,
+                and the narrowest surfaces are the ones with no keyboard to press
+                ⇧↵ on. They were also taking width from the input to say it. */}
             {onExpand ? (
-                <span className='flex shrink-0 items-center gap-2 font-mono text-[10px] text-text-faint'>
+                <span className='hidden shrink-0 items-center gap-2 font-mono text-[10px] text-text-faint sm:flex'>
                     <span>↵ add</span>
                     <span>⇧↵ details</span>
                 </span>
             ) : (
-                <span className='shrink-0 font-mono text-[10px] text-text-faint'>return ↵</span>
+                <span className='hidden shrink-0 font-mono text-[10px] text-text-faint sm:inline'>
+                    return ↵
+                </span>
             )}
         </div>
     );

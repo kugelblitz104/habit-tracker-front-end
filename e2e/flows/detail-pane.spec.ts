@@ -303,6 +303,26 @@ test('the pane is a sticky aside with its own scroll container', async ({ authed
     expect(await authedPage.evaluate(() => window.scrollY)).toBe(0);
 });
 
+test('the stuck pane rests below the sticky header, not under it', async ({ authedPage }) => {
+    await gotoAppRoute(authedPage, '/');
+    await taskTitle(authedPage, GOLDEN.tasks.now).click();
+    await expect(detailPane(authedPage)).toBeVisible();
+    await assertPaneWidth(authedPage, TASK_PANE_WIDTH);
+
+    // Far enough that the aside has reached its sticky offset.
+    await authedPage.evaluate(() => window.scrollTo(0, 600));
+    await authedPage.waitForTimeout(300);
+
+    const box = await authedPage.evaluate(() => {
+        const header = document.querySelector('header')!.getBoundingClientRect();
+        const aside = document.querySelector('aside')!.getBoundingClientRect();
+        return { headerBottom: header.bottom, asideTop: aside.top };
+    });
+    // The header is opaque and z-40, so any overlap is not a subtle stacking
+    // nicety — it eats the pane card's top border and padding outright.
+    expect(box.asideTop).toBeGreaterThanOrEqual(box.headerBottom);
+});
+
 /**
  * CURRENT BEHAVIOR, pinned deliberately — not an endorsement.
  *

@@ -248,12 +248,19 @@ export const CountdownCaptureBar = ({
                     </PopoverPanel>
                 </Popover>
             </div>
+            {/* The pill's own height IS the X's height, so a floor on the X sets the
+                chip: the coarse 44px one made these 46px-tall slabs. The X keeps a
+                24px box (SC 2.5.8 AA) and takes no coarse bump. hit-target is NOT the
+                alternative here: this row wraps at gap-1.5, so 44px overlays overlap
+                the row above as well as the pill beside them. Keep this identical to
+                `task-capture-bar.tsx`; the two have diverged on a target-size rule
+                once already. */}
             {tokenPills.length > 0 && (
                 <div className='mt-2 flex flex-wrap items-center gap-1.5'>
                     {tokenPills.map((pill) => (
                         <span
                             key={pill.type}
-                            className='inline-flex items-center gap-1 rounded-chip border py-0.5 pl-2 pr-1 font-mono text-[10.5px] text-text-secondary'
+                            className='inline-flex min-h-[24px] items-center gap-1 rounded-chip border pl-2 pr-1 font-mono text-[10.5px] text-text-secondary'
                             style={{
                                 backgroundColor: 'var(--surface-input-bg)',
                                 borderColor: 'var(--surface-input-border)'
@@ -264,7 +271,8 @@ export const CountdownCaptureBar = ({
                                 type='button'
                                 onClick={() => removeToken(pill.type)}
                                 aria-label={`Remove ${pill.label}`}
-                                className='min-h-[28px] min-w-[28px] rounded-full p-0.5 text-text-faint transition-colors pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] hover:text-text-primary'
+                                data-target-exempt='inline'
+                                className='inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-text-faint transition-colors hover:text-text-primary'
                             >
                                 <X size={11} />
                             </button>
