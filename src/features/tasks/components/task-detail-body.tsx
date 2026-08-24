@@ -11,6 +11,7 @@ import { toast } from 'react-toastify';
 import { TaskIntegrationActions } from '@/features/integrations/components/task-integration-actions';
 import { useTask, useTasks } from '../api/get-tasks';
 import { useDeleteTaskWithConfirm } from '../hooks/use-delete-task-with-confirm';
+import { useTaskStatusChange } from '../hooks/use-task-status-change';
 import { renderTaskMarkdown } from '../utils/task-markdown';
 import { TaskDetailHeader } from './task-detail-header';
 import { TaskDetailSubtasks } from './task-detail-subtasks';
@@ -63,6 +64,10 @@ export const TaskDetailBody = ({
     const subtasksQuery = useTasks({ profileId: task?.profile_id, includeClosed: true });
 
     const { deleteWithConfirm, isPending: isDeletePending } = useDeleteTaskWithConfirm();
+
+    // Single-task list: the hook only needs it to recover the previous status
+    // for the undo toast.
+    const handleStatusChange = useTaskStatusChange(task ? [task] : []);
 
     const handleCopy = async () => {
         if (!task) return;
@@ -129,6 +134,7 @@ export const TaskDetailBody = ({
                 project={project}
                 pathname={pathname}
                 showEstimatedEffort={showEstimatedEffort}
+                onStatusChange={(status) => handleStatusChange(task.id, status)}
                 onEdit={() => setIsEditing(true)}
                 onClose={onClose}
                 onCopy={handleCopy}

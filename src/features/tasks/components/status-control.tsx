@@ -1,7 +1,7 @@
 import { POPOVER_PANEL_CLASS, popoverPanelStyle } from '@/components/ui/menu';
 import { TaskStatus, type TaskBand } from '@/types/types';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
-import { Check } from 'lucide-react';
+import { Check, ChevronDown } from 'lucide-react';
 import { STATUS_META, STATUS_ORDER } from './status-config';
 import { StatusGlyph } from './status-glyph';
 
@@ -15,6 +15,12 @@ type StatusControlProps = {
      */
     openUpward?: boolean;
     disabled?: boolean;
+    /**
+     * Render the trigger as a labelled pill (glyph + status name + chevron)
+     * instead of the bare round glyph, for surfaces that showed the status as
+     * text rather than as a row control.
+     */
+    withLabel?: boolean;
 };
 
 const CONTROL_SIZE: Record<Exclude<TaskBand, 'hidden'>, number> = {
@@ -24,7 +30,8 @@ const CONTROL_SIZE: Record<Exclude<TaskBand, 'hidden'>, number> = {
 };
 
 /**
- * Round status control. Clicking it opens a popover listing the 8 task statuses
+ * Round status control (or a labelled pill with `withLabel`). Clicking it opens
+ * a popover listing the task statuses
  * (glyph + label); the current one is highlighted with its color and a check.
  * Selecting a status calls `onSelect`.
  *
@@ -36,24 +43,41 @@ export const StatusControl = ({
     onSelect,
     band,
     openUpward = false,
-    disabled = false
+    disabled = false,
+    withLabel = false
 }: StatusControlProps) => {
     const current = STATUS_META[status] ?? STATUS_META[TaskStatus.OPEN];
     const size = CONTROL_SIZE[band];
 
     return (
         <Popover className='relative shrink-0'>
-            <PopoverButton
-                disabled={disabled}
-                aria-label={`Status: ${current.label}. Change status`}
-                // hit-target rather than a Button conversion: the per-status color
-                // lives on the glyph, not the button, and Button's variant chrome
-                // (border/background) would visually grow an isolated round glyph
-                // that every task row repeats.
-                className='hit-target flex items-center justify-center rounded-full outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-now-accent disabled:cursor-not-allowed disabled:opacity-50'
-            >
-                <StatusGlyph status={status} size={size} color={current.color} />
-            </PopoverButton>
+            {withLabel ? (
+                <PopoverButton
+                    disabled={disabled}
+                    aria-label={`Status: ${current.label}. Change status`}
+                    // No hit-target here: the labelled pill sits in a meta row
+                    // beside other fields, and a 44px overlay would extend over
+                    // them. It grows with min-height instead.
+                    className='flex min-h-[24px] items-center gap-[5px] rounded-button border px-[6px] text-[13px] leading-none outline-none transition-colors hover:brightness-125 focus-visible:ring-2 focus-visible:ring-now-accent disabled:cursor-not-allowed disabled:opacity-50 pointer-coarse:min-h-[44px]'
+                    style={{ borderColor: 'var(--surface-input-border)' }}
+                >
+                    <StatusGlyph status={status} size={16} color={current.color} />
+                    <span style={{ color: current.color }}>{current.label}</span>
+                    <ChevronDown size={12} className='text-text-faint' aria-hidden='true' />
+                </PopoverButton>
+            ) : (
+                <PopoverButton
+                    disabled={disabled}
+                    aria-label={`Status: ${current.label}. Change status`}
+                    // hit-target rather than a Button conversion: the per-status color
+                    // lives on the glyph, not the button, and Button's variant chrome
+                    // (border/background) would visually grow an isolated round glyph
+                    // that every task row repeats.
+                    className='hit-target flex items-center justify-center rounded-full outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-now-accent disabled:cursor-not-allowed disabled:opacity-50'
+                >
+                    <StatusGlyph status={status} size={size} color={current.color} />
+                </PopoverButton>
+            )}
             <PopoverPanel
                 anchor={{ to: openUpward ? 'top start' : 'bottom start', gap: 8 }}
                 className={`w-52 ${POPOVER_PANEL_CLASS}`}

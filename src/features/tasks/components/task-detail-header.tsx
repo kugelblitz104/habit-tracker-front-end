@@ -8,13 +8,16 @@ import { attentionReasons } from '../utils/attention-reasons';
 import { formatShortDate } from '../utils/task-format';
 import { PRIORITY_LABELS } from '../utils/priority-config';
 import { PriorityMeter } from './priority-meter';
-import { STATUS_META } from './status-config';
+import { StatusControl } from './status-control';
 import { projectDetailPath } from '@/lib/entity-ref';
 
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
     <div>
         <p className='font-mono text-[11px] uppercase tracking-[0.04em] text-text-muted'>{label}</p>
-        <div className='mt-[2px] flex items-center gap-[6px] text-[13px] text-text-primary'>
+        {/* min-h matches the status pill's 24px control floor, so every field's
+            value centres on the same line instead of the plain-text ones riding
+            high beside it. */}
+        <div className='mt-[1px] flex min-h-[24px] items-center gap-[6px] text-[13px] text-text-primary'>
             {children}
         </div>
     </div>
@@ -31,6 +34,8 @@ type TaskDetailHeaderProps = {
     /** Current route path — carried through the project link's `from` state. */
     pathname: string;
     showEstimatedEffort: boolean;
+    /** Persist a status picked from the meta row's status control. */
+    onStatusChange: (status: TaskStatus) => void;
     onEdit: () => void;
     onClose?: () => void;
     /** Copy this task (and its subtasks) to the clipboard as Markdown. */
@@ -41,19 +46,20 @@ type TaskDetailHeaderProps = {
  * TaskDetailBody's header block: a project kicker above the title, the
  * needs-attention block (label + reason chips, only when banded `now`), and a
  * labelled meta row (status always, due/scheduled/priority/estimate only when
- * present). Purely presentational; TaskDetailBody owns all the state.
+ * present). Status is the shared `StatusControl` picker, so it can be changed
+ * here without entering edit mode; TaskDetailBody owns the mutation.
  */
 export const TaskDetailHeader = ({
     task,
     project,
     pathname,
     showEstimatedEffort,
+    onStatusChange,
     onEdit,
     onClose,
     onCopy
 }: TaskDetailHeaderProps) => {
     const status = (task.status ?? TaskStatus.OPEN) as TaskStatus;
-    const meta = STATUS_META[status];
     const priority = task.priority ?? 0;
     const blockReason = status === TaskStatus.BLOCKED ? task.block_reason?.trim() : null;
     // The banner below carries the reason in full, so the chip that would say it
@@ -181,15 +187,21 @@ export const TaskDetailHeader = ({
             )}
 
             <div
-                className=' flex flex-wrap gap-[20px] border-t pt-[12px]'
+                className='flex flex-wrap gap-x-[18px] gap-y-[6px] border-t pt-[10px]'
                 style={{ borderColor: 'var(--surface-card-border)' }}
             >
                 <Field label='Status'>
-                    <span
-                        className='h-1.5 w-1.5 rounded-full'
-                        style={{ backgroundColor: meta.color }}
-                    />
-                    <span style={{ color: meta.color }}>{meta.label}</span>
+                    {/* Pulls the pill's border + padding back out of the flow so
+                        its glyph starts on the same left edge as the "Status"
+                        label and the other fields' flush plain text. */}
+                    <div className='-ml-[7px]'>
+                        <StatusControl
+                            status={status}
+                            onSelect={onStatusChange}
+                            band='whenever'
+                            withLabel
+                        />
+                    </div>
                 </Field>
 
                 {task.due_date && (
