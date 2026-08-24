@@ -161,6 +161,21 @@
     --glow: 0.42;
     --quiet: 1;
 
+    /* ---- Sticky chrome geometry ----
+       AppHeader is pinned to this height rather than being sized by its
+       content, so the sticky detail pane can offset by it. The pane is opaque
+       and the header is opaque and z-40, so a pane that sticks any higher does
+       not layer over the bar — it slides under it and loses its card's top
+       border and padding. */
+    --app-header-h: 51px;
+    /* Where a stuck pane comes to rest. ADJUST HERE: the addend is the air
+       between the bar and the pane's card. It is smaller than the page
+       container's 28px top padding on purpose — that padding separates the
+       content from the top of the page, whereas this only has to keep the card
+       from touching the bar. */
+    --pane-sticky-top: calc(var(--app-header-h) + 0.75rem);
+    --pane-max-h: calc(100vh - var(--pane-sticky-top) - 1.75rem);
+
     /* ---- Input / capture surfaces ---- */
     --surface-input-bg: rgba(255, 255, 255, 0.045);
     --surface-input-border: rgba(255, 255, 255, 0.09);

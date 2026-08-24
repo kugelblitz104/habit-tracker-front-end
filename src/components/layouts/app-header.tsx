@@ -119,7 +119,10 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
             // instead of sliding with the page during a route view transition —
             // the full-width bar is identical across pages, so it stays put while
             // only the content beneath pans.
-            className='sticky top-0 z-40 border-b [view-transition-name:app-header]'
+            // Height is pinned to --app-header-h rather than left to the content:
+            // the sticky detail pane offsets by that var, so the bar's height has
+            // to be a declared number instead of an emergent one.
+            className='sticky top-0 z-40 h-[var(--app-header-h)] border-b [view-transition-name:app-header]'
             style={{
                 borderColor: 'var(--surface-card-border)',
                 // Solid base so scrolled content doesn't bleed through the sticky

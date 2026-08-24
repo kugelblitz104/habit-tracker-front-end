@@ -13,7 +13,10 @@ type DetailPaneProps = {
 
 /**
  * Sticky master-detail pane host shared by the task, habit and countdown
- * panes. Fills (and clips) the grid pane track that animates 0 -> `width`px
+ * panes. It comes to rest at `--pane-sticky-top` (the AppHeader's height plus
+ * the page container's top padding) rather than at an offset of its own: the
+ * header is opaque and z-40, so anything higher slides under the bar.
+ * Fills (and clips) the grid pane track that animates 0 -> `width`px
  * while opening; the fixed-width inner keeps the content laid out at its
  * final width throughout. `pane-rise` floats it up into place — it lives on
  * the scroll container itself (not the inner) so the transform doesn't
@@ -38,7 +41,7 @@ export const DetailPane = ({
     children
 }: DetailPaneProps) => {
     return (
-        <aside className='pane-rise sticky top-7 max-h-[calc(100vh-3.5rem)] w-full min-w-0 overflow-x-hidden overflow-y-auto'>
+        <aside className='pane-rise sticky top-[var(--pane-sticky-top)] max-h-[var(--pane-max-h)] w-full min-w-0 overflow-x-hidden overflow-y-auto'>
             <div className={innerClassName ?? PANE_INNER_WIDTH[width]} style={innerStyle}>
                 {children}
             </div>
