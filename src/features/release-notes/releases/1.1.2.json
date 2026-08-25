@@ -1,0 +1,14 @@
+{
+    "date": "2026-08-22",
+    "summary": "Bug Fixes and Improvements",
+    "changes": [
+        {
+            "kind": "added",
+            "text": "Status control button on the task detail page"
+        },
+        {
+            "kind": "added",
+            "text": "Follow up question for block reason or scheduled date when setting those statuses"
+        }
+    ]
+}

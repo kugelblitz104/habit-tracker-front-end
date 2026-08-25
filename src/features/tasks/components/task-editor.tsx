@@ -14,6 +14,7 @@ import { toast } from 'react-toastify';
 import { useTasks } from '../api/get-tasks';
 import { useUpdateTask } from '../api/update-tasks';
 import { useDeleteTaskWithConfirm } from '../hooks/use-delete-task-with-confirm';
+import { StatusControl } from './status-control';
 import { SubtaskSection } from './subtask-section';
 import { useTimeEntrySummary } from '@/features/time-entries/api/get-time-entries';
 import { formatHumanDuration } from '@/features/time-entries/utils/format-duration';
@@ -96,6 +97,28 @@ export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
             setScheduledTime('');
         }
     }, [isScheduled]);
+
+    // Status writes immediately, matching the subtask rows in this same editor
+    // and the control's behaviour on every other surface.
+    const handleStatusSelect = (next: TaskStatus) => {
+        if (next === status) return;
+        updateTask.mutate(
+            { taskId: task.id, data: { status: next } },
+            { onError: () => toast.error('Failed to update status. Please try again.') }
+        );
+    };
+
+    /**
+     * Mirror a follow-up the status picker just persisted into local state.
+     * Without this the stale local copy wins on Save: `buildPatch` diffs against
+     * `task`, so an untouched empty field would be sent back as null and wipe
+     * the value the picker had written seconds earlier.
+     */
+    const applyFollowUp = (patch: TaskUpdate) => {
+        if (patch.block_reason !== undefined) setBlockReason(patch.block_reason ?? '');
+        if (patch.scheduled_date !== undefined) setScheduledDate(patch.scheduled_date ?? '');
+        if (patch.scheduled_time !== undefined) setScheduledTime(patch.scheduled_time ?? '');
+    };
 
     // Assemble a partial PATCH containing only fields that actually changed.
     const buildPatch = (): TaskUpdate | null => {
@@ -187,6 +210,28 @@ export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
                     className={`${formFieldClass} font-display text-[13px] text-text-primary`}
                     style={formFieldStyle}
                 />
+            </div>
+
+            {/* Status: the same control every other surface uses, and like the
+                subtask rows below it, it writes on pick rather than waiting for
+                Save. Cancel therefore does not revert it. */}
+            <div>
+                <span className={formLabelClass}>Status</span>
+                <div className='-ml-[7px]'>
+                    <StatusControl
+                        status={status}
+                        onSelect={handleStatusSelect}
+                        followUp={{
+                            taskId: task.id,
+                            blockReason: task.block_reason,
+                            scheduledDate: task.scheduled_date,
+                            scheduledTime: task.scheduled_time,
+                            onSaved: applyFollowUp
+                        }}
+                        band='whenever'
+                        withLabel
+                    />
+                </div>
             </div>
 
             {/* Notes / description */}

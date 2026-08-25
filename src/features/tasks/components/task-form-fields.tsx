@@ -116,7 +116,7 @@ export const PriorityField = ({ value, onChange }: PriorityFieldProps) => (
 
 type DateTimeFieldProps = {
     /** Section label, e.g. "Due" or "Scheduled for". */
-    label: string;
+    label?: string;
     date: string;
     time: string;
     onDateChange: (value: string) => void;
@@ -131,7 +131,7 @@ type DateTimeFieldProps = {
  * disabled until a date is picked.
  */
 export const DateTimeField = ({
-    label,
+    label = '',
     date,
     time,
     onDateChange,
@@ -146,7 +146,7 @@ export const DateTimeField = ({
 
     return (
         <div>
-            <span className={formLabelClass}>{label}</span>
+            {label && <span className={formLabelClass}>{label}</span>}
             <div className='flex flex-wrap items-center gap-2'>
                 <Input
                     type='date'

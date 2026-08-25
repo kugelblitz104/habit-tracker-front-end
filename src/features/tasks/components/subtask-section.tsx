@@ -91,7 +91,7 @@ const SortableSubtaskRow = ({
  * tasks-list response with `parent_id` set (fetched with `includeClosed` so
  * completed ones stay visible). Completed subtasks sink to the bottom; within
  * each group the manual `sort_order` drives the order. Each row surfaces the
- * full 8-status picker (via the round glyph), a promote-to-task action and a
+ * full 9-status picker (via the round glyph), a promote-to-task action and a
  * ghost delete (no confirm — subtasks are lightweight); a subtask's other
  * fields (priority, notes, …) stay hidden until it's promoted.
  */

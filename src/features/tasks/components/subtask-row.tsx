@@ -14,7 +14,7 @@ import { StatusControl } from './status-control';
 
 type SubtaskRowProps = {
     subtask: TaskRead;
-    /** Change the subtask's status (the round glyph opens the 8-status picker). */
+    /** Change the subtask's status (the round glyph opens the 9-status picker). */
     onStatusChange: (status: TaskStatus) => void;
     /** Commit a new title. When provided, the title becomes click-to-edit. */
     onRename?: (title: string) => void;
@@ -39,7 +39,7 @@ type SubtaskRowProps = {
 
 /**
  * Shared row chrome for a subtask: the same round status glyph parent tasks use
- * (click to open the 8-status picker) plus the title (struck through + faint
+ * (click to open the 9-status picker) plus the title (struck through + faint
  * when done or cancelled). When `onRename` is supplied the title is
  * click-to-edit inline. Subtasks surface *only* their status — other metadata
  * (priority, notes, …) stays hidden unless the task is promoted to a full task.
@@ -111,6 +111,9 @@ export const SubtaskRow = ({
                 {...attributes}
             >
                 {handle}
+                {/* No followUp: a subtask shows only its status, so a block
+                    reason or scheduled date would have nowhere to render. One
+                    that needs either gets promoted to a full task. */}
                 <StatusControl
                     status={status}
                     onSelect={onStatusChange}
@@ -150,6 +153,7 @@ export const SubtaskRow = ({
 
     return (
         <div className='flex items-center gap-2 rounded-button px-1.5 py-1'>
+            {/* No followUp, same reason as the checklist variant above. */}
             <StatusControl status={status} onSelect={onStatusChange} band='whenever' />
             {editing ? (
                 // `style` (not className) forces the font here: the compact tier sets

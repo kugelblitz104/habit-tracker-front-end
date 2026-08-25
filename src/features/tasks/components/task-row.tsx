@@ -310,6 +310,12 @@ export const TaskRow = ({
                                     <StatusControl
                                         status={status}
                                         onSelect={handleStatusSelect}
+                                        followUp={{
+                                            taskId: task.id,
+                                            blockReason: task.block_reason,
+                                            scheduledDate: task.scheduled_date,
+                                            scheduledTime: task.scheduled_time
+                                        }}
                                         band={band}
                                         openUpward={openUpward}
                                     />

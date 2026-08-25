@@ -143,6 +143,12 @@ export const CompletedSection = ({
                                                 onSelect={(next) =>
                                                     handleStatusChange(task.id, next)
                                                 }
+                                                followUp={{
+                                                    taskId: task.id,
+                                                    blockReason: task.block_reason,
+                                                    scheduledDate: task.scheduled_date,
+                                                    scheduledTime: task.scheduled_time
+                                                }}
                                                 band='whenever'
                                                 openUpward
                                             />

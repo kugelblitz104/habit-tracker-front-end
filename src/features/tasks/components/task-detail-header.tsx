@@ -198,6 +198,12 @@ export const TaskDetailHeader = ({
                         <StatusControl
                             status={status}
                             onSelect={onStatusChange}
+                            followUp={{
+                                taskId: task.id,
+                                blockReason: task.block_reason,
+                                scheduledDate: task.scheduled_date,
+                                scheduledTime: task.scheduled_time
+                            }}
                             band='whenever'
                             withLabel
                         />

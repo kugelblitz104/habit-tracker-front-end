@@ -57,10 +57,24 @@ const statusControl = (page: Page, title: string) =>
         .locator('xpath=../../..')
         .getByRole('button', { name: /^Status: / });
 
-/** Open a card's status picker and pick `label`. */
+/**
+ * Open a card's status picker and pick `label`.
+ *
+ * Blocked and Scheduled hold the popover open on a second step asking for the
+ * field they need (`task-status-follow-up.spec.ts` covers that). These tests
+ * only care about the status itself, and dismissing that step commits it with
+ * the field left null, so skip past it rather than leaving the popover open
+ * over the next interaction.
+ */
 const setStatus = async (page: Page, title: string, label: string) => {
     await statusControl(page, title).click();
     await page.getByRole('button', { name: label, exact: true }).click();
+    // Identified by the step's own back header, since neither branch has a save
+    // button: Blocked commits on Enter and Scheduled on the pick.
+    const followUpHeader = page.getByRole('button', {
+        name: /^(Blocked on|Scheduled for)$/
+    });
+    if (await followUpHeader.count()) await page.keyboard.press('Escape');
 };
 
 const expectStatus = async (page: Page, title: string, label: string) => {

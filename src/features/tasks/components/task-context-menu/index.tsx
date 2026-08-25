@@ -18,6 +18,7 @@ import { DateSubmenu } from './date-submenu';
 import { PrioritySubmenu } from './priority-submenu';
 import { ProjectSubmenu } from './project-submenu';
 import { Divider, RootRow, itemClass } from './shared';
+import { statusFollowUpKind } from '../../utils/status-follow-up';
 import { StatusSubmenu } from './status-submenu';
 
 export type MenuPoint = { x: number; y: number };
@@ -146,7 +147,9 @@ export const TaskContextMenu = ({
 
     const handleStatus = (s: TaskStatus) => {
         onStatusChange(s);
-        onClose();
+        // Blocked and Scheduled keep the menu up so the submenu can ask for
+        // their second field; every other status closes it as before.
+        if (!statusFollowUpKind(s)) onClose();
     };
 
     const openEditor = () => {
@@ -297,6 +300,13 @@ export const TaskContextMenu = ({
                     status={status}
                     onSelect={handleStatus}
                     onBack={() => setView('root')}
+                    followUp={{
+                        taskId: task.id,
+                        blockReason: task.block_reason,
+                        scheduledDate: task.scheduled_date,
+                        scheduledTime: task.scheduled_time
+                    }}
+                    onFollowUpDone={onClose}
                 />
             )}
 
