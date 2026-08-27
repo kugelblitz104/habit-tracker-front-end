@@ -59,3 +59,22 @@ export const externalLinkChipStyle = (source: string | null | undefined): CSSPro
  * coming back as a 422 toast.
  */
 export const isLinkableUrl = (url: string): boolean => /^https?:\/\//i.test(url.trim());
+
+/**
+ * The `source` half of an edit to an existing link, as a patch fragment to
+ * spread into the request. An empty object means leave `source` out of the
+ * PATCH rather than send null.
+ *
+ * A stored source that does not match its own URL was written by Publish (from
+ * the connection's provider) or by a backup import, so it knows something this
+ * regex does not - an on-prem Azure DevOps item at `https://tfs.corp/...`
+ * carries `azure_devops` that `sourceFromUrl` cannot re-derive. Those are left
+ * alone. Anything else was inferred in the first place, so it is re-inferred.
+ */
+export const linkSourcePatch = (
+    prev: { source: string | null | undefined; url: string | null | undefined },
+    nextUrl: string
+): { source?: string | null } => {
+    if (sourceFromUrl(prev.url ?? '') !== (prev.source ?? null)) return {};
+    return { source: sourceFromUrl(nextUrl) };
+};

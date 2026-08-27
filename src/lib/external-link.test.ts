@@ -3,6 +3,7 @@ import {
     EXTERNAL_LINK_STYLE,
     externalLinkChipStyle,
     isLinkableUrl,
+    linkSourcePatch,
     sourceFromUrl
 } from './external-link';
 
@@ -75,5 +76,45 @@ describe('isLinkableUrl', () => {
 
     it('rejects a blank string', () => {
         expect(isLinkableUrl('   ')).toBe(false);
+    });
+});
+
+describe('linkSourcePatch', () => {
+    const GITHUB = 'https://github.com/octocat/hello/issues/42';
+    const JIRA = 'https://example.atlassian.net/browse/PROJ-412';
+    /** An on-prem Azure DevOps host, which `sourceFromUrl` cannot recognise. */
+    const ON_PREM = 'https://tfs.corp/tfs/Proj/_workitems/edit/2841';
+
+    it('re-infers when the stored source is what its own URL implies', () => {
+        expect(linkSourcePatch({ source: null, url: JIRA }, GITHUB)).toEqual({ source: 'github' });
+    });
+
+    it('demotes to null when an inferred link moves to an unrecognised host', () => {
+        expect(linkSourcePatch({ source: 'github', url: GITHUB }, JIRA)).toEqual({ source: null });
+    });
+
+    // A published on-prem Azure DevOps link: its source came from the
+    // connection's provider, not from the URL, so re-inferring would demote it
+    // to null and repaint its chip neutral.
+    it('omits source when the stored value disagrees with its own URL', () => {
+        expect(linkSourcePatch({ source: 'azure_devops', url: ON_PREM }, ON_PREM)).toEqual({});
+    });
+
+    it('preserves a provider name this client does not know', () => {
+        expect(linkSourcePatch({ source: 'jira', url: JIRA }, GITHUB)).toEqual({});
+    });
+
+    // A no-op write rather than an omission, which is cheaper than a second
+    // condition to avoid it.
+    it('re-sends the same value when only the reference changed', () => {
+        expect(linkSourcePatch({ source: 'github', url: GITHUB }, GITHUB)).toEqual({
+            source: 'github'
+        });
+    });
+
+    it('treats a missing stored URL as implying no source', () => {
+        expect(linkSourcePatch({ source: null, url: undefined }, GITHUB)).toEqual({
+            source: 'github'
+        });
     });
 });
