@@ -14,10 +14,11 @@ import { projectDetailPath } from '@/lib/entity-ref';
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
     <div>
         <p className='font-mono text-[11px] uppercase tracking-[0.04em] text-text-muted'>{label}</p>
-        {/* min-h matches the status pill's 24px control floor, so every field's
-            value centres on the same line instead of the plain-text ones riding
-            high beside it. */}
-        <div className='mt-[1px] flex min-h-[24px] items-center gap-[6px] text-[13px] text-text-primary'>
+        {/* min-h tracks the status pill's control floor at BOTH pointer types
+            (StatusControl's labelled pill grows to 44px on a coarse pointer), so
+            every field's value centres on the same line instead of the
+            plain-text ones riding high beside the taller pill. */}
+        <div className='mt-[1px] flex min-h-[24px] items-center gap-[6px] text-[13px] text-text-primary pointer-coarse:min-h-[44px]'>
             {children}
         </div>
     </div>
