@@ -152,6 +152,62 @@ test('long titles truncate instead of widening the page on mobile @narrow', asyn
     }
 });
 
+/**
+ * The bulk-action bar is `position: fixed`, so it does NOT widen
+ * `documentElement.scrollWidth` — `expectNoHorizontalOverflow` above reads clean
+ * while the bar hangs off both edges of the screen. It has to be measured against
+ * the viewport directly, which is why this lives in its own test rather than as
+ * another route in the sweep.
+ *
+ * The regression: the bar was a single nowrap `rounded-full` pill whose contents
+ * come to ~456px against ~358px of room at 390px. Being centred, it overhung
+ * equally at both ends — the count was clipped on the left and the exit button sat
+ * entirely off-screen on the right, so selection mode could not be left from the
+ * bar at all.
+ *
+ * Also runs in the `touch` project, where the 44px floor applies and every control
+ * grows, which is the width case most likely to break the wrap again.
+ */
+test('the bulk-action bar fits the viewport and keeps every control reachable @narrow @touch', async ({
+    authedPage: page
+}) => {
+    const min = (await page.evaluate(() => matchMedia('(pointer: coarse)').matches)) ? 44 : 24;
+
+    await gotoAppRoute(page, '/tasks');
+    await expect(taskRowTitle(page, GOLDEN.tasks.now)).toBeVisible();
+    await page.getByRole('button', { name: 'Select', exact: true }).click();
+    await page.getByRole('button', { name: 'All', exact: true }).click();
+    await expect(page.getByText('8 selected')).toBeVisible();
+
+    // Measured off the count label's own bar rather than a class name, so a
+    // restyle of the surface doesn't quietly stop testing anything.
+    const bar = page.getByText('8 selected').locator('xpath=..');
+    const box = (await bar.boundingBox())!;
+    const width = page.viewportSize()!.width;
+    expect(Math.round(box.x), 'bar overhangs the left edge').toBeGreaterThanOrEqual(0);
+    expect(Math.round(box.x + box.width), 'bar overhangs the right edge').toBeLessThanOrEqual(
+        width
+    );
+
+    // Every control inside it, individually: the pill used to clip its own ends,
+    // so a bar that fits is not on its own proof that the buttons do.
+    const controls = bar.getByRole('button');
+    const undersized: string[] = [];
+    for (const control of await controls.all()) {
+        const name = (await control.getAttribute('aria-label')) ?? (await control.innerText());
+        const r = (await control.boundingBox())!;
+        if (r.x < 0 || r.x + r.width > width) undersized.push(`"${name}" offscreen at x=${r.x}`);
+        if (r.width < min || r.height < min) {
+            undersized.push(`"${name}" is ${r.width}x${r.height}, under the ${min}px floor`);
+        }
+    }
+    expect(undersized, undersized.join('\n')).toEqual([]);
+
+    // The one that was unreachable, driven for real: it must still exit selection.
+    await page.getByRole('button', { name: 'Exit selection' }).click();
+    await expect(page.getByText('8 selected')).toHaveCount(0);
+});
+
 test('the priority column keeps its bars and drops only the text label below sm @narrow', async ({
     authedPage
 }) => {
