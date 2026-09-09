@@ -79,7 +79,8 @@ const toSlug = (title: string) =>
         .replace(/(^-|-$)/g, '');
 
 export const GOLDEN_TASK_SLUGS = {
-    now: toSlug(GOLDEN.tasks.now)
+    now: toSlug(GOLDEN.tasks.now),
+    closed: toSlug(GOLDEN.tasks.closed)
 } as const;
 
 export const GOLDEN_PROJECT_SLUGS = {

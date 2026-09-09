@@ -15,6 +15,7 @@ import { useTaskStatusChange } from '../hooks/use-task-status-change';
 import { renderTaskMarkdown } from '../utils/task-markdown';
 import { TaskDetailHeader } from './task-detail-header';
 import { TaskDetailSubtasks } from './task-detail-subtasks';
+import { TaskDetailTimestamps } from './task-detail-timestamps';
 import { TaskEditor } from './task-editor';
 
 type TaskDetailBodyProps = {
@@ -165,10 +166,16 @@ export const TaskDetailBody = ({
                 that needs a link can be promoted to a full task. */}
             {task.parent_id == null && <TaskIntegrationActions task={task} />}
 
+            {/* Record keeping: created / updated / closed */}
+            <TaskDetailTimestamps
+                createdDate={task.created_date}
+                updatedDate={task.updated_date}
+                closedDate={task.closed_date}
+            />
+
             {/* Footer: delete */}
             <div
-                className='flex justify-start border-t pt-4'
-                style={{ borderColor: 'rgba(255,255,255,.06)' }}
+                className='flex justify-start'
             >
                 <Button
                     variant='ghost'
