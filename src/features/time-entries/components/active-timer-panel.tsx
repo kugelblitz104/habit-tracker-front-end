@@ -61,7 +61,8 @@ export const ActiveTimerPanel = () => {
                             <Timer size={16} style={{ color: 'var(--color-now-accent)' }} />
                         </span>
                         <div className='min-w-0'>
-                            <div className='font-mono text-[17px] font-semibold tabular-nums text-text-primary'>
+                            {/* px-2.5 to match the input padding */}
+                            <div className='font-mono text-[17px] px-2.5 font-semibold tabular-nums text-text-primary'>
                                 {formatClock(elapsed)}
                             </div>
                             <div className='mt-0.5 flex min-w-0 items-center gap-1.5'>
