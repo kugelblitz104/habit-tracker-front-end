@@ -325,7 +325,9 @@ const EntryRow = ({
     entry,
     primary,
     showDate,
-    project
+    project,
+    editing,
+    onToggle
 }: {
     entry: TimeEntryRead;
     /** Label or context name; null when there's neither. */
@@ -333,8 +335,9 @@ const EntryRow = ({
     showDate: boolean;
     /** The entry's project pip; undefined/null renders nothing. */
     project?: EntryProject | null;
+    editing: boolean;
+    onToggle: () => void;
 }) => {
-    const [editing, setEditing] = useState(false);
     const dateTime = [showDate ? formatDate(entry.started_at) : null, formatTime(entry.started_at)]
         .filter(Boolean)
         .join(' · ');
@@ -349,7 +352,7 @@ const EntryRow = ({
         >
             <button
                 type='button'
-                onClick={() => setEditing((v) => !v)}
+                onClick={onToggle}
                 aria-expanded={editing}
                 className='flex w-full items-center gap-2 text-left pointer-coarse:min-h-[44px]'
             >
@@ -386,6 +389,17 @@ export const EditableTimeLog = ({
     showProject = false
 }: EditableTimeLogProps) => {
     const [expanded, setExpanded] = useState<Set<string>>(new Set());
+    // Held here, not in EntryRow: a row's group key is derived from its label
+    // (or context name), so committing either field regroups the entry and
+    // would remount the row, closing the editor mid-edit.
+    const [editingIds, setEditingIds] = useState<Set<number>>(new Set());
+
+    const toggleEditing = (entryId: number) =>
+        setEditingIds((prev) => {
+            const next = new Set(prev);
+            next.has(entryId) ? next.delete(entryId) : next.add(entryId);
+            return next;
+        });
 
     const primaryFor = (entry: TimeEntryRead): string | null =>
         entry.label?.trim() || contextNameFor?.(entry) || null;
@@ -425,15 +439,21 @@ export const EditableTimeLog = ({
                 if (group.entries.length === 1) {
                     return (
                         <EntryRow
-                            key={group.key}
+                            key={group.entries[0]!.id}
                             entry={group.entries[0]!}
                             primary={group.primary}
                             showDate
                             project={projectOf(group.entries[0]!)}
+                            editing={editingIds.has(group.entries[0]!.id)}
+                            onToggle={() => toggleEditing(group.entries[0]!.id)}
                         />
                     );
                 }
-                const open = expanded.has(group.key);
+                // A label edit can merge an entry into a group; force the group
+                // open so an editor already on screen isn't collapsed away.
+                const open =
+                    expanded.has(group.key) ||
+                    group.entries.some((entry) => editingIds.has(entry.id));
                 const first = group.entries[0]!;
                 // With a label/context that's the title (date in the subline);
                 // without one, the date leads. The group's entries share a
@@ -499,6 +519,8 @@ export const EditableTimeLog = ({
                                         primary={null}
                                         showDate={false}
                                         project={projectOf(entry)}
+                                        editing={editingIds.has(entry.id)}
+                                        onToggle={() => toggleEditing(entry.id)}
                                     />
                                 ))}
                             </div>
