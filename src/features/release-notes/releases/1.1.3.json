@@ -1,0 +1,22 @@
+{
+    "date": "2026-09-10",
+    "summary": "Visual Improvements",
+    "changes": [
+        {
+            "kind": "added",
+            "text": "Timestamps on Task Detail view"
+        },
+        {
+            "kind": "fixed",
+            "text": "Bulk action showing up incorrectly on mobile"
+        },
+        {
+            "kind": "fixed",
+            "text": "Inline status display not showing properly on mobile"
+        },
+        {
+            "kind": "fixed",
+            "text": "Time entries autoclosing after edits"
+        }
+    ]
+}
