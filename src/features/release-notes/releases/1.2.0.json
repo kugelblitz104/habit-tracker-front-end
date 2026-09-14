@@ -1,0 +1,22 @@
+{
+    "date": "2026-09-14",
+    "summary": "Daily Journal",
+    "changes": [
+        {
+            "kind": "added",
+            "text": "Daily journal: a page per day for how the day went, something you're grateful for, and a word for how it felt. Disabled by default. Turn it on per profile under Settings > Journal."
+        },
+        {
+            "kind": "added",
+            "text": "Import from Obsidian: upload a zip of your daily notes folder to bring existing entries across. A day that already has an entry is never overwritten."
+        },
+        {
+            "kind": "changed",
+            "text": "Countdowns now say 'passed' instead of 'overdue' when the date has passed."
+        },
+        {
+            "kind": "fixed",
+            "text": "Text flashing in an unstyled font for a moment on first load."
+        }
+    ]
+}
