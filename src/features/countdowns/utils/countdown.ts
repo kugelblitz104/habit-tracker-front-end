@@ -177,7 +177,7 @@ export const getCountdown = (
 
 /** Presentation metadata per urgency bucket — accent color + human label. */
 export const URGENCY_META: Record<CountdownUrgency, { label: string; color: string }> = {
-    overdue: { label: 'Overdue', color: 'var(--color-danger)' },
+    overdue: { label: 'Passed', color: 'var(--color-danger)' },
     now: { label: 'Due now', color: 'var(--color-now-accent)' },
     soon: { label: 'This week', color: 'var(--color-soon-label)' },
     later: { label: 'Later', color: 'var(--color-whenever-text)' },
@@ -186,7 +186,7 @@ export const URGENCY_META: Record<CountdownUrgency, { label: string; color: stri
 
 /** Section metadata for the time-grouped Countdown view, in display order. */
 export const COUNTDOWN_GROUPS: { key: CountdownGroup; label: string; color: string }[] = [
-    { key: 'overdue', label: 'Overdue', color: 'var(--color-danger)' },
+    { key: 'overdue', label: 'Passed', color: 'var(--color-danger)' },
     { key: 'today', label: 'Today', color: 'var(--color-now-accent)' },
     { key: 'week', label: 'This week', color: 'var(--color-soon-label)' },
     { key: 'later', label: 'Later', color: 'var(--color-whenever-text)' },
@@ -222,18 +222,17 @@ export const groupColor = (group: CountdownGroup): string =>
 
 /**
  * The prominent hero readout for a countdown card: a big value + a small unit.
- * "Today" / "Overdue" collapse to a single word (no unit); day counts read as
+ * "Today" / "Passed" collapse to a single word (no unit); day counts read as
  * a number + "days".
+ *
+ * A countdown is never "overdue", only passed: nothing about a date going by
+ * makes it late. Overdue is a task word and stays on task surfaces.
  */
 export const countdownHero = (c: Countdown): { value: string; unit: string | null } => {
-    if (c.group === 'past') {
+    if (c.group === 'past' || c.overdue) {
+        if (c.daysUntil === 0) return { value: 'Passed', unit: null };
         const n = Math.abs(c.daysUntil);
-        return { value: String(n), unit: n === 1 ? 'day ago' : 'days ago' };
-    }
-    if (c.overdue) {
-        if (c.daysUntil === 0) return { value: 'Overdue', unit: null };
-        const n = Math.abs(c.daysUntil);
-        return { value: String(n), unit: n === 1 ? 'day overdue' : 'days overdue' };
+        return { value: String(n), unit: n === 1 ? 'day passed' : 'days passed' };
     }
     if (c.daysUntil === 0) return { value: 'Today', unit: null };
     if (c.daysUntil === 1) return { value: '1', unit: 'day' };

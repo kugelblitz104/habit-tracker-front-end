@@ -68,7 +68,7 @@ export const CountdownDashboard = () => {
     const { items, byGroup, total, overdueCount } = useMemo(() => {
         const items = (countdownsQuery.data?.countdowns ?? []).map((c) => ({
             countdown: c,
-            // applyPastRule is what keeps a task-less countdown out of Overdue
+            // applyPastRule is what keeps a task-less countdown out of Passed
             // once its day has gone; it lands in the Past band instead.
             calc: applyPastRule(
                 getCountdown(c.target_date, c.target_time, now, c.repeat as CountdownRepeat)!,
@@ -244,7 +244,7 @@ export const CountdownDashboard = () => {
                             <>
                                 <span className='text-text-faint'>·</span>
                                 <span style={{ color: 'var(--color-danger)' }}>
-                                    {overdueCount} overdue
+                                    {overdueCount} passed
                                 </span>
                             </>
                         )}

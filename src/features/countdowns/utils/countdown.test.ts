@@ -169,19 +169,19 @@ describe('getCountdown', () => {
 describe('countdownHero', () => {
     const hero = (date: string, time?: string | null) => countdownHero(at(date, time));
 
-    it('collapses today and overdue-today to a single word', () => {
+    it('collapses today and passed-today to a single word', () => {
         expect(hero('2026-03-15')).toEqual({ value: 'Today', unit: null });
-        expect(hero('2026-03-15', '09:00')).toEqual({ value: 'Overdue', unit: null });
+        expect(hero('2026-03-15', '09:00')).toEqual({ value: 'Passed', unit: null });
     });
 
     it('singularises one day', () => {
         expect(hero('2026-03-16')).toEqual({ value: '1', unit: 'day' });
-        expect(hero('2026-03-14')).toEqual({ value: '1', unit: 'day overdue' });
+        expect(hero('2026-03-14')).toEqual({ value: '1', unit: 'day passed' });
     });
 
     it('pluralises beyond one day', () => {
         expect(hero('2026-03-18')).toEqual({ value: '3', unit: 'days' });
-        expect(hero('2026-03-12')).toEqual({ value: '3', unit: 'days overdue' });
+        expect(hero('2026-03-12')).toEqual({ value: '3', unit: 'days passed' });
     });
 });
 
@@ -282,8 +282,8 @@ describe('applyPastRule', () => {
         expect(applyPastRule(c, null)).toEqual(c);
     });
 
-    it('reads the hero as days ago rather than days overdue', () => {
-        expect(countdownHero(past('2026-03-12'))).toEqual({ value: '3', unit: 'days ago' });
-        expect(countdownHero(past('2026-03-14'))).toEqual({ value: '1', unit: 'day ago' });
+    it('reads the hero as days passed', () => {
+        expect(countdownHero(past('2026-03-12'))).toEqual({ value: '3', unit: 'days passed' });
+        expect(countdownHero(past('2026-03-14'))).toEqual({ value: '1', unit: 'day passed' });
     });
 });

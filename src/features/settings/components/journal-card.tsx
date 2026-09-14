@@ -1,4 +1,5 @@
-import type { ProfileRead, ProfileUpdate } from '@/api';
+import { ImportService, type ProfileRead, type ProfileUpdate } from '@/api';
+import { Button } from '@/components/ui/buttons/button';
 import { EmberToggle } from '@/components/ui/forms/ember-toggle';
 import {
     fieldLabelClass,
@@ -6,9 +7,12 @@ import {
     themedInputClass,
     themedInputStyle
 } from '@/components/ui/forms/input-styles';
+import { invalidateJournal } from '@/features/journal/api/query-keys';
 import { useUpdateProfile } from '@/features/profiles/api/update-profiles';
 import { apiErrorMessage } from '@/lib/api-error-message';
-import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Upload } from 'lucide-react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { toast } from 'react-toastify';
 import { SettingsCard } from './settings-card';
 
@@ -48,6 +52,44 @@ export const JournalCard = ({ profile }: JournalCardProps) => {
     const enabled = profile.journal_enabled ?? false;
     const subordinateDisabled = !enabled || updateProfile.isPending;
     const subordinateClass = enabled ? '' : 'opacity-50';
+
+    const queryClient = useQueryClient();
+    const vaultInputRef = useRef<HTMLInputElement>(null);
+    const [importing, setImporting] = useState(false);
+
+    const importVault = async (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        setImporting(true);
+        try {
+            const result = await ImportService.importJournalFromObsidianImportJournalPost(
+                profile.id,
+                // The generated request model declares `file: Blob`, and a
+                // File is a Blob, so it passes through with no cast.
+                { file }
+            );
+            toast.success(
+                `Imported ${result.entries_imported} ${
+                    result.entries_imported === 1 ? 'entry' : 'entries'
+                }`
+            );
+            // A run can import nothing and still be a success, so the two
+            // ways a note is passed over are reported rather than buried.
+            if (result.entries_skipped > 0 || result.files_failed > 0) {
+                toast.warning(
+                    `${result.entries_skipped} days already written, ` +
+                        `${result.files_failed} files unreadable`
+                );
+            }
+            invalidateJournal(queryClient);
+        } catch (error) {
+            toast.error(apiErrorMessage(error, 'Failed to import the vault'));
+        } finally {
+            setImporting(false);
+            // Lets the same zip be picked again after a failure.
+            event.target.value = '';
+        }
+    };
 
     return (
         <SettingsCard label='Journal' labelGapClass='mb-1.5'>
@@ -123,7 +165,7 @@ export const JournalCard = ({ profile }: JournalCardProps) => {
             </div>
 
             <div
-                className={`flex items-center justify-between gap-4 border-t pt-3.5 ${subordinateClass}`}
+                className={`flex items-center justify-between gap-4 border-t py-3.5 ${subordinateClass}`}
                 style={rowBorderStyle}
             >
                 <div>
@@ -139,6 +181,37 @@ export const JournalCard = ({ profile }: JournalCardProps) => {
                     onChange={(value) => patch({ journal_gratitude_enabled: value })}
                     label={`Gratitude prompt for ${profile.name}`}
                     disabled={subordinateDisabled}
+                />
+            </div>
+
+            <div
+                className={`flex items-center justify-between gap-4 border-t pt-3.5 ${subordinateClass}`}
+                style={rowBorderStyle}
+            >
+                <div className='min-w-0'>
+                    <div className='text-[14.5px] font-medium' style={{ color: '#f0e7db' }}>
+                        Import from Obsidian
+                    </div>
+                    <div className='mt-0.5 text-[12px] text-text-muted'>
+                        A zip of a daily-notes folder, one YYYY-MM-DD.md per day. A day that already
+                        has an entry is never overwritten.
+                    </div>
+                </div>
+                <Button
+                    onClick={() => vaultInputRef.current?.click()}
+                    disabled={subordinateDisabled || importing}
+                    className='shrink-0'
+                >
+                    <Upload size={14} />
+                    {importing ? 'Importing…' : 'Import'}
+                </Button>
+                <input
+                    ref={vaultInputRef}
+                    type='file'
+                    accept='.zip,application/zip'
+                    onChange={importVault}
+                    style={{ display: 'none' }}
+                    aria-label='Obsidian daily-notes zip'
                 />
             </div>
         </SettingsCard>
