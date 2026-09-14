@@ -7,13 +7,14 @@ import { TaskStatus, type TaskBand } from '@/types/types';
  * (habit-tracker `src/habit_tracker/constants.py`) in the same first-match-wins
  * order, and adds Blocked as a `now` condition.
  *
- * This, not `TaskRead.band`, is what the UI paints, groups and sorts by. The
- * server field is still used by the `?band=` query filter on GET /tasks/. The
- * two deliberately differ, so this is not a parity mirror.
+ * This is the only place a band is resolved. The server no longer returns one:
+ * it banded from `date.today()` and accepts no `tz` param, so a browser whose
+ * local date differed from the API container's UTC saw bands a day off. What
+ * remains server-side is the `?band=` query filter on GET /tasks/, which the
+ * closed-task list uses with `hidden` (status-only, so date-independent).
  *
- * Computed here rather than read off the wire because the tasks router bands
- * from `date.today()` and accepts no `tz` param, so a browser whose local date
- * differs from the API container's UTC saw bands a day off.
+ * The two deliberately differ (Blocked is `now` here), so this is not a parity
+ * mirror.
  */
 
 /** A task untouched for this many days or more reads as stale. */

@@ -20,5 +20,6 @@ export type ImportSummary = {
     integration_connections_imported?: number;
     warnings?: Array<string>;
     countdown_categories_imported?: number;
+    journal_entries_imported?: number;
 };
 

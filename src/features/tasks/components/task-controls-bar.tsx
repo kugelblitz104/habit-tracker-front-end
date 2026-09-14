@@ -5,7 +5,7 @@ import { fieldClass } from '@/components/ui/forms/field-tiers';
 import { Input } from '@/components/ui/forms/input';
 import { Select } from '@/components/ui/forms/select';
 import { SelectOption } from '@/components/ui/forms/select-option';
-import { toLocalDateString } from '@/lib/date-utils';
+import { shiftDay, toLocalDateString } from '@/lib/date-utils';
 import {
     Checkbox,
     Field,
@@ -180,11 +180,7 @@ const DATE_FIELD_OPTIONS: { value: TaskDateField; label: string }[] = [
     { value: 'created', label: 'Created date' }
 ];
 
-const daysAgo = (n: number): string => {
-    const d = new Date();
-    d.setDate(d.getDate() - n);
-    return toLocalDateString(d);
-};
+const daysAgo = (n: number): string => shiftDay(toLocalDateString(new Date()), -n);
 const startOfThisMonth = (): string => {
     const d = new Date();
     return toLocalDateString(new Date(d.getFullYear(), d.getMonth(), 1));

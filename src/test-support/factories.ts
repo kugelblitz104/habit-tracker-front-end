@@ -40,7 +40,6 @@ export const makeTask = (overrides: Partial<TaskRead> = {}): TaskRead => {
         block_reason: null,
         estimated_effort: null,
         sort_order: seq,
-        band: 'whenever',
         subtask_count: 0,
         subtask_done_count: 0,
         // Monotonic so `created_date` is a deterministic final tiebreaker in the

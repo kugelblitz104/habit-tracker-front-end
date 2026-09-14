@@ -3,8 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Body_import_from_loop_habit_tracker_import_loop_habit_tracker_post } from '../models/Body_import_from_loop_habit_tracker_import_loop_habit_tracker_post';
+import type { Body_import_journal_from_obsidian_import_journal_post } from '../models/Body_import_journal_from_obsidian_import_journal_post';
 import type { ExportResult } from '../models/ExportResult';
 import type { ImportResult } from '../models/ImportResult';
+import type { JournalImportResult } from '../models/JournalImportResult';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
@@ -88,6 +90,52 @@ export class ImportService {
                 'include_archived': includeArchived,
                 'profile_id': profileId,
             },
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Import journal entries from an Obsidian daily-notes folder
+     * Import daily notes from a zipped Obsidian daily-notes folder.
+     *
+     * - **file**: A zip of the folder, one `YYYY-MM-DD.md` per day
+     * - **profile_id**: The profile the entries belong to (required)
+     *
+     * The filename gives the day. `daily.md` and any note inside a
+     * subdirectory are not daily notes and are ignored.
+     *
+     * **Mapping from a daily note to a journal entry:**
+     * - Prose under `**How did today go?**` -> `body`
+     * - Prose under `**Something you're grateful for?**` -> `gratitude`
+     * - The `[day_quality::...]` inline field -> `day_quality`, mapped onto the
+     * app's vocabulary. An unrecognised value imports the entry without one.
+     * - A note with neither prompt nor field is free prose and becomes `body`
+     * whole.
+     * - Dataview query blocks are dropped: they resolve inside Obsidian and
+     * carry no data.
+     *
+     * A day that already has an entry is left untouched, never overwritten,
+     * and one unreadable file does not abort the run. Both are reported in
+     * `warnings`.
+     * @param profileId The profile the entries belong to
+     * @param formData
+     * @returns JournalImportResult Successful Response
+     * @throws ApiError
+     */
+    public static importJournalFromObsidianImportJournalPost(
+        profileId: number,
+        formData: Body_import_journal_from_obsidian_import_journal_post,
+    ): CancelablePromise<JournalImportResult> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/import/journal',
+            query: {
+                'profile_id': profileId,
+            },
+            formData: formData,
+            mediaType: 'multipart/form-data',
             errors: {
                 404: `Not found`,
                 422: `Validation Error`,

@@ -8,6 +8,7 @@ export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { Body_import_from_loop_habit_tracker_import_loop_habit_tracker_post } from './models/Body_import_from_loop_habit_tracker_import_loop_habit_tracker_post';
+export type { Body_import_journal_from_obsidian_import_journal_post } from './models/Body_import_journal_from_obsidian_import_journal_post';
 export type { Body_login_auth_login_post } from './models/Body_login_auth_login_post';
 export type { CalendarConnectionBackup } from './models/CalendarConnectionBackup';
 export type { CalendarConnectionCreate } from './models/CalendarConnectionCreate';
@@ -45,6 +46,11 @@ export type { IntegrationConnectionList } from './models/IntegrationConnectionLi
 export type { IntegrationConnectionRead } from './models/IntegrationConnectionRead';
 export type { IntegrationConnectionUpdate } from './models/IntegrationConnectionUpdate';
 export type { IntegrationSyncResult } from './models/IntegrationSyncResult';
+export type { JournalEntryBackup } from './models/JournalEntryBackup';
+export type { JournalEntryCreate } from './models/JournalEntryCreate';
+export type { JournalEntryList } from './models/JournalEntryList';
+export type { JournalEntryRead } from './models/JournalEntryRead';
+export type { JournalImportResult } from './models/JournalImportResult';
 export type { MessageResponse } from './models/MessageResponse';
 export type { ProfileBackup } from './models/ProfileBackup';
 export type { ProfileCreate } from './models/ProfileCreate';
@@ -96,6 +102,7 @@ export { CountdownsService } from './services/CountdownsService';
 export { HabitsService } from './services/HabitsService';
 export { ImportService } from './services/ImportService';
 export { IntegrationsService } from './services/IntegrationsService';
+export { JournalService } from './services/JournalService';
 export { ProfilesService } from './services/ProfilesService';
 export { ProjectsService } from './services/ProjectsService';
 export { TasksService } from './services/TasksService';

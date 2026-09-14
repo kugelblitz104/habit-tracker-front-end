@@ -20,5 +20,6 @@ export type TaskUpdate = {
     project_id?: (number | null);
     parent_id?: (number | null);
     sort_order?: (number | null);
+    closed_date?: (string | null);
 };
 

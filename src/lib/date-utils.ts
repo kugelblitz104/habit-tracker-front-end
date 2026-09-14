@@ -38,6 +38,80 @@ export const parseServerDate = (value: string): Date => {
     return new Date(hasTz ? value : `${value}Z`);
 };
 
+/** The calendar day `days` away from a `YYYY-MM-DD` day (negative goes back). */
+export const shiftDay = (date: string, days: number): string => {
+    const shifted = parseLocalDate(date);
+    shifted.setDate(shifted.getDate() + days);
+    return toLocalDateString(shifted);
+};
+
+/**
+ * Whether a string is a real `YYYY-MM-DD` day. The round-trip is what rejects
+ * "2026-02-31": `parseLocalDate` rolls it forward to March 3 rather than
+ * returning an invalid date, so only re-formatting catches it. Use it on any
+ * day that came from a URL, a query string or a half-typed date input.
+ */
+export const isValidDay = (date: string | null | undefined): boolean =>
+    !!date && /^\d{4}-\d{2}-\d{2}$/.test(date) && toLocalDateString(parseLocalDate(date)) === date;
+
+/**
+ * Whole calendar days from `from` to `date`, negative for a day in the past.
+ *
+ * Rounded rather than truncated because a DST transition inside the span makes
+ * it 23 or 25 hours, which integer division would report as the wrong day.
+ */
+export const dayDifference = (date: string, from: string): number =>
+    Math.round((parseLocalDate(date).getTime() - parseLocalDate(from).getTime()) / 86_400_000);
+
+/**
+ * How far a `YYYY-MM-DD` day is from another, in words: "Today", "Yesterday",
+ * "Tomorrow", "3 days ago", "In 2 days". Always returns something, so a caller
+ * can use it as a heading.
+ */
+export const relativeDayLabel = (date: string, today: string): string => {
+    const days = dayDifference(date, today);
+    if (days === 0) return 'Today';
+    if (days === -1) return 'Yesterday';
+    if (days === 1) return 'Tomorrow';
+    return days < 0 ? `${-days} days ago` : `In ${days} days`;
+};
+
+/** A half-open `[closedFrom, closedTo)` instant range, naive UTC. */
+export type UtcDayBounds = {
+    /** Inclusive lower bound, `YYYY-MM-DDTHH:MM:SS`, no designator. */
+    closedFrom: string;
+    /** Exclusive upper bound, same shape. */
+    closedTo: string;
+};
+
+/**
+ * Naive-UTC wire format: the instant in UTC with the trailing "Z" removed.
+ * The API stores and compares naive UTC datetimes and emits no designator (see
+ * `parseServerDate`), so a bound carrying a "Z" would be rejected as an
+ * offset-aware value by the server's naive comparison.
+ */
+const toNaiveUtc = (instant: Date): string => instant.toISOString().slice(0, 19);
+
+/**
+ * The UTC instants bounding one **local** calendar day, half-open.
+ *
+ * Server timestamps are naive UTC, so a task closed at 9pm Eastern on the 10th
+ * is stored at 01:00 on the 11th. Filtering on the UTC day would file it under
+ * the wrong date, so a date-bounded query sends the interval it actually means.
+ * Half-open so consecutive days tile without double-counting a row that landed
+ * exactly on midnight.
+ *
+ * The end is local midnight of the next day computed with `setDate`, not
+ * `+24h`, so a DST transition inside the day still yields the real 23- or
+ * 25-hour span.
+ */
+export const localDayUtcBounds = (date: string): UtcDayBounds => {
+    const start = parseLocalDate(date);
+    const end = parseLocalDate(date);
+    end.setDate(end.getDate() + 1);
+    return { closedFrom: toNaiveUtc(start), closedTo: toNaiveUtc(end) };
+};
+
 /** Format a Date as a value for <input type="datetime-local"> (local wall time, minute precision). */
 export const toDateTimeLocal = (date: Date): string => {
     const pad = (n: number) => String(n).padStart(2, '0');

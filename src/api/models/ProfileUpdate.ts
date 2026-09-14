@@ -19,5 +19,9 @@ export type ProfileUpdate = {
     pomodoro_break_minutes?: (number | null);
     pomodoro_long_break_minutes?: (number | null);
     pomodoro_cycles?: (number | null);
+    journal_enabled?: (boolean | null);
+    journal_prompt_time?: (string | null);
+    journal_prompt?: (string | null);
+    journal_gratitude_enabled?: (boolean | null);
 };
 

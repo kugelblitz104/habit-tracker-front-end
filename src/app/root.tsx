@@ -24,6 +24,7 @@ import '@fontsource/space-grotesk/600.css';
 import '@fontsource/space-grotesk/700.css';
 import '@fontsource/jetbrains-mono/400.css';
 import '@fontsource/jetbrains-mono/500.css';
+import '@fontsource/jetbrains-mono/600.css';
 
 // Hashed URLs for the primary latin woff2 files, preloaded below so the fonts
 // are fetched with the document instead of lazily on first glyph paint — the
@@ -34,6 +35,7 @@ import spaceGrotesk600Url from '@fontsource/space-grotesk/files/space-grotesk-la
 import spaceGrotesk700Url from '@fontsource/space-grotesk/files/space-grotesk-latin-700-normal.woff2?url';
 import jetbrainsMono400Url from '@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2?url';
 import jetbrainsMono500Url from '@fontsource/jetbrains-mono/files/jetbrains-mono-latin-500-normal.woff2?url';
+import jetbrainsMono600Url from '@fontsource/jetbrains-mono/files/jetbrains-mono-latin-600-normal.woff2?url';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
@@ -55,7 +57,8 @@ export const links: Route.LinksFunction = () =>
         spaceGrotesk600Url,
         spaceGrotesk700Url,
         jetbrainsMono400Url,
-        jetbrainsMono500Url
+        jetbrainsMono500Url,
+        jetbrainsMono600Url
     ].map((href) => ({
         rel: 'preload',
         as: 'font',

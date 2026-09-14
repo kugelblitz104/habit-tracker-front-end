@@ -1,13 +1,10 @@
 import { Input } from '@/components/ui/forms/input';
-import { parseLocalDate, toLocalDateString } from '@/lib/date-utils';
+import { parseLocalDate, shiftDay, toLocalDateString } from '@/lib/date-utils';
 import { formatShortDate } from '../../utils/task-format';
 import { DATE_QUICK_SETS, Divider, SubHeader, itemClass } from './shared';
 
-const quickDate = (offsetDays: number): string => {
-    const d = new Date();
-    d.setDate(d.getDate() + offsetDays);
-    return toLocalDateString(d);
-};
+const quickDate = (offsetDays: number): string =>
+    shiftDay(toLocalDateString(new Date()), offsetDays);
 
 type DateSubmenuProps = {
     /** Submenu title — 'Due' or 'Scheduled'. */

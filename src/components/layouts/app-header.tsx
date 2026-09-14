@@ -1,4 +1,5 @@
 import { MENU_ITEM_CLASS, ThemedMenuItems } from '@/components/ui/menu';
+import { useJournalReminder } from '@/features/journal/hooks/use-journal-reminder';
 import { ProfileSwitcher } from '@/features/profiles/components/profile-switcher';
 import { SearchPalette } from '@/features/search/components/search-palette';
 import { useAuth } from '@/lib/auth-context';
@@ -35,6 +36,7 @@ const TABS: NavTab[] = [
     { label: 'Projects', to: '/projects' },
     { label: 'Timer', to: '/timer' },
     { label: 'Countdown', to: '/countdown' },
+    { label: 'Journal', to: '/journal' },
     { label: 'Insights', to: '/insights' }
 ];
 
@@ -48,6 +50,7 @@ function activeTabKey(pathname: string): string | null {
     // Full-page task detail (/tasks/:id) and the All-tasks list both light Tasks.
     if (pathname === '/tasks' || pathname.startsWith('/tasks/')) return '/tasks';
     if (pathname.startsWith('/countdown')) return '/countdown';
+    if (pathname.startsWith('/journal')) return '/journal';
     if (pathname.startsWith('/habits') || pathname.startsWith('/details')) return '/habits';
     if (pathname.startsWith('/projects')) return '/projects';
     if (pathname.startsWith('/timer')) return '/timer';
@@ -68,6 +71,12 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
     const activeKey = activeTabKey(pathname);
     const [searchOpen, setSearchOpen] = useState(false);
 
+    // The journal's catch-up nudge and its foreground reminder timer. Mounted
+    // here because this bar is the only chrome on every signed-in page, and
+    // "you have not checked in today" has to reach someone who is not on the
+    // journal. Inert unless the profile has the journal on with a reminder time.
+    useJournalReminder();
+
     // Global ⌘K / Ctrl+K opens the search palette from anywhere. Only one header
     // is mounted at a time (one per page), so this registers a single listener.
     useEffect(() => {
@@ -86,7 +95,8 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
         (tab) =>
             !(tab.to === '/habits' && activeProfile?.habits_enabled === false) &&
             !(tab.to === '/countdown' && activeProfile?.countdowns_enabled === false) &&
-            !(tab.to === '/insights' && activeProfile?.insights_enabled === false)
+            !(tab.to === '/insights' && activeProfile?.insights_enabled === false) &&
+            !(tab.to === '/journal' && activeProfile?.journal_enabled !== true)
     );
     const activeTab = tabs.find((tab) => tab.to === activeKey) ?? null;
     const navigate = useNavigate();

@@ -38,8 +38,8 @@ export enum TaskStatus {
 }
 
 /**
- * Computed urgency band — mirrors backend `compute_band`. Delivered already
- * resolved on `TaskRead.band`; the UI never sets or changes a band.
+ * Computed urgency band. Resolved client-side by `features/tasks/utils/
+ * compute-band.ts`; the server only accepts it as the `?band=` list filter.
  * `hidden` = done/cancelled (appears in "Completed & closed").
  */
 export type TaskBand = 'now' | 'soon' | 'whenever' | 'hidden';

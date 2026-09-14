@@ -7,6 +7,7 @@ import type { CountdownBackup } from './CountdownBackup';
 import type { CountdownCategoryBackup } from './CountdownCategoryBackup';
 import type { HabitBackup } from './HabitBackup';
 import type { IntegrationConnectionBackup } from './IntegrationConnectionBackup';
+import type { JournalEntryBackup } from './JournalEntryBackup';
 import type { ProfileSettings } from './ProfileSettings';
 import type { ProjectBackup } from './ProjectBackup';
 import type { TaskBackup } from './TaskBackup';
@@ -29,5 +30,6 @@ export type ProfileBackup = {
     calendar_connections?: Array<CalendarConnectionBackup>;
     integration_connections?: Array<IntegrationConnectionBackup>;
     countdown_categories?: Array<CountdownCategoryBackup>;
+    journal_entries?: Array<JournalEntryBackup>;
 };
 

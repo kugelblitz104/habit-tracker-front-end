@@ -19,6 +19,10 @@ export type ProfileRead = {
     pomodoro_break_minutes?: number;
     pomodoro_long_break_minutes?: number;
     pomodoro_cycles?: number;
+    journal_enabled?: boolean;
+    journal_prompt_time?: (string | null);
+    journal_prompt?: (string | null);
+    journal_gratitude_enabled?: boolean;
     id: number;
     created_date: string;
     updated_date?: (string | null);

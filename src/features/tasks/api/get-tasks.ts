@@ -2,7 +2,6 @@ import type { TaskList, TaskRead } from '@/api';
 import { TasksService } from '@/api';
 import { pagedList } from '@/lib/paginate';
 import type { QueryConfig } from '@/lib/react-query';
-import type { TaskBand } from '@/types/types';
 import { queryOptions, useQuery } from '@tanstack/react-query';
 
 export type TaskListParams = {
@@ -10,7 +9,8 @@ export type TaskListParams = {
     projectId?: number | null;
     /** Only this parent's subtasks. Server-side filter — see `getTasks`. */
     parentId?: number | null;
-    band?: TaskBand | null;
+    /** Return ONLY done/cancelled tasks, newest-closed first. */
+    closedOnly?: boolean;
     status?: number | null;
     includeClosed?: boolean;
     /**
@@ -32,14 +32,14 @@ export type TaskListParams = {
  * caller-facing — paging is this function's business, not the call sites'.
  */
 export const getTasks = async (params: TaskListParams): Promise<TaskList> => {
-    const { profileId, projectId, band, status, includeClosed, parentId, maxRows } = params;
+    const { profileId, projectId, closedOnly, status, includeClosed, parentId, maxRows } = params;
 
     const { items, total } = await pagedList<TaskRead>(
         async ({ offset, limit }) => {
             const page = await TasksService.listTasksTasksGet(
                 profileId!,
                 projectId,
-                band,
+                closedOnly,
                 status,
                 includeClosed,
                 limit,
@@ -64,7 +64,7 @@ export const getTasksQueryOptions = (params: TaskListParams) => {
         profileId,
         projectId = null,
         parentId = null,
-        band = null,
+        closedOnly = false,
         status = null,
         includeClosed = false,
         maxRows = null
@@ -72,7 +72,7 @@ export const getTasksQueryOptions = (params: TaskListParams) => {
     return queryOptions({
         queryKey: [
             'tasks',
-            { profileId, projectId, parentId, band, status, includeClosed, maxRows }
+            { profileId, projectId, parentId, closedOnly, status, includeClosed, maxRows }
         ],
         queryFn: () => getTasks(params),
         enabled: !!profileId

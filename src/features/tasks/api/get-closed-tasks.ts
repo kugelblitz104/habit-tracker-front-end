@@ -14,7 +14,7 @@ import { infiniteQueryOptions, useInfiniteQuery } from '@tanstack/react-query';
  * so walking a long history in full on each of them costs up to 50 requests and
  * thousands of DOM rows for something nobody has opened yet.
  *
- * `GET /tasks/` orders this exact query (`band=hidden` + `include_closed`) by
+ * `GET /tasks/` orders this exact query (`closed_only`) by
  * `closed_date DESC` rather than the default priority ordering, so page one is
  * the most recently closed 100 and paging walks backwards through history. A
  * bounded fetch would return an arbitrary slice under any other ordering.
@@ -39,9 +39,9 @@ const getClosedTasksPage = async (
     const page = await TasksService.listTasksTasksGet(
         profileId!,
         projectId ?? undefined,
-        'hidden',
-        null,
         true,
+        null,
+        undefined,
         PAGE_SIZE,
         offset
     );
@@ -62,7 +62,7 @@ export const getClosedTasksQueryOptions = ({ profileId, projectId = null }: Clos
     infiniteQueryOptions({
         // The `['tasks', …]` prefix is load-bearing: `useUpdateTask` and friends
         // invalidate `['tasks', { profileId }]`, and TanStack matches object keys
-        // partially, so this query refreshes with the active-band lists when a
+        // partially, so this query refreshes with the active task lists when a
         // task is closed or reopened. Renaming the prefix would silently strand
         // it until staleTime expired.
         queryKey: ['tasks', { profileId, projectId, closed: true }],

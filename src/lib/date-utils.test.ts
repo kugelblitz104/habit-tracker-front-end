@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+    dayDifference,
     getBrowserTimeZone,
+    isValidDay,
+    localDayUtcBounds,
     parseLocalDate,
     parseServerDate,
+    relativeDayLabel,
+    shiftDay,
     toLocalDateString
 } from './date-utils';
 
@@ -147,5 +152,142 @@ describe('getBrowserTimeZone', () => {
         const zone = getBrowserTimeZone();
         expect(zone).toBe(Intl.DateTimeFormat().resolvedOptions().timeZone);
         expect(zone).toMatch(/^\S+$/);
+    });
+});
+
+/**
+ * These assertions are written to hold in ANY host timezone: the runner's zone
+ * is whatever the machine has, and Playwright pins UTC, so anything asserting
+ * a literal offset would prove nothing. Each bound is checked by parsing it
+ * back as UTC and comparing it to the local midnight it must equal.
+ */
+const asUtcInstant = (naive: string): number => new Date(`${naive}Z`).getTime();
+
+describe('localDayUtcBounds', () => {
+    it('emits naive UTC with no timezone designator', () => {
+        const { closedFrom, closedTo } = localDayUtcBounds('2026-09-14');
+
+        expect(closedFrom).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/);
+        expect(closedTo).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/);
+    });
+
+    it('starts at the local midnight that opens the day', () => {
+        const { closedFrom } = localDayUtcBounds('2026-09-14');
+
+        expect(asUtcInstant(closedFrom)).toBe(parseLocalDate('2026-09-14').getTime());
+    });
+
+    it('ends at the next local midnight, exclusive', () => {
+        const { closedTo } = localDayUtcBounds('2026-09-14');
+
+        expect(asUtcInstant(closedTo)).toBe(parseLocalDate('2026-09-15').getTime());
+    });
+
+    it('tiles consecutive days without a gap or an overlap', () => {
+        const first = localDayUtcBounds('2026-09-14');
+        const second = localDayUtcBounds('2026-09-15');
+
+        expect(first.closedTo).toBe(second.closedFrom);
+    });
+
+    it('spans a whole day even across a DST transition', () => {
+        // US spring-forward (Mar 8 2026) and fall-back (Nov 1 2026). In a zone
+        // that observes them the span is 23h/25h; elsewhere it stays 24h. Both
+        // are correct, and both are wrong if the end were computed as +24h.
+        for (const date of ['2026-03-08', '2026-11-01']) {
+            const { closedFrom, closedTo } = localDayUtcBounds(date);
+            const hours = (asUtcInstant(closedTo) - asUtcInstant(closedFrom)) / 3_600_000;
+
+            expect([23, 24, 25]).toContain(hours);
+            expect(asUtcInstant(closedTo)).toBe(parseLocalDate(shiftDay(date, 1)).getTime());
+        }
+    });
+
+    it('handles the last day of a year', () => {
+        const { closedTo } = localDayUtcBounds('2026-12-31');
+
+        expect(asUtcInstant(closedTo)).toBe(parseLocalDate('2027-01-01').getTime());
+    });
+});
+
+describe('shiftDay', () => {
+    it('moves forward and back one day', () => {
+        expect(shiftDay('2026-09-14', 1)).toBe('2026-09-15');
+        expect(shiftDay('2026-09-14', -1)).toBe('2026-09-13');
+    });
+
+    it('crosses month and year boundaries', () => {
+        expect(shiftDay('2026-09-30', 1)).toBe('2026-10-01');
+        expect(shiftDay('2026-01-01', -1)).toBe('2025-12-31');
+    });
+
+    it('knows February in a leap year', () => {
+        expect(shiftDay('2028-02-28', 1)).toBe('2028-02-29');
+        expect(shiftDay('2026-02-28', 1)).toBe('2026-03-01');
+    });
+});
+
+describe('isValidDay', () => {
+    it('accepts a real calendar day', () => {
+        expect(isValidDay('2026-09-14')).toBe(true);
+    });
+
+    it('rejects a day that does not exist, rather than rolling it forward', () => {
+        expect(isValidDay('2026-02-31')).toBe(false);
+    });
+
+    it('rejects anything that is not YYYY-MM-DD', () => {
+        expect(isValidDay('')).toBe(false);
+        expect(isValidDay(null)).toBe(false);
+        expect(isValidDay('14-09-2026')).toBe(false);
+        expect(isValidDay('2026-9-14')).toBe(false);
+        expect(isValidDay('yesterday')).toBe(false);
+    });
+});
+
+describe('dayDifference', () => {
+    it('counts forward and back from the reference day', () => {
+        expect(dayDifference('2026-09-14', '2026-09-14')).toBe(0);
+        expect(dayDifference('2026-09-17', '2026-09-14')).toBe(3);
+        expect(dayDifference('2026-09-11', '2026-09-14')).toBe(-3);
+    });
+
+    it('crosses month and year boundaries', () => {
+        expect(dayDifference('2026-10-01', '2026-09-29')).toBe(2);
+        expect(dayDifference('2025-12-31', '2026-01-02')).toBe(-2);
+    });
+
+    it('counts whole days across a DST transition', () => {
+        // A 23- or 25-hour day would truncate to the wrong count; these must
+        // read as one day in every zone, whether or not it observes DST.
+        expect(dayDifference('2026-03-09', '2026-03-08')).toBe(1);
+        expect(dayDifference('2026-11-02', '2026-11-01')).toBe(1);
+        // A whole month spanning a transition still counts as calendar days.
+        expect(dayDifference('2026-04-08', '2026-03-08')).toBe(31);
+    });
+});
+
+describe('relativeDayLabel', () => {
+    it('names the three days around today', () => {
+        expect(relativeDayLabel('2026-09-14', '2026-09-14')).toBe('Today');
+        expect(relativeDayLabel('2026-09-13', '2026-09-14')).toBe('Yesterday');
+        expect(relativeDayLabel('2026-09-15', '2026-09-14')).toBe('Tomorrow');
+    });
+
+    it('counts the days for anything further off', () => {
+        expect(relativeDayLabel('2026-09-12', '2026-09-14')).toBe('2 days ago');
+        expect(relativeDayLabel('2026-08-15', '2026-09-14')).toBe('30 days ago');
+        expect(relativeDayLabel('2026-09-16', '2026-09-14')).toBe('In 2 days');
+    });
+
+    it('always returns a label, so a caller can use it as a heading', () => {
+        for (const offset of [-400, -31, -2, -1, 0, 1, 2, 31, 400]) {
+            expect(relativeDayLabel(shiftDay('2026-09-14', offset), '2026-09-14')).toBeTruthy();
+        }
+    });
+
+    it('works across a month boundary', () => {
+        expect(relativeDayLabel('2026-08-31', '2026-09-01')).toBe('Yesterday');
+        expect(relativeDayLabel('2026-08-29', '2026-09-01')).toBe('3 days ago');
     });
 });

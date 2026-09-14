@@ -12,17 +12,17 @@ import { request as __request } from '../core/request';
 export class TasksService {
     /**
      * List tasks for a profile
-     * Get a paginated list of tasks belonging to a profile. Each task carries
-     * its computed urgency **band** (now/soon/whenever/hidden).
+     * Get a paginated list of tasks belonging to a profile.
      *
      * - **profile_id**: The profile whose tasks to list (required)
      * - **project_id**: Optional. Only tasks in this project
-     * - **band**: Optional. Filter by computed band. Bands are date-relative,
-     * so this filter is applied after fetching the profile's tasks
+     * - **closed_only**: Return *only* done/cancelled tasks, ordered by closed
+     * date (most recent first). This is the "Completed & closed" view; it
+     * implies the closed tasks regardless of **include_closed**
      * - **status**: Optional. Filter by exact task status value
-     * - **include_closed**: Include done/cancelled tasks (default: false). For
-     * the "Completed & closed" view pass `include_closed=true&band=hidden` -
-     * that view is ordered by closed date (most recent first)
+     * - **include_closed**: Include done/cancelled tasks alongside the active
+     * ones (default: false). Use **closed_only** for closed tasks by
+     * themselves
      * - **limit**: Maximum number of tasks to return (default: 100, max: 100)
      * - **offset**: Number of tasks to skip (default: 0)
      * - **parent_id**: Optional. Only subtasks of this parent task. A plain
@@ -34,31 +34,32 @@ export class TasksService {
      *
      * Subtasks are returned in the same response as their parents, with
      * **parent_id** set, so the frontend can nest them without extra requests.
-     * A subtask's **band** is the natural value its own status/priority/dates
-     * would produce (no special-casing) - the frontend ignores it and groups
-     * the subtask under its parent instead. Every task also carries
-     * **subtask_count** / **subtask_done_count** (done = status DONE only),
-     * computed in a single grouped query.
+     * Every task also carries **subtask_count** / **subtask_done_count**
+     * (done = status DONE only), computed in a single grouped query.
      * @param profileId The profile whose tasks to list
      * @param projectId Only tasks in this project
-     * @param band Only tasks in this computed band (now, soon, whenever, hidden)
+     * @param closedOnly Only done/cancelled tasks, ordered by closed date (most recent first) instead of the default priority ordering
      * @param status Only tasks with this status value
      * @param includeClosed Include done/cancelled tasks (excluded by default)
      * @param limit Maximum number of tasks to return (1-100)
      * @param offset Number of tasks to skip
      * @param parentId Only subtasks of this parent task
+     * @param closedFrom Only tasks whose closed_date is at or after this instant. Naive UTC, matching what the server stores; send the UTC bounds of the day you mean. Only closed tasks ever have a closed_date, so combine this with include_closed=true (or an explicit status) or the result is always empty.
+     * @param closedTo Only tasks whose closed_date is strictly before this instant. Half-open with closed_from, so consecutive days tile without overlapping.
      * @returns TaskList Successful Response
      * @throws ApiError
      */
     public static listTasksTasksGet(
         profileId: number,
         projectId?: (number | null),
-        band?: (string | null),
+        closedOnly: boolean = false,
         status?: (number | null),
         includeClosed: boolean = false,
         limit: number = 100,
         offset?: number,
         parentId?: (number | null),
+        closedFrom?: (string | null),
+        closedTo?: (string | null),
     ): CancelablePromise<TaskList> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -66,12 +67,14 @@ export class TasksService {
             query: {
                 'profile_id': profileId,
                 'project_id': projectId,
-                'band': band,
+                'closed_only': closedOnly,
                 'status': status,
                 'include_closed': includeClosed,
                 'limit': limit,
                 'offset': offset,
                 'parent_id': parentId,
+                'closed_from': closedFrom,
+                'closed_to': closedTo,
             },
             errors: {
                 404: `Not found`,
@@ -165,15 +168,16 @@ export class TasksService {
      *
      * - **profile_id**: The profile whose tasks to export (required)
      *
-     * Tasks are grouped by computed urgency band (Now / Soon / Whenever, plus a
-     * "Completed & cancelled" section for done/cancelled tasks); empty sections
-     * are omitted. Each task is a checklist line (`- [x]` when done) with
-     * indented detail bullets for the fields that are set. Subtasks never
+     * Tasks are split into an "Active" section and a "Completed & cancelled"
+     * section; an empty section is omitted. The document carries no urgency
+     * band: a band is date-relative and resolved by the client against the
+     * reader's own date, so one baked into an export is only correct on the
+     * day it was written. Each task is a checklist line (`- [x]` when done)
+     * with indented detail bullets for the fields that are set. Subtasks never
      * appear as top-level entries - they render as indented checklist lines
-     * under their parent, wherever the parent lands. Ordering matches the
-     * tasks list endpoint: active bands by priority (desc), due date (asc, no
-     * due date last), then creation date; the closed section by closed date
-     * (most recent first).
+     * under their parent. Ordering matches the tasks list endpoint: active by
+     * priority (desc), due date (asc, no due date last), then creation date;
+     * closed by closed date (most recent first).
      * @param profileId The profile whose tasks to export
      * @returns string Successful Response
      * @throws ApiError
@@ -226,8 +230,7 @@ export class TasksService {
      * Get a task by its URL slug
      * Retrieve a task by its URL **slug** instead of its numeric id, so a task
      * detail URL can read as the task it opens (`/tasks/setup-utilities`). The
-     * response is identical to `GET /tasks/{task_id}`, band and subtask counts
-     * included.
+     * response is identical to `GET /tasks/{task_id}`, subtask counts included.
      *
      * - **slug**: The task's slug, as returned in **slug** on any task read
      * - **profile_id**: The profile the slug belongs to (required)
@@ -262,9 +265,8 @@ export class TasksService {
     }
     /**
      * Get a task by ID
-     * Retrieve a specific task by its ID, including its computed urgency band
-     * and its subtask counts (subtask_count / subtask_done_count, done = status
-     * DONE only).
+     * Retrieve a specific task by its ID, including its subtask counts
+     * (subtask_count / subtask_done_count, done = status DONE only).
      *
      * - **task_id**: The unique identifier of the task to retrieve
      * @param taskId

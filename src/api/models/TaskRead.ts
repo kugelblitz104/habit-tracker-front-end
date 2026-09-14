@@ -24,7 +24,6 @@ export type TaskRead = {
     closed_date?: (string | null);
     created_date: string;
     updated_date?: (string | null);
-    band?: string;
     subtask_count?: number;
     subtask_done_count?: number;
     slug: string;

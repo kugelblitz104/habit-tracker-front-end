@@ -36,7 +36,8 @@ export type BackupEntity =
     | 'habits'
     | 'trackers'
     | 'calendar_connections'
-    | 'integration_connections';
+    | 'integration_connections'
+    | 'journal_entries';
 
 /**
  * Export a single entity type of a profile as JSON. Reuses the full-backup

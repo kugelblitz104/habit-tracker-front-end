@@ -39,6 +39,7 @@ const EXPECTED_METHODS = [
     'listHabitTrackersHabitsHabitIdTrackersGet',
     'listHabitTrackersLiteHabitsHabitIdTrackersLiteGet',
     'listIntegrationConnectionsIntegrationsGet',
+    'listJournalEntriesJournalGet',
     'listProfilesProfilesGet',
     'listProjectsProjectsGet',
     'listTasksTasksGet',

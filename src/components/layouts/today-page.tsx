@@ -37,7 +37,7 @@ export const TodayDashboard = () => {
     const tasksQuery = useTasks({ profileId });
     const projectsQuery = useProjects({ profileId });
     // Closed tasks (for the "done today" count under the header).
-    const closedQuery = useTasks({ profileId, includeClosed: true, band: 'hidden' });
+    const closedQuery = useTasks({ profileId, closedOnly: true });
     const handleStartTimer = useStartTaskTimer(activeProfileId);
 
     // Shift+Enter / + in the capture bar expands it into the full details form,

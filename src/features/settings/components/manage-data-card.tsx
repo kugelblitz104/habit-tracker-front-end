@@ -24,7 +24,8 @@ const JSON_EXPORTS: { entity: BackupEntity; label: string }[] = [
     { entity: 'habits', label: 'Habits' },
     { entity: 'trackers', label: 'Trackers' },
     { entity: 'calendar_connections', label: 'Calendars' },
-    { entity: 'integration_connections', label: 'Integrations' }
+    { entity: 'integration_connections', label: 'Integrations' },
+    { entity: 'journal_entries', label: 'Journal' }
 ];
 
 const dataButtonStyle = {
