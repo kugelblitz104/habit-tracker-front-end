@@ -1,4 +1,5 @@
 import type { ProjectRead } from '@/api';
+import { useDetailOrigin } from '@/components/layouts/detail-origin';
 import { ErrorPage } from '@/components/layouts/error-page';
 import { LoadingPage } from '@/components/layouts/loading-page';
 import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
@@ -42,14 +43,13 @@ import { useAuth } from '@/lib/auth-context';
 import { parseEntityRef } from '@/lib/entity-ref';
 import { useSlugResolution } from '@/lib/use-slug-resolution';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 
 function ProjectContent({ projectId }: { projectId: number }) {
     const { activeProfileId } = useAuth();
     const profileId = activeProfileId ?? undefined;
     const navigate = useNavigate();
-    const location = useLocation();
 
     // Projects are profile-scoped: switching the active profile means this
     // project no longer belongs to the visible profile, so bounce back to the
@@ -65,10 +65,7 @@ function ProjectContent({ projectId }: { projectId: number }) {
         }
     }, [activeProfileId, navigate]);
 
-    // Origin-aware back: return to wherever the project was opened from.
-    const from = (location.state as { from?: string } | null)?.from;
-    const backTo = from === '/' ? '/' : from === '/tasks' ? '/tasks' : '/projects';
-    const backLabel = from === '/' ? 'Today' : from === '/tasks' ? 'All tasks' : 'Projects';
+    const { backTo, backLabel, ariaLabel } = useDetailOrigin('/projects');
 
     const projectQuery = useProject({ projectId });
     // Include closed so the Status filter/group can reach done/cancelled tasks.
@@ -248,6 +245,7 @@ function ProjectContent({ projectId }: { projectId: number }) {
                     <ProjectHeader
                         backTo={backTo}
                         backLabel={backLabel}
+                        backAriaLabel={ariaLabel}
                         project={project}
                         openCount={openCount}
                         doneCount={doneCount}

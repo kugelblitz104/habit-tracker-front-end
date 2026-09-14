@@ -6,6 +6,8 @@ import { Pencil } from 'lucide-react';
 type ProjectHeaderProps = {
     backTo: string;
     backLabel: string;
+    /** Accessible name, when the visible label is too terse to stand alone. */
+    backAriaLabel?: string;
     project: ProjectRead | undefined;
     openCount: number;
     doneCount: number;
@@ -21,6 +23,7 @@ type ProjectHeaderProps = {
 export const ProjectHeader = ({
     backTo,
     backLabel,
+    backAriaLabel,
     project,
     openCount,
     doneCount,
@@ -31,6 +34,7 @@ export const ProjectHeader = ({
         <BackLink
             to={backTo}
             label={backLabel}
+            ariaLabel={backAriaLabel}
             className='font-mono text-[12px] text-text-muted hover:text-text-secondary'
         />
 

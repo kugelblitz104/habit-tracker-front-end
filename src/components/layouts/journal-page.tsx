@@ -1,4 +1,4 @@
-import { AppHeader } from '@/components/layouts/app-header';
+import { PageShell } from '@/components/layouts/page-shell';
 import { Button } from '@/components/ui/buttons/button';
 import { QueryState } from '@/components/ui/query-state';
 import { CARD_SURFACE_CLASS, CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
@@ -8,10 +8,11 @@ import { DayCompletedTasks } from '@/features/journal/components/day-completed-t
 import { DayNavigator } from '@/features/journal/components/day-navigator';
 import { DayQualityPicker } from '@/features/journal/components/day-quality-picker';
 import { JournalEditor } from '@/features/journal/components/journal-editor';
+import { TaskDetailPane } from '@/features/tasks/components/task-detail-pane';
+import { useTaskDetailPane } from '@/features/tasks/hooks/use-task-detail-pane';
 import { apiErrorMessage } from '@/lib/api-error-message';
 import { useAuth } from '@/lib/auth-context';
 import { isValidDay, toLocalDateString } from '@/lib/date-utils';
-import { PAGE_MAX_WIDTH } from '@/lib/layout';
 import { useNow } from '@/lib/use-now';
 import { Bell } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -181,6 +182,14 @@ export const JournalDayPage = () => {
 
     const editingDisabled = !activeProfileId || showingPreviousDay;
 
+    // Opening one of the day's completed tasks. On a wide screen it fills the
+    // right-hand pane so the entry stays on screen and in the same scroll
+    // position; a narrow screen has no room for a pane, so `selectEdit`
+    // navigates to the full-page detail instead, stashing `/journal?date=` so
+    // its back link returns to this day rather than to today.
+    const { isWide, selectedEditTaskId, editIntent, selectEdit, closeEdit } = useTaskDetailPane();
+    const showPane = isWide && selectedEditTaskId !== null;
+
     // Read after mount, never during render: the server has no Notification
     // API and a first-render read would not match the hydrated markup.
     const [permission, setPermission] = useState<NotificationPermission | null>(null);
@@ -202,126 +211,139 @@ export const JournalDayPage = () => {
     };
 
     return (
-        <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
-            <AppHeader maxWidthClass={PAGE_MAX_WIDTH} />
-            <div className={`mx-auto px-5 py-7 md:px-7 ${PAGE_MAX_WIDTH}`}>
-                {/* Narrower than the page: this is a reading and writing
-                    column, and full-width prose is hard to track across. */}
-                <div className='mx-auto w-full max-w-[760px]'>
-                    <DayNavigator date={date} today={today} onNavigate={goToDay}>
-                        {canAskForNotifications && (
-                            <Button
-                                variant='icon'
-                                onClick={() => {
-                                    Notification.requestPermission()
-                                        .then(setPermission)
-                                        .catch(() => {});
-                                }}
-                                title='Allow desktop notifications for the reminder time'
-                            >
-                                <Bell size={14} />
-                                <span>Reminders</span>
-                            </Button>
+        <PageShell
+            isWide={isWide}
+            showPane={showPane}
+            pane={
+                <TaskDetailPane
+                    taskId={selectedEditTaskId}
+                    onClose={closeEdit}
+                    defaultEditing={editIntent}
+                />
+            }
+        >
+            {/* Capped and centred on its own: this is a reading and writing
+                column, and full-width prose across a 1080px page is hard to
+                track. With the pane open the content track is already about
+                that width, so the column fills it instead, which is what puts
+                the entry beside the task rather than a band of empty page. */}
+            <div className={showPane ? 'w-full' : 'mx-auto w-full max-w-[760px]'}>
+                <DayNavigator date={date} today={today} onNavigate={goToDay}>
+                    {canAskForNotifications && (
+                        <Button
+                            variant='icon'
+                            onClick={() => {
+                                Notification.requestPermission()
+                                    .then(setPermission)
+                                    .catch(() => {});
+                            }}
+                            title='Allow desktop notifications for the reminder time'
+                        >
+                            <Bell size={14} />
+                            <span>Reminders</span>
+                        </Button>
+                    )}
+                </DayNavigator>
+
+                <QueryState
+                    isError={entryQuery.isError}
+                    isLoading={entryQuery.isLoading}
+                    errorMessage='Failed to load this entry.'
+                    loadingMessage='Loading…'
+                    size='md'
+                    className='mb-4'
+                />
+
+                <div className='flex flex-col gap-4'>
+                    <section className={cardClass} style={CARD_SURFACE_STYLE}>
+                        <JournalEditor
+                            id='journal-body'
+                            prompt={activeProfile?.journal_prompt?.trim() || DEFAULT_BODY_PROMPT}
+                            value={body}
+                            onChange={setBodyDraft}
+                            onCommit={() => {
+                                if (isDirty(bodyDraft, stored.body)) save({ body });
+                            }}
+                            disabled={editingDisabled}
+                        />
+
+                        {activeProfile?.journal_gratitude_enabled !== false && (
+                            <div className='mt-5'>
+                                <JournalEditor
+                                    id='journal-gratitude'
+                                    prompt={GRATITUDE_PROMPT}
+                                    value={gratitude}
+                                    onChange={setGratitudeDraft}
+                                    onCommit={() => {
+                                        if (isDirty(gratitudeDraft, stored.gratitude))
+                                            save({ gratitude });
+                                    }}
+                                    rows={3}
+                                    disabled={editingDisabled}
+                                />
+                            </div>
                         )}
-                    </DayNavigator>
 
-                    <QueryState
-                        isError={entryQuery.isError}
-                        isLoading={entryQuery.isLoading}
-                        errorMessage='Failed to load this entry.'
-                        loadingMessage='Loading…'
-                        size='md'
-                        className='mb-4'
-                    />
-
-                    <div className='flex flex-col gap-4'>
-                        <section className={cardClass} style={CARD_SURFACE_STYLE}>
-                            <JournalEditor
-                                id='journal-body'
-                                prompt={
-                                    activeProfile?.journal_prompt?.trim() || DEFAULT_BODY_PROMPT
-                                }
-                                value={body}
-                                onChange={setBodyDraft}
-                                onCommit={() => {
-                                    if (isDirty(bodyDraft, stored.body)) save({ body });
-                                }}
-                                disabled={editingDisabled}
-                            />
-
-                            {activeProfile?.journal_gratitude_enabled !== false && (
-                                <div className='mt-5'>
-                                    <JournalEditor
-                                        id='journal-gratitude'
-                                        prompt={GRATITUDE_PROMPT}
-                                        value={gratitude}
-                                        onChange={setGratitudeDraft}
-                                        onCommit={() => {
-                                            if (isDirty(gratitudeDraft, stored.gratitude))
-                                                save({ gratitude });
-                                        }}
-                                        rows={3}
-                                        disabled={editingDisabled}
-                                    />
-                                </div>
-                            )}
-
-                            {/* The row keeps its height whether or not it has
+                        {/* The row keeps its height whether or not it has
                                 anything in it, so a status appearing or a save
                                 settling never moves the card below. */}
-                            <div className='mt-3 flex min-h-[36px] items-center justify-between gap-3 pointer-coarse:min-h-[44px]'>
-                                <span
-                                    aria-live='polite'
-                                    className='font-mono text-[11px] text-text-faint'
-                                    style={dirty ? { color: 'var(--color-now-accent)' } : undefined}
-                                >
-                                    {status}
-                                </span>
-                                <div className='flex items-center gap-2'>
-                                    {dirty && (
-                                        <Button
-                                            variant='ghost'
-                                            // Keeps focus in the editor, so the
-                                            // blur-commit below does not save
-                                            // the very edit this button exists
-                                            // to throw away.
-                                            onMouseDown={(event) => event.preventDefault()}
-                                            onClick={discard}
-                                            disabled={upsert.isPending}
-                                        >
-                                            Cancel
-                                        </Button>
-                                    )}
-                                    {/* Blur already commits; this is for anyone
+                        <div className='mt-3 flex min-h-[36px] items-center justify-between gap-3 pointer-coarse:min-h-[44px]'>
+                            <span
+                                aria-live='polite'
+                                className='font-mono text-[11px] text-text-faint'
+                                style={dirty ? { color: 'var(--color-now-accent)' } : undefined}
+                            >
+                                {status}
+                            </span>
+                            <div className='flex items-center gap-2'>
+                                {dirty && (
+                                    <Button
+                                        variant='ghost'
+                                        // Keeps focus in the editor, so the
+                                        // blur-commit below does not save
+                                        // the very edit this button exists
+                                        // to throw away.
+                                        onMouseDown={(event) => event.preventDefault()}
+                                        onClick={discard}
+                                        disabled={upsert.isPending}
+                                    >
+                                        Cancel
+                                    </Button>
+                                )}
+                                {/* Blur already commits; this is for anyone
                                         who wants to see the save happen, and
                                         for a keyboard user who never leaves the
                                         field. */}
-                                    <Button
-                                        variant={dirty ? 'primary' : 'ghost'}
-                                        onClick={() => save({ body, gratitude })}
-                                        disabled={!dirty || upsert.isPending}
-                                    >
-                                        Save
-                                    </Button>
-                                </div>
+                                <Button
+                                    variant={dirty ? 'primary' : 'ghost'}
+                                    onClick={() => save({ body, gratitude })}
+                                    disabled={!dirty || upsert.isPending}
+                                >
+                                    Save
+                                </Button>
                             </div>
-                        </section>
+                        </div>
+                    </section>
 
-                        <section className={cardClass} style={CARD_SURFACE_STYLE}>
-                            <DayQualityPicker
-                                value={quality}
-                                onChange={handleQualityChange}
-                                disabled={!activeProfileId}
-                                busy={showingPreviousDay}
-                            />
-                        </section>
+                    <section className={cardClass} style={CARD_SURFACE_STYLE}>
+                        <DayQualityPicker
+                            value={quality}
+                            onChange={handleQualityChange}
+                            disabled={!activeProfileId}
+                            busy={showingPreviousDay}
+                        />
+                    </section>
 
-                        <section className={cardClass} style={CARD_SURFACE_STYLE}>
-                            <DayCompletedTasks profileId={activeProfileId} date={date} />
-                        </section>
-                    </div>
+                    <section className={cardClass} style={CARD_SURFACE_STYLE}>
+                        <DayCompletedTasks
+                            profileId={activeProfileId}
+                            date={date}
+                            onSelectTask={selectEdit}
+                            selectedTaskId={selectedEditTaskId}
+                        />
+                    </section>
                 </div>
             </div>
-        </div>
+        </PageShell>
     );
 };

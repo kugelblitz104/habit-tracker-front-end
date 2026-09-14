@@ -32,8 +32,9 @@ const DimSuffix = ({ children }: { children: React.ReactNode }) => (
 type TaskDetailHeaderProps = {
     task: TaskRead;
     project: ProjectRead | null;
-    /** Current route path — carried through the project link's `from` state. */
-    pathname: string;
+    /** Current route path and search, carried through the project link's
+     *  `from` state so the back link returns to this exact view. */
+    originPath: string;
     showEstimatedEffort: boolean;
     /** Persist a status picked from the meta row's status control. */
     onStatusChange: (status: TaskStatus) => void;
@@ -53,7 +54,7 @@ type TaskDetailHeaderProps = {
 export const TaskDetailHeader = ({
     task,
     project,
-    pathname,
+    originPath,
     showEstimatedEffort,
     onStatusChange,
     onEdit,
@@ -88,7 +89,7 @@ export const TaskDetailHeader = ({
                             />
                             <Link
                                 to={projectDetailPath(project)}
-                                state={{ from: pathname }}
+                                state={{ from: originPath }}
                                 className='truncate transition-opacity hover:opacity-80'
                             >
                                 {project.name}

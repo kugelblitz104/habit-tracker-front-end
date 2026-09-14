@@ -79,7 +79,7 @@ export const SearchPalette = ({ open, onClose }: SearchPaletteProps) => {
             else navigate(taskDetailPath(result.task), { state: { from: '/tasks' } });
         } else {
             if (isWide) navigate('/habits', { state: { openHabitId: result.id } });
-            else navigate(habitDetailPath(result), { state: { from: 'habits' } });
+            else navigate(habitDetailPath(result), { state: { from: '/habits' } });
         }
     };
 

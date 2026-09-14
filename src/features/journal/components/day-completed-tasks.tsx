@@ -1,8 +1,7 @@
 import { QueryState } from '@/components/ui/query-state';
 import { parseServerDate } from '@/lib/date-utils';
-import { taskDetailPath } from '@/lib/entity-ref';
+import type { SluggedEntity } from '@/lib/entity-ref';
 import { TaskStatus } from '@/types/types';
-import { Link } from 'react-router';
 import { useDayTasks } from '../api/get-day-tasks';
 import { formatCompactTime } from '@/features/tasks/utils/task-format';
 
@@ -10,6 +9,13 @@ type DayCompletedTasksProps = {
     profileId: number | null | undefined;
     /** The local day, `YYYY-MM-DD`. */
     date: string;
+    /**
+     * Open a task's detail. Passed the task, not just its id, so a narrow
+     * screen's navigation can use the readable slug URL.
+     */
+    onSelectTask: (task: SluggedEntity) => void;
+    /** Task currently open in the detail pane, for the pressed state. */
+    selectedTaskId: number | null;
 };
 
 const pad = (value: number) => String(value).padStart(2, '0');
@@ -30,7 +36,12 @@ const closedAt = (closed: string | null | undefined): string | null => {
  * read means it cannot rot. A task finished last Tuesday but closed today is
  * fixed by editing its closed date, not by editing the journal.
  */
-export const DayCompletedTasks = ({ profileId, date }: DayCompletedTasksProps) => {
+export const DayCompletedTasks = ({
+    profileId,
+    date,
+    onSelectTask,
+    selectedTaskId
+}: DayCompletedTasksProps) => {
     const query = useDayTasks({ profileId, date });
     const tasks = query.data ?? [];
 
@@ -79,19 +90,20 @@ export const DayCompletedTasks = ({ profileId, date }: DayCompletedTasksProps) =
                                             : 'var(--color-status-done)'
                                     }}
                                 />
-                                <Link
-                                    to={taskDetailPath(task)}
-                                    viewTransition
-                                    className={`flex min-h-[24px] min-w-0 flex-1 items-center py-1 font-display text-[13.5px] text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-primary ${
+                                <button
+                                    type='button'
+                                    onClick={() => onSelectTask(task)}
+                                    aria-pressed={selectedTaskId === task.id}
+                                    className={`flex min-h-[24px] min-w-0 flex-1 items-center py-1 text-left font-display text-[13.5px] text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-primary ${
                                         cancelled ? 'line-through' : ''
                                     }`}
                                     title={task.title}
                                 >
                                     {/* Inner span, because `truncate` needs a
-                                        block box and the link itself is a flex
-                                        row to carry the touch-target floor. */}
+                                        block box and the button itself is a
+                                        flex row to carry the target floor. */}
                                     <span className='truncate'>{task.title}</span>
-                                </Link>
+                                </button>
                                 {time && (
                                     <span className='shrink-0 font-mono text-[10px] text-text-faint'>
                                         {time}

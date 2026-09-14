@@ -220,7 +220,7 @@ export const HabitListElement = ({
             <td className='relative'>
                 <Link
                     to={habitDetailPath(habit)}
-                    state={{ from: 'habits' }}
+                    state={{ from: '/habits' }}
                     onClick={handleNameClick}
                     className='absolute inset-0 flex items-center cursor-pointer px-4'
                 >

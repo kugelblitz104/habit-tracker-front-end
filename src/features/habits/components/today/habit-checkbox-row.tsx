@@ -114,7 +114,7 @@ export const HabitCheckboxRow = ({
             </button>
             <Link
                 to={habitDetailPath(habit)}
-                state={{ from: 'today' }}
+                state={{ from: '/' }}
                 // Its height is the line box of its own 13px label, and growing
                 // it to 44 would set the height of every habit row on Today.
                 data-target-exempt='inline'

@@ -1,4 +1,5 @@
 import { AppHeader } from '@/components/layouts/app-header';
+import { useDetailOrigin } from '@/components/layouts/detail-origin';
 import { BackLink } from '@/components/ui/back-link';
 import { ErrorPage } from '@/components/layouts/error-page';
 import { LoadingPage } from '@/components/layouts/loading-page';
@@ -9,20 +10,11 @@ import { useAuth } from '@/lib/auth-context';
 import { parseEntityRef } from '@/lib/entity-ref';
 import { PAGE_MAX_WIDTH } from '@/lib/layout';
 import { useSlugResolution } from '@/lib/use-slug-resolution';
-import { useLocation, useNavigate } from 'react-router';
-
-/** Back-nav target: Today when that's where the habit was opened from. */
-function useBackTo() {
-    const fromToday = (useLocation().state as { from?: string } | null)?.from === 'today';
-    return {
-        backTo: fromToday ? '/' : '/habits',
-        backLabel: fromToday ? 'Today' : 'Habits'
-    };
-}
+import { useNavigate } from 'react-router';
 
 /** The chrome around the detail body: back-nav, header, width. */
 function HabitDetailShell({ children }: { children: React.ReactNode }) {
-    const { backTo, backLabel } = useBackTo();
+    const { backTo, backLabel, ariaLabel } = useDetailOrigin('/habits');
 
     return (
         <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
@@ -31,6 +23,7 @@ function HabitDetailShell({ children }: { children: React.ReactNode }) {
                 <BackLink
                     to={backTo}
                     label={backLabel}
+                    ariaLabel={ariaLabel}
                     className='mb-4 font-mono text-[12.5px] text-text-muted transition-colors hover:text-text-secondary'
                 />
                 {children}

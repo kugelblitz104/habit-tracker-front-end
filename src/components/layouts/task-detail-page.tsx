@@ -1,4 +1,5 @@
 import { AppHeader } from '@/components/layouts/app-header';
+import { useDetailOrigin } from '@/components/layouts/detail-origin';
 import { BackLink } from '@/components/ui/back-link';
 import { ErrorPage } from '@/components/layouts/error-page';
 import { LoadingPage } from '@/components/layouts/loading-page';
@@ -8,31 +9,11 @@ import { parseEntityRef } from '@/lib/entity-ref';
 import { useAuth } from '@/lib/auth-context';
 import { PAGE_MAX_WIDTH } from '@/lib/layout';
 import { useQueryClient } from '@tanstack/react-query';
-import { useLocation, useNavigate } from 'react-router';
-
-type DetailState = { from?: string; editing?: boolean } | null;
-
-/**
- * Where the back link and the detail's close button go.
- *
- * `from` is the origin pathname stashed by the task list (Today `/` or a project
- * `/projects/:id`). Project origins return to that project; anything else
- * (including a fresh deep-link) falls back to Today.
- */
-function useBackTo() {
-    const state = useLocation().state as DetailState;
-    const from = state?.from;
-    const fromProject = typeof from === 'string' && from.startsWith('/projects');
-    return {
-        backTo: fromProject ? from : '/',
-        backLabel: fromProject ? 'Back' : 'Today',
-        editing: state?.editing ?? false
-    };
-}
+import { useNavigate } from 'react-router';
 
 /** The chrome around the detail body: back-nav, header, width. */
 function TaskDetailShell({ children }: { children: React.ReactNode }) {
-    const { backTo, backLabel } = useBackTo();
+    const { backTo, backLabel, ariaLabel } = useDetailOrigin('/');
 
     return (
         <div className='min-h-screen' style={{ backgroundColor: 'transparent' }}>
@@ -41,8 +22,7 @@ function TaskDetailShell({ children }: { children: React.ReactNode }) {
                 <BackLink
                     to={backTo}
                     label={backLabel}
-                    // 'Back to Back' would be nonsense for the project origin.
-                    ariaLabel={backLabel === 'Back' ? 'Back' : undefined}
+                    ariaLabel={ariaLabel}
                     className='mb-4 font-mono text-[12.5px] text-text-muted transition-colors hover:text-text-secondary'
                 />
 
@@ -54,7 +34,7 @@ function TaskDetailShell({ children }: { children: React.ReactNode }) {
 
 function TaskDetailContent({ taskId }: { taskId: number }) {
     const navigate = useNavigate();
-    const { backTo, editing } = useBackTo();
+    const { backTo, editing } = useDetailOrigin('/');
 
     return (
         <TaskDetailBody taskId={taskId} onClose={() => navigate(backTo)} defaultEditing={editing} />

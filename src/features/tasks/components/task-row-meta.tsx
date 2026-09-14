@@ -12,8 +12,9 @@ export type TaskRowMetaProps = {
     /** Whether to render the project pip at all. Default true; the project
      *  view (every row shares one project) passes false to hide it. */
     showProject?: boolean;
-    /** Current route path: carried through the project link's `from` state. */
-    pathname: string;
+    /** Current route path and search, carried through the project link's
+     *  `from` state so the back link returns to this exact view. */
+    originPath: string;
     statusMeta: StatusMeta;
     status: TaskStatus;
     /** Pre-merged status pill text (folds in block reason / scheduled date). */
@@ -55,7 +56,7 @@ export const TaskRowMeta = ({
     task,
     project,
     showProject = true,
-    pathname,
+    originPath,
     statusMeta,
     status,
     pillLabel,
@@ -113,7 +114,7 @@ export const TaskRowMeta = ({
                     />
                     <Link
                         to={projectDetailPath(project)}
-                        state={{ from: pathname }}
+                        state={{ from: originPath }}
                         data-target-exempt='inline'
                         className='inline-flex min-h-[24px] items-center transition-opacity hover:opacity-80'
                         onClick={(e) => e.stopPropagation()}

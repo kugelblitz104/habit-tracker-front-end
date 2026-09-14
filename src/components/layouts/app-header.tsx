@@ -41,6 +41,14 @@ const TABS: NavTab[] = [
 ];
 
 /**
+ * The nav tab label for an exact path, or null when the path is not a tab.
+ * The detail screens' back link reads this, so "where you came from" is named
+ * with the same word the nav uses for it.
+ */
+export const navTabLabel = (path: string): string | null =>
+    TABS.find((tab) => tab.to === path)?.label ?? null;
+
+/**
  * Which nav tab is active for a given pathname. Drill-in detail pages resolve
  * to their parent tab (habit detail -> Habits, project detail -> Projects) so
  * the nav stays oriented; unrelated routes (e.g. /settings) light up nothing.

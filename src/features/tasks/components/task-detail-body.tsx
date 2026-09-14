@@ -42,7 +42,8 @@ export const TaskDetailBody = ({
 }: TaskDetailBodyProps) => {
     const { activeProfile } = useAuth();
     const showEstimatedEffort = activeProfile?.show_estimated_effort ?? false;
-    const { pathname } = useLocation();
+    const { pathname, search } = useLocation();
+    const originPath = `${pathname}${search}`;
 
     const taskQuery = useTask({ taskId });
     const task = taskQuery.data ?? null;
@@ -133,7 +134,7 @@ export const TaskDetailBody = ({
             <TaskDetailHeader
                 task={task}
                 project={project}
-                pathname={pathname}
+                originPath={originPath}
                 showEstimatedEffort={showEstimatedEffort}
                 onStatusChange={(status) => handleStatusChange(task.id, status)}
                 onEdit={() => setIsEditing(true)}
@@ -174,9 +175,7 @@ export const TaskDetailBody = ({
             />
 
             {/* Footer: delete */}
-            <div
-                className='flex justify-start'
-            >
+            <div className='flex justify-start'>
                 <Button
                     variant='ghost'
                     size='sm'

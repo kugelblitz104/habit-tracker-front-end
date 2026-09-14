@@ -70,10 +70,13 @@ export const useTaskDetailPane = () => {
                 return;
             }
             navigate(taskDetailPath(ref), {
-                state: { from: location.pathname, editing }
+                // Search included: the journal's day and a filtered list both
+                // live in the query string, so a bare pathname would come
+                // back to the right page showing the wrong thing.
+                state: { from: `${location.pathname}${location.search}`, editing }
             });
         },
-        [isWide, navigate, location.pathname]
+        [isWide, navigate, location.pathname, location.search]
     );
 
     const closeEdit = useCallback(() => {
