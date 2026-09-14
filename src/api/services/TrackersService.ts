@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { TrackerCreate } from '../models/TrackerCreate';
+import type { TrackerList } from '../models/TrackerList';
 import type { TrackerRead } from '../models/TrackerRead';
 import type { TrackerUpdate } from '../models/TrackerUpdate';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -29,6 +30,51 @@ export class TrackersService {
             url: '/trackers/',
             body: requestBody,
             mediaType: 'application/json',
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * List tracker entries for a profile
+     * Get a paginated list of tracker entries across every habit in a profile,
+     * most recent date first.
+     *
+     * The per-habit endpoints under /habits/{habit_id}/trackers answer "this
+     * habit's history"; this one answers "what was recorded over these days",
+     * which otherwise costs one request per habit.
+     *
+     * - **profile_id**: The profile whose trackers to list (required)
+     * - **dated_from**: Optional. Entries on or after this local date
+     * - **dated_to**: Optional. Entries on or before this local date
+     * - **limit**: Maximum number of entries to return (default: 100, max: 100)
+     * - **offset**: Number of entries to skip (default: 0)
+     * @param profileId The profile whose trackers to list
+     * @param datedFrom Only entries dated on or after this local date
+     * @param datedTo Only entries dated on or before this local date. Inclusive, unlike the instant filters elsewhere: dated is a date, so one day is the same value in both bounds.
+     * @param limit Maximum number of entries to return (1-100)
+     * @param offset Number of entries to skip
+     * @returns TrackerList Successful Response
+     * @throws ApiError
+     */
+    public static listTrackersTrackersGet(
+        profileId: number,
+        datedFrom?: (string | null),
+        datedTo?: (string | null),
+        limit: number = 100,
+        offset?: number,
+    ): CancelablePromise<TrackerList> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/trackers/',
+            query: {
+                'profile_id': profileId,
+                'dated_from': datedFrom,
+                'dated_to': datedTo,
+                'limit': limit,
+                'offset': offset,
+            },
             errors: {
                 404: `Not found`,
                 422: `Validation Error`,

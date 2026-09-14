@@ -165,29 +165,29 @@ const asUtcInstant = (naive: string): number => new Date(`${naive}Z`).getTime();
 
 describe('localDayUtcBounds', () => {
     it('emits naive UTC with no timezone designator', () => {
-        const { closedFrom, closedTo } = localDayUtcBounds('2026-09-14');
+        const { from, to } = localDayUtcBounds('2026-09-14');
 
-        expect(closedFrom).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/);
-        expect(closedTo).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/);
+        expect(from).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/);
+        expect(to).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/);
     });
 
     it('starts at the local midnight that opens the day', () => {
-        const { closedFrom } = localDayUtcBounds('2026-09-14');
+        const { from } = localDayUtcBounds('2026-09-14');
 
-        expect(asUtcInstant(closedFrom)).toBe(parseLocalDate('2026-09-14').getTime());
+        expect(asUtcInstant(from)).toBe(parseLocalDate('2026-09-14').getTime());
     });
 
     it('ends at the next local midnight, exclusive', () => {
-        const { closedTo } = localDayUtcBounds('2026-09-14');
+        const { to } = localDayUtcBounds('2026-09-14');
 
-        expect(asUtcInstant(closedTo)).toBe(parseLocalDate('2026-09-15').getTime());
+        expect(asUtcInstant(to)).toBe(parseLocalDate('2026-09-15').getTime());
     });
 
     it('tiles consecutive days without a gap or an overlap', () => {
         const first = localDayUtcBounds('2026-09-14');
         const second = localDayUtcBounds('2026-09-15');
 
-        expect(first.closedTo).toBe(second.closedFrom);
+        expect(first.to).toBe(second.from);
     });
 
     it('spans a whole day even across a DST transition', () => {
@@ -195,18 +195,18 @@ describe('localDayUtcBounds', () => {
         // that observes them the span is 23h/25h; elsewhere it stays 24h. Both
         // are correct, and both are wrong if the end were computed as +24h.
         for (const date of ['2026-03-08', '2026-11-01']) {
-            const { closedFrom, closedTo } = localDayUtcBounds(date);
-            const hours = (asUtcInstant(closedTo) - asUtcInstant(closedFrom)) / 3_600_000;
+            const { from, to } = localDayUtcBounds(date);
+            const hours = (asUtcInstant(to) - asUtcInstant(from)) / 3_600_000;
 
             expect([23, 24, 25]).toContain(hours);
-            expect(asUtcInstant(closedTo)).toBe(parseLocalDate(shiftDay(date, 1)).getTime());
+            expect(asUtcInstant(to)).toBe(parseLocalDate(shiftDay(date, 1)).getTime());
         }
     });
 
     it('handles the last day of a year', () => {
-        const { closedTo } = localDayUtcBounds('2026-12-31');
+        const { to } = localDayUtcBounds('2026-12-31');
 
-        expect(asUtcInstant(closedTo)).toBe(parseLocalDate('2027-01-01').getTime());
+        expect(asUtcInstant(to)).toBe(parseLocalDate('2027-01-01').getTime());
     });
 });
 

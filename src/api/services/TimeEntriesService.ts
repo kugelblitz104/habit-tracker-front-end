@@ -32,6 +32,8 @@ export class TimeEntriesService {
      * @param running Filter to running (true) or completed (false) entries
      * @param limit Maximum number of entries to return (1-100)
      * @param offset Number of entries to skip
+     * @param startedFrom Only entries whose started_at is at or after this instant. Naive UTC, matching what the server stores; send the UTC bounds of the day you mean.
+     * @param startedTo Only entries whose started_at is strictly before this instant. Half-open with started_from, so consecutive days tile without overlapping.
      * @returns TimeEntryList Successful Response
      * @throws ApiError
      */
@@ -43,6 +45,8 @@ export class TimeEntriesService {
         running?: (boolean | null),
         limit: number = 100,
         offset?: number,
+        startedFrom?: (string | null),
+        startedTo?: (string | null),
     ): CancelablePromise<TimeEntryList> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -55,6 +59,8 @@ export class TimeEntriesService {
                 'running': running,
                 'limit': limit,
                 'offset': offset,
+                'started_from': startedFrom,
+                'started_to': startedTo,
             },
             errors: {
                 404: `Not found`,

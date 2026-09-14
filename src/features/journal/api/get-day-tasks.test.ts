@@ -1,7 +1,7 @@
 import { TasksService, type TaskRead } from '@/api';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { localDayUtcBounds } from '@/lib/date-utils';
-import { getDayTasks } from './get-day-tasks';
+import { getDayCreatedTasks, getDayTasks } from './get-day-tasks';
 
 const task = (id: number) => ({ id, title: `task ${id}` }) as TaskRead;
 
@@ -30,13 +30,13 @@ describe('getDayTasks', () => {
 
     it('sends the local day as naive UTC bounds', async () => {
         const spy = mockList(1);
-        const { closedFrom, closedTo } = localDayUtcBounds('2026-09-14');
+        const { from, to } = localDayUtcBounds('2026-09-14');
 
         await getDayTasks(7, '2026-09-14');
 
         const call = spy.mock.calls[0]!;
-        expect(call[8]).toBe(closedFrom);
-        expect(call[9]).toBe(closedTo);
+        expect(call[8]).toBe(from);
+        expect(call[9]).toBe(to);
         expect(call[8]).not.toMatch(/Z$/);
     });
 
@@ -49,5 +49,38 @@ describe('getDayTasks', () => {
         // Every page here repeats ids 1..100, so de-duplication must collapse
         // them rather than handing React duplicate keys.
         expect(new Set(tasks.map((row) => row.id)).size).toBe(tasks.length);
+    });
+});
+
+describe('getDayCreatedTasks', () => {
+    it('sends the day on the created bounds, leaving the closed ones unset', async () => {
+        const spy = mockList(1);
+        const { from, to } = localDayUtcBounds('2026-09-14');
+
+        await getDayCreatedTasks(7, '2026-09-14');
+
+        // The generated client passes positionally, so a created bound landing
+        // in a closed slot would silently filter on the wrong column.
+        const call = spy.mock.calls[0]!;
+        expect(call[8]).toBeUndefined();
+        expect(call[9]).toBeUndefined();
+        expect(call[10]).toBe(from);
+        expect(call[11]).toBe(to);
+    });
+
+    it('includes closed tasks, or a task raised and finished today vanishes', async () => {
+        const spy = mockList(1);
+
+        await getDayCreatedTasks(7, '2026-09-14');
+
+        expect(spy.mock.calls[0]![4]).toBe(true);
+    });
+
+    it('walks every page', async () => {
+        const spy = mockList(150);
+
+        await getDayCreatedTasks(7, '2026-09-14');
+
+        expect(spy).toHaveBeenCalledTimes(2);
     });
 });

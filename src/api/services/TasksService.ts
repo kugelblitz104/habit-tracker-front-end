@@ -46,6 +46,8 @@ export class TasksService {
      * @param parentId Only subtasks of this parent task
      * @param closedFrom Only tasks whose closed_date is at or after this instant. Naive UTC, matching what the server stores; send the UTC bounds of the day you mean. Only closed tasks ever have a closed_date, so combine this with include_closed=true (or an explicit status) or the result is always empty.
      * @param closedTo Only tasks whose closed_date is strictly before this instant. Half-open with closed_from, so consecutive days tile without overlapping.
+     * @param createdFrom Only tasks whose created_date is at or after this instant. Naive UTC, matching what the server stores; send the UTC bounds of the day you mean.
+     * @param createdTo Only tasks whose created_date is strictly before this instant. Half-open with created_from, so consecutive days tile without overlapping.
      * @returns TaskList Successful Response
      * @throws ApiError
      */
@@ -60,6 +62,8 @@ export class TasksService {
         parentId?: (number | null),
         closedFrom?: (string | null),
         closedTo?: (string | null),
+        createdFrom?: (string | null),
+        createdTo?: (string | null),
     ): CancelablePromise<TaskList> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -75,6 +79,8 @@ export class TasksService {
                 'parent_id': parentId,
                 'closed_from': closedFrom,
                 'closed_to': closedTo,
+                'created_from': createdFrom,
+                'created_to': createdTo,
             },
             errors: {
                 404: `Not found`,

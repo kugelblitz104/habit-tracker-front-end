@@ -106,6 +106,20 @@ const nextOccurrence = (anchorStr: string, repeat: CountdownRepeat, today: Date)
     return isoDate(d);
 };
 
+/**
+ * Whether a countdown lands on one specific local day, recurrence included.
+ *
+ * Asked of a named day rather than of "now", which is what lets the journal
+ * show the birthday that fell on a day you are reading back.
+ */
+export const countdownOccursOn = (
+    anchorDate: string,
+    repeat: string | null | undefined,
+    date: string
+): boolean =>
+    nextOccurrence(anchorDate, (repeat as CountdownRepeat) || 'none', parseLocalDate(date)) ===
+    date;
+
 /** The local instant a target is due: the given time, else end of that day. */
 const dueInstant = (date: string, time: string | null | undefined): Date => {
     const d = parseLocalDate(date);

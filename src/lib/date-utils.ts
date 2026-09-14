@@ -76,12 +76,12 @@ export const relativeDayLabel = (date: string, today: string): string => {
     return days < 0 ? `${-days} days ago` : `In ${days} days`;
 };
 
-/** A half-open `[closedFrom, closedTo)` instant range, naive UTC. */
+/** A half-open `[from, to)` instant range, naive UTC. */
 export type UtcDayBounds = {
     /** Inclusive lower bound, `YYYY-MM-DDTHH:MM:SS`, no designator. */
-    closedFrom: string;
+    from: string;
     /** Exclusive upper bound, same shape. */
-    closedTo: string;
+    to: string;
 };
 
 /**
@@ -101,6 +101,9 @@ const toNaiveUtc = (instant: Date): string => instant.toISOString().slice(0, 19)
  * Half-open so consecutive days tile without double-counting a row that landed
  * exactly on midnight.
  *
+ * The same window serves every timestamp column, so the fields are named for
+ * the interval rather than for one of them.
+ *
  * The end is local midnight of the next day computed with `setDate`, not
  * `+24h`, so a DST transition inside the day still yields the real 23- or
  * 25-hour span.
@@ -109,7 +112,7 @@ export const localDayUtcBounds = (date: string): UtcDayBounds => {
     const start = parseLocalDate(date);
     const end = parseLocalDate(date);
     end.setDate(end.getDate() + 1);
-    return { closedFrom: toNaiveUtc(start), closedTo: toNaiveUtc(end) };
+    return { from: toNaiveUtc(start), to: toNaiveUtc(end) };
 };
 
 /** Format a Date as a value for <input type="datetime-local"> (local wall time, minute precision). */

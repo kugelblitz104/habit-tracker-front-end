@@ -4,6 +4,7 @@ import {
     applyPastRule,
     COUNTDOWN_GROUPS,
     countdownHero,
+    countdownOccursOn,
     getCountdown,
     groupColor,
     occurrenceLabel,
@@ -285,5 +286,36 @@ describe('applyPastRule', () => {
     it('reads the hero as days passed', () => {
         expect(countdownHero(past('2026-03-12'))).toEqual({ value: '3', unit: 'days passed' });
         expect(countdownHero(past('2026-03-14'))).toEqual({ value: '1', unit: 'day passed' });
+    });
+});
+
+describe('countdownOccursOn', () => {
+    it('matches a one-off only on its own date', () => {
+        expect(countdownOccursOn('2026-03-12', 'none', '2026-03-12')).toBe(true);
+        expect(countdownOccursOn('2026-03-12', 'none', '2026-03-13')).toBe(false);
+        expect(countdownOccursOn('2026-03-12', null, '2026-03-12')).toBe(true);
+    });
+
+    it('matches a yearly anchor on the anniversary', () => {
+        expect(countdownOccursOn('2020-03-12', 'yearly', '2026-03-12')).toBe(true);
+        expect(countdownOccursOn('2020-03-12', 'yearly', '2026-03-13')).toBe(false);
+    });
+
+    it('matches a weekly anchor on the same weekday', () => {
+        // 2026-03-12 is a Thursday.
+        expect(countdownOccursOn('2026-03-12', 'weekly', '2026-03-26')).toBe(true);
+        expect(countdownOccursOn('2026-03-12', 'weekly', '2026-03-27')).toBe(false);
+    });
+
+    it('matches a monthly anchor on the same day of the month', () => {
+        expect(countdownOccursOn('2026-01-12', 'monthly', '2026-03-12')).toBe(true);
+        expect(countdownOccursOn('2026-01-12', 'monthly', '2026-03-11')).toBe(false);
+    });
+
+    it('does not match a day before the anchor', () => {
+        // A journal day read back from before the countdown existed should
+        // show nothing, however the recurrence rule would tile backwards.
+        expect(countdownOccursOn('2026-03-12', 'yearly', '2025-03-12')).toBe(false);
+        expect(countdownOccursOn('2026-03-12', 'weekly', '2026-03-05')).toBe(false);
     });
 });

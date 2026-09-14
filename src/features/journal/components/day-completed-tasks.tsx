@@ -1,9 +1,8 @@
-import { QueryState } from '@/components/ui/query-state';
-import { parseServerDate } from '@/lib/date-utils';
 import type { SluggedEntity } from '@/lib/entity-ref';
 import { TaskStatus } from '@/types/types';
 import { useDayTasks } from '../api/get-day-tasks';
-import { formatCompactTime } from '@/features/tasks/utils/task-format';
+import { localClockLabel } from '../utils/day-summary';
+import { DayRow, DaySection } from './day-section';
 
 type DayCompletedTasksProps = {
     profileId: number | null | undefined;
@@ -16,15 +15,6 @@ type DayCompletedTasksProps = {
     onSelectTask: (task: SluggedEntity) => void;
     /** Task currently open in the detail pane, for the pressed state. */
     selectedTaskId: number | null;
-};
-
-const pad = (value: number) => String(value).padStart(2, '0');
-
-/** The local clock time a task was closed at. */
-const closedAt = (closed: string | null | undefined): string | null => {
-    if (!closed) return null;
-    const instant = parseServerDate(closed);
-    return formatCompactTime(`${pad(instant.getHours())}:${pad(instant.getMinutes())}`);
 };
 
 /**
@@ -46,74 +36,32 @@ export const DayCompletedTasks = ({
     const tasks = query.data ?? [];
 
     return (
-        // While `isPlaceholderData` the rows are the previous day's, held on
-        // screen on purpose so the card does not collapse mid-navigation.
-        <section aria-busy={query.isPlaceholderData}>
-            <div className='mb-2.5 flex items-center gap-2'>
-                <h2 className='font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-text-muted'>
-                    Completed
-                </h2>
-                {tasks.length > 0 && (
-                    <span className='font-mono text-[11px] text-text-faint'>{tasks.length}</span>
-                )}
-            </div>
-
-            <QueryState
-                isError={query.isError}
-                isLoading={query.isLoading}
-                errorMessage='Failed to load the completed tasks for this day.'
-                loadingMessage='Loading…'
-                size='sm'
-            />
-
-            {!query.isError && !query.isLoading && tasks.length === 0 && (
-                <p className='font-mono text-[11px] text-text-faint'>Nothing closed on this day.</p>
-            )}
-
-            {tasks.length > 0 && (
-                <ul className='flex flex-col'>
-                    {tasks.map((task) => {
-                        const cancelled = task.status === TaskStatus.CANCELLED;
-                        const time = closedAt(task.closed_date);
-                        return (
-                            <li
-                                key={task.id}
-                                className='flex items-center gap-2.5 border-b py-2'
-                                style={{ borderColor: 'var(--color-whenever-ring)' }}
-                            >
-                                <span
-                                    aria-hidden='true'
-                                    className='h-1.5 w-1.5 shrink-0 rounded-full'
-                                    style={{
-                                        backgroundColor: cancelled
-                                            ? 'var(--color-status-cancelled)'
-                                            : 'var(--color-status-done)'
-                                    }}
-                                />
-                                <button
-                                    type='button'
-                                    onClick={() => onSelectTask(task)}
-                                    aria-pressed={selectedTaskId === task.id}
-                                    className={`flex min-h-[24px] min-w-0 flex-1 items-center py-1 text-left font-display text-[13.5px] text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-primary ${
-                                        cancelled ? 'line-through' : ''
-                                    }`}
-                                    title={task.title}
-                                >
-                                    {/* Inner span, because `truncate` needs a
-                                        block box and the button itself is a
-                                        flex row to carry the target floor. */}
-                                    <span className='truncate'>{task.title}</span>
-                                </button>
-                                {time && (
-                                    <span className='shrink-0 font-mono text-[10px] text-text-faint'>
-                                        {time}
-                                    </span>
-                                )}
-                            </li>
-                        );
-                    })}
-                </ul>
-            )}
-        </section>
+        <DaySection
+            title='Completed'
+            meta={tasks.length > 0 ? String(tasks.length) : null}
+            isLoading={query.isLoading}
+            isError={query.isError}
+            isBusy={query.isPlaceholderData}
+            errorMessage='Failed to load the completed tasks for this day.'
+            emptyMessage='Nothing closed on this day.'
+            isEmpty={tasks.length === 0}
+        >
+            {tasks.map((task) => {
+                const cancelled = task.status === TaskStatus.CANCELLED;
+                return (
+                    <DayRow
+                        key={task.id}
+                        dotColor={
+                            cancelled ? 'var(--color-status-cancelled)' : 'var(--color-status-done)'
+                        }
+                        title={task.title}
+                        onClick={() => onSelectTask(task)}
+                        selected={selectedTaskId === task.id}
+                        struck={cancelled}
+                        trailing={localClockLabel(task.closed_date)}
+                    />
+                );
+            })}
+        </DaySection>
     );
 };

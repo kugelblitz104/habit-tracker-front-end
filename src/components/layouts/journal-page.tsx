@@ -5,8 +5,12 @@ import { CARD_SURFACE_CLASS, CARD_SURFACE_STYLE } from '@/components/ui/surface-
 import { useJournalEntry } from '@/features/journal/api/get-journal-entry';
 import { useUpsertJournalEntry } from '@/features/journal/api/upsert-journal-entry';
 import { DayCompletedTasks } from '@/features/journal/components/day-completed-tasks';
+import { DayCountdowns } from '@/features/journal/components/day-countdowns';
+import { DayCreatedTasks } from '@/features/journal/components/day-created-tasks';
+import { DayHabits } from '@/features/journal/components/day-habits';
 import { DayNavigator } from '@/features/journal/components/day-navigator';
 import { DayQualityPicker } from '@/features/journal/components/day-quality-picker';
+import { DayTimeLog } from '@/features/journal/components/day-time-log';
 import { JournalEditor } from '@/features/journal/components/journal-editor';
 import { TaskDetailPane } from '@/features/tasks/components/task-detail-pane';
 import { useTaskDetailPane } from '@/features/tasks/hooks/use-task-detail-pane';
@@ -334,13 +338,30 @@ export const JournalDayPage = () => {
                         />
                     </section>
 
-                    <section className={cardClass} style={CARD_SURFACE_STYLE}>
+                    {/* One card, not five: this is the day's record read as a
+                        whole, and five floating cards would make five
+                        unrelated things out of it. Two columns once there is
+                        room, because stacking every section turns a glance
+                        into a scroll. */}
+                    <section
+                        className={`${cardClass} grid gap-6 sm:grid-cols-2`}
+                        style={CARD_SURFACE_STYLE}
+                    >
                         <DayCompletedTasks
                             profileId={activeProfileId}
                             date={date}
                             onSelectTask={selectEdit}
                             selectedTaskId={selectedEditTaskId}
                         />
+                        <DayCreatedTasks
+                            profileId={activeProfileId}
+                            date={date}
+                            onSelectTask={selectEdit}
+                            selectedTaskId={selectedEditTaskId}
+                        />
+                        <DayHabits profileId={activeProfileId} date={date} />
+                        <DayTimeLog profileId={activeProfileId} date={date} />
+                        <DayCountdowns profileId={activeProfileId} date={date} />
                     </section>
                 </div>
             </div>

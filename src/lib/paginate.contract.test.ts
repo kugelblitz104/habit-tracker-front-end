@@ -44,6 +44,7 @@ const EXPECTED_METHODS = [
     'listProjectsProjectsGet',
     'listTasksTasksGet',
     'listTimeEntriesTimeEntriesGet',
+    'listTrackersTrackersGet',
     'listUsersUsersGet'
 ].sort();
 
