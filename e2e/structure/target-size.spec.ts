@@ -120,7 +120,8 @@ const ROUTES: readonly (readonly [string, string])[] = [
     ['projects', '/projects'],
     ['timer', '/timer'],
     ['insights', '/insights'],
-    ['settings', '/settings']
+    ['settings', '/settings'],
+    ['reconciliation', '/reconciliation']
 ];
 
 test('@narrow @touch every interactive target meets the size floor', async ({

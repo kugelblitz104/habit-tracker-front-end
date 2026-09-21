@@ -10,17 +10,21 @@ import { expect, gotoAppRoute, taskRowTitle, test } from '../fixtures/test';
  * The ONE place date-driven task banding is asserted deliberately.
  *
  * Every other spec drives bands off `priority` (see `golden-profile.ts`) because
- * `compute_band` runs on the API container's clock — `date.today()`, UTC — and
- * the tasks router neither injects a `today` nor accepts a `tz`. A task banded
- * by a hard-coded date would therefore migrate Now -> Soon -> Whenever as real
- * time passed.
+ * a band is date-relative: a task banded by a hard-coded date would migrate
+ * Now -> Soon -> Whenever as real time passed.
  *
  * Here the dates are computed AT RUN TIME from the `anchor` fixture instead, so
  * "today + 7" means today + 7 on whatever day the suite runs. `timezoneId` is
  * pinned to UTC in the Playwright config so the browser and the container agree
  * on which day that is.
  *
- * The rules under test (backend `constants.py::compute_band`, first match wins):
+ * The rules under test live ONLY in `features/tasks/utils/compute-band.ts`. The
+ * backend's `compute_band` and `TaskRead.band` were both deleted on 2026-09-14
+ * (breaks #9 and #10) precisely because two implementations of a date-relative
+ * rule, one of them banding from the container's UTC day, disagreed for part of
+ * every day. So these tests assert the RENDERED band and nothing else.
+ *
+ * The rules (first match wins):
  *   1. status DONE / CANCELLED           -> hidden  (rendered in no band)
  *   2. status DEFERRED                   -> whenever (overrides everything below)
  *   3. effective date <= today, or priority == 3 -> now
@@ -53,12 +57,16 @@ type TaskSeed = {
 };
 
 /**
- * Create a task through the API and return its server-computed band.
+ * Create a task through the API.
  *
  * `POST /tasks/` forces `scheduled_date`/`scheduled_time` to null unless the
  * status is SCHEDULED, so every seed that exercises the scheduled-date path has
  * to carry `status: SCHEDULED` — otherwise the field silently vanishes and the
  * test would be asserting the due-date path twice.
+ *
+ * This used to return `body.band` so each test could cross-check the server's
+ * band against the rendered one. `TaskRead.band` was retired in the 2026-09-14
+ * break, so there is no second opinion left: the rendered band IS the rule.
  */
 const createTask = async (
     api: APIRequestContext,
@@ -66,7 +74,7 @@ const createTask = async (
     profileId: number,
     anchor: Date,
     seed: TaskSeed
-): Promise<string> => {
+): Promise<void> => {
     const response = await api.post('/tasks/', {
         headers: authHeaders(account),
         data: {
@@ -91,7 +99,6 @@ const createTask = async (
             dayFrom(anchor, seed.scheduledIn)
         );
     }
-    return body.band;
 };
 
 /** The Today band `<section>` identified by its uppercase mono heading. */
@@ -100,15 +107,6 @@ const bandSection = (page: Page, band: Band) =>
         has: page.getByRole('heading', { level: 2, name: BAND_HEADING[band], exact: true })
     });
 
-/**
- * Assert a task's title card lives in exactly one band section on Today (or in
- * none, for `null` — the hidden band).
- *
- * Counted rather than `toBeVisible()`-ed on purpose: Today collapses the
- * Whenever band to `grid-rows-[0fr]` by default, so its cards are in the DOM but
- * have zero height. Presence in the right section is the thing being asserted;
- * whether that section happens to be collapsed is a different test's business.
- */
 /**
  * The row's fixed-width due column (line 1, immediately after the title). Its
  * wording is pinned exhaustively at the unit layer (`due-column.test.ts`);
@@ -119,6 +117,15 @@ const bandSection = (page: Page, band: Band) =>
 const dueColumnText = (page: Page, title: string): Locator =>
     taskRowTitle(page, title).locator('xpath=following-sibling::span[1]');
 
+/**
+ * Assert a task's title card lives in exactly one band section on Today (or in
+ * none, for `null` — the hidden band).
+ *
+ * Counted rather than `toBeVisible()`-ed on purpose: Today collapses the
+ * Whenever band to `grid-rows-[0fr]` by default, so its cards are in the DOM but
+ * have zero height. Presence in the right section is the thing being asserted;
+ * whether that section happens to be collapsed is a different test's business.
+ */
 const expectBand = async (page: Page, title: string, band: Band | null) => {
     for (const candidate of ['now', 'soon', 'whenever'] as const) {
         await expect(
@@ -159,9 +166,8 @@ test('closed tasks are hidden, and DEFERRED overrides urgency', async ({
         ]
     ];
 
-    for (const [seed, expected] of seeds) {
-        const band = await createTask(api, account, goldenProfileId, anchor, seed);
-        expect(band, `API band for "${seed.title}"`).toBe(expected ?? 'hidden');
+    for (const [seed] of seeds) {
+        await createTask(api, account, goldenProfileId, anchor, seed);
     }
 
     await gotoAppRoute(authedPage, '/');
@@ -203,9 +209,8 @@ test('dates and priority band a task, and priority 3 / 2 short-circuit', async (
         [{ title: `${P} p0 no dates`, priority: 0 }, 'whenever']
     ];
 
-    for (const [seed, expected] of seeds) {
-        const band = await createTask(api, account, goldenProfileId, anchor, seed);
-        expect(band, `API band for "${seed.title}"`).toBe(expected);
+    for (const [seed] of seeds) {
+        await createTask(api, account, goldenProfileId, anchor, seed);
     }
 
     await gotoAppRoute(authedPage, '/');
@@ -288,9 +293,8 @@ test('the EARLIER of due_date and scheduled_date decides the band', async ({
         ]
     ];
 
-    for (const [seed, expected] of seeds) {
-        const band = await createTask(api, account, goldenProfileId, anchor, seed);
-        expect(band, `API band for "${seed.title}"`).toBe(expected);
+    for (const [seed] of seeds) {
+        await createTask(api, account, goldenProfileId, anchor, seed);
     }
 
     await gotoAppRoute(authedPage, '/');
@@ -335,8 +339,7 @@ test('a thin Soon section is topped up from Low-priority tasks', async ({
     ];
 
     for (const [seed] of seeds) {
-        const band = await createTask(api, account, goldenProfileId, anchor, seed);
-        expect(band, `API band for "${seed.title}"`).toBe('whenever');
+        await createTask(api, account, goldenProfileId, anchor, seed);
     }
 
     await gotoAppRoute(authedPage, '/');

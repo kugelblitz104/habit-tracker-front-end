@@ -23,6 +23,9 @@ export type ProfileRead = {
     journal_prompt_time?: (string | null);
     journal_prompt?: (string | null);
     journal_gratitude_enabled?: boolean;
+    reconciliation_stale_task_days?: (number | null);
+    reconciliation_stale_project_days?: (number | null);
+    reconciliation_stale_habit_days?: (number | null);
     id: number;
     created_date: string;
     updated_date?: (string | null);

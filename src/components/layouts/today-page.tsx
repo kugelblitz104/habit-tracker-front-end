@@ -6,6 +6,7 @@ import { CountdownSection } from '@/features/countdowns/components/countdown-sec
 import { HabitDetailPane } from '@/features/habits/components/details/habit-detail-pane';
 import { TodayHabitsPanel } from '@/features/habits/components/today/today-habits-panel';
 import { useHabitDetailPane } from '@/features/habits/hooks/use-habit-detail-pane';
+import { ReconciliationNudge } from '@/features/reconciliation/components/reconciliation-nudge';
 import { useProjects } from '@/features/projects/api/get-projects';
 import { useProjectsById } from '@/features/projects/hooks/use-projects-by-id';
 import { useTasks } from '@/features/tasks/api/get-tasks';
@@ -198,6 +199,11 @@ export const TodayDashboard = () => {
                 size='md'
                 className='mb-6'
             />
+
+            {/* Renders nothing unless there is something to decide and it has
+                been a while. Reads only queries this page already holds, so it
+                costs no extra requests. */}
+            <ReconciliationNudge />
 
             {grouped.map(({ band, tasks: bandTasks }) => (
                 <BandSection

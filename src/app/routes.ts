@@ -23,6 +23,10 @@ export default [
     route('projects', 'routes/auth/projects.tsx'),
     route('timer', 'routes/auth/timer.tsx'),
     route('insights', 'routes/auth/insights.tsx'),
+    // Unlisted: absent from the nav and marked noindex, reached from the card
+    // Today shows when there is something to clear. A page you visit every few
+    // weeks does not belong beside ones you visit daily.
+    route('reconciliation', 'routes/auth/reconciliation.tsx'),
 
     // Detail routes. Each `:*Ref` is a slug ("setup-utilities") or a numeric id
     // ("172"); the route resolves whichever it got. Numeric URLs stay

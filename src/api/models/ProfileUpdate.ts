@@ -23,5 +23,8 @@ export type ProfileUpdate = {
     journal_prompt_time?: (string | null);
     journal_prompt?: (string | null);
     journal_gratitude_enabled?: (boolean | null);
+    reconciliation_stale_task_days?: (number | null);
+    reconciliation_stale_project_days?: (number | null);
+    reconciliation_stale_habit_days?: (number | null);
 };
 

@@ -9,7 +9,7 @@ import { expect, gotoAppRoute, test } from '../fixtures/test';
  * Retiring countdowns, both halves of it.
  *
  * A countdown with no linked task has nothing that can ever resolve it, so once
- * its target day has gone it reads as Past rather than Overdue: a client-side
+ * its target day has gone it reads as Past rather than Passed: a client-side
  * rule (`applyPastRule`), collapsed into its own band. Archiving is the stored
  * half: `archived_date` on the row, and the API's `archived` filter decides
  * which list a surface gets, so an archived countdown is absent from the live
@@ -58,7 +58,7 @@ const seedLinkedOverdue = async (
     ).toBeTruthy();
 };
 
-test('a passed countdown reads as Past without a task, and Overdue with one', async ({
+test('a passed countdown reads as Past without a task, and Passed with one', async ({
     api,
     account,
     goldenProfileId,
@@ -69,9 +69,11 @@ test('a passed countdown reads as Past without a task, and Overdue with one', as
     await gotoAppRoute(authedPage, '/countdown');
     await expect(authedPage.getByText(GOLDEN.countdowns.future, { exact: true })).toBeVisible();
 
-    // Task-linked: still Overdue, which is the signal completing the task clears.
+    // Task-linked: still in Passed, which is the signal completing the task clears.
+    // The section heading is 'Passed', not 'Overdue' - nothing about a date going
+    // by makes a countdown late, so Overdue stays a task word (see countdown.ts).
     await expect(
-        bandSection(authedPage, 'Overdue').getByText(LINKED_OVERDUE, { exact: true })
+        bandSection(authedPage, 'Passed').getByText(LINKED_OVERDUE, { exact: true })
     ).toBeVisible();
 
     // Task-less: in Past, and collapsed. The count is on the header, the card is

@@ -15,6 +15,8 @@ import { toast } from 'react-toastify';
  *   - render LoadingPage / ErrorPage / Login / Register previews via the
  *     dev-only /dev/debug route (login/register are previews there because the
  *     real routes redirect authenticated users back to `/`)
+ *   - preview every shape of the shared `Banner`, whose optional parts (icon,
+ *     detail, action, dismiss) are the whole of its API
  * Deliberately small and utilitarian; not a product surface.
  */
 
@@ -70,7 +72,8 @@ export const DebugMenu = () => {
         { label: 'Login page (preview)', to: '/dev/debug?view=login' },
         { label: 'Register page (preview)', to: '/dev/debug?view=register' },
         { label: 'LoadingPage', to: '/dev/debug?view=loading' },
-        { label: 'ErrorPage', to: '/dev/debug?view=error' }
+        { label: 'ErrorPage', to: '/dev/debug?view=error' },
+        { label: 'Banner (every shape)', to: '/dev/debug?view=banner' }
     ];
 
     return (
