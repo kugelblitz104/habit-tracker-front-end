@@ -1,6 +1,6 @@
 import { HabitsService, type TrackerLite } from '@/api';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getTrackersLite } from './get-trackers';
+import { getHabitsTrackersLite, getTrackersLite } from './get-trackers';
 
 const tracker = (id: number) =>
     ({ id, dated: '2026-01-01', status: 2, has_note: false }) as TrackerLite;
@@ -92,5 +92,49 @@ describe('getTrackersLite', () => {
         expect(result.days).toBe(page0.days);
         expect(result.has_previous).toBe(page0.has_previous);
         expect(result.auto_skipped_dates).toEqual(page0.auto_skipped_dates);
+    });
+});
+
+describe('getHabitsTrackersLite', () => {
+    it('walks every page and returns one entry per habit', async () => {
+        const page = vi
+            .spyOn(HabitsService, 'listHabitsTrackersLiteHabitsTrackersLiteGet')
+            .mockResolvedValueOnce({
+                items: [{ habit_id: 1, trackers: [], end_date: '2026-09-21', days: 7 }],
+                total: 2,
+                limit: 100,
+                offset: 0
+            } as never)
+            .mockResolvedValueOnce({
+                items: [{ habit_id: 2, trackers: [], end_date: '2026-09-21', days: 7 }],
+                total: 2,
+                limit: 100,
+                offset: 1
+            } as never);
+
+        const entries = await getHabitsTrackersLite({ profileId: 3, days: 7 });
+
+        expect(entries.map((e) => e.habit_id)).toEqual([1, 2]);
+        expect(page).toHaveBeenCalledTimes(2);
+    });
+
+    it('de-duplicates a habit an offset walk repeated', async () => {
+        vi.spyOn(HabitsService, 'listHabitsTrackersLiteHabitsTrackersLiteGet')
+            .mockResolvedValueOnce({
+                items: [{ habit_id: 1, trackers: [], end_date: '2026-09-21', days: 7 }],
+                total: 2,
+                limit: 100,
+                offset: 0
+            } as never)
+            .mockResolvedValueOnce({
+                items: [{ habit_id: 1, trackers: [], end_date: '2026-09-21', days: 7 }],
+                total: 2,
+                limit: 100,
+                offset: 1
+            } as never);
+
+        const entries = await getHabitsTrackersLite({ profileId: 3, days: 7 });
+
+        expect(entries).toHaveLength(1);
     });
 });

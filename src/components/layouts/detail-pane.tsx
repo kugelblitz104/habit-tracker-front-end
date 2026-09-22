@@ -22,6 +22,12 @@ type DetailPaneProps = {
  * the scroll container itself (not the inner) so the transform doesn't
  * inflate scrollHeight and flash a scrollbar mid-rise.
  *
+ * It scrolls but draws no scrollbar. Long pane content is meant to scroll; the
+ * bar itself is chrome against a surface this narrow, and the content is
+ * plainly cut off at the fold, so the overflow stays discoverable without it.
+ * Tailwind ships no scrollbar utility, hence the two arbitrary properties.
+ * All three panes share this, which `layout.spec.ts` pins.
+ *
  * Does NOT own the card surface: each caller renders its own inner card
  * (different background/border tokens, different padding while editing),
  * because the task and habit panes are deliberately different surfaces. Pass
@@ -41,7 +47,7 @@ export const DetailPane = ({
     children
 }: DetailPaneProps) => {
     return (
-        <aside className='pane-rise sticky top-[var(--pane-sticky-top)] max-h-[var(--pane-max-h)] w-full min-w-0 overflow-x-hidden overflow-y-auto'>
+        <aside className='pane-rise sticky top-[var(--pane-sticky-top)] max-h-[var(--pane-max-h)] w-full min-w-0 overflow-x-hidden overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
             <div className={innerClassName ?? PANE_INNER_WIDTH[width]} style={innerStyle}>
                 {children}
             </div>

@@ -23,7 +23,7 @@ test('the golden import creates every entity type', async ({ api, account, ancho
     expect(summary.subtasks_imported).toBe(2);
     expect(summary.countdowns_imported).toBe(4);
     expect(summary.time_entries_imported).toBe(3);
-    expect(summary.habits_imported).toBe(3);
+    expect(summary.habits_imported).toBe(4);
     expect(summary.trackers_imported).toBe(19);
 });
 

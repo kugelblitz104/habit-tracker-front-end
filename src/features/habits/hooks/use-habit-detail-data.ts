@@ -10,7 +10,7 @@ import type {
 } from '@/api';
 import { deleteHabit } from '@/features/habits/api/delete-habits';
 import { getHabit } from '@/features/habits/api/get-habits';
-import { useHabitKpis } from '@/features/habits/api/get-habit-kpis';
+import { getHabitKpis, useHabitKpis } from '@/features/habits/api/get-habit-kpis';
 import { useHabitStreaks } from '@/features/habits/api/get-habit-streaks';
 import { habitKeys, invalidateHabits } from '@/features/habits/api/query-keys';
 import { updateHabit } from '@/features/habits/api/update-habits';
@@ -21,6 +21,7 @@ import {
     adaptKpisToServerShape,
     adaptStreaksToServerShape
 } from '@/features/trackers/utils/kpi-adapter';
+import { reconcileHabitKpis } from '@/features/trackers/utils/habit-kpi-cache';
 import { toLocalDateString } from '@/lib/date-utils';
 import { TrackerStatus } from '@/types/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -101,9 +102,13 @@ export const useHabitDetailData = (habitId: number) => {
     // this habit's trackers (the Today panel, the dashboard grid) picks up the
     // change too — mirrors the invalidation in `use-tracker-toggle.ts`, which
     // otherwise leaves those caches stale after a detail-view edit and can make
-    // the Today panel's auto-skip computation diverge from this view.
-    const invalidateKpiCaches = useCallback(() => {
+    // the Today panel's auto-skip computation diverge from this view. The
+    // dashboard's KPI batch is not invalidated (a whole-profile scan) but it is
+    // rendered beside this pane on wide screens, so this habit's entry in it is
+    // refetched on its own.
+    const reconcileAfterWrite = useCallback(() => {
         invalidateHabitTrackers(queryClient, habitId);
+        void reconcileHabitKpis(queryClient, habitId, getHabitKpis);
     }, [habitId, queryClient]);
 
     // mutations
@@ -166,8 +171,8 @@ export const useHabitDetailData = (habitId: number) => {
 
     // Shared optimistic create/update mutations; a successful persist reconciles
     // the server-computed KPI/streak caches on top of the shared cache patch.
-    const { trackerCreate, trackerUpdate } = useTrackerMutations(habitId, {
-        onSuccess: invalidateKpiCaches
+    const { trackerCreate, trackerUpdate } = useTrackerMutations({
+        onSuccess: reconcileAfterWrite
     });
 
     const handleTrackerCreate = async (tracker: TrackerCreate): Promise<TrackerRead> => {

@@ -45,12 +45,18 @@ export const GOLDEN = {
         longTitle:
             'A deliberately very long task title that has to ellipsis-clip rather than widen its row on a narrow viewport'
     },
-    habits: { daily: 'Daily habit', thrice: 'Thrice weekly habit', paused: 'Lapsed habit' },
+    habits: {
+        daily: 'Daily habit',
+        thrice: 'Thrice weekly habit',
+        paused: 'Lapsed habit',
+        weekly: 'Weekly review'
+    },
     /** Each habit's check-in prompt, rendered under the name on the habit detail. */
     habitQuestions: {
         daily: 'Did you do the daily habit?',
         thrice: 'Did you do it three times this week?',
-        paused: 'Did you keep it up?'
+        paused: 'Did you keep it up?',
+        weekly: 'Did you do your weekly review?'
     },
     countdowns: {
         future: 'Far future countdown',
@@ -107,7 +113,8 @@ const IDS = {
     taskLong: 20,
     habitDaily: 30,
     habitThrice: 31,
-    habitPaused: 32
+    habitPaused: 32,
+    habitWeekly: 33
 } as const;
 
 /**
@@ -407,6 +414,21 @@ export const buildGoldenProfile = (anchor: Date) => {
                 reminder: false,
                 archived: false,
                 sort_order: 2,
+                created_date: stamp(-60)
+            },
+            {
+                // 1-per-7-days, no trackers anywhere: a clean slate for
+                // habit-toggle.spec.ts's auto-skip-without-reload test.
+                id: IDS.habitWeekly,
+                name: GOLDEN.habits.weekly,
+                question: GOLDEN.habitQuestions.weekly,
+                category: 'Work',
+                color: '#8833cc',
+                frequency: 1,
+                range: 7,
+                reminder: false,
+                archived: false,
+                sort_order: 3,
                 created_date: stamp(-60)
             }
         ],

@@ -149,6 +149,23 @@ export const getTrackerIcon = (status: DisplayStatus, habitColor?: string) => {
     }
 };
 
+/** Stable, lowercase status token for the DOM and for tests. */
+export const trackerStatusToken = (status: DisplayStatus): string =>
+    ({
+        [DisplayStatus.COMPLETED]: 'completed',
+        [DisplayStatus.SKIPPED]: 'skipped',
+        [DisplayStatus.AUTO_SKIPPED]: 'auto-skipped',
+        [DisplayStatus.NOT_COMPLETED]: 'not-completed'
+    })[status] ?? 'not-completed';
+
+/**
+ * How the day reads aloud: its CURRENT state, not the one a click produces.
+ * The token with its hyphens opened out, so a screen reader says "not
+ * completed" rather than depending on how it treats a hyphen.
+ */
+export const trackerStatusLabel = (status: DisplayStatus): string =>
+    trackerStatusToken(status).replaceAll('-', ' ');
+
 /**
  * Get the next state in the tracker status cycle
  * Cycles: not completed → completed → skipped → not completed

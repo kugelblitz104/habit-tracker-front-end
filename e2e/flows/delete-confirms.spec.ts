@@ -109,9 +109,10 @@ test('the habit delete confirm warns, cancels cleanly, and on confirm removes th
     // Gone from the dashboard, and the pane it was open in closes with it.
     await expect(habitRow(authedPage, GOLDEN.habits.daily)).toHaveCount(0);
     await expect(detailPane(authedPage)).toHaveCount(0);
-    // The other two habits are untouched.
+    // The other habits are untouched.
     await expect(habitRow(authedPage, GOLDEN.habits.thrice)).toHaveCount(1);
     await expect(habitRow(authedPage, GOLDEN.habits.paused)).toHaveCount(1);
+    await expect(habitRow(authedPage, GOLDEN.habits.weekly)).toHaveCount(1);
 
     // Actually deleted server-side, not just dropped from the query cache.
     const remaining = await api.get('/habits/', {
@@ -120,7 +121,9 @@ test('the habit delete confirm warns, cancels cleanly, and on confirm removes th
     });
     expect(remaining.ok(), `habit list fetch failed: ${remaining.status()}`).toBeTruthy();
     const names: string[] = (await remaining.json()).habits.map((h: { name: string }) => h.name);
-    expect(names.sort()).toEqual([GOLDEN.habits.paused, GOLDEN.habits.thrice].sort());
+    expect(names.sort()).toEqual(
+        [GOLDEN.habits.paused, GOLDEN.habits.thrice, GOLDEN.habits.weekly].sort()
+    );
 });
 
 test('the project delete confirm is reachable from the footer and from the editor, and Cancel keeps the project', async ({

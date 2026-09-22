@@ -12,28 +12,34 @@ export const toTrackerLite = (data: TrackerRead): TrackerLite => ({
 });
 
 type UseTrackerMutationsOptions = {
-    /** Runs after the optimistic `['trackers', {habitId}]` cache patch on every success. */
-    onSuccess?: () => void;
+    /** Runs after the optimistic `['trackers', {habitId}]` cache patch on every
+     *  success, with the persisted row. */
+    onSuccess?: (data: TrackerRead) => void;
     /** Runs after the error is logged to the console. */
     onError?: () => void;
 };
 
 /**
- * Shared optimistic create/update mutations for one habit's trackers, used by
- * both the dashboard grid (`habit-list-element`) and the Today panel
- * (`use-tracker-toggle`). Each success patches EVERY `['trackers', {habitId}]`
- * cache entry (any days window) in place so all consumers see the change
- * immediately; per-surface follow-ups (invalidation, toasts) plug in via
- * `options`.
+ * Shared optimistic tracker create/update mutations, used by the dashboard grid
+ * (`habit-list`), the Today panel (`use-tracker-toggle`) and the detail view
+ * (`use-habit-detail-data`). Each success patches EVERY
+ * `['trackers', {habitId}]` cache entry (any days window) in place so all
+ * consumers see the change immediately; per-surface follow-ups (invalidation,
+ * toasts) plug in via `options`.
+ *
+ * The habit comes from the persisted row rather than from a hook argument: one
+ * instance serves every row of the dashboard grid, so writes for different
+ * habits can be in flight at once and an argument captured at render time
+ * would name the wrong one.
  */
-export const useTrackerMutations = (habitId: number, options: UseTrackerMutationsOptions = {}) => {
+export const useTrackerMutations = (options: UseTrackerMutationsOptions = {}) => {
     const queryClient = useQueryClient();
 
     const trackerCreate = useMutation({
         mutationFn: (tracker: TrackerCreate) => createTracker(tracker),
         onSuccess: async (data) => {
             queryClient.setQueriesData<{ trackers: TrackerRead[] }>(
-                { queryKey: ['trackers', { habitId }] },
+                { queryKey: ['trackers', { habitId: data.habit_id }] },
                 (oldData) => {
                     if (!oldData?.trackers) return oldData;
                     // Only add if not already present
@@ -41,7 +47,7 @@ export const useTrackerMutations = (habitId: number, options: UseTrackerMutation
                     return { ...oldData, trackers: [...oldData.trackers, data] };
                 }
             );
-            options.onSuccess?.();
+            options.onSuccess?.(data);
         },
         onError: (error) => {
             console.error('Error adding tracker:', error);
@@ -54,7 +60,7 @@ export const useTrackerMutations = (habitId: number, options: UseTrackerMutation
             updateTracker(id, update),
         onSuccess: async (data) => {
             queryClient.setQueriesData<{ trackers: TrackerRead[] }>(
-                { queryKey: ['trackers', { habitId }] },
+                { queryKey: ['trackers', { habitId: data.habit_id }] },
                 (oldData) => {
                     if (!oldData?.trackers) return oldData;
                     return {
@@ -63,7 +69,7 @@ export const useTrackerMutations = (habitId: number, options: UseTrackerMutation
                     };
                 }
             );
-            options.onSuccess?.();
+            options.onSuccess?.(data);
         },
         onError: (error) => {
             console.error('Error updating tracker:', error);

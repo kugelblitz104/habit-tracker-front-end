@@ -41,8 +41,11 @@ test('filling colour/frequency/notes in the form and clicking Add habit creates 
 }) => {
     await gotoAppRoute(authedPage, '/habits');
 
+    // Not "Weekly review": the golden profile seeds a habit with that exact
+    // name (see golden-profile.ts), and this test's own assertion needs a
+    // name it doesn't share with anything already on the page.
     const input = authedPage.getByRole('textbox', { name: CAPTURE_LABEL });
-    await input.fill('Weekly review');
+    await input.fill('Weekly retro');
     await input.press('Shift+Enter');
 
     await authedPage.getByRole('textbox', { name: 'Color' }).fill('#336699');
@@ -53,7 +56,7 @@ test('filling colour/frequency/notes in the form and clicking Add habit creates 
     await expect(authedPage.getByText('Habit created')).toBeVisible();
     await expect(authedPage.getByRole('textbox', { name: CAPTURE_LABEL })).toBeVisible();
     await expect(authedPage.getByLabel('Habit name')).toHaveCount(0);
-    await expect(authedPage.getByText('Weekly review', { exact: true })).toBeVisible();
+    await expect(authedPage.getByText('Weekly retro', { exact: true })).toBeVisible();
 });
 
 test('Escape in the form collapses it and creates nothing', async ({ authedPage }) => {

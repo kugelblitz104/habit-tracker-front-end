@@ -1,28 +1,21 @@
 import type { HabitRead, TrackerLite } from '@/api';
 import { Label } from '@/components/ui/label';
-import { useHabitKpis } from '@/features/habits/api/get-habit-kpis';
-import { getTrackersLite } from '@/features/trackers/api/get-trackers';
-import { trackerKeys } from '@/features/trackers/api/query-keys';
 import {
-    toTrackerLite,
-    useTrackerMutations
-} from '@/features/trackers/hooks/use-tracker-mutations';
-import {
-    createNewTracker,
     findTrackerByDate,
     getDisplayStatusForDate,
-    getNextTrackerState,
     getTrackerIcon,
-    NotePip
+    NotePip,
+    trackerStatusLabel,
+    trackerStatusToken
 } from '@/features/trackers/utils/tracker-utils';
 import { getFrequencyString } from '@/features/habits/utils/frequency-label';
+import type { HabitRowData } from '@/features/habits/utils/habit-row-data';
 import { useLongPress } from '@/lib/use-long-press';
 import { DisplayStatus } from '@/types/types';
 import { Button } from '@headlessui/react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Flame } from 'lucide-react';
 import type { MouseEvent } from 'react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { habitDetailPath } from '@/lib/entity-ref';
 
@@ -35,12 +28,10 @@ export type HabitListElementProps = {
     isWide?: boolean;
     isSelected?: boolean;
     onSelectHabit?: (habitId: number) => void;
-    onStreakChange?: (habitId: number, streak: number) => void;
-    onVisibilityChange?: (habitId: number, visible: boolean) => void;
-    /** Report today's resolved display status (incl. auto-skip) up so the page
-     *  header can count "still to do" with the same logic as the filter. */
-    onTodayStatusChange?: (habitId: number, status: DisplayStatus) => void;
     onNoteOpen?: (habitId: number, date: Date, tracker: TrackerLite | undefined) => void;
+    /** Everything this row renders, derived once by the list. */
+    row: HabitRowData;
+    onToggle: (habitId: number, date: Date) => void;
 };
 
 export const HabitListElement = ({
@@ -51,10 +42,9 @@ export const HabitListElement = ({
     isWide = false,
     isSelected = false,
     onSelectHabit,
-    onStreakChange,
-    onVisibilityChange,
-    onTodayStatusChange,
-    onNoteOpen
+    onNoteOpen,
+    row,
+    onToggle
 }: HabitListElementProps) => {
     // useMemo to prevent hydration mismatch
     const today = useMemo(() => {
@@ -71,21 +61,10 @@ export const HabitListElement = ({
     }, [days, today]);
 
     const [rowIsActive, setRowIsActive] = useState<boolean>(false);
-    const [trackers, setTrackers] = useState<TrackerLite[]>([]);
     const currentDateRef = useRef<Date | null>(null);
 
-    const queryClient = useQueryClient();
-
-    // Shared optimistic mutations. The day cells patch in place instantly; on
-    // top of that we invalidate this habit's KPI cache so the streak flame in
-    // the Streak column re-fetches and updates immediately after a toggle
-    // (the streak is server-computed from full history, ['kpis', { habitId }]).
-    const { trackerCreate, trackerUpdate } = useTrackerMutations(habit.id, {
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: trackerKeys.kpis(habit.id) })
-    });
-
     const handleNoteClick = (date: Date) => {
-        const tracker = findTrackerByDate(trackers, date);
+        const tracker = findTrackerByDate(row.trackers, date);
         onNoteOpen?.(habit.id, date, tracker);
     };
 
@@ -95,99 +74,15 @@ export const HabitListElement = ({
         }
     });
 
-    // Fetches exactly the rendered columns. Auto-skip needs completions from up
-    // to `range - 1` days earlier, but the server evaluates that against full
-    // history and hands back `auto_skipped_dates`, so no lookback is fetched here.
-    const trackersQuery = useQuery({
-        queryKey: ['trackers-lite', { habitId: habit.id }, days],
-        queryFn: () => getTrackersLite(habit.id, undefined, days),
-        staleTime: 1000 * 60 // 1 minute
-    });
-
-    // undefined (not an empty Set) when the server didn't send the field, so
-    // getDisplayStatusForDate falls back to computing locally. An empty Set is
-    // truthy and would silently suppress auto-skip against an older backend.
-    const autoSkippedDates = useMemo(() => {
-        const dates = trackersQuery.data?.auto_skipped_dates;
-        return dates ? new Set(dates) : undefined;
-    }, [trackersQuery.data]);
-
-    // Streak comes from the server KPI (full-history, source of truth) so the
-    // dashboard matches the detail view's KPI board exactly. The limited
-    // trackers-lite window above only drives the day-by-day check cells and can
-    // never be a valid streak source (it would truncate any streak longer than
-    // the visible range). The ['kpis', { habitId }] cache is shared with — and
-    // patched by — the detail view, so edits there stay in sync here.
-    // Small layout hides the streak column entirely, so skip the KPI fetch there.
-    const kpisQuery = useHabitKpis({
-        habitId: habit.id,
-        queryConfig: { staleTime: 1000 * 60, enabled: !isSmall }
-    });
-    const currentStreak = kpisQuery.data?.current_streak ?? 0;
-
-    // Report streak changes to parent for sorting purposes
-    useEffect(() => {
-        onStreakChange?.(habit.id, currentStreak);
-    }, [habit.id, currentStreak, onStreakChange]);
-
-    // functions
     const getStatus = (date: Date): DisplayStatus =>
-        getDisplayStatusForDate(trackers, date, habit, autoSkippedDates);
-
-    const handleCheckboxClick = (date: Date) => {
-        const tracker = findTrackerByDate(trackers, date);
-
-        if (!tracker) {
-            // create tracker if it doesn't exist
-            const newTracker = createNewTracker(habit.id, date);
-            trackerCreate.mutate(newTracker, {
-                onSuccess: (data) => setTrackers([...trackers, toTrackerLite(data)])
-            });
-            return;
-        }
-
-        // Cycle through states: not completed → completed → skipped → not completed
-        const update = getNextTrackerState(tracker);
-
-        trackerUpdate.mutate(
-            { id: tracker.id, update },
-            {
-                onSuccess: (data) =>
-                    setTrackers(
-                        trackers.map((t) => (t.id === tracker.id ? toTrackerLite(data) : t))
-                    )
-            }
-        );
-    };
-
-    useEffect(() => {
-        if (trackersQuery.data?.trackers) {
-            setTrackers(trackersQuery.data.trackers);
-        }
-    }, [trackersQuery.data]);
-
-    // Get today's status for filtering
-    const todayStatus = getStatus(today);
+        getDisplayStatusForDate(row.trackers, date, habit, row.autoSkippedDates);
 
     // Whether this habit is visible under the current filter: when the incomplete
     // filter is active, a habit that is completed or auto-skipped for today is hidden.
     const isVisible = !(
         filterIncomplete &&
-        (todayStatus === DisplayStatus.COMPLETED || todayStatus === DisplayStatus.AUTO_SKIPPED)
+        (row.status === DisplayStatus.COMPLETED || row.status === DisplayStatus.AUTO_SKIPPED)
     );
-
-    // Report visibility to the parent so it can show an empty state when nothing is
-    // visible. This effect must run even in the render path that returns null below,
-    // so it lives above the early return (hooks must run unconditionally).
-    useEffect(() => {
-        onVisibilityChange?.(habit.id, isVisible);
-    }, [habit.id, isVisible, onVisibilityChange]);
-
-    // Report today's resolved status up (runs even when the row hides itself
-    // below, so the count stays complete under the incomplete filter).
-    useEffect(() => {
-        onTodayStatusChange?.(habit.id, todayStatus);
-    }, [habit.id, todayStatus, onTodayStatusChange]);
 
     // If filtering for incomplete and today is completed, skipped, or auto-skipped, hide this habit
     if (!isVisible) {
@@ -237,7 +132,7 @@ export const HabitListElement = ({
             {!isSmall && (
                 <td className='text-center'>
                     <div className='flex items-center justify-center gap-1'>
-                        {currentStreak > 0 ? (
+                        {row.streak > 0 ? (
                             <>
                                 <Flame
                                     size={15}
@@ -245,7 +140,7 @@ export const HabitListElement = ({
                                     style={{ fill: 'rgba(127,168,201,.35)' }}
                                 />
                                 <span className='font-mono text-[12px] text-[var(--color-habit-accent)]'>
-                                    {currentStreak}
+                                    {row.streak}
                                 </span>
                             </>
                         ) : (
@@ -256,15 +151,14 @@ export const HabitListElement = ({
             )}
             {dates.map((date) => {
                 const status = getStatus(date);
-                const tracker = findTrackerByDate(trackers, date);
+                const tracker = findTrackerByDate(row.trackers, date);
                 return (
                     <td className='relative text-center' key={date.toISOString()}>
                         <Button
                             className='w-full h-12 flex items-center justify-center select-none'
-                            aria-label={`Mark habit ${habit.name} as ${getNextTrackerState(
-                                tracker
-                            )} for ${date.toLocaleDateString()}`}
-                            onClick={() => handleCheckboxClick(date)}
+                            aria-label={`${habit.name}, ${date.toLocaleDateString()}: ${trackerStatusLabel(status)}`}
+                            data-status={trackerStatusToken(status)}
+                            onClick={() => onToggle(habit.id, date)}
                             onContextMenu={(e) => {
                                 e.preventDefault();
                                 handleNoteClick(date);

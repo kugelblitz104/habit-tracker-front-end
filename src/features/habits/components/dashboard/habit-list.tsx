@@ -9,10 +9,22 @@ import {
     useHabitListSort
 } from '@/features/habits/hooks/use-habit-list-sort';
 import { useNoteDialog } from '@/features/habits/hooks/use-note-dialog';
+import { getHabitKpis } from '@/features/habits/api/get-habit-kpis';
+import type { HabitRowData } from '@/features/habits/utils/habit-row-data';
+import { streakMap } from '@/features/habits/utils/habit-row-data';
+import { invalidateHabitTrackers } from '@/features/trackers/api/query-keys';
 import { useTrackerMutations } from '@/features/trackers/hooks/use-tracker-mutations';
+import {
+    cycleTrackerOptimistically,
+    trackerCellKey
+} from '@/features/trackers/utils/cycle-tracker';
+import {
+    patchHabitTrackersBatch,
+    reconcileHabitKpis
+} from '@/features/trackers/utils/habit-kpi-cache';
 import { createNewTracker } from '@/features/trackers/utils/tracker-utils';
 import { DisplayStatus, TrackerStatus } from '@/types/types';
-import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useMemo, useRef } from 'react';
 import { HabitListElement } from './habit-list-element';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getTracker } from '@/features/trackers/api/get-trackers';
@@ -30,10 +42,8 @@ export type HabitListProps = {
     groupByCategory?: boolean;
     /** Renders the "Group by category" toggle next to the filters when provided. */
     onToggleGroupByCategory?: () => void;
-    /** Reports how many (non-archived) habits are still "to do" today — the same
-     *  logic as the Incomplete filter (today status is not-completed or skipped,
-     *  auto-skipped excluded). `null` until every row has reported. */
-    onIncompleteCountChange?: (count: number | null) => void;
+    /** Everything each row renders, derived once by the page from the batch reads. */
+    rowData: Map<number, HabitRowData>;
 };
 
 export const HabitList = ({
@@ -45,7 +55,7 @@ export const HabitList = ({
     onSelectHabit,
     groupByCategory = false,
     onToggleGroupByCategory,
-    onIncompleteCountChange
+    rowData
 }: HabitListProps) => {
     // hooks - use useMemo to prevent hydration mismatch
     const today = useMemo(() => new Date(), []);
@@ -55,9 +65,10 @@ export const HabitList = ({
     });
 
     const queryClient = useQueryClient();
-    const [habitStreaks, setHabitStreaks] = useState<Map<number, number>>(new Map());
-    const [visibility, setVisibility] = useState<Map<number, boolean>>(new Map());
-    const [todayStatuses, setTodayStatuses] = useState<Map<number, DisplayStatus>>(new Map());
+
+    // Memoized: `useHabitListSort` lists this in its sort/filter deps, and a
+    // fresh Map every render re-runs the sort, the filter and the grouping.
+    const streaks = useMemo(() => streakMap(rowData), [rowData]);
 
     const {
         selectedSort,
@@ -67,7 +78,7 @@ export const HabitList = ({
         handleFilterChange,
         sortedHabits,
         groupedHabits
-    } = useHabitListSort(habits, habitStreaks, groupByCategory);
+    } = useHabitListSort(habits, streaks, groupByCategory);
 
     // Note dialog: `target` carries the habit id being annotated, since this one
     // dialog instance serves every row in the grid.
@@ -84,66 +95,50 @@ export const HabitList = ({
     // dialog gets the same error handling + cache invalidation as every other
     // tracker write, instead of firing the raw API calls with no feedback.
     const { trackerCreate: noteTrackerCreate, trackerUpdate: noteTrackerUpdate } =
-        useTrackerMutations(noteDialog.target ?? -1, {
-            onSuccess: () => {
-                queryClient.invalidateQueries({
-                    queryKey: ['trackers-lite', { habitId: noteDialog.target }]
-                });
-            },
+        useTrackerMutations({
+            onSuccess: (data) => invalidateHabitTrackers(queryClient, data.habit_id),
             onError: () => toast.error('Failed to save note. Please try again.')
         });
 
-    // Callback for child components to report their streak values
-    const handleStreakChange = useCallback((habitId: number, streak: number) => {
-        setHabitStreaks((prev) => {
-            // Only update if value actually changed to prevent unnecessary re-renders
-            if (prev.get(habitId) === streak) return prev;
-            const next = new Map(prev);
-            next.set(habitId, streak);
-            return next;
-        });
-    }, []);
+    // Cells with a write in flight, keyed by habit and date. One mutation pair
+    // serves the whole grid, so a single `isPending` boolean would silently
+    // discard a click on a different habit.
+    const inFlightRef = useRef(new Set<string>());
 
-    // Callback for child components to report whether they are visible under the
-    // current filter. Deduped like handleStreakChange to avoid render loops.
-    const handleVisibilityChange = useCallback((habitId: number, visible: boolean) => {
-        setVisibility((prev) => {
-            // Only update if value actually changed to prevent unnecessary re-renders
-            if (prev.get(habitId) === visible) return prev;
-            const next = new Map(prev);
-            next.set(habitId, visible);
-            return next;
-        });
-    }, []);
+    // The windowed trackers batch carries auto_skipped_dates, and auto-skip for
+    // a habit's OTHER days changes when one day is completed, so
+    // `invalidateHabitTrackers` refetches it. The KPI batch is not invalidated
+    // (that reruns a whole-profile full-history scan on every click); the one
+    // habit that changed is refetched and written back instead. That read is
+    // the only thing that moves the streak column, because the optimistic patch
+    // deliberately leaves KPI figures alone rather than deriving them from the
+    // rendered window.
+    const { trackerCreate, trackerUpdate } = useTrackerMutations({
+        onSuccess: (data) => {
+            invalidateHabitTrackers(queryClient, data.habit_id);
+            void reconcileHabitKpis(queryClient, data.habit_id, getHabitKpis);
+        },
+        onError: () => toast.error('Failed to update habit. Please try again.')
+    });
 
-    // Rows report today's resolved status (incl. auto-skip); deduped to avoid loops.
-    const handleTodayStatusChange = useCallback((habitId: number, status: DisplayStatus) => {
-        setTodayStatuses((prev) => {
-            if (prev.get(habitId) === status) return prev;
-            const next = new Map(prev);
-            next.set(habitId, status);
-            return next;
-        });
-    }, []);
+    const handleToggle = useCallback(
+        (habitId: number, date: Date) => {
+            if (inFlightRef.current.has(trackerCellKey(habitId, date))) return;
+            const row = rowData.get(habitId);
+            if (!row) return;
 
-    // "Habits left today" = same rule as the Incomplete filter: a non-archived
-    // habit whose today status is not-completed or (manually) skipped. Reported
-    // to the page header. `null` until every non-archived row has reported so the
-    // header shows a settled figure rather than flashing a partial count.
-    const nonArchived = useMemo(() => habits.filter((h) => !h.archived), [habits]);
-    useEffect(() => {
-        if (!onIncompleteCountChange) return;
-        const allReported = nonArchived.every((h) => todayStatuses.has(h.id));
-        if (!allReported) {
-            onIncompleteCountChange(null);
-            return;
-        }
-        const count = nonArchived.filter((h) => {
-            const status = todayStatuses.get(h.id);
-            return status === DisplayStatus.NOT_COMPLETED || status === DisplayStatus.SKIPPED;
-        }).length;
-        onIncompleteCountChange(count);
-    }, [nonArchived, todayStatuses, onIncompleteCountChange]);
+            cycleTrackerOptimistically({
+                habitId,
+                date,
+                trackers: row.trackers,
+                patch: (update) => patchHabitTrackersBatch(queryClient, habitId, update),
+                inFlight: inFlightRef.current,
+                trackerCreate,
+                trackerUpdate
+            });
+        },
+        [rowData, queryClient, trackerCreate, trackerUpdate]
+    );
 
     const handleNoteOpen = useCallback(
         (habitId: number, date: Date, tracker: TrackerLite | undefined) => {
@@ -186,11 +181,17 @@ export const HabitList = ({
         );
     }
 
-    // When the incomplete filter is active, each element reports whether it is still
-    // visible. Treat not-yet-reported habits as visible so the empty state doesn't
-    // flash before children report.
+    // When the incomplete filter is active, a habit that is completed or
+    // auto-skipped for today is hidden. Rows report today's resolved status
+    // in `rowData`, so visibility is derived directly rather than reported up.
     const incompleteActive = selectedFilters.includes('incomplete');
-    const anyVisible = sortedHabits.some((h) => visibility.get(h.id) !== false);
+    const isRowVisible = (habit: HabitRead) =>
+        !(
+            incompleteActive &&
+            (rowData.get(habit.id)?.status === DisplayStatus.COMPLETED ||
+                rowData.get(habit.id)?.status === DisplayStatus.AUTO_SKIPPED)
+        );
+    const anyVisible = sortedHabits.some((h) => isRowVisible(h));
     const showAllDone = incompleteActive && sortedHabits.length > 0 && !anyVisible;
 
     // One section per category when grouping is on; otherwise a single
@@ -277,14 +278,12 @@ export const HabitList = ({
                             </thead>
                             <tbody>
                                 {sections.map(([category, categoryHabits]) => {
-                                    // Rows self-hide under the incomplete filter and report
-                                    // visibility up; drop the header when every row in the
-                                    // group is hidden so the section disappears entirely.
-                                    // Not-yet-reported rows count as visible, matching the
-                                    // empty-state logic. Ungrouped mode never has a category
-                                    // label, so it never renders a header row.
-                                    const groupVisible = categoryHabits.some(
-                                        (h) => visibility.get(h.id) !== false
+                                    // Rows self-hide under the incomplete filter; drop the
+                                    // header when every row in the group is hidden so the
+                                    // section disappears entirely. Ungrouped mode never has
+                                    // a category label, so it never renders a header row.
+                                    const groupVisible = categoryHabits.some((h) =>
+                                        isRowVisible(h)
                                     );
                                     return (
                                         <Fragment key={category ?? '__all__'}>
@@ -298,24 +297,25 @@ export const HabitList = ({
                                                     </td>
                                                 </tr>
                                             )}
-                                            {categoryHabits.map((habit) => (
-                                                <HabitListElement
-                                                    key={habit.id}
-                                                    habit={habit}
-                                                    days={days}
-                                                    isSmall={isSmall}
-                                                    isWide={isWide}
-                                                    isSelected={selectedHabitId === habit.id}
-                                                    onSelectHabit={onSelectHabit}
-                                                    filterIncomplete={selectedFilters.includes(
-                                                        'incomplete'
-                                                    )}
-                                                    onStreakChange={handleStreakChange}
-                                                    onVisibilityChange={handleVisibilityChange}
-                                                    onTodayStatusChange={handleTodayStatusChange}
-                                                    onNoteOpen={handleNoteOpen}
-                                                />
-                                            ))}
+                                            {categoryHabits.map((habit) => {
+                                                const row = rowData.get(habit.id);
+                                                if (!row) return null;
+                                                return (
+                                                    <HabitListElement
+                                                        key={habit.id}
+                                                        habit={habit}
+                                                        days={days}
+                                                        isSmall={isSmall}
+                                                        isWide={isWide}
+                                                        isSelected={selectedHabitId === habit.id}
+                                                        onSelectHabit={onSelectHabit}
+                                                        filterIncomplete={incompleteActive}
+                                                        row={row}
+                                                        onToggle={handleToggle}
+                                                        onNoteOpen={handleNoteOpen}
+                                                    />
+                                                );
+                                            })}
                                         </Fragment>
                                     );
                                 })}

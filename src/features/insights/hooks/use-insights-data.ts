@@ -1,13 +1,15 @@
 import { useMemo } from 'react';
-import { useQueries, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth-context';
 import { getTasks } from '@/features/tasks/api/get-tasks';
 import { getTimeEntries } from '@/features/time-entries/api/get-time-entries';
 import { useProjects } from '@/features/projects/api/get-projects';
-import { getHabitKpis } from '@/features/habits/api/get-habit-kpis';
 import { getHabits } from '@/features/habits/api/get-habits';
 import { habitKeys } from '@/features/habits/api/query-keys';
-import { getTrackersLite } from '@/features/trackers/api/get-trackers';
+import {
+    useHabitTrackersBatch,
+    useHabitKpisBatch
+} from '@/features/habits/hooks/use-habit-batch-data';
 import { calculateCompletionRate } from '@/features/trackers/utils/kpi-utils';
 import { parseLocalDate, parseServerDate } from '@/lib/date-utils';
 import { TaskStatus } from '@/types/types';
@@ -74,10 +76,10 @@ export type InsightsData = {
 /**
  * Single derived view for the Insights page, keyed off the active profile and
  * the selected range. Composes the existing task/time/project/habit queries and
- * the tracker-KPI utilities — no backend changes. Habit stats fan out one
- * `getTrackersLite` and one `getHabitKpis` query per active habit via
- * `useQueries`: the trackers give the windowed completion rate, the KPI gives
- * the full-history streak.
+ * the tracker-KPI utilities, no backend changes. Habit stats come from the
+ * two profile-wide batch queries, `useHabitTrackersBatch` and
+ * `useHabitKpisBatch`: the trackers give the windowed completion rate, the
+ * KPI gives the full-history streak.
  */
 export const useInsightsData = (rangeDays: RangeDays): InsightsData => {
     const { activeProfileId, activeProfile } = useAuth();
@@ -113,47 +115,24 @@ export const useInsightsData = (rangeDays: RangeDays): InsightsData => {
         staleTime: 1000 * 60
     });
 
-    // Active (non-archived) habits drive the per-habit tracker fan-out. Uses the
-    // same ['trackers-lite', {habitId}, days] key shape as the dashboard so the
-    // caches align and shared invalidations reach these too.
+    // The batch reads below filter server-side via `archived: false`.
+    // `activeHabits` applies the same non-archived filter client-side,
+    // independently, to drive the per-habit ranking below - the two filters
+    // agree today, but neither is derived from the other.
     const activeHabits = useMemo(
         () => (habitsQuery.data?.habits ?? []).filter((h) => !h.archived),
         [habitsQuery.data]
     );
 
-    const trackerQueries = useQueries({
-        queries: activeHabits.map((h) => ({
-            queryKey: ['trackers-lite', { habitId: h.id }, rangeDays],
-            queryFn: () => getTrackersLite(h.id, undefined, rangeDays),
-            enabled: !!activeProfileId,
-            staleTime: 1000 * 60
-        }))
+    const trackersBatch = useHabitTrackersBatch({
+        profileId: activeProfileId,
+        days: rangeDays,
+        archived: false
     });
+    const kpisBatch = useHabitKpisBatch({ profileId: activeProfileId, archived: false });
 
-    // Streaks come from the server KPI, not from the trackers above: that window
-    // is `rangeDays` long, so computing a streak from it truncates any streak
-    // longer than the range (a 40-day streak reads as 7 on the 7d toggle). Same
-    // ['kpis', { habitId }] key as the dashboard and detail view (tz is not part
-    // of it), so the cache and their optimistic patches are shared.
-    const kpiQueries = useQueries({
-        queries: activeHabits.map((h) => ({
-            queryKey: ['kpis', { habitId: h.id }],
-            queryFn: () => getHabitKpis(h.id),
-            enabled: !!activeProfileId,
-            staleTime: 1000 * 60
-        }))
-    });
-
-    const trackersLoading = trackerQueries.some((q) => q.isLoading);
-    const kpisLoading = kpiQueries.some((q) => q.isLoading);
-    // Snapshot the per-habit tracker arrays into a stable primitive for the memo
-    // dep (the query objects are new references every render).
-    const trackerData = trackerQueries.map((q) => q.data?.trackers ?? []);
-    const trackerKey = trackerData.map((t) => t.length).join(',');
-    // A failed KPI degrades that habit's streak to 0 (and drops it down the
-    // ranking) rather than erroring the whole page, matching the tracker fan-out.
-    const streaks = kpiQueries.map((q) => q.data?.current_streak ?? 0);
-    const streakKey = streaks.join(',');
+    const trackersLoading = trackersBatch.isLoading;
+    const kpisLoading = kpisBatch.isLoading;
 
     return useMemo(() => {
         const now = new Date();
@@ -200,10 +179,10 @@ export const useInsightsData = (rangeDays: RangeDays): InsightsData => {
             windowEnd
         );
 
-        // Per-habit performance: windowed completion rate from the fanned-out
-        // trackers, streak from the fanned-out KPIs.
-        const allHabitPerf: HabitPerf[] = activeHabits.map((h, i) => {
-            const trackers: TrackerLite[] = trackerData[i] ?? [];
+        // Per-habit performance: windowed completion rate from the batched
+        // trackers, streak from the batched KPIs.
+        const allHabitPerf: HabitPerf[] = activeHabits.map((h) => {
+            const trackers: TrackerLite[] = trackersBatch.byHabit.get(h.id)?.trackers ?? [];
             return {
                 id: h.id,
                 name: h.name,
@@ -217,7 +196,16 @@ export const useInsightsData = (rangeDays: RangeDays): InsightsData => {
                         rangeDays
                     )
                 ),
-                currentStreak: streaks[i] ?? 0
+                // Streak comes from the server KPI, not from the windowed
+                // `trackers` above: that window is rangeDays long, so a streak
+                // computed from it truncates anything longer than the window -
+                // a 40-day streak would read as 7 on the 7d toggle. The KPI's
+                // current_streak is full-history, so rangeDays can't truncate it.
+                // `?? 0` covers a habit absent from the batch rather than
+                // a single failed request: one batch succeeds or fails for
+                // every habit at once, the same all-or-nothing the tasks,
+                // time and projects queries on this page already have.
+                currentStreak: kpisBatch.byHabit.get(h.id)?.current_streak ?? 0
             };
         });
 
@@ -268,10 +256,9 @@ export const useInsightsData = (rangeDays: RangeDays): InsightsData => {
             tasksTruncated: (tasksQuery.data?.total ?? 0) > tasks.length,
             timeTruncated: (timeQuery.data?.total ?? 0) > entries.length
         };
-        // trackerKey and streakKey stand in for the per-habit query arrays (new
-        // refs each render). habitsQuery.data is deliberately omitted:
-        // activeHabits is its filtered, memoized derivative and already
-        // re-triggers this memo when it changes.
+        // habitsQuery.data is deliberately omitted: activeHabits is its
+        // filtered, memoized derivative and already re-triggers this memo
+        // when it changes.
     }, [
         rangeDays,
         weekStartMonday,
@@ -288,8 +275,8 @@ export const useInsightsData = (rangeDays: RangeDays): InsightsData => {
         habitsQuery.isError,
         activeHabits,
         trackersLoading,
-        trackerKey,
+        trackersBatch.byHabit,
         kpisLoading,
-        streakKey
+        kpisBatch.byHabit
     ]);
 };

@@ -11,5 +11,10 @@ playwright-report/
 blob-report/
 package-lock.json
 
+# npm mirrors package.json's indent onto package-lock.json. Prettier's tabWidth
+# of 4 would therefore rewrite all ~6800 lock lines on every `npm install`;
+# keeping both at npm's own 2-space default is what stops that.
+package.json
+
 # Playwright aria snapshots — exact content is the assertion.
 e2e/**/*-snapshots/**

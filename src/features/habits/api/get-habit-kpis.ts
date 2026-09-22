@@ -1,7 +1,8 @@
-import type { HabitKPIs } from '@/api';
+import type { HabitKPIs, HabitKPIsEntry } from '@/api';
 import { HabitsService } from '@/api';
 import { getBrowserTimeZone } from '@/lib/date-utils';
 import type { QueryConfig } from '@/lib/react-query';
+import { pagedList } from '@/lib/paginate';
 import { queryOptions, useQuery } from '@tanstack/react-query';
 
 export const getHabitKpis = async (habitId: number): Promise<HabitKPIs> => {
@@ -30,4 +31,34 @@ export const useHabitKpis = ({ habitId, queryConfig }: UseHabitKpisOptions) => {
         ...getHabitKpisQueryOptions(habitId),
         ...queryConfig
     });
+};
+
+export type HabitsKpisOptions = {
+    profileId: number;
+    archived?: boolean;
+};
+
+/**
+ * Fetch computed KPIs for every habit in a profile, all pages.
+ *
+ * Replaces one getHabitKpis call (and one full-history scan) per habit. tz
+ * is resolved exactly as the singular resolves it, because callers seed the
+ * per-habit ['kpis', {habitId}] cache from these entries and that key
+ * carries no tz.
+ */
+export const getHabitsKpis = async ({
+    profileId,
+    archived
+}: HabitsKpisOptions): Promise<HabitKPIsEntry[]> => {
+    const tz = getBrowserTimeZone();
+
+    const { items } = await pagedList<HabitKPIsEntry>(
+        ({ offset, limit }) =>
+            HabitsService.listHabitsKpisHabitsKpisGet(profileId, tz, archived, limit, offset).then(
+                (page) => ({ items: page.items ?? [], total: page.total })
+            ),
+        { identify: (item) => item.habit_id }
+    );
+
+    return items;
 };

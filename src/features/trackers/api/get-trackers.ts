@@ -1,4 +1,4 @@
-import type { TrackerLite, TrackerLiteList, TrackerRead } from '@/api';
+import type { HabitTrackersLite, TrackerLite, TrackerLiteList, TrackerRead } from '@/api';
 import { HabitsService, TrackersService } from '@/api';
 import { getBrowserTimeZone } from '@/lib/date-utils';
 import { pagedList } from '@/lib/paginate';
@@ -61,4 +61,47 @@ export const getTrackersLite = async (
         has_previous: range?.has_previous ?? false,
         auto_skipped_dates: range?.auto_skipped_dates ?? []
     };
+};
+
+export type HabitsTrackersLiteOptions = {
+    profileId: number;
+    /** Local day the window ends on. Send it explicitly: omitting it lets a
+     *  session open across midnight serve the previous day. */
+    endDate?: string;
+    days?: number;
+    archived?: boolean;
+};
+
+/**
+ * Fetch the lightweight tracker window for every habit in a profile, all
+ * pages, as one entry per habit.
+ *
+ * Replaces one getTrackersLite call per habit. Paging is over habits, so
+ * each entry already holds its whole window.
+ */
+export const getHabitsTrackersLite = async ({
+    profileId,
+    endDate,
+    days = 42,
+    archived
+}: HabitsTrackersLiteOptions): Promise<HabitTrackersLite[]> => {
+    // Same resolution as the singular endpoint, deliberately: both seed and
+    // read caches keyed without tz.
+    const tz = getBrowserTimeZone();
+
+    const { items } = await pagedList<HabitTrackersLite>(
+        ({ offset, limit }) =>
+            HabitsService.listHabitsTrackersLiteHabitsTrackersLiteGet(
+                profileId,
+                endDate,
+                days,
+                tz,
+                archived,
+                limit,
+                offset
+            ).then((page) => ({ items: page.items ?? [], total: page.total })),
+        { identify: (item) => item.habit_id }
+    );
+
+    return items;
 };

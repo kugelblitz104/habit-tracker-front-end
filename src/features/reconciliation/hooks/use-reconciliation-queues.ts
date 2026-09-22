@@ -1,11 +1,10 @@
-import { useQueries } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import type { HabitRead, ProjectRead, TaskRead } from '@/api';
 import { useHabits } from '@/features/habits/api/get-habits';
+import { useHabitTrackersBatch } from '@/features/habits/hooks/use-habit-batch-data';
 import { useProjects } from '@/features/projects/api/get-projects';
 import { useTasks } from '@/features/tasks/api/get-tasks';
-import { getTrackersLite } from '@/features/trackers/api/get-trackers';
 import { calculateCompletionRate } from '@/features/trackers/utils/kpi-utils';
 import { useAuth } from '@/lib/auth-context';
 import { toLocalDateString } from '@/lib/date-utils';
@@ -82,28 +81,21 @@ export const useReconciliationQueues = ({
     // midnight then serves the previous day. The window is in the key too, so
     // changing the setting refetches rather than serving a stale rate.
     const today = toLocalDateString(now);
-    const trackerQueries = useQueries({
-        queries: habitsForRate.map((habit) => ({
-            queryKey: ['trackers-lite', { habitId: habit.id }, windows.staleHabitDays, today],
-            queryFn: () => getTrackersLite(habit.id, today, windows.staleHabitDays),
-            enabled: includeHabits,
-            staleTime: 1000 * 60
-        }))
+    const trackersBatch = useHabitTrackersBatch({
+        profileId: includeHabits ? profileId : null,
+        days: windows.staleHabitDays,
+        endDate: today,
+        archived: false
     });
 
-    const trackersReady = includeHabits && trackerQueries.every((query) => query.isSuccess);
-    // The query objects are new references every render, so key the memo on a
-    // primitive snapshot rather than on the array.
-    const trackerFingerprint = trackerQueries
-        .map((query) => query.data?.trackers?.length ?? -1)
-        .join(',');
+    const trackersReady = includeHabits && trackersBatch.isSuccess;
 
     const habitCandidates = useMemo<HabitCandidate[]>(() => {
         if (!trackersReady) return [];
-        return habitsForRate.map((habit, index) => ({
+        return habitsForRate.map((habit) => ({
             habit,
             completionRate: calculateCompletionRate(
-                trackerQueries[index]?.data?.trackers ?? [],
+                trackersBatch.byHabit.get(habit.id)?.trackers ?? [],
                 habit.frequency,
                 habit.range,
                 habit.created_date,
@@ -111,7 +103,7 @@ export const useReconciliationQueues = ({
             )
         }));
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [habitsForRate, trackersReady, trackerFingerprint, windows.staleHabitDays]);
+    }, [habitsForRate, trackersReady, trackersBatch.byHabit, windows.staleHabitDays]);
 
     const activeTasks = activeTasksQuery.data?.tasks ?? [];
     const closedTasks = closedTasksQuery.data?.tasks ?? [];
@@ -135,7 +127,7 @@ export const useReconciliationQueues = ({
     );
 
     const cheapQueries = [activeTasksQuery, closedTasksQuery, projectsQuery];
-    const habitQueries = includeHabits ? [habitsQuery, ...trackerQueries] : [];
+    const habitQueries = includeHabits ? [habitsQuery, trackersBatch] : [];
 
     return {
         windows,

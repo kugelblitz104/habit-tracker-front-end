@@ -1,21 +1,37 @@
 import type { HabitRead } from '@/api';
 import { useCreateHabit } from '@/features/habits/api/create-habits';
 import { useHabits } from '@/features/habits/api/get-habits';
+import { habitKeys } from '@/features/habits/api/query-keys';
 import { HabitCaptureForm } from '@/features/habits/components/habit-capture-form';
 import { HabitDetailPane } from '@/features/habits/components/details/habit-detail-pane';
 import { HabitList } from '@/features/habits/components/dashboard/habit-list';
+import { HabitListSkeleton } from '@/features/habits/components/dashboard/habit-list-skeleton';
 import { SortHabitModal } from '@/features/habits/components/modals/sort-habit-modal';
 import { useHabitDetailPane } from '@/features/habits/hooks/use-habit-detail-pane';
+import {
+    readRememberedHabitCount,
+    rememberHabitCount
+} from '@/features/habits/utils/remembered-habit-count';
+import {
+    useHabitKpisBatch,
+    useHabitTrackersBatch
+} from '@/features/habits/hooks/use-habit-batch-data';
+import {
+    buildHabitRowData,
+    countHabitsLeft,
+    countHabitsLeftFromFlags
+} from '@/features/habits/utils/habit-row-data';
 import { CaptureBar } from '@/features/tasks/components/capture-bar';
 import { PageShell } from '@/components/layouts/page-shell';
 import { useAuth } from '@/lib/auth-context';
+import { toLocalDateString } from '@/lib/date-utils';
 import { useOpenFromSearchState } from '@/lib/use-open-from-search-state';
 import { useResponsiveLayout, DASHBOARD_DAYS_BY_SIZE } from '@/lib/use-responsive-layout';
 import { GripVertical } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Navigate } from 'react-router';
 import { ErrorPage } from './error-page';
-import { LoadingPage } from './loading-page';
 import { useSortHabits } from '@/features/habits/api/update-habits';
 import { toast } from 'react-toastify';
 
@@ -38,8 +54,9 @@ export const HabitsDashboard = () => {
     // route here with the id in router state; narrow goes to /details/:id).
     useOpenFromSearchState('openHabitId', selectHabit);
 
+    const queryClient = useQueryClient();
+
     // hooks
-    const [habits, setHabits] = useState<HabitRead[]>([]);
     const [sortModalOpen, setSortModalOpen] = useState(false);
     // Group-by-category display mode; hydrated from localStorage after mount
     // (SSR renders the default flat list, same pattern as active_profile).
@@ -47,13 +64,19 @@ export const HabitsDashboard = () => {
     // Draft name from the capture bar's Shift+Enter; non-null swaps the bar for
     // the expanded HabitCaptureForm.
     const [captureName, setCaptureName] = useState<string | null>(null);
-    // "Habits left today" count reported up from HabitList, computed with the
-    // same logic as the Incomplete filter (auto-skip aware). null until settled.
-    const [incompleteCount, setIncompleteCount] = useState<number | null>(null);
 
     useEffect(() => {
         setGroupByCategory(localStorage.getItem(GROUP_BY_CATEGORY_STORAGE_KEY) === 'true');
     }, []);
+
+    // Size the skeleton from what this profile had last time, so the
+    // placeholder table is the height the real one will be. Read during
+    // render rather than in an effect: an effect would paint the fallback
+    // first, which is the shift this is meant to avoid.
+    const skeletonRows = useMemo(
+        () => readRememberedHabitCount(activeProfileId),
+        [activeProfileId]
+    );
 
     const handleToggleGroupByCategory = () => {
         const next = !groupByCategory;
@@ -63,11 +86,16 @@ export const HabitsDashboard = () => {
     // Scope habits to the active profile (keyed per profile so it caches
     // separately and matches the Today panel). Gate until a profile resolves.
     const habitsQuery = useHabits({ profileId: activeProfileId });
+    const habits = habitsQuery.data?.habits ?? [];
+
+    useEffect(() => {
+        if (habitsQuery.isSuccess) rememberHabitCount(activeProfileId, habits.length);
+    }, [habitsQuery.isSuccess, habits.length, activeProfileId]);
 
     const habitsAdd = useCreateHabit({
         mutationConfig: {
-            onSuccess: (data) => {
-                setHabits((prev) => [...prev, data]);
+            onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: habitKeys.all });
                 toast.success('Habit created');
             }
         }
@@ -81,12 +109,24 @@ export const HabitsDashboard = () => {
         }
     });
 
-    // Effect to set habits from query data
-    useEffect(() => {
-        if (habitsQuery.data?.habits) {
-            setHabits(habitsQuery.data.habits);
-        }
-    }, [habitsQuery.data]);
+    // Send it explicitly so a session open across midnight doesn't serve the
+    // previous day.
+    const endDate = toLocalDateString(new Date());
+    const trackersBatch = useHabitTrackersBatch({ profileId: activeProfileId, days, endDate });
+    const kpisBatch = useHabitKpisBatch({ profileId: activeProfileId });
+
+    const rowData = useMemo(
+        () => buildHabitRowData(habits, trackersBatch.byHabit, kpisBatch.byHabit, new Date()),
+        [habits, trackersBatch.byHabit, kpisBatch.byHabit]
+    );
+    // `habits` and the two batches are independent queries and the batches are
+    // heavier, so there is a window where every row's trackers read as empty
+    // and every habit counts as outstanding. Approximate from the flags already
+    // on HabitRead until the trackers batch lands, or the header counts up from
+    // "All habits done" to a wrong figure and then down to the right one.
+    const habitsLeft = trackersBatch.isSuccess
+        ? countHabitsLeft(habits, rowData)
+        : countHabitsLeftFromFlags(habits);
 
     // Quick-capture create path: a daily habit with a cool default color. Full
     // options (question, frequency, category…) live in the detail-pane editor.
@@ -118,10 +158,6 @@ export const HabitsDashboard = () => {
         return <ErrorPage message='User not authenticated' />;
     }
 
-    if (habitsQuery.isLoading) {
-        return <LoadingPage />;
-    }
-
     if (habitsQuery.isError) {
         return <ErrorPage message='Error loading habits' />;
     }
@@ -129,13 +165,7 @@ export const HabitsDashboard = () => {
     const showPane = isWide && selectedHabitId != null;
     const subline = `${habits.length} ${habits.length === 1 ? 'habit' : 'habits'}`;
     // Header = how many of today's habits still need doing, using the SAME rule
-    // as the Incomplete filter (HabitList reports it; auto-skipped habits don't
-    // count). Until rows settle (`null`), fall back to a server-field
-    // approximation so the title doesn't flash a wrong figure.
-    const approxLeft = habits.filter(
-        (habit) => !habit.archived && !habit.completed_today && !habit.skipped_today
-    ).length;
-    const habitsLeft = incompleteCount ?? approxLeft;
+    // as the Incomplete filter (auto-skipped habits don't count).
     const headerTitle =
         habitsLeft > 0
             ? `${habitsLeft} ${habitsLeft === 1 ? 'habit' : 'habits'} left`
@@ -201,17 +231,21 @@ export const HabitsDashboard = () => {
                 />
             )}
 
-            <HabitList
-                habits={habits}
-                days={days}
-                isSmall={isSmall}
-                isWide={isWide}
-                selectedHabitId={selectedHabitId}
-                onSelectHabit={selectHabit}
-                groupByCategory={groupByCategory}
-                onToggleGroupByCategory={handleToggleGroupByCategory}
-                onIncompleteCountChange={setIncompleteCount}
-            />
+            {habitsQuery.isLoading ? (
+                <HabitListSkeleton rows={skeletonRows} days={days} isSmall={isSmall} />
+            ) : (
+                <HabitList
+                    habits={habits}
+                    days={days}
+                    isSmall={isSmall}
+                    isWide={isWide}
+                    selectedHabitId={selectedHabitId}
+                    onSelectHabit={selectHabit}
+                    groupByCategory={groupByCategory}
+                    onToggleGroupByCategory={handleToggleGroupByCategory}
+                    rowData={rowData}
+                />
+            )}
         </PageShell>
     );
 };

@@ -4,9 +4,11 @@
 /* eslint-disable */
 import type { HabitCreate } from '../models/HabitCreate';
 import type { HabitKPIs } from '../models/HabitKPIs';
+import type { HabitKPIsList } from '../models/HabitKPIsList';
 import type { HabitList } from '../models/HabitList';
 import type { HabitRead } from '../models/HabitRead';
 import type { HabitStreak } from '../models/HabitStreak';
+import type { HabitTrackersLiteList } from '../models/HabitTrackersLiteList';
 import type { HabitUpdate } from '../models/HabitUpdate';
 import type { TrackerList } from '../models/TrackerList';
 import type { TrackerLiteList } from '../models/TrackerLiteList';
@@ -181,6 +183,110 @@ export class HabitsService {
             query: {
                 'profile_id': profileId,
                 'tz': tz,
+            },
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * List lightweight trackers for every habit in a profile
+     * Get lightweight trackers over a date window for every habit in a profile.
+     *
+     * The per-habit endpoint under /habits/{habit_id}/trackers/lite answers
+     * "this habit's window"; this one answers "every habit's window", which
+     * otherwise costs one request per habit.
+     *
+     * Paging is over HABITS, not trackers: each entry carries every tracker in
+     * the window for its habit, so a caller can treat an entry exactly as it
+     * treats the per-habit response. Row volume is therefore bounded by
+     * days * limit, both of which the caller sets.
+     *
+     * - **profile_id**: The profile whose habits to read (required)
+     * - **end_date**: End date for the range (defaults to today)
+     * - **days**: Number of days to fetch (1-3660, default: 42 = 6 weeks)
+     * - **tz**: Optional IANA timezone for the default end_date (invalid name -> 422)
+     * - **archived**: Optional archived filter; omit for both
+     * - **limit**: Maximum number of habits to return (default: 100, max: 100)
+     * - **offset**: Number of habits to skip (default: 0)
+     * @param profileId The profile whose habits to read
+     * @param endDate End date for the range (defaults to today)
+     * @param days Number of days to fetch (1-3660, default: 42 = 6 weeks)
+     * @param tz IANA timezone name (e.g. 'America/New_York'). When provided, the default end_date is today in this zone; when omitted, the server's local date is used.
+     * @param archived Filter by archived state. Omit to return both.
+     * @param limit Maximum number of habits to return (1-100)
+     * @param offset Number of habits to skip
+     * @returns HabitTrackersLiteList Successful Response
+     * @throws ApiError
+     */
+    public static listHabitsTrackersLiteHabitsTrackersLiteGet(
+        profileId: number,
+        endDate?: (string | null),
+        days: number = 42,
+        tz?: (string | null),
+        archived?: (boolean | null),
+        limit: number = 100,
+        offset?: number,
+    ): CancelablePromise<HabitTrackersLiteList> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/habits/trackers-lite',
+            query: {
+                'profile_id': profileId,
+                'end_date': endDate,
+                'days': days,
+                'tz': tz,
+                'archived': archived,
+                'limit': limit,
+                'offset': offset,
+            },
+            errors: {
+                404: `Not found`,
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Get computed KPIs for every habit in a profile
+     * Retrieve computed statistics for every habit in a profile.
+     *
+     * The per-habit endpoint under /habits/{habit_id}/kpis answers "this
+     * habit's KPIs"; this one answers "every habit's", which otherwise costs
+     * one request and one full-history scan per habit.
+     *
+     * KPIs are derived from each habit's trackers on the fly - nothing is
+     * persisted - by the same calculate_kpis the per-habit endpoint uses.
+     *
+     * - **profile_id**: The profile whose habits to read (required)
+     * - **tz**: Optional IANA timezone for determining "today" (invalid name -> 422)
+     * - **archived**: Optional archived filter; omit for both
+     * - **limit**: Maximum number of habits to return (default: 100, max: 100)
+     * - **offset**: Number of habits to skip (default: 0)
+     * @param profileId The profile whose habits to read
+     * @param tz IANA timezone name (e.g. 'America/New_York'). When provided, KPIs are computed against today in this zone; when omitted, the server's local date is used.
+     * @param archived Filter by archived state. Omit to return both.
+     * @param limit Maximum number of habits to return (1-100)
+     * @param offset Number of habits to skip
+     * @returns HabitKPIsList Successful Response
+     * @throws ApiError
+     */
+    public static listHabitsKpisHabitsKpisGet(
+        profileId: number,
+        tz?: (string | null),
+        archived?: (boolean | null),
+        limit: number = 100,
+        offset?: number,
+    ): CancelablePromise<HabitKPIsList> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/habits/kpis',
+            query: {
+                'profile_id': profileId,
+                'tz': tz,
+                'archived': archived,
+                'limit': limit,
+                'offset': offset,
             },
             errors: {
                 404: `Not found`,

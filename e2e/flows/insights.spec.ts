@@ -37,7 +37,10 @@ import { appHeader, expect, gotoAppRoute, test } from '../fixtures/test';
  *      -> 23%.
  *    - Lapsed (frequency=1, range=1): one completion 45 days back, outside
  *      the 30-day window -> 0 actual -> 0%.
- *    Average (47+23+0)/3 = 23.33% -> 23%. Only the thrice-weekly habit's
+ *    - Weekly review (frequency=1, range=7): no trackers at all -> 0 actual,
+ *      expected = 30*1/7 = 4.286 -> 0%.
+ *    Average (47+23+0+0)/4 = 17.5% -> 18% (each habit's rate is rounded
+ *    first, then averaged and rounded again). Only the thrice-weekly habit's
  *    streak reaches today (auto-skip), so exactly one habit is "on streak".
  *  - Streaks, unlike the rates, come from the SERVER KPI over full history, so
  *    they do not shrink with the range toggle. Golden's streaks all sit inside
@@ -184,27 +187,31 @@ test('all four charts render with their titles and figures', async ({ authedPage
     await expect(projectLegend.filter({ hasText: GOLDEN.projects.beta })).toContainText('45m');
 
     // --- habits ---
-    await expect(chartFigure(authedPage, 'Habit completion')).toHaveText('3 habits');
+    await expect(chartFigure(authedPage, 'Habit completion')).toHaveText('4 habits');
     const habitRows = chartCard(authedPage, 'Habit completion').getByRole('listitem');
-    await expect(habitRows).toHaveCount(3);
+    await expect(habitRows).toHaveCount(4);
     // Sorted by streak descending, completion rate breaking ties. Only the
     // thrice-weekly habit's streak reaches today (today is auto-skipped because
     // three completions already sit inside its 7-day window), so it leads
-    // despite the lower rate; the other two are ranked by rate alone.
+    // despite the lower rate; the rest are ranked by rate alone, and the two
+    // 0% habits keep their seeded (sort_order) order as the final tiebreak.
     await expect(habitRows.nth(0)).toContainText(GOLDEN.habits.thrice);
     await expect(habitRows.nth(0)).toContainText('23%');
     await expect(habitRows.nth(1)).toContainText(GOLDEN.habits.daily);
     await expect(habitRows.nth(1)).toContainText('47%');
     await expect(habitRows.nth(2)).toContainText(GOLDEN.habits.paused);
     await expect(habitRows.nth(2)).toContainText('0%');
+    await expect(habitRows.nth(3)).toContainText(GOLDEN.habits.weekly);
+    await expect(habitRows.nth(3)).toContainText('0%');
 
     // ...so it is the only row wearing a flame.
     await expect(habitRows.nth(0).getByTitle('3-day streak')).toBeVisible();
     await expect(habitRows.nth(1).getByTitle(/-day streak$/)).toHaveCount(0);
     await expect(habitRows.nth(2).getByTitle(/-day streak$/)).toHaveCount(0);
-    await expect(summaryValue(authedPage, 'Habit completion')).toHaveText('23%');
+    await expect(habitRows.nth(3).getByTitle(/-day streak$/)).toHaveCount(0);
+    await expect(summaryValue(authedPage, 'Habit completion')).toHaveText('18%');
     await expect(summaryValue(authedPage, 'Habits on streak')).toHaveText('1');
-    await expect(summarySub(authedPage, 'Habits on streak')).toHaveText('of 3');
+    await expect(summarySub(authedPage, 'Habits on streak')).toHaveText('of 4');
 
     // --- point-in-time backlog ---
     await expect(summaryValue(authedPage, 'Open now')).toHaveText('8');
@@ -228,7 +235,7 @@ test('the 7-day range keeps the seeded totals and relabels the header', async ({
     await expect(chartFigure(authedPage, 'Tasks completed')).toHaveText('1 total');
     await expect(chartFigure(authedPage, 'Time by project')).toHaveText('2h 15m');
     // The habit COUNT isn't windowed (only each habit's rate is).
-    await expect(chartFigure(authedPage, 'Habit completion')).toHaveText('3 habits');
+    await expect(chartFigure(authedPage, 'Habit completion')).toHaveText('4 habits');
 });
 
 test('a profile with nothing in it shows the page-level empty state', async ({

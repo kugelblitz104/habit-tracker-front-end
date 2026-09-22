@@ -1,19 +1,14 @@
 import type { HabitRead, TrackerLite } from '@/api';
 import { getTrackersLite } from '@/features/trackers/api/get-trackers';
 import { invalidateHabitTrackers } from '@/features/trackers/api/query-keys';
-import {
-    toTrackerLite,
-    useTrackerMutations
-} from '@/features/trackers/hooks/use-tracker-mutations';
-import {
-    createNewTracker,
-    findTrackerByDate,
-    getDisplayStatusForDate,
-    getNextTrackerState
-} from '@/features/trackers/utils/tracker-utils';
-import { TrackerStatus, type DisplayStatus } from '@/types/types';
+import { useTrackerMutations } from '@/features/trackers/hooks/use-tracker-mutations';
+import { cycleTrackerOptimistically } from '@/features/trackers/utils/cycle-tracker';
+import { getDisplayStatusForDate } from '@/features/trackers/utils/tracker-utils';
+import type { DisplayStatus } from '@/types/types';
+import { getHabitKpis } from '@/features/habits/api/get-habit-kpis';
+import { reconcileHabitKpis } from '@/features/trackers/utils/habit-kpi-cache';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 
 export type UseTrackerToggleResult = {
@@ -66,60 +61,32 @@ export const useTrackerToggle = (habit: HabitRead, date: Date): UseTrackerToggle
     // /`habit-detail-page` read `['trackers', {habitId}]`, while the Today panel
     // and dashboard calendars read `['trackers-lite', {habitId}, days]`, so both
     // key families are invalidated (broad match on habitId) — along with the
-    // server-computed KPI/streak caches, which depend on trackers.
-    const { trackerCreate, trackerUpdate } = useTrackerMutations(habit.id, {
-        onSuccess: () => invalidateHabitTrackers(queryClient, habit.id),
+    // server-computed KPI/streak caches and the dashboard's profile-wide
+    // trackers batch, which all depend on trackers. The KPI batch is not
+    // invalidated (a whole-profile scan); this habit's entry is refetched on
+    // its own, and only when a batch is actually cached.
+    const { trackerCreate, trackerUpdate } = useTrackerMutations({
+        onSuccess: (data) => {
+            invalidateHabitTrackers(queryClient, data.habit_id);
+            void reconcileHabitKpis(queryClient, data.habit_id, getHabitKpis);
+        },
         onError: () => toast.error('Failed to update habit. Please try again.')
     });
 
-    const toggle = () => {
-        // Ignore rapid re-clicks while a mutation is in flight so a double-click
-        // before a create resolves can't fire two creates (or update an as-yet
-        // unpersisted optimistic row) for the same date.
-        if (trackerCreate.isPending || trackerUpdate.isPending) return;
+    // One cell (this habit, this date), so this set never holds more than one
+    // key; cycleTrackerOptimistically owns adding and clearing it.
+    const inFlightRef = useRef(new Set<string>());
 
-        const tracker = findTrackerByDate(trackers, date);
-
-        // Optimistic path: apply the change to local state up front so the
-        // checkbox reacts instantly, fire the request in the background, then
-        // reconcile with the server row on success or roll back on failure.
-        // (The hook-level onError toast still surfaces the failure.)
-        if (!tracker) {
-            const newTracker = createNewTracker(habit.id, date);
-            const tempId = -Date.now();
-            const optimistic: TrackerLite = {
-                id: tempId,
-                dated: newTracker.dated ?? '',
-                status: newTracker.status ?? TrackerStatus.COMPLETED,
-                has_note: !!newTracker.note
-            };
-            setTrackers((prev) => [...prev, optimistic]);
-            trackerCreate.mutate(newTracker, {
-                onSuccess: (data) =>
-                    setTrackers((prev) =>
-                        prev.map((t) => (t.id === tempId ? toTrackerLite(data) : t))
-                    ),
-                onError: () => setTrackers((prev) => prev.filter((t) => t.id !== tempId))
-            });
-            return;
-        }
-
-        const update = getNextTrackerState(tracker);
-        const previousTrackers = trackers;
-        setTrackers((prev) =>
-            prev.map((t) => (t.id === tracker.id ? { ...t, status: update.status ?? t.status } : t))
-        );
-        trackerUpdate.mutate(
-            { id: tracker.id, update },
-            {
-                onSuccess: (data) =>
-                    setTrackers((prev) =>
-                        prev.map((t) => (t.id === tracker.id ? toTrackerLite(data) : t))
-                    ),
-                onError: () => setTrackers(previousTrackers)
-            }
-        );
-    };
+    const toggle = () =>
+        cycleTrackerOptimistically({
+            habitId: habit.id,
+            date,
+            trackers,
+            patch: setTrackers,
+            inFlight: inFlightRef.current,
+            trackerCreate,
+            trackerUpdate
+        });
 
     const status = getDisplayStatusForDate(trackers, date, habit, autoSkippedDates);
 

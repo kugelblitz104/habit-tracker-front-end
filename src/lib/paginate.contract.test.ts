@@ -27,7 +27,7 @@ const BOUNDED_READS: Record<string, string> = {
 };
 
 /**
- * The offset-paged methods found in the generated client as of 2026-08-17.
+ * The offset-paged methods found in the generated client as of 2026-09-21.
  * A regen that adds a paged endpoint is expected to fail the assertion below;
  * the fix is to give the new method a paged caller, then add its name here.
  */
@@ -36,6 +36,8 @@ const EXPECTED_METHODS = [
     'listCountdownCategoriesCountdownCategoriesGet',
     'listCountdownsCountdownsGet',
     'listHabitsHabitsGet',
+    'listHabitsKpisHabitsKpisGet',
+    'listHabitsTrackersLiteHabitsTrackersLiteGet',
     'listHabitTrackersHabitsHabitIdTrackersGet',
     'listHabitTrackersLiteHabitsHabitIdTrackersLiteGet',
     'listIntegrationConnectionsIntegrationsGet',

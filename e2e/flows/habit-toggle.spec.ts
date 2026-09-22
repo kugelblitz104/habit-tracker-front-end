@@ -69,15 +69,12 @@ const habitRow = (page: Page, name: string): Locator =>
 /** A row's server-computed current-streak cell (column 2, after the name). */
 const streakCell = (row: Locator): Locator => row.getByRole('cell').nth(1);
 
-/**
- * One day cell in a dashboard row. The `.*` in the middle is deliberate: the
- * label reads "Mark habit X as [object Object] for D" because it interpolates
- * `getNextTrackerState`'s update object, and this spec should not depend on
- * that stringification.
- */
+/** One day cell in a dashboard row, matched by habit name and date only: the
+ *  label's tail reports the cell's current status, which this spec doesn't
+ *  need to predict. */
 const dayCell = (row: Locator, habitName: string, dateLabel: string): Locator =>
     row.getByRole('button', {
-        name: new RegExp(`^Mark habit ${escapeRe(habitName)} as .* for ${escapeRe(dateLabel)}$`)
+        name: new RegExp(`^${escapeRe(habitName)}, ${escapeRe(dateLabel)}: `)
     });
 
 /**
@@ -163,6 +160,38 @@ test("toggling today's cell moves the streak, and the new figure survives a refe
     await expect(today.locator(NOT_COMPLETED_GLYPH)).toBeVisible();
 });
 
+test('a streak longer than the rendered window reads the server figure, not the window', async ({
+    authedPage,
+    anchor
+}) => {
+    // The grid renders 14 days at this viewport and the optimistic KPI patch
+    // can only see those, so a streak longer than 14 cannot be derived from
+    // them. Filling the gap at -8 and then completing today makes the real
+    // streak 17 (-16..today); patched from the window alone the column reads
+    // 14 and stays there, because nothing invalidates the KPI batch. This is
+    // the assertion that pins the reconcile against the server.
+    await gotoAppRoute(authedPage, '/habits');
+
+    const row = habitRow(authedPage, GOLDEN.habits.daily);
+    const streak = streakCell(row);
+    // The KPI batch has landed once this reads 3, which makes the daily
+    // habit's dash below a real 0 rather than a still-loading default.
+    await expect(streakCell(habitRow(authedPage, GOLDEN.habits.thrice))).toHaveText('3');
+    await expect(streak).toHaveText(NO_STREAK);
+
+    const gapDay = dayCell(row, GOLDEN.habits.daily, usDate(anchor, 8));
+    await gapDay.click();
+    await expect(gapDay.locator(COMPLETED_GLYPH)).toBeVisible();
+
+    const today = dayCell(row, GOLDEN.habits.daily, usDate(anchor, 0));
+    await today.click();
+    await expect(today.locator(COMPLETED_GLYPH)).toBeVisible();
+
+    await expect(streak).toHaveText('17');
+    await authedPage.reload();
+    await expect(streak).toHaveText('17');
+});
+
 test('backdating from the detail calendar merges two streaks, and the merge survives a refetch', async ({
     authedPage,
     anchor
@@ -199,6 +228,16 @@ test('backdating from the detail calendar merges two streaks, and the merge surv
     await expect(streaks.getByText('8', { exact: true })).toHaveCount(0);
     await expect(streaks.getByText('7', { exact: true })).toHaveCount(0);
 
+    // The grid row rendered BESIDE this pane reads the profile-wide trackers
+    // batch, which the pane's write has to reach as well or the cell it just
+    // filled stays empty until a reload.
+    const gridGapDay = dayCell(
+        habitRow(authedPage, GOLDEN.habits.daily),
+        GOLDEN.habits.daily,
+        usDate(anchor, 8)
+    );
+    await expect(gridGapDay.locator(COMPLETED_GLYPH)).toBeVisible();
+
     // Refetch from scratch: the optimistic `kpi-adapter` patch is gone, so these
     // numbers now come straight from `habit_stats.py`.
     await authedPage.reload();
@@ -229,10 +268,13 @@ test('habit stat requests carry the pinned UTC zone', async ({ authedPage }) => 
     // Every number in this file depends on the browser and the API container
     // agreeing on "today", which they only do because the client forwards its
     // zone and the config pins that zone to the container's (UTC).
+    // The dashboard now reads through the profile-wide batch endpoints
+    // (`/habits/trackers-lite`, `/habits/kpis`) rather than one request per
+    // habit (`/habits/{id}/...`); this matches either shape.
     const statUrls: string[] = [];
     authedPage.on('request', (request) => {
         const url = request.url();
-        if (/\/habits\/\d+\/(kpis|streaks|trackers-lite)/.test(url)) statUrls.push(url);
+        if (/\/habits\/(\d+\/)?(kpis|streaks|trackers-lite)/.test(url)) statUrls.push(url);
     });
 
     await gotoAppRoute(authedPage, '/habits');
@@ -242,4 +284,27 @@ test('habit stat requests carry the pinned UTC zone', async ({ authedPage }) => 
     for (const url of statUrls) {
         expect(url, `${url} is missing tz=UTC`).toContain('tz=UTC');
     }
+});
+
+test('completing a habit auto-skips its remaining days without a reload', async ({
+    authedPage
+}) => {
+    // A 1-per-7-days habit: one completion satisfies the window, so LATER
+    // days become auto-skipped. `is_auto_skipped` looks BACKWARD from a day
+    // (`[day - range + 1, day)`), so completing yesterday auto-skips today,
+    // not the other way around. `cells.first()` is today and `cells.nth(1)`
+    // is yesterday (habit-list-element.tsx renders today first). Before this
+    // change the grid invalidated only ['kpis'], so auto_skipped_dates stayed
+    // on the stale trackers-lite entry until a hard reload.
+    await gotoAppRoute(authedPage, '/habits');
+
+    const row = authedPage.getByRole('row', { name: /Weekly review/ });
+    const cells = row.getByRole('button', { name: /^Weekly review, / });
+
+    await expect(cells.first()).toHaveAttribute('data-status', 'not-completed');
+
+    await cells.nth(1).click();
+
+    await expect(cells.nth(1)).toHaveAttribute('data-status', 'completed');
+    await expect(cells.first()).toHaveAttribute('data-status', 'auto-skipped');
 });

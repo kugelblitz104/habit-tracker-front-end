@@ -61,8 +61,13 @@ const PANE_ROW_OPEN_400 =
 
 // --- detail pane ------------------------------------------------------------
 
+// All three panes scroll without drawing a scrollbar: Tailwind ships no
+// utility for it, so the last two are arbitrary properties (standards, then
+// WebKit's pseudo-element). One constant on purpose - the panes are one
+// component, and a caller that hides its bar alone would be a divergence worth
+// failing here.
 const PANE_ASIDE =
-    'pane-rise sticky top-[var(--pane-sticky-top)] max-h-[var(--pane-max-h)] w-full min-w-0 overflow-x-hidden overflow-y-auto';
+    'pane-rise sticky top-[var(--pane-sticky-top)] max-h-[var(--pane-max-h)] w-full min-w-0 overflow-x-hidden overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden';
 const PANE_INNER_480 = 'w-[480px]';
 /** The countdown form pane fuses the width and the card surface into one node. */
 const PANE_INNER_400_CARD = 'w-[400px] rounded-card border p-4';
