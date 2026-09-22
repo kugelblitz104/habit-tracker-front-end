@@ -1,0 +1,14 @@
+{
+    "date": "2026-09-22",
+    "summary": "Reconciliation",
+    "changes": [
+        {
+            "kind": "added",
+            "text": "Reconciliation view, prompts user to revisit stale entities"
+        },
+        {
+            "kind": "changed",
+            "text": "Optimized habits dashboard page"
+        }
+    ]
+}
