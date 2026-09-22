@@ -81,7 +81,9 @@ type TimeLogSectionProps = {
      *  default; RecentEntries (timer page) is the only caller that sets it. */
     showProject?: boolean;
     errorMessage: string;
-    emptyMessage: string;
+    /** Shown in place of the log when the fetch succeeded with no entries. Omit
+     *  to render nothing there — TaskTimeLog hides itself entirely instead. */
+    emptyMessage?: string;
 };
 
 /**
@@ -141,7 +143,7 @@ export const TimeLogSection = ({
                 <p className={`${messageClass} text-danger`}>{errorMessage}</p>
             )}
 
-            {!entriesQuery.isError && entries.length === 0 && (
+            {!entriesQuery.isError && entries.length === 0 && emptyMessage && (
                 <p className={`${messageClass} text-text-faint`}>{emptyMessage}</p>
             )}
 
