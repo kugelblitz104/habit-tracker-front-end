@@ -90,6 +90,8 @@ export const makeHabit = (overrides: Partial<HabitRead> = {}): HabitRead => {
         updated_date: null,
         completed_today: false,
         skipped_today: false,
+        reminder_time: null,
+        reminder_days: 127,
         ...overrides
     };
 };

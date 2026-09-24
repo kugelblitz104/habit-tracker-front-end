@@ -15,5 +15,7 @@ export type HabitUpdate = {
     category?: (string | null);
     profile_id?: (number | null);
     updated_date?: string;
+    reminder_time?: (string | null);
+    reminder_days?: (number | null);
 };
 

@@ -14,6 +14,8 @@ export type HabitRead = {
     sort_order?: number;
     category?: (string | null);
     profile_id: number;
+    reminder_time?: (string | null);
+    reminder_days?: number;
     id: number;
     created_date: string;
     updated_date?: (string | null);

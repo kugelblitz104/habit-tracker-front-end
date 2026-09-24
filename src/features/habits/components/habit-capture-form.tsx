@@ -1,5 +1,6 @@
 import type { HabitCreate } from '@/api';
 import { CaptureFormCard } from '@/components/ui/forms/capture-form-card';
+import { EVERY_DAY } from '@/features/habits/utils/weekday-mask';
 import { sanitizeFormData, sanitizeMultilineText, sanitizeText } from '@/lib/input-sanitization';
 import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import { toast } from 'react-toastify';
@@ -30,6 +31,8 @@ export const HabitCaptureForm = ({ profileId, initialName, onClose }: HabitCaptu
             frequency: { name: 'daily', frequency: 1, range: 1 },
             category: '',
             reminder: true,
+            reminderTime: '',
+            reminderDays: EVERY_DAY,
             notes: ''
         }
     });
@@ -53,6 +56,8 @@ export const HabitCaptureForm = ({ profileId, initialName, onClose }: HabitCaptu
             frequency: clean.frequency.frequency,
             range: clean.frequency.range,
             reminder: clean.reminder,
+            reminder_time: clean.reminderTime || null,
+            reminder_days: clean.reminderDays,
             notes: clean.notes,
             category: clean.category ? clean.category : null
         };

@@ -38,7 +38,7 @@ const normalizeTime = (raw: string): string | null => {
 };
 
 /**
- * Shared time control for the task editor's due + scheduled times. A text input
+ * Shared time control (task due/scheduled times, habit reminder time). A text input
  * bound to a `<datalist>` of 30-minute options: the dropdown makes common times
  * one click away, but the field accepts any exact time the user types (e.g.
  * 14:07). Displays and emits 24-hour HH:MM to keep parsing unambiguous.

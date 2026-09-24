@@ -1,5 +1,6 @@
 import type { HabitRead, HabitUpdate } from '@/api';
 import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
+import { EVERY_DAY } from '@/features/habits/utils/weekday-mask';
 import { sanitizeFormData, sanitizeMultilineText, sanitizeText } from '@/lib/input-sanitization';
 import { useRecentColors } from '@/lib/use-recent-colors';
 import { Trash2, X } from 'lucide-react';
@@ -44,6 +45,8 @@ export const HabitEditor = ({
             },
             category: habit.category ?? '',
             reminder: habit.reminder ?? true,
+            reminderTime: (habit.reminder_time ?? '').slice(0, 5),
+            reminderDays: habit.reminder_days ?? EVERY_DAY,
             notes: habit.notes ?? ''
         }
     });
@@ -65,6 +68,8 @@ export const HabitEditor = ({
             range: sanitized.frequency.range,
             category: sanitized.category ? sanitized.category : null,
             reminder: sanitized.reminder,
+            reminder_time: sanitized.reminderTime || null,
+            reminder_days: sanitized.reminderDays,
             notes: sanitized.notes
         });
     };

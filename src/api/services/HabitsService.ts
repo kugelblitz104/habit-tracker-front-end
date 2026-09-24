@@ -26,6 +26,9 @@ export class HabitsService {
      * - **frequency**: How many times the habit should be completed within the range
      * - **range**: The number of days within which the frequency should be met
      * - **reminder**: Whether to enable reminders for this habit
+     * - **reminder_time**: Optional wall-clock reminder time (HH:MM)
+     * - **reminder_days**: Weekday mask for the reminder, bit 0 = Monday ...
+     * bit 6 = Sunday, 1-127 (127 = every day)
      * - **notes**: Optional additional notes about the habit
      * - **archived**: Whether the habit is archived
      * - **sort_order**: The order in which the habit appears in lists (ascending)
@@ -371,6 +374,9 @@ export class HabitsService {
      * - **frequency**: How many times the habit should be completed within the range
      * - **range**: The number of days within which the frequency should be met
      * - **reminder**: Whether to enable reminders for this habit
+     * - **reminder_time**: Optional wall-clock reminder time (HH:MM)
+     * - **reminder_days**: Weekday mask for the reminder, bit 0 = Monday ...
+     * bit 6 = Sunday, 1-127 (127 = every day)
      * - **notes**: Optional additional notes about the habit
      * - **archived**: Whether the habit is archived
      * - **sort_order**: The order in which the habit appears in lists (ascending)

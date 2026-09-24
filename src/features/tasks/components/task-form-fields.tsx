@@ -4,11 +4,11 @@ import {
     formFieldStyle,
     formLabelClass
 } from '@/components/ui/forms/form-field-styles';
+import { TimePicker } from '@/components/ui/forms/time-picker';
 import { X } from 'lucide-react';
 import { useId } from 'react';
 import { PRIORITY_LEVELS } from '../utils/priority-config';
 import { ParentTaskAutocomplete, type ParentTaskOption } from './parent-task-autocomplete';
-import { TimePicker } from './time-picker';
 
 /**
  * Shared field components for task forms. Extracted from `TaskEditor` so the

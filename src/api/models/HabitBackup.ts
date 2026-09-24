@@ -16,5 +16,7 @@ export type HabitBackup = {
     sort_order?: number;
     created_date?: (string | null);
     updated_date?: (string | null);
+    reminder_time?: (string | null);
+    reminder_days?: number;
 };
 

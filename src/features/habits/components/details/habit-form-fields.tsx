@@ -3,6 +3,9 @@ import { formLabelClass } from '@/components/ui/forms/form-field-styles';
 import { FrequencyPicker } from '@/components/ui/forms/frequency-picker';
 import { LabeledSwitch } from '@/components/ui/forms/labeled-switch';
 import { TextField } from '@/components/ui/forms/text-field';
+import { TimePicker } from '@/components/ui/forms/time-picker';
+import { hasDay, toggleDay, weekdayColumns } from '@/features/habits/utils/weekday-mask';
+import { useAuth } from '@/lib/auth-context';
 import { validationPatterns } from '@/lib/input-sanitization';
 import type { Frequency } from '@/types/types';
 import { Field, Fieldset, Label, Textarea } from '@headlessui/react';
@@ -15,8 +18,52 @@ export type HabitFormValues = {
     frequency: Frequency;
     category: string;
     reminder: boolean;
+    /** HH:MM, or '' when unset. */
+    reminderTime: string;
+    /** Weekday mask, bit 0 = Monday (see weekday-mask.ts). */
+    reminderDays: number;
     notes: string;
 };
+
+type ReminderDaysProps = {
+    mask: number;
+    onChange: (mask: number) => void;
+    weekStartMonday: boolean;
+};
+
+/** Seven toggle buttons, one per weekday. The last selected day stays locked on. */
+const ReminderDays = ({ mask, onChange, weekStartMonday }: ReminderDaysProps) => (
+    <div role='group' aria-label='Reminder days' className='flex gap-1'>
+        {weekdayColumns(weekStartMonday).map((col) => {
+            const on = hasDay(mask, col.py);
+            const isLast = on && toggleDay(mask, col.py) === mask;
+            return (
+                <button
+                    key={col.py}
+                    type='button'
+                    aria-pressed={on}
+                    aria-label={col.name}
+                    title={isLast ? 'At least one day is needed' : col.name}
+                    disabled={isLast}
+                    onClick={() => onChange(toggleDay(mask, col.py))}
+                    className='flex min-h-[28px] min-w-[24px] flex-1 items-center justify-center rounded-button border py-1.5 font-mono text-[12px] transition-colors disabled:cursor-not-allowed pointer-coarse:min-h-[44px]'
+                    // Same selected/unselected treatment as FrequencyPicker's options.
+                    style={{
+                        backgroundColor: on
+                            ? 'rgba(255, 255, 255, 0.05)'
+                            : 'var(--surface-input-bg)',
+                        borderColor: on
+                            ? 'var(--color-habit-accent)'
+                            : 'var(--surface-input-border)',
+                        color: on ? 'var(--color-habit-accent)' : 'var(--color-text-secondary)'
+                    }}
+                >
+                    {col.label}
+                </button>
+            );
+        })}
+    </div>
+);
 
 /**
  * Map a habit's (frequency, range) to the FrequencyPicker's PRESET name key
@@ -39,13 +86,16 @@ type HabitFormFieldsProps = {
 };
 
 /**
- * The habit field block: name, question, category, colour, frequency, reminder,
- * notes. Rendered by both the inline editor and the quick-add expanded form, so
+ * The habit field block: name, question, category, colour, frequency, reminder
+ * (with its time and days while it is on), notes. Rendered by both the inline editor and the quick-add expanded form, so
  * the two stay identical. Must sit inside a `FormProvider<HabitFormValues>`.
  */
 export const HabitFormFields = ({ onNameEnter, autoFocusName = false }: HabitFormFieldsProps) => {
-    const { control, formState, register } = useFormContext<HabitFormValues>();
+    const { control, formState, register, watch } = useFormContext<HabitFormValues>();
     const errors = formState.errors;
+    const { activeProfile } = useAuth();
+    const weekStartMonday = activeProfile?.week_start_monday ?? true;
+    const reminderOn = watch('reminder');
     return (
         <Fieldset>
             <TextField
@@ -105,6 +155,41 @@ export const HabitFormFields = ({ onNameEnter, autoFocusName = false }: HabitFor
                     />
                 )}
             />
+            {/* Unmounted rather than hidden while off; form state keeps the values. */}
+            {reminderOn && (
+                // Time and days share one row, wrapping the days below on a phone.
+                <div className='mb-3 flex flex-wrap items-end gap-2'>
+                    <div>
+                        <span className={formLabelClass}>Time</span>
+                        <Controller
+                            name='reminderTime'
+                            control={control}
+                            render={({ field }) => (
+                                <TimePicker
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    aria-label='Reminder time'
+                                    style={{ width: '7rem' }}
+                                />
+                            )}
+                        />
+                    </div>
+                    <div className='min-w-[14rem] flex-1'>
+                        <span className={formLabelClass}>Days</span>
+                        <Controller
+                            name='reminderDays'
+                            control={control}
+                            render={({ field }) => (
+                                <ReminderDays
+                                    mask={field.value}
+                                    onChange={field.onChange}
+                                    weekStartMonday={weekStartMonday}
+                                />
+                            )}
+                        />
+                    </div>
+                </div>
+            )}
             <Field className='mb-3'>
                 <Label className={formLabelClass}>Notes</Label>
                 <Textarea

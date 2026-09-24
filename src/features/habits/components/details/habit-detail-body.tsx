@@ -5,9 +5,10 @@ import { StreakChart } from '@/features/habits/components/details/streak-chart';
 import { WeekdayChart } from '@/features/habits/components/details/weekday-chart';
 import { DeleteHabitModal } from '@/features/habits/components/modals/delete-habit-modal';
 import { useHabitDetailData } from '@/features/habits/hooks/use-habit-detail-data';
+import { EVERY_DAY, formatReminder } from '@/features/habits/utils/weekday-mask';
 import { useAuth } from '@/lib/auth-context';
 import { parseLocalDate } from '@/lib/date-utils';
-import { Archive, ArchiveRestore, MessageCircleQuestion, Pencil, Trash } from 'lucide-react';
+import { Archive, ArchiveRestore, Bell, MessageCircleQuestion, Pencil, Trash } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
 
@@ -187,6 +188,19 @@ export const HabitDetailBody = ({
                                 style={{ background: habit.color }}
                             />
                             <span>{frequencyMeta(habit.frequency, habit.range)}</span>
+                            {habit.reminder && habit.reminder_time && (
+                                <>
+                                    <span className='text-[#3a4a56]'>·</span>
+                                    <span className='inline-flex items-center gap-1'>
+                                        <Bell size={11} aria-hidden />
+                                        <span className='sr-only'>Reminder </span>
+                                        {formatReminder(
+                                            habit.reminder_time,
+                                            habit.reminder_days ?? EVERY_DAY
+                                        )}
+                                    </span>
+                                </>
+                            )}
                             {habit.category && (
                                 <>
                                     <span className='text-[#3a4a56]'>·</span>

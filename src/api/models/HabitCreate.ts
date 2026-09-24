@@ -14,5 +14,7 @@ export type HabitCreate = {
     sort_order?: number;
     category?: (string | null);
     profile_id: number;
+    reminder_time?: (string | null);
+    reminder_days?: number;
 };
 

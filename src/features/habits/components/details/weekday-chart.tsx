@@ -1,3 +1,4 @@
+import { weekdayColumns } from '@/features/habits/utils/weekday-mask';
 import { DetailPanel } from './detail-panel';
 
 type WeekdayChartProps = {
@@ -10,31 +11,9 @@ type WeekdayChartProps = {
     weekStartMonday?: boolean;
 };
 
-// Rates are indexed by Python weekday (Mon = 0 … Sun = 6), so each display
-// column carries the `py` index it reads from. Monday-first columns read
-// rates[i] directly; Sunday-first just moves the Sunday column (rates[6]) up
-// front.
-const DISPLAY_MONDAY_FIRST = [
-    { label: 'M', py: 0 },
-    { label: 'T', py: 1 },
-    { label: 'W', py: 2 },
-    { label: 'T', py: 3 },
-    { label: 'F', py: 4 },
-    { label: 'S', py: 5 },
-    { label: 'S', py: 6 }
-];
-const DISPLAY_SUNDAY_FIRST = [
-    { label: 'S', py: 6 },
-    { label: 'M', py: 0 },
-    { label: 'T', py: 1 },
-    { label: 'W', py: 2 },
-    { label: 'T', py: 3 },
-    { label: 'F', py: 4 },
-    { label: 'S', py: 5 }
-];
-
 export const WeekdayChart = ({ rates, weekStartMonday = true }: WeekdayChartProps) => {
-    const display = weekStartMonday ? DISPLAY_MONDAY_FIRST : DISPLAY_SUNDAY_FIRST;
+    // Each column carries the Python weekday (`py`) it reads from `rates`.
+    const display = weekdayColumns(weekStartMonday);
     const safeRates = rates && rates.length === 7 ? rates : new Array(7).fill(0);
     const maxRate = Math.max(...safeRates, 0);
     // A day is "strong" (accent) when it clears half of the best weekday; below
