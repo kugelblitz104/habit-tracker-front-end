@@ -84,7 +84,7 @@ export const TaskLinkForm = ({
                     type='button'
                     onClick={handleSubmit}
                     disabled={!ref.trim() || !url.trim() || isPending}
-                    className='rounded-button border px-2.5 py-1 font-mono text-[11.5px] text-text-secondary transition-colors hover:text-text-primary disabled:opacity-50'
+                    className='rounded-button border px-2.5 py-1 font-mono text-[11.5px] pointer-coarse:min-h-[44px] text-text-secondary transition-colors hover:text-text-primary disabled:opacity-50'
                     style={{ borderColor: 'rgba(255,255,255,.14)' }}
                 >
                     {mode === 'edit' ? 'Save link' : 'Link'}
@@ -93,7 +93,7 @@ export const TaskLinkForm = ({
                     type='button'
                     onClick={onCancel}
                     disabled={isPending}
-                    className='rounded-button border px-2.5 py-1 font-mono text-[11.5px] text-text-muted transition-colors hover:text-text-secondary disabled:opacity-50'
+                    className='rounded-button border px-2.5 py-1 font-mono text-[11.5px] pointer-coarse:min-h-[44px] text-text-muted transition-colors hover:text-text-secondary disabled:opacity-50'
                     style={{ borderColor: 'rgba(255,255,255,.12)' }}
                 >
                     Cancel

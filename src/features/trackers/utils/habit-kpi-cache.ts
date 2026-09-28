@@ -71,13 +71,23 @@ export const reconcileHabitKpis = async (
     const ticket = (latestReconcile.get(habitId) ?? 0) + 1;
     latestReconcile.set(habitId, ticket);
 
-    const kpis = await fetchKpis(habitId).catch((error: unknown) => {
+    // An observed per-habit query (the detail pane's `useHabitKpis`) was just
+    // restarted by the caller's `invalidateHabitTrackers`, so join that read.
+    // An unobserved one has no fresh read in flight, and joining an older one
+    // would return a pre-write answer, so it gets its own.
+    const key = trackerKeys.kpis(habitId);
+    const observed = queryClient.getQueryCache().find({ queryKey: key, exact: true })?.isActive();
+    const read = observed
+        ? queryClient.fetchQuery({ queryKey: key, queryFn: () => fetchKpis(habitId) })
+        : fetchKpis(habitId);
+
+    const kpis = await read.catch((error: unknown) => {
         console.error('Error reconciling habit KPIs:', error);
         return null;
     });
     if (!kpis || latestReconcile.get(habitId) !== ticket) return;
 
-    queryClient.setQueryData<HabitKPIs>(trackerKeys.kpis(habitId), kpis);
+    queryClient.setQueryData<HabitKPIs>(key, kpis);
     queryClient.setQueriesData<HabitKPIsEntry[]>({ queryKey: habitsKpisBatchKey }, (old) =>
         old?.map((entry) => (entry.habit_id === habitId ? { ...entry, kpis } : entry))
     );

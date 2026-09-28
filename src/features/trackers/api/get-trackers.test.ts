@@ -1,4 +1,5 @@
 import { HabitsService, type TrackerLite } from '@/api';
+import { toLocalDateString } from '@/lib/date-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getHabitsTrackersLite, getTrackersLite } from './get-trackers';
 
@@ -95,7 +96,40 @@ describe('getTrackersLite', () => {
     });
 });
 
+describe('getTrackersLite end date', () => {
+    it("sends the browser's local date and no tz when endDate is omitted", async () => {
+        const spy = vi
+            .spyOn(HabitsService, 'listHabitTrackersLiteHabitsHabitIdTrackersLiteGet')
+            .mockResolvedValue({
+                trackers: [],
+                total: 0,
+                end_date: '2026-01-01',
+                days: 2,
+                limit: 1000,
+                offset: 0
+            } as never);
+
+        await getTrackersLite(1, undefined, 2);
+
+        const [, endDate, , tz] = spy.mock.calls[0]!;
+        expect(endDate).toBe(toLocalDateString(new Date()));
+        expect(tz).toBeUndefined();
+    });
+});
+
 describe('getHabitsTrackersLite', () => {
+    it("sends the browser's local date and no tz when endDate is omitted", async () => {
+        const spy = vi
+            .spyOn(HabitsService, 'listHabitsTrackersLiteHabitsTrackersLiteGet')
+            .mockResolvedValue({ items: [], total: 0, limit: 100, offset: 0 } as never);
+
+        await getHabitsTrackersLite({ profileId: 3, days: 7 });
+
+        const [, endDate, , tz] = spy.mock.calls[0]!;
+        expect(endDate).toBe(toLocalDateString(new Date()));
+        expect(tz).toBeUndefined();
+    });
+
     it('walks every page and returns one entry per habit', async () => {
         const page = vi
             .spyOn(HabitsService, 'listHabitsTrackersLiteHabitsTrackersLiteGet')

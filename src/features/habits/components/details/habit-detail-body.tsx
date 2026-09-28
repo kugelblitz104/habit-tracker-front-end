@@ -7,7 +7,7 @@ import { DeleteHabitModal } from '@/features/habits/components/modals/delete-hab
 import { useHabitDetailData } from '@/features/habits/hooks/use-habit-detail-data';
 import { EVERY_DAY, formatReminder } from '@/features/habits/utils/weekday-mask';
 import { useAuth } from '@/lib/auth-context';
-import { parseLocalDate } from '@/lib/date-utils';
+import { parseServerDate } from '@/lib/date-utils';
 import { Archive, ArchiveRestore, Bell, MessageCircleQuestion, Pencil, Trash } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
@@ -93,13 +93,10 @@ export const HabitDetailBody = ({
     }
 
     const sinceLabel = habit
-        ? parseLocalDate(habit.created_date.split('T')[0] ?? habit.created_date).toLocaleDateString(
-              'en-US',
-              {
-                  month: 'short',
-                  year: 'numeric'
-              }
-          )
+        ? parseServerDate(habit.created_date).toLocaleDateString('en-US', {
+              month: 'short',
+              year: 'numeric'
+          })
         : '';
 
     const ghostButton =

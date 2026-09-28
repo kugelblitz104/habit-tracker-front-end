@@ -7,6 +7,7 @@ import { getDisplayStatusForDate } from '@/features/trackers/utils/tracker-utils
 import type { DisplayStatus } from '@/types/types';
 import { getHabitKpis } from '@/features/habits/api/get-habit-kpis';
 import { reconcileHabitKpis } from '@/features/trackers/utils/habit-kpi-cache';
+import { toLocalDateString } from '@/lib/date-utils';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -36,10 +37,12 @@ export const useTrackerToggle = (habit: HabitRead, date: Date): UseTrackerToggle
     // history and returns `auto_skipped_dates`. Two days, not one, so a session
     // sitting across midnight still has yesterday's row on hand.
     const days = 2;
+    // In the key so a session open across midnight fetches the new day.
+    const endDate = toLocalDateString(new Date());
 
     const trackersQuery = useQuery({
-        queryKey: ['trackers-lite', { habitId: habit.id }, days],
-        queryFn: () => getTrackersLite(habit.id, undefined, days),
+        queryKey: ['trackers-lite', { habitId: habit.id }, days, endDate],
+        queryFn: () => getTrackersLite(habit.id, endDate, days),
         staleTime: 1000 * 60
     });
 

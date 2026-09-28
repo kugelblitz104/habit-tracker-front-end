@@ -11,7 +11,7 @@ import {
     useHabitKpisBatch
 } from '@/features/habits/hooks/use-habit-batch-data';
 import { calculateCompletionRate } from '@/features/trackers/utils/kpi-utils';
-import { parseLocalDate, parseServerDate } from '@/lib/date-utils';
+import { parseLocalDate, parseServerDate, toLocalDateString } from '@/lib/date-utils';
 import { TaskStatus } from '@/types/types';
 import type { TrackerLite } from '@/api';
 import {
@@ -127,6 +127,7 @@ export const useInsightsData = (rangeDays: RangeDays): InsightsData => {
     const trackersBatch = useHabitTrackersBatch({
         profileId: activeProfileId,
         days: rangeDays,
+        endDate: toLocalDateString(new Date()),
         archived: false
     });
     const kpisBatch = useHabitKpisBatch({ profileId: activeProfileId, archived: false });

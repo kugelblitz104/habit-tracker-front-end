@@ -1,7 +1,7 @@
 import { buttonClass, buttonStyle } from '@/components/ui/buttons/button-styles';
 import { useClosedTasks } from '@/features/tasks/api/get-closed-tasks';
 import { useUpdateTask } from '@/features/tasks/api/update-tasks';
-import { parseLocalDate } from '@/lib/date-utils';
+import { parseServerDate } from '@/lib/date-utils';
 import { TaskStatus } from '@/types/types';
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
 import { ChevronRight } from 'lucide-react';
@@ -27,12 +27,10 @@ type CompletedSectionProps = {
     controls?: TaskControlsState;
 };
 
-const formatClosed = (closed: string | null | undefined): string | null => {
+/** closed_date is a UTC instant, so the day it names is the reader's local one. */
+export const formatClosed = (closed: string | null | undefined): string | null => {
     if (!closed) return null;
-    // closed_date is a datetime; take the date part and format it.
-    const datePart = closed.split('T')[0];
-    if (!datePart) return null;
-    return formatShortDate(parseLocalDate(datePart));
+    return formatShortDate(parseServerDate(closed));
 };
 
 /**

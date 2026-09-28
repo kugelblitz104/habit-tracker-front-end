@@ -264,17 +264,19 @@ test('the lapsed habit reads as a zero streak with no streak rows', async ({ aut
     await expect(pane.getByText('No streaks yet')).toBeVisible();
 });
 
-test('habit stat requests carry the pinned UTC zone', async ({ authedPage }) => {
+test('habit stat requests tell the server which day they mean', async ({ authedPage }) => {
     // Every number in this file depends on the browser and the API container
-    // agreeing on "today", which they only do because the client forwards its
-    // zone and the config pins that zone to the container's (UTC).
-    // The dashboard now reads through the profile-wide batch endpoints
-    // (`/habits/trackers-lite`, `/habits/kpis`) rather than one request per
-    // habit (`/habits/{id}/...`); this matches either shape.
+    // agreeing on "today". KPI and streak reads derive it server-side, so they
+    // forward the zone (pinned to the container's UTC by the config). Tracker
+    // windows are a date range the client can name, so they send `end_date`
+    // and no zone. Matches both the profile-wide batch endpoints and the
+    // per-habit ones.
     const statUrls: string[] = [];
     authedPage.on('request', (request) => {
         const url = request.url();
-        if (/\/habits\/(\d+\/)?(kpis|streaks|trackers-lite)/.test(url)) statUrls.push(url);
+        if (/\/habits\/(\d+\/)?(kpis|streaks|trackers-lite|trackers\/lite)/.test(url)) {
+            statUrls.push(url);
+        }
     });
 
     await gotoAppRoute(authedPage, '/habits');
@@ -282,7 +284,12 @@ test('habit stat requests carry the pinned UTC zone', async ({ authedPage }) => 
 
     expect(statUrls.length, 'no habit stat requests were observed').toBeGreaterThan(0);
     for (const url of statUrls) {
-        expect(url, `${url} is missing tz=UTC`).toContain('tz=UTC');
+        if (/trackers(-|\/)lite/.test(url)) {
+            expect(url, `${url} is missing end_date`).toContain('end_date=');
+            expect(url, `${url} still sends tz`).not.toContain('tz=');
+        } else {
+            expect(url, `${url} is missing tz=UTC`).toContain('tz=UTC');
+        }
     }
 });
 

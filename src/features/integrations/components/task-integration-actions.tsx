@@ -15,7 +15,7 @@ const PROVIDER_LABEL: Record<string, string> = {
 };
 
 const LINKED_ACTION_CLASS =
-    'inline-flex items-center gap-1 rounded-button border px-2 py-1 font-mono text-[11px] text-text-muted transition-colors hover:text-text-secondary disabled:opacity-50';
+    'inline-flex items-center gap-1 rounded-button border px-2 py-1 font-mono text-[11px] pointer-coarse:min-h-[44px] text-text-muted transition-colors hover:text-text-secondary disabled:opacity-50';
 
 type Props = {
     task: TaskRead;
@@ -185,7 +185,7 @@ export const TaskIntegrationActions = ({ task }: Props) => {
                                 onClick={() => handlePublish(c.id)}
                                 disabled={publishingId === c.id}
                                 title={`Create a new item in ${c.name}`}
-                                className='inline-flex items-center gap-1 rounded-button border px-2.5 py-1 font-mono text-[11.5px] text-text-secondary transition-colors hover:text-text-primary disabled:opacity-50'
+                                className='inline-flex items-center gap-1 rounded-button border px-2.5 py-1 font-mono text-[11.5px] pointer-coarse:min-h-[44px] text-text-secondary transition-colors hover:text-text-primary disabled:opacity-50'
                                 style={{ borderColor: 'rgba(255,255,255,.12)' }}
                             >
                                 <Send size={12} />
@@ -198,7 +198,7 @@ export const TaskIntegrationActions = ({ task }: Props) => {
                             <button
                                 type='button'
                                 onClick={() => setLinking(true)}
-                                className='inline-flex items-center gap-1 rounded-button border px-2.5 py-1 font-mono text-[11.5px] text-text-muted transition-colors hover:text-text-secondary'
+                                className='inline-flex items-center gap-1 rounded-button border px-2.5 py-1 font-mono text-[11.5px] pointer-coarse:min-h-[44px] text-text-muted transition-colors hover:text-text-secondary'
                                 style={{ borderColor: 'rgba(255,255,255,.12)' }}
                             >
                                 <Link2 size={12} />

@@ -3,18 +3,13 @@ import { parseLocalDate, parseServerDate, toLocalDateString } from '@/lib/date-u
 import { TaskStatus, type TaskBand } from '@/types/types';
 
 /**
- * Client-side urgency banding. Mirrors the backend's `compute_band`
- * (habit-tracker `src/habit_tracker/constants.py`) in the same first-match-wins
- * order, and adds Blocked as a `now` condition.
+ * Client-side urgency banding, first match wins. This is the only
+ * implementation of the rule anywhere: the backend computes, stores, returns
+ * and filters on no band, and the closed-task list asks for
+ * `GET /tasks/?closed_only=true`, which is status-only.
  *
- * This is the only place a band is resolved. The server no longer returns one:
- * it banded from `date.today()` and accepts no `tz` param, so a browser whose
- * local date differed from the API container's UTC saw bands a day off. What
- * remains server-side is the `?band=` query filter on GET /tasks/, which the
- * closed-task list uses with `hidden` (status-only, so date-independent).
- *
- * The two deliberately differ (Blocked is `now` here), so this is not a parity
- * mirror.
+ * It runs here because a band is relative to the reader's local day, which
+ * only the browser knows.
  */
 
 /** A task untouched for this many days or more reads as stale. */

@@ -1,7 +1,7 @@
 import type { HabitKPIs, HabitKPIsEntry, HabitRead, HabitTrackersLite, TrackerLite } from '@/api';
 import { toLocalDateString } from '@/lib/date-utils';
 import { TrackerStatus } from '@/types/types';
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { describe, expect, it, vi } from 'vitest';
 import { patchHabitTrackersBatch, reconcileHabitKpis } from './habit-kpi-cache';
 
@@ -171,6 +171,27 @@ describe('reconcileHabitKpis', () => {
 
         expect(fetchKpis).not.toHaveBeenCalled();
         expect(client.getQueryData(perHabitKpisKey)).toBeUndefined();
+    });
+
+    it('joins the refetch an observed per-habit query already started, instead of a second read', async () => {
+        // The wide habit detail pane: `useHabitKpis` observes the per-habit key,
+        // so `invalidateHabitTrackers` has just restarted its read.
+        const client = seedDashboardCache();
+        const fetchKpis = vi.fn(async (_habitId: number) => serverKpis);
+        const observer = new QueryObserver(client, {
+            queryKey: perHabitKpisKey,
+            queryFn: () => fetchKpis(HABIT_ID)
+        });
+        const unsubscribe = observer.subscribe(() => {});
+        await vi.waitFor(() => expect(fetchKpis).toHaveBeenCalledTimes(1));
+        fetchKpis.mockClear();
+
+        void client.invalidateQueries({ queryKey: perHabitKpisKey });
+        await reconcileHabitKpis(client, HABIT_ID, fetchKpis);
+
+        expect(fetchKpis).toHaveBeenCalledTimes(1);
+        expect(batchKpis(client)).toEqual(serverKpis);
+        unsubscribe();
     });
 
     it('drops an earlier read that lands after a later one', async () => {

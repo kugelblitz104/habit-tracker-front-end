@@ -1,6 +1,6 @@
 import type { HabitTrackersLite, TrackerLite, TrackerLiteList, TrackerRead } from '@/api';
 import { HabitsService, TrackersService } from '@/api';
-import { getBrowserTimeZone } from '@/lib/date-utils';
+import { toLocalDateString } from '@/lib/date-utils';
 import { pagedList } from '@/lib/paginate';
 
 export const getTracker = async (trackerId: number): Promise<TrackerRead> => {
@@ -19,17 +19,15 @@ const TRACKER_PAGE_SIZE = 1000;
  * only `trackers` accumulates. Streak and KPI maths read `auto_skipped_dates`.
  *
  * @param habitId - The habit ID to fetch trackers for
- * @param endDate - End date for the range (defaults to today if undefined)
+ * @param endDate - Local day the window ends on (defaults to the browser's
+ *   today). Always sent, so the server's `tz` fallback is never used.
  * @param days - Number of days to fetch (default: 42 = 6 weeks)
  */
 export const getTrackersLite = async (
     habitId: number,
-    endDate?: string,
+    endDate: string = toLocalDateString(new Date()),
     days: number = 42
 ): Promise<TrackerLiteList> => {
-    // tz sets the DEFAULT end_date to today in the user's zone when endDate is
-    // omitted (no-op when endDate is sent). Not part of any query key.
-    const tz = getBrowserTimeZone();
     let range: Omit<TrackerLiteList, 'trackers' | 'total' | 'limit' | 'offset'> | undefined;
 
     const { items, ...envelope } = await pagedList<TrackerLite>(
@@ -38,7 +36,7 @@ export const getTrackersLite = async (
                 habitId,
                 endDate,
                 days,
-                tz,
+                undefined,
                 limit,
                 offset
             ).then((page) => {
@@ -81,21 +79,17 @@ export type HabitsTrackersLiteOptions = {
  */
 export const getHabitsTrackersLite = async ({
     profileId,
-    endDate,
+    endDate = toLocalDateString(new Date()),
     days = 42,
     archived
 }: HabitsTrackersLiteOptions): Promise<HabitTrackersLite[]> => {
-    // Same resolution as the singular endpoint, deliberately: both seed and
-    // read caches keyed without tz.
-    const tz = getBrowserTimeZone();
-
     const { items } = await pagedList<HabitTrackersLite>(
         ({ offset, limit }) =>
             HabitsService.listHabitsTrackersLiteHabitsTrackersLiteGet(
                 profileId,
                 endDate,
                 days,
-                tz,
+                undefined,
                 archived,
                 limit,
                 offset

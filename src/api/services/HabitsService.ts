@@ -474,8 +474,10 @@ export class HabitsService {
         });
     }
     /**
-     * List trackers in lightweight format
-     * Get tracker entries in a lightweight format with date-based pagination.
+     * List lightweight trackers for one habit
+     * Get one habit's tracker entries in a lightweight format with date-based
+     * pagination. For every habit in a profile in one request, use
+     * GET /habits/trackers-lite.
      *
      * This endpoint returns only the essential fields:
      * - id: Tracker ID (for fetching full details if needed)

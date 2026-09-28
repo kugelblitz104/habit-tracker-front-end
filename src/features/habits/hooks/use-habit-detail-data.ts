@@ -67,9 +67,10 @@ export const useHabitDetailData = (habitId: number) => {
 
     // Fetch the full tracker history once (habit creation → today). The calendar
     // renders whichever month is selected from this in-memory history.
+    const endDate = toLocalDateString(new Date());
     const trackersQuery = useQuery({
-        queryKey: ['trackers-lite', { habitId: habit?.id, allTrackersDays }],
-        queryFn: () => getTrackersLite(habit!.id, toLocalDateString(new Date()), allTrackersDays),
+        queryKey: ['trackers-lite', { habitId: habit?.id, allTrackersDays }, endDate],
+        queryFn: () => getTrackersLite(habit!.id, endDate, allTrackersDays),
         enabled: !!habit,
         staleTime: 1000 * 60
     });
@@ -193,39 +194,38 @@ export const useHabitDetailData = (habitId: number) => {
         setTrackers(nextTrackers);
         patchKpiCaches(nextTrackers);
 
-        return new Promise((resolve, reject) => {
-            trackerCreate.mutate(tracker, {
-                onSuccess: (data) => {
-                    // Replace the optimistic entry with real server data
-                    const trackerLite: TrackerLite = {
-                        id: data.id,
-                        dated: data.dated ?? '',
-                        status: data.status ?? TrackerStatus.COMPLETED,
-                        has_note: !!data.note
-                    };
-                    setTrackers((prev) => {
-                        const reconciled = prev.map((t) => (t.id === tempId ? trackerLite : t));
-                        patchKpiCaches(reconciled);
-                        return reconciled;
-                    });
-                    resolve(data);
-                },
-                onError: (error) => {
-                    // Rollback local trackers + KPI/streak caches
-                    setTrackers((prev) => {
-                        const rolledBack = prev.filter((t) => t.id !== tempId);
-                        patchKpiCaches(rolledBack);
-                        return rolledBack;
-                    });
-                    toast.error(
-                        `Failed to create tracker: ${
-                            error instanceof Error ? error.message : 'Unknown error'
-                        }`
-                    );
-                    reject(error);
-                }
+        // mutateAsync, not mutate-level callbacks: a second mutate on the same
+        // observer drops the first call's callbacks, which left a rapid double
+        // backdate's first promise pending forever.
+        try {
+            const data = await trackerCreate.mutateAsync(tracker);
+            // Replace the optimistic entry with real server data
+            const trackerLite: TrackerLite = {
+                id: data.id,
+                dated: data.dated ?? '',
+                status: data.status ?? TrackerStatus.COMPLETED,
+                has_note: !!data.note
+            };
+            setTrackers((prev) => {
+                const reconciled = prev.map((t) => (t.id === tempId ? trackerLite : t));
+                patchKpiCaches(reconciled);
+                return reconciled;
             });
-        });
+            return data;
+        } catch (error) {
+            // Rollback local trackers + KPI/streak caches
+            setTrackers((prev) => {
+                const rolledBack = prev.filter((t) => t.id !== tempId);
+                patchKpiCaches(rolledBack);
+                return rolledBack;
+            });
+            toast.error(
+                `Failed to create tracker: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`
+            );
+            throw error;
+        }
     };
 
     const handleTrackerUpdate = async (id: number, update: TrackerUpdate): Promise<TrackerRead> => {
@@ -246,41 +246,32 @@ export const useHabitDetailData = (habitId: number) => {
         setTrackers(nextTrackers);
         patchKpiCaches(nextTrackers);
 
-        return new Promise((resolve, reject) => {
-            trackerUpdate.mutate(
-                { id, update },
-                {
-                    onSuccess: (data) => {
-                        // Reconcile with real server data
-                        const trackerLite: TrackerLite = {
-                            id: data.id,
-                            dated: data.dated ?? '',
-                            status: data.status ?? TrackerStatus.COMPLETED,
-                            has_note: !!data.note
-                        };
-                        setTrackers((prev) => {
-                            const reconciled = prev.map((t) =>
-                                t.id === data.id ? trackerLite : t
-                            );
-                            patchKpiCaches(reconciled);
-                            return reconciled;
-                        });
-                        resolve(data);
-                    },
-                    onError: (error) => {
-                        // Rollback local trackers + KPI/streak caches
-                        setTrackers(previousTrackers);
-                        patchKpiCaches(previousTrackers);
-                        toast.error(
-                            `Failed to update tracker: ${
-                                error instanceof Error ? error.message : 'Unknown error'
-                            }`
-                        );
-                        reject(error);
-                    }
-                }
+        try {
+            const data = await trackerUpdate.mutateAsync({ id, update });
+            // Reconcile with real server data
+            const trackerLite: TrackerLite = {
+                id: data.id,
+                dated: data.dated ?? '',
+                status: data.status ?? TrackerStatus.COMPLETED,
+                has_note: !!data.note
+            };
+            setTrackers((prev) => {
+                const reconciled = prev.map((t) => (t.id === data.id ? trackerLite : t));
+                patchKpiCaches(reconciled);
+                return reconciled;
+            });
+            return data;
+        } catch (error) {
+            // Rollback local trackers + KPI/streak caches
+            setTrackers(previousTrackers);
+            patchKpiCaches(previousTrackers);
+            toast.error(
+                `Failed to update tracker: ${
+                    error instanceof Error ? error.message : 'Unknown error'
+                }`
             );
-        });
+            throw error;
+        }
     };
 
     // Effect to set habit from query data
