@@ -28,6 +28,18 @@ const bandSection = (page: Page, label: string) =>
         has: page.getByRole('heading', { level: 2, name: label, exact: true })
     });
 
+/**
+ * Assert a toast, then close it. Toasts stack over the header's top-right
+ * controls for their five-second lifetime, so the next header click can land
+ * on one instead (they close on click).
+ */
+const dismissToast = async (page: Page, text: string): Promise<void> => {
+    const toast = page.getByRole('alert').filter({ hasText: text });
+    await expect(toast).toBeVisible();
+    await toast.click();
+    await expect(toast).toBeHidden();
+};
+
 /** Seed a countdown whose target has passed, attached to a new task. */
 const seedLinkedOverdue = async (
     api: APIRequestContext,
@@ -95,7 +107,7 @@ test('archiving moves a countdown to the archived list and back', async ({ authe
     await past.getByRole('button', { expanded: false }).click();
 
     await past.getByRole('button', { name: 'Archive countdown' }).click();
-    await expect(authedPage.getByText('Countdown archived')).toBeVisible();
+    await dismissToast(authedPage, 'Countdown archived');
     // Gone from the live list entirely: the server filtered it out, so no Past
     // band remains for the only countdown that was in it.
     await expect(bandSection(authedPage, 'Past')).toHaveCount(0);
@@ -108,7 +120,7 @@ test('archiving moves a countdown to the archived list and back', async ({ authe
     await expect(archived.getByText(GOLDEN.countdowns.future, { exact: true })).toHaveCount(0);
 
     await archived.getByRole('button', { name: 'Restore countdown' }).click();
-    await expect(authedPage.getByText('Countdown restored')).toBeVisible();
+    await dismissToast(authedPage, 'Countdown restored');
     await expect(authedPage.getByText('Nothing archived yet.', { exact: false })).toBeVisible();
 
     await authedPage.getByRole('button', { name: 'Show live countdowns' }).click();

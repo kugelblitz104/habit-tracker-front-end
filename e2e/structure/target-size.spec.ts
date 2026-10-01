@@ -1,4 +1,6 @@
-import { expect, gotoAppRoute, test } from '../fixtures/test';
+import { authHeaders } from '../fixtures/api';
+import { GOLDEN } from '../fixtures/golden-profile';
+import { expect, gotoAppRoute, taskRowTitle, test } from '../fixtures/test';
 import type { Page } from '@playwright/test';
 
 /**
@@ -147,6 +149,65 @@ test('@narrow @touch every interactive target meets the size floor', async ({
             );
         }
     }
+
+    expect(failures, `Undersized targets:\n${failures.join('\n')}`).toEqual([]);
+});
+
+/**
+ * The task link section, which the route sweep above never reaches: the golden
+ * profile ships no linked task and no integration connection, so the Publish
+ * buttons, the link form and the linked row (ref chip, Edit, Unlink) never
+ * render there. Seeded per test rather than in the golden fixture, whose
+ * counts `settings-data.spec.ts` asserts exactly.
+ */
+test('@narrow @touch the task link section meets the size floor', async ({
+    api,
+    account,
+    goldenProfileId,
+    authedPage: page
+}) => {
+    const isTouch = await page.evaluate(() => matchMedia('(pointer: coarse)').matches);
+    const min = isTouch ? TOUCH_MIN : AA_MIN;
+    const headers = authHeaders(account);
+
+    const connection = await api.post('/integrations/', {
+        headers,
+        data: {
+            profile_id: goldenProfileId,
+            provider: 'github',
+            name: 'SIZEPROBE GitHub',
+            token: 'not-a-real-token',
+            default_repo: 'octocat/hello'
+        }
+    });
+    expect(connection.ok(), `seed connection failed: ${await connection.text()}`).toBeTruthy();
+
+    const failures: string[] = [];
+    const measure = async (state: string) => {
+        await page.waitForTimeout(300);
+        for (const t of await undersized(page, min)) {
+            failures.push(`${state}: ${t.tag} "${t.name}" ${t.w}x${t.h} (min ${min})`);
+        }
+    };
+
+    await gotoAppRoute(page, '/');
+    await taskRowTitle(page, GOLDEN.tasks.now).click();
+    await expect(page.getByRole('button', { name: /^Publish to/ })).toBeVisible();
+    await measure('unlinked');
+
+    await page.getByRole('button', { name: 'Link existing' }).click();
+    await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible();
+    await measure('link form');
+
+    await page
+        .getByPlaceholder('Reference, e.g. AB#2841 or owner/repo#42')
+        .fill('octocat/hello#42');
+    await page
+        .getByPlaceholder(/link to the work item/)
+        .fill('https://github.com/octocat/hello/issues/42');
+    await page.getByRole('button', { name: 'Link', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Unlink' })).toBeVisible();
+    await measure('linked');
 
     expect(failures, `Undersized targets:\n${failures.join('\n')}`).toEqual([]);
 });

@@ -232,6 +232,8 @@ export type TaskSection = {
     label: string | null;
     color?: string;
     tasks: TaskRead[];
+    /** Renders the header as a disclosure that starts shut. */
+    defaultCollapsed?: boolean;
 };
 
 export { PRIORITY_LABELS };
@@ -435,7 +437,9 @@ export const buildTaskSections = (
             key: `status-${s}`,
             label: STATUS_META[s]?.label ?? `Status ${s}`,
             color: STATUS_META[s]?.color,
-            tasks: sortSection(filtered.filter((t) => (t.status ?? 0) === s))
+            tasks: sortSection(filtered.filter((t) => (t.status ?? 0) === s)),
+            // Waiting on someone else, so nothing to act on until it moves.
+            defaultCollapsed: s === TaskStatus.NEEDS_INFO
         })).filter((section) => section.tasks.length > 0);
     }
 

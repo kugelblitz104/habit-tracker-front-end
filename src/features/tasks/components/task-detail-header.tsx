@@ -87,10 +87,13 @@ export const TaskDetailHeader = ({
                                 className='h-[7px] w-[7px] shrink-0 rounded-full'
                                 style={{ backgroundColor: project.color }}
                             />
+                            {/* A 24px line box rather than hit-target: `truncate`'s
+                                overflow would clip the ::after and the hit area with it. */}
                             <Link
                                 to={projectDetailPath(project)}
                                 state={{ from: originPath }}
-                                className='truncate transition-opacity hover:opacity-80'
+                                data-target-exempt='spacing'
+                                className='truncate leading-[24px] transition-opacity hover:opacity-80'
                             >
                                 {project.name}
                             </Link>
@@ -110,7 +113,7 @@ export const TaskDetailHeader = ({
                             onClick={onCopy}
                             aria-label='Copy task as Markdown'
                             title='Copy as Markdown'
-                            className='rounded-button border p-1.5 text-text-muted transition-colors hover:text-text-primary'
+                            className='rounded-button border p-1.5 text-text-muted transition-colors hover:text-text-primary pointer-coarse:inline-flex pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] pointer-coarse:items-center pointer-coarse:justify-center'
                             style={{ borderColor: 'var(--surface-input-border)' }}
                         >
                             <ClipboardCopy size={14} />
@@ -121,7 +124,7 @@ export const TaskDetailHeader = ({
                         onClick={onEdit}
                         aria-label='Edit task'
                         title='Edit task'
-                        className='rounded-button border p-1.5 text-text-muted transition-colors hover:text-text-primary'
+                        className='rounded-button border p-1.5 text-text-muted transition-colors hover:text-text-primary pointer-coarse:inline-flex pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] pointer-coarse:items-center pointer-coarse:justify-center'
                         style={{ borderColor: 'var(--surface-input-border)' }}
                     >
                         <Pencil size={14} />
@@ -130,7 +133,7 @@ export const TaskDetailHeader = ({
                         type='button'
                         onClick={onClose}
                         aria-label='Close'
-                        className='rounded-full p-1 text-text-faint transition-colors hover:text-text-secondary'
+                        className='rounded-full p-1 text-text-faint transition-colors hover:text-text-secondary pointer-coarse:inline-flex pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] pointer-coarse:items-center pointer-coarse:justify-center'
                     >
                         <X size={16} />
                     </button>

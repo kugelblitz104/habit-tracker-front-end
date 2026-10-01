@@ -43,7 +43,7 @@ const serverKpis: HabitKPIs = {
 };
 
 const trackersBatchKey = ['habits-trackers-lite', { profileId: 1, days: WINDOW_DAYS }];
-const kpisBatchKey = ['habits-kpis', { profileId: 1, archived: undefined }];
+const kpisBatchKey = ['habits-kpis', { profileId: 1 }];
 const perHabitKpisKey = ['kpis', { habitId: HABIT_ID }];
 
 /**

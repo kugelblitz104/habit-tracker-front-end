@@ -25,8 +25,7 @@ export const habitBatchKeys = {
         endDate: string | undefined,
         archived: boolean | undefined
     ) => [...habitsTrackersBatchKey, { profileId, days, endDate, archived }] as const,
-    kpis: (profileId: number | null | undefined, archived: boolean | undefined) =>
-        [...habitsKpisBatchKey, { profileId, archived }] as const
+    kpis: (profileId: number | null | undefined) => [...habitsKpisBatchKey, { profileId }] as const
 };
 
 type TrackersBatchOptions = {
@@ -62,16 +61,21 @@ export const useHabitTrackersBatch = ({
 
 type KpisBatchOptions = {
     profileId: number | null | undefined;
-    archived?: boolean;
 };
 
-export const useHabitKpisBatch = ({ profileId, archived }: KpisBatchOptions) => {
+/**
+ * Every habit's KPIs in the profile, archived ones included. Deliberately
+ * unfiltered so the dashboard (whose Archived filter renders those rows) and
+ * Insights (which reads only its active habits out of `byHabit`) share one
+ * cache entry, and so one full-history scan.
+ */
+export const useHabitKpisBatch = ({ profileId }: KpisBatchOptions) => {
     const queryClient = useQueryClient();
 
     const query = useQuery({
-        queryKey: habitBatchKeys.kpis(profileId, archived),
+        queryKey: habitBatchKeys.kpis(profileId),
         queryFn: async () => {
-            const entries = await getHabitsKpis({ profileId: profileId!, archived });
+            const entries = await getHabitsKpis({ profileId: profileId! });
             // Seed the per-habit cache the detail pane's KPI board and
             // kpi-adapter's optimistic patches share, so opening a habit is
             // instant. Safe only because getHabitsKpis resolves tz exactly as

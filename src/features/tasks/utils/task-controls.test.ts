@@ -511,6 +511,21 @@ describe('buildTaskSections', () => {
         expect(sections.every((s) => s.color)).toBe(true);
     });
 
+    it('starts only the Needs info status section collapsed', () => {
+        const tasks = [
+            makeTask({ title: 'open', status: TaskStatus.OPEN }),
+            makeTask({ title: 'waiting', status: TaskStatus.NEEDS_INFO })
+        ];
+        const sections = buildTaskSections(tasks, controls({ groupBy: 'status' }), new Map());
+        expect(sections.map((s) => [s.label, s.defaultCollapsed ?? false])).toEqual([
+            ['Open', false],
+            ['Needs info', true]
+        ]);
+        // Any other grouping collapses nothing.
+        const byPriority = buildTaskSections(tasks, controls({ groupBy: 'priority' }), new Map());
+        expect(byPriority.some((s) => s.defaultCollapsed)).toBe(false);
+    });
+
     it('groups by project A-Z with No project last', () => {
         const zeta = makeProject({ name: 'Zeta' });
         const alpha = makeProject({ name: 'Alpha' });

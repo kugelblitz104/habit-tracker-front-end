@@ -164,7 +164,7 @@ export const TaskDetailSubtasks = ({ profileId, parentId }: TaskDetailSubtasksPr
                 onKeyDown={handleKeyDown}
                 placeholder='Add a subtask… (Enter)'
                 aria-label='New subtask title'
-                className={`${formFieldClass} mt-2 placeholder:text-text-faint`}
+                className={`${formFieldClass} mt-2 placeholder:text-text-faint pointer-coarse:min-h-[44px]`}
                 style={formFieldStyle}
             />
         </div>

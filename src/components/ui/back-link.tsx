@@ -28,7 +28,9 @@ export const BackLink = ({ to, label, ariaLabel, className = '' }: BackLinkProps
     <Link
         to={to}
         aria-label={ariaLabel ?? `Back to ${label}`}
-        className={`inline-flex items-center gap-0.5 ${className}`}
+        // hit-target: the link stands alone at the top of the page, so a 44px
+        // hit area overlaps nothing.
+        className={`hit-target inline-flex items-center gap-0.5 ${className}`}
     >
         <ChevronLeft size={14} aria-hidden='true' />
         {label}

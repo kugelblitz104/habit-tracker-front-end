@@ -1,6 +1,8 @@
 import type { ProjectRead, TaskRead } from '@/api';
+import { Button } from '@/components/ui/buttons/button';
 import type { TaskStatus } from '@/types/types';
-import { useMemo } from 'react';
+import { ChevronRight } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { computeBand, toActiveBand } from '../utils/compute-band';
 import { upwardFrom } from '../utils/task-bands';
 import { buildTaskSections, type TaskControlsState } from '../utils/task-controls';
@@ -65,6 +67,15 @@ export const TaskListView = ({
         [tasks, controls, projectsById]
     );
 
+    // Keys of collapsible sections the user has flipped from their default.
+    const [flipped, setFlipped] = useState<Set<string>>(() => new Set());
+    const toggleSection = (sectionKey: string) =>
+        setFlipped((prev) => {
+            const next = new Set(prev);
+            if (!next.delete(sectionKey)) next.add(sectionKey);
+            return next;
+        });
+
     // Prominence only reads as ranking when the list is in band order, so any
     // other sort renders every row at the neutral `soon` tier.
     const flattenTiers = controls.sortBy !== 'smart';
@@ -81,70 +92,102 @@ export const TaskListView = ({
         <div className='flex flex-col gap-[26px]'>
             {sections.map((section) => {
                 const upwardIdx = upwardFrom(section.tasks.length);
+                const collapsible = section.defaultCollapsed === true;
+                const collapsed = collapsible && !flipped.has(section.key);
+                const header = section.label && (
+                    <SectionHeader
+                        label={section.label}
+                        color={section.color}
+                        count={section.tasks.length}
+                        dot
+                    />
+                );
                 return (
                     <section key={section.key}>
-                        {section.label && (
+                        {header && (
                             <div className='mb-2.5 flex items-center gap-2'>
-                                <SectionHeader
-                                    label={section.label}
-                                    color={section.color}
-                                    count={section.tasks.length}
-                                    dot
-                                />
+                                {collapsible ? (
+                                    <Button
+                                        variant='subtle'
+                                        size='sm'
+                                        onClick={() => toggleSection(section.key)}
+                                        aria-expanded={!collapsed}
+                                        className='hover:opacity-80'
+                                    >
+                                        {header}
+                                        <ChevronRight
+                                            size={13}
+                                            aria-hidden='true'
+                                            className={`text-text-faint transition-transform ${
+                                                collapsed ? '' : 'rotate-90'
+                                            }`}
+                                        />
+                                    </Button>
+                                ) : (
+                                    header
+                                )}
                             </div>
                         )}
-                        <div
-                            className='overflow-hidden rounded-card border'
-                            style={{
-                                backgroundColor: 'var(--surface-card-bg)',
-                                borderColor: 'var(--surface-card-border)'
-                            }}
-                        >
-                            {section.tasks.map((task, i) => (
-                                <div
-                                    key={task.id}
-                                    className={i === 0 ? '' : 'border-t'}
-                                    style={{ borderColor: 'var(--surface-card-border)' }}
-                                >
-                                    <TaskRow
-                                        task={task}
-                                        band={
-                                            flattenTiers ? 'soon' : toActiveBand(computeBand(task))
-                                        }
-                                        project={
-                                            task.project_id != null
-                                                ? projectsById.get(task.project_id)
-                                                : undefined
-                                        }
-                                        showProject={showProject}
-                                        onStatusChange={(status) => onStatusChange(task.id, status)}
-                                        notesOpen={notesTaskId === task.id}
-                                        editing={selectedEditTaskId === task.id}
-                                        onToggleNotes={() => onToggleNotes(task.id)}
-                                        onSelectEdit={(editing) => onSelectEdit(task, editing)}
-                                        subtasksOpen={subtasksTaskId === task.id}
-                                        onToggleSubtasks={
-                                            onToggleSubtasks
-                                                ? () => onToggleSubtasks(task.id)
-                                                : undefined
-                                        }
-                                        onStartTimer={
-                                            onStartTimer ? () => onStartTimer(task.id) : undefined
-                                        }
-                                        openUpward={i >= upwardIdx}
-                                        isFirst={i === 0}
-                                        isLast={i === section.tasks.length - 1}
-                                        selectable={selectionMode}
-                                        selected={selectedIds?.has(task.id) ?? false}
-                                        onToggleSelect={
-                                            onToggleSelect
-                                                ? () => onToggleSelect(task.id)
-                                                : undefined
-                                        }
-                                    />
-                                </div>
-                            ))}
-                        </div>
+                        {!collapsed && (
+                            <div
+                                className='overflow-hidden rounded-card border'
+                                style={{
+                                    backgroundColor: 'var(--surface-card-bg)',
+                                    borderColor: 'var(--surface-card-border)'
+                                }}
+                            >
+                                {section.tasks.map((task, i) => (
+                                    <div
+                                        key={task.id}
+                                        className={i === 0 ? '' : 'border-t'}
+                                        style={{ borderColor: 'var(--surface-card-border)' }}
+                                    >
+                                        <TaskRow
+                                            task={task}
+                                            band={
+                                                flattenTiers
+                                                    ? 'soon'
+                                                    : toActiveBand(computeBand(task))
+                                            }
+                                            project={
+                                                task.project_id != null
+                                                    ? projectsById.get(task.project_id)
+                                                    : undefined
+                                            }
+                                            showProject={showProject}
+                                            onStatusChange={(status) =>
+                                                onStatusChange(task.id, status)
+                                            }
+                                            notesOpen={notesTaskId === task.id}
+                                            editing={selectedEditTaskId === task.id}
+                                            onToggleNotes={() => onToggleNotes(task.id)}
+                                            onSelectEdit={(editing) => onSelectEdit(task, editing)}
+                                            subtasksOpen={subtasksTaskId === task.id}
+                                            onToggleSubtasks={
+                                                onToggleSubtasks
+                                                    ? () => onToggleSubtasks(task.id)
+                                                    : undefined
+                                            }
+                                            onStartTimer={
+                                                onStartTimer
+                                                    ? () => onStartTimer(task.id)
+                                                    : undefined
+                                            }
+                                            openUpward={i >= upwardIdx}
+                                            isFirst={i === 0}
+                                            isLast={i === section.tasks.length - 1}
+                                            selectable={selectionMode}
+                                            selected={selectedIds?.has(task.id) ?? false}
+                                            onToggleSelect={
+                                                onToggleSelect
+                                                    ? () => onToggleSelect(task.id)
+                                                    : undefined
+                                            }
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </section>
                 );
             })}

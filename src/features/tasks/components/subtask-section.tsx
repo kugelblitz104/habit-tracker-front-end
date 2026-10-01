@@ -361,7 +361,7 @@ export const SubtaskSection = ({ parent }: SubtaskSectionProps) => {
                 onKeyDown={handleKeyDown}
                 placeholder='Add a subtask… (Enter)'
                 aria-label='New subtask title'
-                className={`${formFieldClass} placeholder:text-text-faint`}
+                className={`${formFieldClass} placeholder:text-text-faint pointer-coarse:min-h-[44px]`}
                 style={formFieldStyle}
             />
         </div>

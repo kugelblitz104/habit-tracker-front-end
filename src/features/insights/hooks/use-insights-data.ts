@@ -130,7 +130,7 @@ export const useInsightsData = (rangeDays: RangeDays): InsightsData => {
         endDate: toLocalDateString(new Date()),
         archived: false
     });
-    const kpisBatch = useHabitKpisBatch({ profileId: activeProfileId, archived: false });
+    const kpisBatch = useHabitKpisBatch({ profileId: activeProfileId });
 
     const trackersLoading = trackersBatch.isLoading;
     const kpisLoading = kpisBatch.isLoading;

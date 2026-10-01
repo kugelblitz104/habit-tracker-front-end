@@ -146,7 +146,7 @@ export const TaskIntegrationActions = ({ task }: Props) => {
                             href={task.external_url!}
                             target='_blank'
                             rel='noreferrer'
-                            className='inline-flex min-w-0 items-center gap-1 font-mono text-[12px]'
+                            className='inline-flex min-h-[24px] min-w-0 items-center gap-1 font-mono text-[12px] pointer-coarse:min-h-[44px]'
                             style={{ color: externalLinkChipStyle(task.source).color }}
                         >
                             <span className='truncate'>{task.external_ref}</span>

@@ -45,20 +45,9 @@ export const TodayDashboard = () => {
     // carrying the parsed draft along. `null` = collapsed (plain capture bar).
     const [captureDraft, setCaptureDraft] = useState<TaskCaptureDraft | null>(null);
 
-    // Collapse state for the (hidable) Whenever band, persisted per browser.
-    // Collapsed by default (starts as `true`, matching the SSR render so there's
-    // no open->shut flash); only expanded if the user explicitly un-hid it ('0').
+    // The Whenever band starts collapsed on every visit; opening it is not remembered.
     const [hideWhenever, setHideWhenever] = useState(true);
-    useEffect(() => {
-        setHideWhenever(localStorage.getItem('today_hide_whenever') !== '0');
-    }, []);
-    const toggleHideWhenever = useCallback(() => {
-        setHideWhenever((prev) => {
-            const next = !prev;
-            localStorage.setItem('today_hide_whenever', next ? '1' : '0');
-            return next;
-        });
-    }, []);
+    const toggleHideWhenever = useCallback(() => setHideWhenever((prev) => !prev), []);
 
     const {
         isWide,
