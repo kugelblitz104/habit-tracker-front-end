@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 
-import { appHeader, expect, signInThroughForm, test } from '../fixtures/test';
+import { appHeader, expect, gotoLogin, signInThroughForm, test } from '../fixtures/test';
 
 /**
  * The real login flow — the one thing the rest of the suite stops covering the
@@ -41,7 +41,7 @@ test('signing in through the form lands on the app', async ({ page, account }) =
 });
 
 test('a wrong password shows an error and stays on /login', async ({ page, account }) => {
-    await page.goto('/login');
+    await gotoLogin(page);
     await page.getByLabel('Username').fill(account.username);
     await page.getByLabel('Password').fill('definitely-not-the-password');
     await page.getByRole('button', { name: /sign in/i }).click();

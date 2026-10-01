@@ -120,7 +120,15 @@ export const TaskCaptureBar = ({
 
     const parsed = useMemo(() => parseTaskInput(value, new Date()), [value]);
 
-    const matchProject = (name: string): number | null => matchByName(projects, name);
+    // Enter can beat the first projects fetch, and an `@project` checked against
+    // an empty list would read as unmatched, so a submit awaits the in-flight one.
+    const matchProject = async (name: string): Promise<number | null> =>
+        matchByName(
+            projectsQuery.data?.projects ??
+                (await projectsQuery.refetch({ cancelRefetch: false })).data?.projects ??
+                [],
+            name
+        );
 
     // --- @project autocomplete -------------------------------------------------
     const inputRef = useRef<HTMLInputElement>(null);
@@ -208,7 +216,7 @@ export const TaskCaptureBar = ({
         inputRef.current?.focus();
     };
 
-    const buildDraft = (): TaskCaptureDraft => {
+    const buildDraft = async (): Promise<TaskCaptureDraft> => {
         const draft: TaskCaptureDraft = {
             title: parsed.cleanTitle,
             priority: parsed.priority,
@@ -219,7 +227,7 @@ export const TaskCaptureBar = ({
             projectId: defaultProjectId
         };
         if (parsed.projectName) {
-            const matched = matchProject(parsed.projectName);
+            const matched = await matchProject(parsed.projectName);
             if (matched != null) draft.projectId = matched;
             else draft.createProjectName = parsed.projectName;
         }
@@ -229,20 +237,21 @@ export const TaskCaptureBar = ({
     const isPending = createTask.isPending;
     const canAct = !!profileId && !disabled && !isPending;
 
-    const expand = () => {
+    const expand = async () => {
         if (!canAct) return;
-        onExpand(buildDraft());
+        onExpand(await buildDraft());
         setValue('');
     };
 
-    const create = () => {
+    const create = async () => {
         if (!canAct || !profileId) return;
         const title = parsed.cleanTitle;
         if (!title) return;
 
         // An unmatched @project can't be created silently — hand off to the
         // expanded form's inline "create project?" confirmation instead.
-        if (parsed.projectName && matchProject(parsed.projectName) == null) {
+        const matchedProjectId = parsed.projectName ? await matchProject(parsed.projectName) : null;
+        if (parsed.projectName && matchedProjectId == null) {
             expand();
             return;
         }
@@ -257,7 +266,7 @@ export const TaskCaptureBar = ({
             // Scheduled data only sticks on Scheduled tasks (see the editor).
             data.status = TaskStatus.SCHEDULED;
         }
-        const projectId = parsed.projectName ? matchProject(parsed.projectName) : defaultProjectId;
+        const projectId = parsed.projectName ? matchedProjectId : defaultProjectId;
         if (projectId != null) data.project_id = projectId;
 
         createTask.mutate(data, {

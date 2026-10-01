@@ -65,11 +65,14 @@ export const CountdownCaptureBar = ({
     const inputRef = useRef<HTMLInputElement>(null);
     const createCountdown = useCreateCountdown();
     const categoriesQuery = useCountdownCategories({ profileId });
-    const categories = categoriesQuery.data?.categories ?? [];
+    // Enter can beat the first categories fetch, and an `@group` checked against
+    // an empty list would read as unmatched, so a submit awaits the in-flight one.
+    const loadedCategories = async () =>
+        categoriesQuery.data?.categories ??
+        (await categoriesQuery.refetch({ cancelRefetch: false })).data?.categories ??
+        [];
 
     const parsed = useMemo(() => parseCountdownInput(value, new Date()), [value]);
-
-    const matchGroup = (name: string): number | null => matchByName(categories, name);
 
     // Removable pills for the tokens parsed so far (date / group), so a
     // mistaken token is easy to spot and clear before Enter.
@@ -91,14 +94,14 @@ export const CountdownCaptureBar = ({
         inputRef.current?.focus();
     };
 
-    const buildDraft = (): CountdownCaptureDraft => {
+    const buildDraft = async (): Promise<CountdownCaptureDraft> => {
         const draft: CountdownCaptureDraft = {
             title: parsed.cleanTitle,
             targetDate: parsed.targetDate,
             categoryId: null
         };
         if (parsed.groupName) {
-            const matched = matchGroup(parsed.groupName);
+            const matched = matchByName(await loadedCategories(), parsed.groupName);
             if (matched != null) draft.categoryId = matched;
             else draft.createGroupName = parsed.groupName;
         }
@@ -108,13 +111,13 @@ export const CountdownCaptureBar = ({
     const isPending = createCountdown.isPending;
     const canAct = !!profileId && !disabled && !isPending;
 
-    const expand = () => {
+    const expand = async () => {
         if (!canAct) return;
-        onExpand(buildDraft());
+        onExpand(await buildDraft());
         setValue('');
     };
 
-    const create = () => {
+    const create = async () => {
         if (!canAct || !profileId) return;
         const title = parsed.cleanTitle;
         if (!title) return;
@@ -125,7 +128,10 @@ export const CountdownCaptureBar = ({
             expand();
             return;
         }
-        if (parsed.groupName && matchGroup(parsed.groupName) == null) {
+        const categoryId = parsed.groupName
+            ? matchByName(await loadedCategories(), parsed.groupName)
+            : null;
+        if (parsed.groupName && categoryId == null) {
             expand();
             return;
         }
@@ -135,7 +141,6 @@ export const CountdownCaptureBar = ({
             title,
             target_date: parsed.targetDate
         };
-        const categoryId = parsed.groupName ? matchGroup(parsed.groupName) : null;
         if (categoryId != null) data.category_id = categoryId;
 
         createCountdown.mutate(data, {

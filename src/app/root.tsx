@@ -37,13 +37,13 @@ import jetbrainsMono400Url from '@fontsource/jetbrains-mono/files/jetbrains-mono
 import jetbrainsMono500Url from '@fontsource/jetbrains-mono/files/jetbrains-mono-latin-500-normal.woff2?url';
 import jetbrainsMono600Url from '@fontsource/jetbrains-mono/files/jetbrains-mono-latin-600-normal.woff2?url';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { ToastContainer } from 'react-toastify';
 
 // Configure OpenAPI client base URL
 import '@/lib/api-client';
-import { queryConfig } from '@/lib/react-query';
+import { createQueryClient } from '@/lib/react-query';
 import { AuthProvider } from '@/lib/auth-context';
 import { LoadingPage } from '@/components/layouts/loading-page';
 import type { Route } from './+types/root';
@@ -95,12 +95,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-    const [queryClient] = React.useState(
-        () =>
-            new QueryClient({
-                defaultOptions: queryConfig
-            })
-    );
+    const [queryClient] = React.useState(createQueryClient);
 
     // Register the service worker (client-only) so the app is installable and
     // works offline. Prod-safe: failures are swallowed.

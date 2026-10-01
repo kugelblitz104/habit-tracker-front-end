@@ -27,10 +27,11 @@ export default defineConfig({
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 1 : 0,
-    // Serial for now: every test creates its own user, so parallelism is safe in
-    // principle, but the dev Postgres is shared with the backend pytest suite.
-    // Raise this once the suite has proven stable.
-    workers: 1,
+    // Every test registers its own throwaway user, so workers share no data, and
+    // pytest uses its own per-worker schemas in the same Postgres. Past half the
+    // cores the single API process and the Vite dev server are the bottleneck,
+    // not the browsers.
+    workers: '50%',
     reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : [['list']],
     // Previously hand-written as `{ timeout: 15_000 }` on individual assertions:
     // every protected route server-renders as LoadingPage and only fetches after

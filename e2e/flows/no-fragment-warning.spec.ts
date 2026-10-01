@@ -41,6 +41,8 @@ test('no Headless UI fragment-prop warnings across the app', async ({
     goldenProfileId,
     authedPage
 }) => {
+    // Eleven full page loads, each waiting for network idle.
+    test.slow();
     const projectId = await alphaProjectId(api, account, goldenProfileId);
 
     // Collect on the Node side, and BEFORE the first navigation: page-side state

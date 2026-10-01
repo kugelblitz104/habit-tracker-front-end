@@ -1,6 +1,7 @@
 import type { TaskRead, TaskUpdate } from '@/api';
 import { TasksService } from '@/api';
 import { defineMutationHook } from '@/lib/react-query';
+import { getTaskQueryOptions } from './get-tasks';
 
 export type UpdateTaskInput = {
     taskId: number;
@@ -15,7 +16,10 @@ export const useUpdateTask = defineMutationHook(updateTask, (queryClient, data) 
     queryClient.invalidateQueries({
         queryKey: ['tasks', { profileId: data.profile_id }]
     });
-    queryClient.invalidateQueries({ queryKey: ['task', { taskId: data.id }] });
+    // The PATCH response is the full task, so write it straight in: invalidating
+    // would leave the old task cached until the refetch lands, and a control
+    // opened in that window seeds from it.
+    queryClient.setQueryData(getTaskQueryOptions(data.id).queryKey, data);
     // Refresh project open/done counts + progress bar (e.g. after
     // completing a task) — broad, plus the specific project when known.
     queryClient.invalidateQueries({ queryKey: ['projects'] });

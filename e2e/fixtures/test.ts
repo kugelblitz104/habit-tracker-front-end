@@ -106,9 +106,24 @@ export const signIn = async (
     );
 };
 
+/**
+ * Open /login and wait until React owns the form. The route is prerendered, so
+ * the form is visible and clickable before hydration; submitting it then does a
+ * native GET to `/login?username=…&password=…` instead of calling the API. Under
+ * parallel workers hydration is slow enough to lose that race. React tags every
+ * hydrated DOM node with a `__reactProps$<id>` key, which is the signal here.
+ */
+export const gotoLogin = async (page: Page): Promise<void> => {
+    await page.goto('/login');
+    await page.waitForFunction(() => {
+        const form = document.querySelector('form');
+        return !!form && Object.keys(form).some((key) => key.startsWith('__reactProps'));
+    });
+};
+
 /** Sign in through the login form — for the auth spec, which must cover the real flow. */
 export const signInThroughForm = async (page: Page, account: Account): Promise<void> => {
-    await page.goto('/login');
+    await gotoLogin(page);
     await page.getByLabel('Username').fill(account.username);
     await page.getByLabel('Password').fill(account.password);
     await page.getByRole('button', { name: /sign in/i }).click();

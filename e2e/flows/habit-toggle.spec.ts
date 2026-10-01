@@ -47,6 +47,20 @@ const NOT_COMPLETED_GLYPH = 'svg.lucide-square';
 const SKIPPED_GLYPH = 'svg.lucide-chevrons-right';
 
 /**
+ * Click a day cell and wait for its tracker write to land. The grid ignores a
+ * click on a cell whose write is still in flight, and the optimistic glyph
+ * changes before that write settles, so a second click on the same cell (or a
+ * reload) right after the glyph assertion can drop the write under load.
+ */
+const toggleAndSettle = async (page: Page, cell: Locator): Promise<void> => {
+    const written = page.waitForResponse(
+        (r) => new URL(r.url()).pathname.startsWith('/trackers/') && r.request().method() !== 'GET'
+    );
+    await cell.click();
+    await (await written).finished();
+};
+
+/**
  * `M/D/YYYY` for `daysBack` before the anchor — exactly what the browser renders
  * via `toLocaleDateString()` under the pinned `en-US` locale and UTC zone.
  */
@@ -132,7 +146,7 @@ test("toggling today's cell moves the streak, and the new figure survives a refe
     await expect(today.locator(NOT_COMPLETED_GLYPH)).toBeVisible();
     await expect(streak).toHaveText(NO_STREAK);
 
-    await today.click();
+    await toggleAndSettle(authedPage, today);
 
     // -7..-1 (with -4 skipped) + today = 8.
     await expect(today.locator(COMPLETED_GLYPH)).toBeVisible();
@@ -146,12 +160,12 @@ test("toggling today's cell moves the streak, and the new figure survives a refe
 
     // Second click cycles completed -> skipped. A manual skip still CONTINUES a
     // streak, so the figure must hold at 8 rather than collapse.
-    await today.click();
+    await toggleAndSettle(authedPage, today);
     await expect(today.locator(SKIPPED_GLYPH)).toBeVisible();
     await expect(streak).toHaveText('8');
 
     // Third click clears the day and returns the row to its seeded state.
-    await today.click();
+    await toggleAndSettle(authedPage, today);
     await expect(today.locator(NOT_COMPLETED_GLYPH)).toBeVisible();
     await expect(streak).toHaveText(NO_STREAK);
 
@@ -180,11 +194,11 @@ test('a streak longer than the rendered window reads the server figure, not the 
     await expect(streak).toHaveText(NO_STREAK);
 
     const gapDay = dayCell(row, GOLDEN.habits.daily, usDate(anchor, 8));
-    await gapDay.click();
+    await toggleAndSettle(authedPage, gapDay);
     await expect(gapDay.locator(COMPLETED_GLYPH)).toBeVisible();
 
     const today = dayCell(row, GOLDEN.habits.daily, usDate(anchor, 0));
-    await today.click();
+    await toggleAndSettle(authedPage, today);
     await expect(today.locator(COMPLETED_GLYPH)).toBeVisible();
 
     await expect(streak).toHaveText('17');
@@ -217,7 +231,7 @@ test('backdating from the detail calendar merges two streaks, and the merge surv
     }
     const gapDay = pane.getByLabel(new RegExp(`^${escapeRe(usDate(anchor, 8))} .* not completed$`));
     await expect(gapDay).toBeVisible();
-    await gapDay.click();
+    await toggleAndSettle(authedPage, gapDay);
 
     // -16..-1 is now unbroken: one 16-day streak, 15 completions. "Current" is
     // still 0 because the run ends yesterday, not today.
