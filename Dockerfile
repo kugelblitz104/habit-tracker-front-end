@@ -1,10 +1,10 @@
-FROM node:20-alpine AS build-env
+FROM oven/bun:1-alpine AS build-env
 COPY . /app/
 WORKDIR /app
-RUN npm ci
+RUN bun install --frozen-lockfile
 ARG API_BASE_URL
 ENV API_BASE_URL=${API_BASE_URL}
-RUN npm run build
+RUN bun run build
 
 # SPA mode (ssr:false) emits only build/client, so the runtime image serves
 # static files and ships no Node runtime and no node_modules. That is the whole

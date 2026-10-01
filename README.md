@@ -54,11 +54,11 @@ are developed together.
 ### Installation and development
 
 ```bash
-npm install
-npm run dev          # Vite dev server on :5173
-npm run typecheck    # react-router typegen && tsc
-npm run build
-npm start            # serve the production build
+bun install
+bun run dev          # Vite dev server on :5173
+bun run typecheck    # react-router typegen && tsc
+bun run build
+bun run start        # serve the production build
 ```
 
 ### Environment Variables
@@ -78,7 +78,7 @@ It defaults to `http://localhost:8080` when unset. In Docker it's a build arg of
 `/openapi.json` — never hand-edit it. To change the client, change the backend endpoint, then:
 
 ```bash
-npm run generate-api    # needs the backend up at http://localhost:8080
+bun run generate-api    # needs the backend up at http://localhost:8080
 ```
 
 Regeneration rewrites the three `Profile{Create,Read,Update}.ts` models with CRLF/LF whitespace
@@ -90,13 +90,13 @@ Two runners, split by file suffix: `*.test.ts` is Vitest, `*.spec.ts` is Playwri
 `e2e/`.
 
 ```bash
-npm test              # unit then e2e
-npm run test:unit     # vitest — pure logic, no backend, ~1s
-npm run test:unit:watch
-npm run test:e2e      # Playwright — needs the backend at :8080
+bun run test          # unit then e2e (not `bun test`, which is Bun's runner)
+bun run test:unit     # vitest — pure logic, no backend, ~1s
+bun run test:unit:watch
+bun run test:e2e      # Playwright — needs the backend at :8080
 
-npx playwright test flows/task-status --project=wide   # a single spec
-npx playwright test --project=narrow                   # the @narrow-tagged tests
+bunx playwright test flows/task-status --project=wide   # a single spec
+bunx playwright test --project=narrow                   # the @narrow-tagged tests
 ```
 
 The e2e config auto-starts the dev server (reusing a running one locally); the backend must be
@@ -117,8 +117,8 @@ the backend is the source of truth. Editing the fixture means keeping both suite
 ## Formatting
 
 ```bash
-npm run format         # prettier --write .
-npm run format:check   # the repo is clean; keep it that way
+bun run format         # prettier --write .
+bun run format:check   # the repo is clean; keep it that way
 ```
 
 There is no ESLint config. Prettier settings live in `package.json` (4-space indent, single

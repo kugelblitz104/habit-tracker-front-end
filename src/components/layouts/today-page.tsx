@@ -27,7 +27,7 @@ import { useStartTaskTimer } from '@/features/time-entries/hooks/use-start-task-
 import { parseServerDate, toLocalDateString } from '@/lib/date-utils';
 import { useAuth } from '@/lib/auth-context';
 import { TaskStatus } from '@/types/types';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 

@@ -72,7 +72,7 @@ export default defineConfig({
         }
     ],
     webServer: {
-        command: 'npm run dev',
+        command: 'bun run dev',
         url: BASE_URL,
         // `__API_BASE_URL__` is a BUILD-TIME Vite define, so a reused dev server
         // keeps whatever API base it was started with — passing it here only
