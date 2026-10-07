@@ -12,6 +12,7 @@ import { CompletedSection } from '@/features/tasks/components/completed-section'
 import { BulkActionBar } from '@/features/tasks/components/bulk-action-bar';
 import { TaskControlsBar } from '@/features/tasks/components/task-controls-bar';
 import { TaskDetailPane } from '@/features/tasks/components/task-detail-pane';
+import { TaskListSkeleton } from '@/features/tasks/components/task-list-skeleton';
 import { TaskListView } from '@/features/tasks/components/task-list-view';
 import { useBulkTaskActions } from '@/features/tasks/hooks/use-bulk-task-actions';
 import { useTaskControls } from '@/features/tasks/hooks/use-task-controls';
@@ -19,12 +20,16 @@ import { useTaskDetailPane } from '@/features/tasks/hooks/use-task-detail-pane';
 import { useTaskMarkdownExport } from '@/features/tasks/hooks/use-task-markdown-export';
 import { useTaskSelection } from '@/features/tasks/hooks/use-task-selection';
 import { useTaskStatusChange } from '@/features/tasks/hooks/use-task-status-change';
-import { showClosedSection } from '@/features/tasks/utils/task-controls';
+import { isClosedStatus, showClosedSection } from '@/features/tasks/utils/task-controls';
+import {
+    readRememberedTaskCount,
+    rememberTaskCount
+} from '@/features/tasks/utils/remembered-task-count';
 import { useStartTaskTimer } from '@/features/time-entries/hooks/use-start-task-timer';
 import { useAuth } from '@/lib/auth-context';
 import { useOpenFromSearchState } from '@/lib/use-open-from-search-state';
 import { useScrollRestoration } from '@/lib/use-scroll-restoration';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 /**
  * Dedicated "All tasks" surface: the active profile's tasks (top-level only,
@@ -80,6 +85,19 @@ export const AllTasksDashboard = () => {
 
     const handleStatusChange = useTaskStatusChange(tasks);
 
+    // Open tasks only: the list hides closed ones by default, so this is the
+    // row count the skeleton should paint.
+    const openCount = useMemo(
+        () => tasks.filter((t) => !isClosedStatus(t.status ?? 0)).length,
+        [tasks]
+    );
+    useEffect(() => {
+        if (tasksQuery.isSuccess) rememberTaskCount(activeProfileId, openCount);
+    }, [tasksQuery.isSuccess, openCount, activeProfileId]);
+
+    // Read during render so the first paint is already the right height.
+    const skeletonRows = useMemo(() => readRememberedTaskCount(activeProfileId), [activeProfileId]);
+
     // Done/cancelled tasks are excluded from the main grouped list by default
     // (they live in the Closed section below); the section itself only shows
     // once the user checks Done and/or Cancelled in the Status filter.
@@ -133,7 +151,14 @@ export const AllTasksDashboard = () => {
                     All tasks
                 </h1>
                 <p className='mt-1.5 font-mono text-[12px] text-text-muted'>
-                    {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
+                    {tasksQuery.isLoading ? (
+                        // Keeps the line height without reading "0 tasks" while loading.
+                        <span className='invisible'>0 tasks</span>
+                    ) : (
+                        <>
+                            {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
+                        </>
+                    )}
                 </p>
             </header>
 
@@ -162,11 +187,11 @@ export const AllTasksDashboard = () => {
 
             <QueryState
                 isError={tasksQuery.isError}
-                isLoading={tasksQuery.isLoading}
                 errorMessage='Failed to load tasks.'
-                loadingMessage='Loading tasks…'
                 size='md'
             />
+
+            {tasksQuery.isLoading && <TaskListSkeleton rows={skeletonRows} />}
 
             {!tasksQuery.isError && !tasksQuery.isLoading && (
                 <>

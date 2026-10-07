@@ -1,6 +1,7 @@
 import { AppHeader } from '@/components/layouts/app-header';
 import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
 import { HabitPerformanceChart } from '@/features/insights/components/habit-performance-chart';
+import { InsightsSkeleton } from '@/features/insights/components/insights-skeleton';
 import { InsightsSummaryCards } from '@/features/insights/components/insights-summary-cards';
 import { RangeToggle } from '@/features/insights/components/range-toggle';
 import { TaskThroughputChart } from '@/features/insights/components/task-throughput-chart';
@@ -55,26 +56,7 @@ export const InsightsPage = () => {
                 </header>
 
                 {initialLoading ? (
-                    <div className='flex flex-col gap-5'>
-                        <div className='grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5'>
-                            {Array.from({ length: 5 }).map((_, i) => (
-                                <div
-                                    key={i}
-                                    className='h-[92px] animate-pulse rounded-card border'
-                                    style={CARD_SURFACE_STYLE}
-                                />
-                            ))}
-                        </div>
-                        <div className='grid gap-4 lg:grid-cols-2'>
-                            {Array.from({ length: 4 }).map((_, i) => (
-                                <div
-                                    key={i}
-                                    className='h-[248px] animate-pulse rounded-card border'
-                                    style={CARD_SURFACE_STYLE}
-                                />
-                            ))}
-                        </div>
-                    </div>
+                    <InsightsSkeleton />
                 ) : !data.hasAnyData ? (
                     <div
                         className='rounded-card border p-10 text-center'
