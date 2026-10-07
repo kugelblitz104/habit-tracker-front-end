@@ -1,4 +1,8 @@
 FROM oven/bun:1-alpine AS build-env
+# react-router build must run under Node: with no node binary, bun runs it itself
+# and resolves react-dom/server to server.bun.js, which lacks the
+# renderToPipeableStream the prerender step calls.
+RUN apk add --no-cache nodejs
 COPY . /app/
 WORKDIR /app
 RUN bun install --frozen-lockfile
