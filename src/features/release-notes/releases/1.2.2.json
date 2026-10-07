@@ -1,0 +1,38 @@
+{
+    "date": "2026-10-07",
+    "summary": "Habit reminders",
+    "changes": [
+        {
+            "kind": "added",
+            "text": "Habit reminders now have a time and the days of the week they apply to. Set them when you create or edit a habit."
+        },
+        {
+            "kind": "changed",
+            "text": "The Whenever section of the task list starts collapsed."
+        },
+        {
+            "kind": "changed",
+            "text": "Large task lists load faster."
+        },
+        {
+            "kind": "changed",
+            "text": "Task link controls and notifications are easier to tap on touch screens."
+        },
+        {
+            "kind": "changed",
+            "text": "A task's time log is hidden when no time has been logged."
+        },
+        {
+            "kind": "fixed",
+            "text": "Tasks closed in the evening showed the next day in the Completed list."
+        },
+        {
+            "kind": "fixed",
+            "text": "Habit progress could stay on the previous day after midnight until the page was reloaded."
+        },
+        {
+            "kind": "fixed",
+            "text": "Exporting to Loop Habit Tracker gave every habit a midnight reminder on no days. Habits without a reminder now export with none."
+        }
+    ]
+}
