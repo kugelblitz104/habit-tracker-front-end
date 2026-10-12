@@ -17,6 +17,7 @@ import { TaskDetailHeader } from './task-detail-header';
 import { TaskDetailSubtasks } from './task-detail-subtasks';
 import { TaskDetailTimestamps } from './task-detail-timestamps';
 import { TaskEditor } from './task-editor';
+import { TaskStatus } from '@/types/types';
 
 type TaskDetailBodyProps = {
     taskId: number;
@@ -70,6 +71,8 @@ export const TaskDetailBody = ({
     // Single-task list: the hook only needs it to recover the previous status
     // for the undo toast.
     const handleStatusChange = useTaskStatusChange(task ? [task] : []);
+
+    const isClosed = task?.status === TaskStatus.CANCELLED || task?.status === TaskStatus.DONE;
 
     const handleCopy = async () => {
         if (!task) return;
@@ -155,7 +158,7 @@ export const TaskDetailBody = ({
             )}
 
             {/* Subtasks (complete toggles; add/remove happens in edit) */}
-            {task.parent_id == null && (
+            {task.parent_id == null && !isClosed && (
                 <TaskDetailSubtasks profileId={task.profile_id} parentId={task.id} />
             )}
 
@@ -165,7 +168,7 @@ export const TaskDetailBody = ({
             {/* Link this task to an external work item, and publish it out when a
                 connection exists. Only top-level tasks: subtasks stay lean, and one
                 that needs a link can be promoted to a full task. */}
-            {task.parent_id == null && <TaskIntegrationActions task={task} />}
+            {task.parent_id == null && !isClosed && <TaskIntegrationActions task={task} />}
 
             {/* Record keeping: created / updated / closed */}
             <TaskDetailTimestamps

@@ -217,12 +217,6 @@ export const TaskIntegrationActions = ({ task }: Props) => {
                             onSubmit={handleLink}
                         />
                     )}
-
-                    {connections.length === 0 && (
-                        <p className='font-mono text-[11.5px] text-text-faint'>
-                            Connect Azure DevOps or GitHub in Settings to also publish tasks out.
-                        </p>
-                    )}
                 </div>
             )}
         </div>
