@@ -17,6 +17,9 @@ RUN bun run build
 # ~13MB flat.
 FROM nginx:alpine
 COPY --from=build-env /app/build/client /usr/share/nginx/html
+# The stock nginx.conf says `worker_processes auto`, which counts the host's
+# CPUs, not the container's, and Railway hosts have dozens.
+RUN sed -i 's/^worker_processes.*/worker_processes 1;/' /etc/nginx/nginx.conf
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 
 # The entrypoint's envsubst pass would otherwise blank out nginx's own $uri and
