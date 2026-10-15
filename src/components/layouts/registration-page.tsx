@@ -1,6 +1,7 @@
 import type { UserCreate } from '@/api';
 import { AuthSubmitButton } from '@/components/ui/buttons/auth-submit-button';
 import { Register } from '@/features/auth/api/register';
+import { apiErrorMessage } from '@/lib/api-error-message';
 import { useAuth } from '@/lib/auth-context';
 import {
     sanitizeEmail,
@@ -50,13 +51,7 @@ export const RegistrationPage = () => {
         } catch (error) {
             console.error('Registration Error:', error);
 
-            // Extract error message from API error
-            if (error && typeof error === 'object' && 'body' in error) {
-                const apiError = error as { body?: { detail?: string } };
-                setRegistrationError(apiError.body?.detail || 'Registration failed');
-            } else {
-                setRegistrationError('Registration failed');
-            }
+            setRegistrationError(apiErrorMessage(error, 'Registration failed'));
         } finally {
             setIsSubmitting(false);
         }
