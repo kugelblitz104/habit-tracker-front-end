@@ -1,5 +1,6 @@
 import { AuthSubmitButton } from '@/components/ui/buttons/auth-submit-button';
 import { Login } from '@/features/auth/api/login';
+import { apiErrorMessage } from '@/lib/api-error-message';
 import { useAuth } from '@/lib/auth-context';
 import { sanitizeFormData, sanitizeUsername } from '@/lib/input-sanitization';
 import { Fieldset } from '@headlessui/react';
@@ -41,7 +42,7 @@ export const LoginPage = () => {
             navigate('/', { replace: true });
         } catch (error) {
             console.error('Login error:', error);
-            setLoginError('Login failed. Please check your credentials and try again.');
+            setLoginError(apiErrorMessage(error, 'Login failed. Please try again.'));
         } finally {
             setIsSubmitting(false);
         }
