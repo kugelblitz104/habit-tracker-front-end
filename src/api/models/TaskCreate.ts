@@ -20,5 +20,7 @@ export type TaskCreate = {
     project_id?: (number | null);
     parent_id?: (number | null);
     sort_order?: number;
+    due_reminder_offsets?: (Array<number> | null);
+    scheduled_reminder_offsets?: (Array<number> | null);
 };
 

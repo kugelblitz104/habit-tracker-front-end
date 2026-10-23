@@ -4,7 +4,8 @@ import { useProjects } from '@/features/projects/api/get-projects';
 import { TaskTimeLog } from '@/features/time-entries/components/task-time-log';
 import { useAuth } from '@/lib/auth-context';
 import { sanitizeMultilineText } from '@/lib/input-sanitization';
-import { Trash2, X } from 'lucide-react';
+import { offsetLabel } from '@/features/notifications/utils/reminder-offsets';
+import { Bell, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router';
 import { toast } from 'react-toastify';
@@ -169,6 +170,25 @@ export const TaskDetailBody = ({
                 connection exists. Only top-level tasks: subtasks stay lean, and one
                 that needs a link can be promoted to a full task. */}
             {task.parent_id == null && !isClosed && <TaskIntegrationActions task={task} />}
+
+            {/* Per-task reminder overrides; a null list means the profile default. */}
+            {(
+                [
+                    ['Due reminders', task.due_reminder_offsets],
+                    ['Scheduled reminders', task.scheduled_reminder_offsets]
+                ] as const
+            ).map(
+                ([label, offsets]) =>
+                    offsets != null && (
+                        <p
+                            key={label}
+                            className='flex items-center gap-1.5 font-mono text-[11.5px] text-text-secondary'
+                        >
+                            <Bell size={12} aria-hidden='true' />
+                            {label}: {offsets.length ? offsets.map(offsetLabel).join(', ') : 'none'}
+                        </p>
+                    )
+            )}
 
             {/* Record keeping: created / updated / closed */}
             <TaskDetailTimestamps

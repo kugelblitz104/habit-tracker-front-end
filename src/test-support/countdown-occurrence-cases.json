@@ -1,0 +1,131 @@
+{
+    "_about": "Countdown recurrence parity. Each case is next_occurrence(anchor, repeat, on_or_after). Read by the front-end's countdown-occurrence.test.ts and the API's tests/test_countdown_occurrence.py; never edit without running both.",
+    "cases": [
+        {
+            "name": "none: a past anchor stays put",
+            "anchor": "2026-01-10",
+            "repeat": "none",
+            "on_or_after": "2026-03-01",
+            "expected": "2026-01-10"
+        },
+        {
+            "name": "weekly: an upcoming anchor is returned as-is",
+            "anchor": "2026-03-10",
+            "repeat": "weekly",
+            "on_or_after": "2026-03-01",
+            "expected": "2026-03-10"
+        },
+        {
+            "name": "weekly: the anchor day itself counts",
+            "anchor": "2026-03-03",
+            "repeat": "weekly",
+            "on_or_after": "2026-03-03",
+            "expected": "2026-03-03"
+        },
+        {
+            "name": "weekly: rolls to the next whole week",
+            "anchor": "2026-01-06",
+            "repeat": "weekly",
+            "on_or_after": "2026-01-14",
+            "expected": "2026-01-20"
+        },
+        {
+            "name": "weekly: across the spring-forward change",
+            "anchor": "2026-03-03",
+            "repeat": "weekly",
+            "on_or_after": "2026-03-10",
+            "expected": "2026-03-10"
+        },
+        {
+            "name": "weekly: across the fall-back change",
+            "anchor": "2026-10-27",
+            "repeat": "weekly",
+            "on_or_after": "2026-11-03",
+            "expected": "2026-11-03"
+        },
+        {
+            "name": "monthly: same day next month",
+            "anchor": "2026-01-15",
+            "repeat": "monthly",
+            "on_or_after": "2026-01-16",
+            "expected": "2026-02-15"
+        },
+        {
+            "name": "monthly: day 31 clamps into February",
+            "anchor": "2026-01-31",
+            "repeat": "monthly",
+            "on_or_after": "2026-02-01",
+            "expected": "2026-02-28"
+        },
+        {
+            "name": "monthly: day 31 restored in March",
+            "anchor": "2026-01-31",
+            "repeat": "monthly",
+            "on_or_after": "2026-03-01",
+            "expected": "2026-03-31"
+        },
+        {
+            "name": "monthly: December rolls into January",
+            "anchor": "2025-12-20",
+            "repeat": "monthly",
+            "on_or_after": "2026-12-21",
+            "expected": "2027-01-20"
+        },
+        {
+            "name": "yearly: leap day clamps in a common year",
+            "anchor": "2024-02-29",
+            "repeat": "yearly",
+            "on_or_after": "2026-03-01",
+            "expected": "2027-02-28"
+        },
+        {
+            "name": "yearly: leap day restored in a leap year",
+            "anchor": "2024-02-29",
+            "repeat": "yearly",
+            "on_or_after": "2028-02-01",
+            "expected": "2028-02-29"
+        },
+        {
+            "name": "yearly: later this year",
+            "anchor": "2020-07-04",
+            "repeat": "yearly",
+            "on_or_after": "2026-03-01",
+            "expected": "2026-07-04"
+        },
+        {
+            "name": "monthly_weekday: third Monday",
+            "anchor": "2026-01-19",
+            "repeat": "monthly_weekday",
+            "on_or_after": "2026-02-01",
+            "expected": "2026-02-16"
+        },
+        {
+            "name": "monthly_weekday: fourth Monday",
+            "anchor": "2026-01-26",
+            "repeat": "monthly_weekday",
+            "on_or_after": "2026-02-01",
+            "expected": "2026-02-23"
+        },
+        {
+            "name": "monthly_weekday: last-week anchor means the last one",
+            "anchor": "2026-01-29",
+            "repeat": "monthly_weekday",
+            "on_or_after": "2026-02-01",
+            "expected": "2026-02-26"
+        },
+        {
+            "name": "monthly_weekday: this month's already passed",
+            "anchor": "2026-01-05",
+            "repeat": "monthly_weekday",
+            "on_or_after": "2026-02-03",
+            "expected": "2026-03-02"
+        },
+        {
+            "name": "monthly_weekday: December rolls into January",
+            "anchor": "2025-12-08",
+            "repeat": "monthly_weekday",
+            "on_or_after": "2026-12-20",
+            "expected": "2027-01-11"
+        }
+    ]
+}

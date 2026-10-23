@@ -23,5 +23,7 @@ export type TaskBackup = {
     created_date?: (string | null);
     updated_date?: (string | null);
     sort_order?: number;
+    due_reminder_offsets?: (Array<number> | null);
+    scheduled_reminder_offsets?: (Array<number> | null);
 };
 

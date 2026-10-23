@@ -6,6 +6,7 @@ import { ConnectionsCard } from '@/features/settings/components/connections-card
 import { IntegrationConnectionsSection } from '@/features/settings/components/integration-connections-section';
 import { DangerZoneCard } from '@/features/settings/components/danger-zone-card';
 import { FullBackupCard } from '@/features/settings/components/full-backup-card';
+import { NotificationsCard } from '@/features/settings/components/notifications-card';
 import { JournalCard } from '@/features/settings/components/journal-card';
 import { ManageDataCard } from '@/features/settings/components/manage-data-card';
 import { ProfilePreferencesCard } from '@/features/settings/components/profile-preferences-card';
@@ -61,6 +62,7 @@ export const SettingsPage = () => {
                             />
                         )}
                         {editingProfile && <JournalCard profile={editingProfile} />}
+                        {editingProfile && <NotificationsCard profile={editingProfile} />}
                         <AccountCard />
                         <ChangePasswordCard />
                         {editingProfile && <ConnectionsCard profile={editingProfile} />}

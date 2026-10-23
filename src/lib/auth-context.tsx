@@ -1,12 +1,16 @@
-import { OpenAPI, type ProfileRead } from '@/api';
+import { ApiError, OpenAPI, type ProfileRead } from '@/api';
 import { useProfiles } from '@/features/profiles/api/get-profiles';
 import { getUser } from '@/features/users/api/get-users';
 import { useQueryClient } from '@tanstack/react-query';
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { getUserIdFromToken, isTokenExpired } from './token-utils';
 import { Refresh } from '@/features/auth/api/refresh';
+import { updateProfile } from '@/features/profiles/api/update-profiles';
+import { getBrowserTimeZone } from './date-utils';
+import { shouldRetryTimezoneSync, shouldSyncTimezone } from './timezone-sync';
 
 const ACTIVE_PROFILE_STORAGE_KEY = 'active_profile';
+const TIMEZONE_RETRY_MS = 30_000;
 
 interface User {
     id: number;
@@ -109,6 +113,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         () => profiles.find((p) => p.id === activeProfileId) ?? null,
         [profiles, activeProfileId]
     );
+
+    // Keep every profile's timezone on the device's (the scheduler reads each
+    // profile's zone), once per profile per page load. The ref guards against
+    // refetches re-triggering the PATCH; only a retryable failure clears it.
+    const timezoneSynced = useRef(new Set<number>());
+    const [timezoneRetry, setTimezoneRetry] = useState(0);
+    useEffect(() => {
+        const timezone = getBrowserTimeZone();
+        for (const profile of profiles) {
+            if (timezoneSynced.current.has(profile.id)) continue;
+            timezoneSynced.current.add(profile.id);
+            if (!shouldSyncTimezone(profile.timezone, timezone)) continue;
+            updateProfile({ profileId: profile.id, data: { timezone } })
+                .then(() => queryClient.invalidateQueries({ queryKey: ['profiles'] }))
+                .catch((error: unknown) => {
+                    const status = error instanceof ApiError ? error.status : undefined;
+                    if (!shouldRetryTimezoneSync(status)) return;
+                    window.setTimeout(() => {
+                        timezoneSynced.current.delete(profile.id);
+                        setTimezoneRetry((n) => n + 1);
+                    }, TIMEZONE_RETRY_MS);
+                });
+        }
+    }, [profiles, queryClient, timezoneRetry]);
 
     const profilesLoading = isAuthenticated && (!profileHydrated || profilesQuery.isLoading);
 

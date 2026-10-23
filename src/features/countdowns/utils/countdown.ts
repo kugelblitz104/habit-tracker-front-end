@@ -64,12 +64,14 @@ const nthWeekdayOfMonth = (year: number, month: number, weekday: number, ordinal
  * after `today`. Returns the anchor unchanged for non-recurring, or when the
  * anchor is itself still upcoming.
  */
-const nextOccurrence = (anchorStr: string, repeat: CountdownRepeat, today: Date): string => {
+export const nextOccurrence = (anchorStr: string, repeat: CountdownRepeat, today: Date): string => {
     const anchor = parseLocalDate(anchorStr);
     if (repeat === 'none' || anchor >= today) return anchorStr;
 
     if (repeat === 'weekly') {
-        const weeks = Math.ceil((today.getTime() - anchor.getTime()) / (7 * DAY_MS));
+        // Rounding to whole days absorbs the 1-hour DST shift between local midnights.
+        const days = Math.round((today.getTime() - anchor.getTime()) / DAY_MS);
+        const weeks = Math.ceil(days / 7);
         const d = new Date(anchor);
         d.setDate(anchor.getDate() + weeks * 7);
         return isoDate(d);

@@ -8,6 +8,7 @@ import {
 import { useAuth } from '@/lib/auth-context';
 import { sanitizeMultilineText } from '@/lib/input-sanitization';
 import { TaskStatus } from '@/types/types';
+import { modeToOffsets, offsetsToMode } from '@/features/notifications/utils/reminder-offsets';
 import { Trash2 } from 'lucide-react';
 import { useEffect, useState, type KeyboardEvent } from 'react';
 import { toast } from 'react-toastify';
@@ -15,6 +16,7 @@ import { useTasks } from '../api/get-tasks';
 import { useUpdateTask } from '../api/update-tasks';
 import { useDeleteTaskWithConfirm } from '../hooks/use-delete-task-with-confirm';
 import { StatusControl } from './status-control';
+import { TaskReminderField } from './task-reminder-field';
 import { SubtaskSection } from './subtask-section';
 import { useTimeEntrySummary } from '@/features/time-entries/api/get-time-entries';
 import { formatHumanDuration } from '@/features/time-entries/utils/format-duration';
@@ -26,6 +28,9 @@ import {
     PriorityField,
     ProjectField
 } from './task-form-fields';
+
+const sameOffsets = (a: number[] | null, b: number[] | null) =>
+    a === b || (a != null && b != null && a.length === b.length && a.every((v, i) => v === b[i]));
 
 type TaskEditorProps = {
     task: TaskRead;
@@ -45,7 +50,8 @@ type TaskEditorProps = {
  * so a priority/due change may relocate the task once the list refetches.
  */
 export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
-    const { activeProfile } = useAuth();
+    const { activeProfile, profiles } = useAuth();
+    const taskProfile = profiles.find((p) => p.id === task.profile_id) ?? activeProfile;
     const showEstimatedEffort = activeProfile?.show_estimated_effort ?? false;
     const updateTask = useUpdateTask();
     const { deleteWithConfirm, isPending: isDeletePending } = useDeleteTaskWithConfirm();
@@ -67,6 +73,14 @@ export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
         task.estimated_effort ?? null
     );
     const [blockReason, setBlockReason] = useState(task.block_reason ?? '');
+    const [dueMode, setDueMode] = useState(offsetsToMode(task.due_reminder_offsets));
+    const [dueCustom, setDueCustom] = useState<number[]>(task.due_reminder_offsets ?? []);
+    const [scheduledMode, setScheduledMode] = useState(
+        offsetsToMode(task.scheduled_reminder_offsets)
+    );
+    const [scheduledCustom, setScheduledCustom] = useState<number[]>(
+        task.scheduled_reminder_offsets ?? []
+    );
 
     // Parent-task candidates for demote/re-parent: the profile's other
     // top-level tasks. A task that itself has subtasks can't become a subtask
@@ -148,6 +162,14 @@ export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
         if (estimatedEffort !== (task.estimated_effort ?? null))
             patch.estimated_effort = estimatedEffort;
 
+        // null (Default) is sent explicitly; omitting the key leaves the override alone.
+        const dueOffsets = modeToOffsets(dueMode, dueCustom);
+        if (!sameOffsets(dueOffsets, task.due_reminder_offsets ?? null))
+            patch.due_reminder_offsets = dueOffsets;
+        const scheduledOffsets = modeToOffsets(scheduledMode, scheduledCustom);
+        if (!sameOffsets(scheduledOffsets, task.scheduled_reminder_offsets ?? null))
+            patch.scheduled_reminder_offsets = scheduledOffsets;
+
         if (isBlocked) {
             const trimmedReason = blockReason.trim();
             if (trimmedReason !== (task.block_reason ?? ''))
@@ -161,6 +183,13 @@ export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
 
     const handleSave = () => {
         if (!canSave) return;
+        const emptyCustom =
+            (dueMode === 'custom' && dueCustom.length === 0) ||
+            (isScheduled && scheduledMode === 'custom' && scheduledCustom.length === 0);
+        if (emptyCustom) {
+            toast.error('Add a reminder, or choose None.');
+            return;
+        }
         const patch = buildPatch();
         if (!patch) {
             onClose();
@@ -285,6 +314,29 @@ export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
                     onTimeChange={setScheduledTime}
                     dateAriaLabel='Scheduled date'
                     timeAriaLabel='Scheduled time'
+                />
+            )}
+
+            {/* Reminder overrides use the task's own profile. An existing override stays
+                visible with the toggle off so it can be reset to Default. */}
+            {(taskProfile?.notify_task_due || dueMode !== 'default') && (
+                <TaskReminderField
+                    label='Due'
+                    mode={dueMode}
+                    custom={dueCustom}
+                    profileOffsets={taskProfile?.task_due_reminder_offsets ?? []}
+                    onModeChange={setDueMode}
+                    onCustomChange={setDueCustom}
+                />
+            )}
+            {isScheduled && (taskProfile?.notify_task_scheduled || scheduledMode !== 'default') && (
+                <TaskReminderField
+                    label='Scheduled'
+                    mode={scheduledMode}
+                    custom={scheduledCustom}
+                    profileOffsets={taskProfile?.task_scheduled_reminder_offsets ?? []}
+                    onModeChange={setScheduledMode}
+                    onCustomChange={setScheduledCustom}
                 />
             )}
 

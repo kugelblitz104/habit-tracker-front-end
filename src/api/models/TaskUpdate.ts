@@ -21,5 +21,7 @@ export type TaskUpdate = {
     parent_id?: (number | null);
     sort_order?: (number | null);
     closed_date?: (string | null);
+    due_reminder_offsets?: (Array<number> | null);
+    scheduled_reminder_offsets?: (Array<number> | null);
 };
 

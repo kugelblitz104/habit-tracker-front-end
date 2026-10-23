@@ -27,5 +27,7 @@ export type TaskRead = {
     subtask_count?: number;
     subtask_done_count?: number;
     slug: string;
+    due_reminder_offsets?: (Array<number> | null);
+    scheduled_reminder_offsets?: (Array<number> | null);
 };
 

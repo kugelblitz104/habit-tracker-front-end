@@ -26,5 +26,14 @@ export type ProfileUpdate = {
     reconciliation_stale_task_days?: (number | null);
     reconciliation_stale_project_days?: (number | null);
     reconciliation_stale_habit_days?: (number | null);
+    notify_task_due?: (boolean | null);
+    notify_task_scheduled?: (boolean | null);
+    notify_habits?: (boolean | null);
+    notify_countdowns?: (boolean | null);
+    notify_journal?: (boolean | null);
+    task_due_reminder_offsets?: (Array<number> | null);
+    task_scheduled_reminder_offsets?: (Array<number> | null);
+    task_reminder_default_time?: (string | null);
+    timezone?: (string | null);
 };
 

@@ -26,6 +26,15 @@ export type ProfileRead = {
     reconciliation_stale_task_days?: (number | null);
     reconciliation_stale_project_days?: (number | null);
     reconciliation_stale_habit_days?: (number | null);
+    notify_task_due?: boolean;
+    notify_task_scheduled?: boolean;
+    notify_habits?: boolean;
+    notify_countdowns?: boolean;
+    notify_journal?: boolean;
+    task_due_reminder_offsets?: Array<number>;
+    task_scheduled_reminder_offsets?: Array<number>;
+    task_reminder_default_time?: string;
+    timezone?: (string | null);
     id: number;
     created_date: string;
     updated_date?: (string | null);

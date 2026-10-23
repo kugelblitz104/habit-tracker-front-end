@@ -65,3 +65,43 @@ self.addEventListener('fetch', (event) => {
         );
     }
 });
+
+// Web Push: the server sends {title, body, url}; the click opens or focuses that URL.
+self.addEventListener('push', (event) => {
+    let payload = {};
+    try {
+        payload = event.data?.json() ?? {};
+    } catch (err) {
+        // Malformed payload: still show a notification, browsers require one.
+    }
+    const { title = 'Habit Tracker', body = '', url = '/' } = payload;
+    event.waitUntil(
+        self.registration.showNotification(title, {
+            body,
+            data: { url },
+            icon: '/icon-192.png'
+        })
+    );
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    const target = new URL(event.notification.data?.url || '/', self.location.origin);
+    event.waitUntil(
+        (async () => {
+            const windows = await self.clients.matchAll({
+                type: 'window',
+                includeUncontrolled: true
+            });
+            const onPath = windows.find((c) => new URL(c.url).pathname === target.pathname);
+            if (onPath) return onPath.focus();
+            const other = windows[0];
+            if (other) {
+                const focused = await other.focus();
+                const client = focused ?? other;
+                if (client.navigate) return client.navigate(target.href);
+            }
+            return self.clients.openWindow(target.href);
+        })()
+    );
+});
