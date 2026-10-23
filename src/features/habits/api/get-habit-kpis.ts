@@ -1,4 +1,4 @@
-import type { HabitKPIs, HabitKPIsEntry } from '@/api';
+import type { HabitKPIs } from '@/api';
 import { HabitsService } from '@/api';
 import { getBrowserTimeZone } from '@/lib/date-utils';
 import type { QueryConfig } from '@/lib/react-query';
@@ -49,10 +49,10 @@ export type HabitsKpisOptions = {
 export const getHabitsKpis = async ({
     profileId,
     archived
-}: HabitsKpisOptions): Promise<HabitKPIsEntry[]> => {
+}: HabitsKpisOptions): Promise<HabitKPIs[]> => {
     const tz = getBrowserTimeZone();
 
-    const { items } = await pagedList<HabitKPIsEntry>(
+    const { items } = await pagedList<HabitKPIs>(
         ({ offset, limit }) =>
             HabitsService.listHabitsKpisHabitsKpisGet(profileId, tz, archived, limit, offset).then(
                 (page) => ({ items: page.items ?? [], total: page.total })

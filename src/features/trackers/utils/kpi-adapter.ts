@@ -82,7 +82,8 @@ export const adaptKpisToServerShape = (
         thirty_day_completion_rate: localKpis.thirty_day_completion_rate / 100,
         overall_completion_rate: localKpis.overall_completion_rate / 100,
         last_completed_date: localKpis.last_completed_date ?? null,
-        weekday_completion_rates: computeWeekdayCompletionRates(habit, trackers)
+        weekday_completion_rates: computeWeekdayCompletionRates(habit, trackers),
+        habit_id: habit.id
     };
 };
 

@@ -11,13 +11,13 @@ describe('getHabitsKpis', () => {
         const page = vi
             .spyOn(HabitsService, 'listHabitsKpisHabitsKpisGet')
             .mockResolvedValueOnce({
-                items: [{ habit_id: 1, kpis: {} }],
+                items: [{ habit_id: 1 }],
                 total: 2,
                 limit: 100,
                 offset: 0
             } as never)
             .mockResolvedValueOnce({
-                items: [{ habit_id: 2, kpis: {} }],
+                items: [{ habit_id: 2 }],
                 total: 2,
                 limit: 100,
                 offset: 1
@@ -32,13 +32,13 @@ describe('getHabitsKpis', () => {
     it('de-duplicates a habit an offset walk repeated', async () => {
         vi.spyOn(HabitsService, 'listHabitsKpisHabitsKpisGet')
             .mockResolvedValueOnce({
-                items: [{ habit_id: 1, kpis: {} }],
+                items: [{ habit_id: 1 }],
                 total: 2,
                 limit: 100,
                 offset: 0
             } as never)
             .mockResolvedValueOnce({
-                items: [{ habit_id: 1, kpis: {} }],
+                items: [{ habit_id: 1 }],
                 total: 2,
                 limit: 100,
                 offset: 1

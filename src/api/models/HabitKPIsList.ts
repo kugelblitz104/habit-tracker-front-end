@@ -2,14 +2,14 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { HabitKPIsEntry } from './HabitKPIsEntry';
+import type { HabitKPIs } from './HabitKPIs';
 /**
  * Computed KPIs for a page of a profile's habits.
  *
  * Paging is over habits; `total` is the habit match count.
  */
 export type HabitKPIsList = {
-    items?: Array<HabitKPIsEntry>;
+    items?: Array<HabitKPIs>;
     total: number;
     limit: number;
     offset: number;

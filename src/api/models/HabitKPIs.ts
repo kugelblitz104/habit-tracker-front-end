@@ -42,5 +42,9 @@ export type HabitKPIs = {
      * Length-7 list of completion rates (0.0-1.0), one per weekday, indexed by Python date.weekday(): index 0 = Monday ... 6 = Sunday. The frontend reorders these for display.
      */
     weekday_completion_rates: Array<number>;
+    /**
+     * The habit these KPIs belong to
+     */
+    habit_id: number;
 };
 

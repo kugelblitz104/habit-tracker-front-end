@@ -81,7 +81,7 @@ export const useHabitKpisBatch = ({ profileId }: KpisBatchOptions) => {
             // instant. Safe only because getHabitsKpis resolves tz exactly as
             // getHabitKpis does - that key carries no tz.
             for (const entry of entries) {
-                queryClient.setQueryData(trackerKeys.kpis(entry.habit_id), entry.kpis);
+                queryClient.setQueryData(trackerKeys.kpis(entry.habit_id), entry);
             }
             return entries;
         },
@@ -91,7 +91,7 @@ export const useHabitKpisBatch = ({ profileId }: KpisBatchOptions) => {
     });
 
     const byHabit = useMemo(
-        () => new Map<number, HabitKPIs>((query.data ?? []).map((e) => [e.habit_id, e.kpis])),
+        () => new Map<number, HabitKPIs>((query.data ?? []).map((e) => [e.habit_id, e])),
         [query.data]
     );
 

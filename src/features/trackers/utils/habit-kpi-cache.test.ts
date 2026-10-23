@@ -1,4 +1,4 @@
-import type { HabitKPIs, HabitKPIsEntry, HabitRead, HabitTrackersLite, TrackerLite } from '@/api';
+import type { HabitKPIs, HabitRead, HabitTrackersLite, TrackerLite } from '@/api';
 import { toLocalDateString } from '@/lib/date-utils';
 import { TrackerStatus } from '@/types/types';
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
@@ -39,7 +39,8 @@ const serverKpis: HabitKPIs = {
     thirty_day_completion_rate: 1,
     overall_completion_rate: 0.9,
     last_completed_date: TODAY,
-    weekday_completion_rates: [1, 1, 1, 1, 1, 1, 1]
+    weekday_completion_rates: [1, 1, 1, 1, 1, 1, 1],
+    habit_id: HABIT_ID
 };
 
 const trackersBatchKey = ['habits-trackers-lite', { profileId: 1, days: WINDOW_DAYS }];
@@ -70,9 +71,7 @@ const seedDashboardCache = () => {
             auto_skipped_dates: []
         }
     ]);
-    client.setQueryData<HabitKPIsEntry[]>(kpisBatchKey, [
-        { habit_id: HABIT_ID, kpis: { ...serverKpis } }
-    ]);
+    client.setQueryData<HabitKPIs[]>(kpisBatchKey, [{ ...serverKpis }]);
     return client;
 };
 
@@ -82,7 +81,7 @@ const completeToday = (prev: TrackerLite[]): TrackerLite[] => [
 ];
 
 const batchKpis = (client: QueryClient): HabitKPIs =>
-    client.getQueryData<HabitKPIsEntry[]>(kpisBatchKey)![0]!.kpis;
+    client.getQueryData<HabitKPIs[]>(kpisBatchKey)![0]!;
 
 describe('patchHabitTrackersBatch', () => {
     it('adds the row to the trackers batch', () => {
@@ -124,9 +123,7 @@ describe('patchHabitTrackersBatch', () => {
         client.setQueryData<HabitTrackersLite[]>(trackersBatchKey, [
             { habit_id: HABIT_ID, trackers, end_date: TODAY, days: WINDOW_DAYS }
         ]);
-        client.setQueryData<HabitKPIsEntry[]>(kpisBatchKey, [
-            { habit_id: HABIT_ID, kpis: { ...serverKpis, current_streak: 8 } }
-        ]);
+        client.setQueryData<HabitKPIs[]>(kpisBatchKey, [{ ...serverKpis, current_streak: 8 }]);
 
         patchHabitTrackersBatch(client, HABIT_ID, (prev) => [
             ...prev,
@@ -148,7 +145,7 @@ describe('reconcileHabitKpis', () => {
     it('is what moves the streak after a write, since the patch leaves it alone', async () => {
         const client = seedDashboardCache();
         const before = { ...serverKpis, current_streak: 8 };
-        client.setQueryData<HabitKPIsEntry[]>(kpisBatchKey, [{ habit_id: HABIT_ID, kpis: before }]);
+        client.setQueryData<HabitKPIs[]>(kpisBatchKey, [before]);
 
         patchHabitTrackersBatch(client, HABIT_ID, completeToday);
 

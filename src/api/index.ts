@@ -32,7 +32,6 @@ export type { ForgotPasswordRequest } from './models/ForgotPasswordRequest';
 export type { HabitBackup } from './models/HabitBackup';
 export type { HabitCreate } from './models/HabitCreate';
 export type { HabitKPIs } from './models/HabitKPIs';
-export type { HabitKPIsEntry } from './models/HabitKPIsEntry';
 export type { HabitKPIsList } from './models/HabitKPIsList';
 export type { HabitList } from './models/HabitList';
 export type { HabitRead } from './models/HabitRead';

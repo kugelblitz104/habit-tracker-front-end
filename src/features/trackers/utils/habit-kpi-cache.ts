@@ -1,4 +1,4 @@
-import type { HabitKPIs, HabitKPIsEntry, HabitTrackersLite, TrackerLite } from '@/api';
+import type { HabitKPIs, HabitTrackersLite, TrackerLite } from '@/api';
 import {
     habitsKpisBatchKey,
     habitsTrackersBatchKey,
@@ -65,7 +65,7 @@ export const reconcileHabitKpis = async (
     habitId: number,
     fetchKpis: (habitId: number) => Promise<HabitKPIs>
 ): Promise<void> => {
-    const batches = queryClient.getQueriesData<HabitKPIsEntry[]>({ queryKey: habitsKpisBatchKey });
+    const batches = queryClient.getQueriesData<HabitKPIs[]>({ queryKey: habitsKpisBatchKey });
     if (!batches.some(([, entries]) => entries?.some((e) => e.habit_id === habitId))) return;
 
     const ticket = (latestReconcile.get(habitId) ?? 0) + 1;
@@ -88,7 +88,7 @@ export const reconcileHabitKpis = async (
     if (!kpis || latestReconcile.get(habitId) !== ticket) return;
 
     queryClient.setQueryData<HabitKPIs>(key, kpis);
-    queryClient.setQueriesData<HabitKPIsEntry[]>({ queryKey: habitsKpisBatchKey }, (old) =>
-        old?.map((entry) => (entry.habit_id === habitId ? { ...entry, kpis } : entry))
+    queryClient.setQueriesData<HabitKPIs[]>({ queryKey: habitsKpisBatchKey }, (old) =>
+        old?.map((entry) => (entry.habit_id === habitId ? kpis : entry))
     );
 };
