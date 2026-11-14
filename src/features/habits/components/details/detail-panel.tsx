@@ -14,7 +14,7 @@ type DetailPanelProps = {
 const PANEL =
     'bg-[var(--habit-container-bg)] border border-[var(--habit-container-border)] rounded-card px-5 py-[18px]';
 const TITLE =
-    'm-0 font-display text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--color-habit-label)]';
+    'm-0 font-display text-meta font-semibold uppercase tracking-[0.14em] text-[var(--color-habit-label)]';
 
 /**
  * Shared card chrome for the habit-detail analytics panels (streak chart,

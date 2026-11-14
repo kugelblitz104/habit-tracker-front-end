@@ -7,10 +7,10 @@ import type { CSSProperties } from 'react';
  */
 
 export const formLabelClass =
-    'mb-1 block font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-text-faint';
+    'mb-1 block font-mono text-label font-semibold uppercase tracking-[0.12em] text-text-faint';
 
 export const formFieldClass =
-    'w-full rounded-button border px-2.5 py-1.5 font-mono text-[12px] text-text-secondary outline-none transition-colors focus-visible:ring-1 focus-visible:ring-now-accent';
+    'w-full rounded-button border px-2.5 py-1.5 font-mono text-meta text-text-secondary outline-none transition-colors';
 
 export const formFieldStyle: CSSProperties = {
     backgroundColor: 'var(--surface-input-bg)',
@@ -32,7 +32,7 @@ export const selectOptionStyle: CSSProperties = {
  *  same visual language as `formFieldClass`/`formFieldStyle` but without the
  *  `w-full` and with tighter `px-2 py-1` padding for dense inline rows. */
 export const compactFieldClass =
-    'rounded-button border px-2 py-1 font-mono text-[12px] text-text-secondary outline-none transition-colors focus-visible:ring-1 focus-visible:ring-now-accent';
+    'rounded-button border px-2 py-1 font-mono text-meta text-text-secondary outline-none transition-colors';
 
 export const compactFieldStyle: CSSProperties = {
     ...formFieldStyle,

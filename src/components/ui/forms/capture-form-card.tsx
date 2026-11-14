@@ -46,7 +46,7 @@ export const CaptureFormCard = ({
                     type='button'
                     onClick={onCancel}
                     disabled={isPending}
-                    className='min-h-[28px] rounded-button px-3 py-1.5 font-display text-[12px] text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary disabled:cursor-not-allowed disabled:opacity-50'
+                    className='min-h-[28px] rounded-button px-3 py-1.5 font-display text-meta text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary disabled:cursor-not-allowed disabled:opacity-50'
                 >
                     Cancel
                 </button>
@@ -54,7 +54,7 @@ export const CaptureFormCard = ({
                     type='button'
                     onClick={onSubmit}
                     disabled={!canSubmit}
-                    className='min-h-[28px] rounded-button px-3 py-1.5 font-display text-[12px] font-semibold transition-opacity pointer-coarse:min-h-[44px] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50'
+                    className='min-h-[28px] rounded-button px-3 py-1.5 font-display text-meta font-semibold transition-opacity pointer-coarse:min-h-[44px] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50'
                     style={{
                         background: 'var(--button-primary-gradient)',
                         color: 'var(--button-primary-text)'

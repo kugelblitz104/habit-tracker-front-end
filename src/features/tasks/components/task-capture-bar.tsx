@@ -12,6 +12,7 @@ import { parseLocalDate } from '@/lib/date-utils';
 import { Plus } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { toast } from 'react-toastify';
+import { markJustCreated } from '@/lib/just-created';
 import { useProjects } from '@/features/projects/api/get-projects';
 import { useCreateTask } from '../api/create-tasks';
 import { parseTaskInput, type TaskTokenType } from '../utils/parse-task-input';
@@ -270,7 +271,8 @@ export const TaskCaptureBar = ({
         if (projectId != null) data.project_id = projectId;
 
         createTask.mutate(data, {
-            onSuccess: () => {
+            onSuccess: (task) => {
+                markJustCreated('task', task.id);
                 toast.success('Task created');
                 setValue('');
             },
@@ -360,7 +362,7 @@ export const TaskCaptureBar = ({
                         />
                     )}
                 </div>
-                <span className='hidden shrink-0 items-center gap-2 font-mono text-[10px] text-text-faint sm:flex'>
+                <span className='hidden shrink-0 items-center gap-2 font-mono text-label text-text-faint sm:flex'>
                     <span>↵ add</span>
                     <span>⇧↵ details</span>
                 </span>

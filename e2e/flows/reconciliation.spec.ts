@@ -63,7 +63,9 @@ const buildProfile = (anchor: Date) => {
                 priority: 1,
                 status: 0,
                 created_date: stamp(-200),
-                updated_date: stamp(-STALE_DAYS)
+                // At the anchor's own time of day: the page floors elapsed 24h
+                // periods, so a fixed 09:00 stamp reads one day short before 09:00.
+                updated_date: stampFrom(anchor, -STALE_DAYS, anchor.toISOString().slice(11, 19))
             },
             {
                 // Deferred is deliberately IN this queue: "not now", never

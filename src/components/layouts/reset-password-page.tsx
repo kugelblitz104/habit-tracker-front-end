@@ -54,10 +54,10 @@ export const ResetPasswordPage = () => {
         return (
             <AuthCardLayout subtitle='Reset your password'>
                 <div className='space-y-4'>
-                    <p className='text-[13px] leading-relaxed text-text-secondary'>
+                    <p className='text-body leading-relaxed text-text-secondary'>
                         This reset link is missing or malformed. Request a new one to continue.
                     </p>
-                    <div className='text-center text-[13px] text-text-muted'>
+                    <div className='text-center text-body text-text-muted'>
                         <Link
                             to='/forgot-password'
                             className='text-text-secondary-soft transition-colors hover:text-now-accent'
@@ -102,8 +102,8 @@ export const ResetPasswordPage = () => {
                             submittingLabel='Resetting...'
                             label='Reset password'
                         />
-                        {error && <div className='font-mono text-[11px] text-danger'>{error}</div>}
-                        <div className='text-center text-[13px] text-text-muted'>
+                        {error && <div className='font-mono text-label text-danger'>{error}</div>}
+                        <div className='text-center text-body text-text-muted'>
                             <Link
                                 to='/login'
                                 className='text-text-secondary-soft transition-colors hover:text-now-accent'

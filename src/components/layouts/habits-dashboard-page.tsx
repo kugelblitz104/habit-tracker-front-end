@@ -27,6 +27,7 @@ import { useAuth } from '@/lib/auth-context';
 import { toLocalDateString } from '@/lib/date-utils';
 import { useOpenFromSearchState } from '@/lib/use-open-from-search-state';
 import { useResponsiveLayout, DASHBOARD_DAYS_BY_SIZE } from '@/lib/use-responsive-layout';
+import { RollingNumber } from '@/components/ui/rolling-number';
 import { GripVertical } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -37,7 +38,7 @@ import { toast } from 'react-toastify';
 
 const ghostButton =
     'inline-flex min-h-[36px] items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono ' +
-    'text-[11.5px] text-text-secondary transition-colors pointer-coarse:min-h-[44px]';
+    'text-meta text-text-secondary transition-colors pointer-coarse:min-h-[44px]';
 
 // Follows the active_profile localStorage key naming (see auth-context.tsx).
 const GROUP_BY_CATEGORY_STORAGE_KEY = 'habits_group_by_category';
@@ -92,6 +93,8 @@ export const HabitsDashboard = () => {
         if (habitsQuery.isSuccess) rememberHabitCount(activeProfileId, habits.length);
     }, [habitsQuery.isSuccess, habits.length, activeProfileId]);
 
+    const [newHabitId, setNewHabitId] = useState<number | null>(null);
+
     const habitsAdd = useCreateHabit({
         mutationConfig: {
             onSuccess: () => {
@@ -133,7 +136,7 @@ export const HabitsDashboard = () => {
     const handleCaptureHabit = async (name: string) => {
         if (!activeProfileId) return;
         try {
-            await habitsAdd.mutateAsync({
+            const created = await habitsAdd.mutateAsync({
                 name,
                 question: '',
                 color: '#7fa8c9',
@@ -141,6 +144,8 @@ export const HabitsDashboard = () => {
                 range: 1,
                 profile_id: activeProfileId
             });
+            setNewHabitId(created.id);
+            setTimeout(() => setNewHabitId(null), 3000);
         } catch (error) {
             toast.error('Failed to add habit. Please try again.');
             // Re-throw so the capture bar keeps the typed text for a retry.
@@ -163,13 +168,6 @@ export const HabitsDashboard = () => {
     }
 
     const showPane = isWide && selectedHabitId != null;
-    const subline = `${habits.length} ${habits.length === 1 ? 'habit' : 'habits'}`;
-    // Header = how many of today's habits still need doing, using the SAME rule
-    // as the Incomplete filter (auto-skipped habits don't count).
-    const headerTitle =
-        habitsLeft > 0
-            ? `${habitsLeft} ${habitsLeft === 1 ? 'habit' : 'habits'} left`
-            : 'All habits done';
 
     return (
         <PageShell
@@ -190,13 +188,24 @@ export const HabitsDashboard = () => {
                 />
             }
         >
-            {/* Header */}
+            {/* Header: how many of today's habits still need doing, by the same rule
+                as the Incomplete filter (auto-skipped habits don't count). */}
             <header className='mb-[30px] flex items-start justify-between gap-4'>
                 <div>
-                    <h1 className='font-display text-[23px] font-bold tracking-[-0.01em] text-text-primary'>
-                        {headerTitle}
+                    <h1 className='font-display text-title font-bold tracking-[-0.01em] text-text-primary'>
+                        {habitsLeft > 0 ? (
+                            <>
+                                <RollingNumber value={habitsLeft} />{' '}
+                                {habitsLeft === 1 ? 'habit' : 'habits'} left
+                            </>
+                        ) : (
+                            'All habits done'
+                        )}
                     </h1>
-                    <p className='mt-0.5 font-mono text-[12px] text-text-muted'>{subline}</p>
+                    <p className='mt-0.5 font-mono text-meta text-text-muted'>
+                        <RollingNumber value={habits.length} />{' '}
+                        {habits.length === 1 ? 'habit' : 'habits'}
+                    </p>
                 </div>
                 <button
                     type='button'
@@ -240,6 +249,7 @@ export const HabitsDashboard = () => {
                     isSmall={isSmall}
                     isWide={isWide}
                     selectedHabitId={selectedHabitId}
+                    newHabitId={newHabitId}
                     onSelectHabit={selectHabit}
                     groupByCategory={groupByCategory}
                     onToggleGroupByCategory={handleToggleGroupByCategory}

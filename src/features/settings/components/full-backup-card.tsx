@@ -77,7 +77,7 @@ export const FullBackupCard = () => {
 
     return (
         <SettingsCard label='Full backup' labelGapClass='mb-3.5'>
-            <div className='mb-3 text-[12px]' style={{ color: '#9a8f81' }}>
+            <div className='mb-3 text-meta' style={{ color: '#9a8f81' }}>
                 Export this profile&apos;s complete data as a JSON file, or import one as a new
                 profile. Use it to move a profile between servers. Integration access tokens
                 aren&apos;t included &mdash; re-enter them after importing.

@@ -2,7 +2,7 @@ import { AppHeader } from '@/components/layouts/app-header';
 import { useDetailOrigin } from '@/components/layouts/detail-origin';
 import { BackLink } from '@/components/ui/back-link';
 import { ErrorPage } from '@/components/layouts/error-page';
-import { LoadingPage } from '@/components/layouts/loading-page';
+import { LoadingContent } from '@/components/layouts/loading-page';
 import { useHabitBySlug } from '@/features/habits/api/get-habits';
 import { habitKeys } from '@/features/habits/api/query-keys';
 import { HabitDetailBody } from '@/features/habits/components/details/habit-detail-body';
@@ -24,7 +24,7 @@ function HabitDetailShell({ children }: { children: React.ReactNode }) {
                     to={backTo}
                     label={backLabel}
                     ariaLabel={ariaLabel}
-                    className='mb-4 font-mono text-[12.5px] text-text-muted transition-colors hover:text-text-secondary'
+                    className='mb-4 font-mono text-meta text-text-muted transition-colors hover:text-text-secondary'
                 />
                 {children}
             </div>
@@ -49,7 +49,7 @@ function HabitDetailBySlug({ slug }: { slug: string }) {
         habitKeys.detail(habit.id)
     );
 
-    if (isPending) return <LoadingPage />;
+    if (isPending) return <LoadingContent />;
     if (notFound || id === null) {
         return <ErrorPage message="That habit link doesn't match a habit in this profile." />;
     }

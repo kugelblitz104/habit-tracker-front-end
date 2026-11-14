@@ -45,9 +45,9 @@ function firstCachedId(queryClient: QueryClient, key: string, listProp: string):
 }
 
 const ITEM_CLASS =
-    'flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-left font-display text-[13px] text-text-secondary data-focus:bg-white/5';
+    'flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-left font-display text-body text-text-secondary data-focus:bg-white/5';
 
-const LABEL_CLASS = 'px-2 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-text-faint';
+const LABEL_CLASS = 'px-2 py-1 font-mono text-label uppercase tracking-[0.16em] text-text-faint';
 
 export const DebugMenu = () => {
     const queryClient = useQueryClient();
@@ -81,7 +81,7 @@ export const DebugMenu = () => {
             <MenuButton
                 aria-label='Debug menu'
                 title='Debug menu (dev only)'
-                className='flex h-7 w-7 items-center justify-center rounded-chip border text-text-muted outline-none transition-colors pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] hover:bg-white/5 hover:text-text-secondary focus-visible:ring-2 focus-visible:ring-now-accent'
+                className='flex h-7 w-7 items-center justify-center rounded-chip border text-text-muted outline-none transition-colors pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] hover:bg-white/5 hover:text-text-secondary'
                 style={{ borderColor: 'var(--surface-card-border)' }}
             >
                 <FlaskConical size={14} />
@@ -96,7 +96,7 @@ export const DebugMenu = () => {
                             key={variant.label}
                             type='button'
                             onClick={variant.fire}
-                            className='rounded-chip border px-2 py-0.5 font-mono text-[11px] text-text-secondary transition-colors hover:bg-white/5'
+                            className='rounded-chip border px-2 py-0.5 font-mono text-label text-text-secondary transition-colors hover:bg-white/5'
                             style={{ borderColor: 'var(--surface-card-border)' }}
                         >
                             {variant.label}
@@ -124,7 +124,7 @@ export const DebugMenu = () => {
                     ) : (
                         <p
                             key={item.label}
-                            className='px-2 py-1.5 font-display text-[13px] text-text-faint'
+                            className='px-2 py-1.5 font-display text-body text-text-faint'
                         >
                             {item.label}
                         </p>

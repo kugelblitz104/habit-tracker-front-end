@@ -147,10 +147,10 @@ export const AllTasksDashboard = () => {
             }
         >
             <header className='mb-[30px]'>
-                <h1 className='font-display text-[23px] font-bold tracking-[-0.01em] text-text-primary'>
+                <h1 className='font-display text-title font-bold tracking-[-0.01em] text-text-primary'>
                     All tasks
                 </h1>
-                <p className='mt-1.5 font-mono text-[12px] text-text-muted'>
+                <p className='mt-1.5 font-mono text-meta text-text-muted'>
                     {tasksQuery.isLoading ? (
                         // Keeps the line height without reading "0 tasks" while loading.
                         <span className='invisible'>0 tasks</span>

@@ -166,7 +166,7 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
                                     prefetch='render'
                                     onClick={(e) => handleNavClick(e, tab.to)}
                                     aria-current={active ? 'page' : undefined}
-                                    className='my-2 rounded-chip px-3.5 py-1.5 font-display text-[13.5px] font-semibold transition-opacity hover:opacity-90'
+                                    className='my-2 rounded-chip px-3.5 py-1.5 font-display text-body font-semibold transition-opacity hover:opacity-90'
                                     style={
                                         active
                                             ? {
@@ -191,7 +191,7 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
                                 prefetch='render'
                                 onClick={(e) => handleNavClick(e, tab.to)}
                                 aria-current={active ? 'page' : undefined}
-                                className={`-mb-px flex items-center gap-1.5 self-stretch border-b-2 px-2 py-3.5 font-display text-[14px] transition-colors sm:px-2.5 ${
+                                className={`-mb-px flex items-center gap-1.5 self-stretch border-b-2 px-2 py-3.5 font-display text-body transition-colors sm:px-2.5 ${
                                     active
                                         ? 'text-text-primary'
                                         : 'border-transparent text-text-muted hover:text-text-secondary'
@@ -210,7 +210,7 @@ export function AppHeader({ maxWidthClass = PAGE_MAX_WIDTH }: { maxWidthClass?: 
                 <Menu as='div' className='relative flex items-center md:hidden'>
                     <MenuButton
                         aria-label='Navigation menu'
-                        className='inline-flex items-center gap-1.5 py-3.5 font-display text-[14px] text-text-primary outline-none'
+                        className='inline-flex items-center gap-1.5 py-3.5 font-display text-body text-text-primary outline-none'
                     >
                         <MenuIcon size={18} className='text-text-secondary' />
                         {activeTab?.label ?? 'Menu'}

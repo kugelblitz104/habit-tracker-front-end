@@ -45,10 +45,10 @@ export const DayNavigator = ({ date, today, onNavigate, children }: DayNavigator
     return (
         <header className='mb-[26px] flex flex-wrap items-end justify-between gap-3'>
             <div className='min-w-0'>
-                <h1 className='font-display text-[23px] font-bold tracking-[-0.01em] text-text-primary'>
+                <h1 className='font-display text-title font-bold tracking-[-0.01em] text-text-primary'>
                     {relativeDayLabel(date, today)}
                 </h1>
-                <p className='mt-1 font-mono text-[11px] text-text-muted'>{fullDate(date)}</p>
+                <p className='mt-1 font-mono text-label text-text-muted'>{fullDate(date)}</p>
             </div>
 
             <div className='flex flex-wrap items-center justify-end gap-2'>

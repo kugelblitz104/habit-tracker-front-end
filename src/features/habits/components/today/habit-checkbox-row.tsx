@@ -1,9 +1,10 @@
 import type { HabitRead } from '@/api';
+import { legibleOnDark } from '@/components/ui/label';
 import { getFrequencyString } from '@/features/habits/utils/frequency-label';
 import { useTrackerToggle } from '@/features/trackers/hooks/use-tracker-toggle';
 import { DisplayStatus } from '@/types/types';
 import { Check, ChevronsRight } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import { habitDetailPath } from '@/lib/entity-ref';
 
@@ -40,6 +41,9 @@ export const HabitCheckboxRow = ({
     }, [habit.id, status, onStatusChange]);
 
     const isSkipped = status === DisplayStatus.SKIPPED;
+    // Set by this row's own click, so a check that is already there on load
+    // or arrives from a refetch never animates.
+    const justToggled = useRef(false);
 
     const box = (() => {
         switch (status) {
@@ -49,7 +53,18 @@ export const HabitCheckboxRow = ({
                         backgroundColor: 'var(--habit-complete)',
                         borderColor: 'var(--habit-complete)'
                     },
-                    icon: <Check size={12} style={{ color: 'var(--bg)' }} strokeWidth={3} />
+                    icon: (
+                        <Check
+                            size={12}
+                            style={{ color: 'var(--bg)' }}
+                            strokeWidth={3}
+                            className={
+                                justToggled.current
+                                    ? 'motion-safe:animate-pop motion-safe:[&_path]:animate-draw'
+                                    : undefined
+                            }
+                        />
+                    )
                 };
             case DisplayStatus.AUTO_SKIPPED:
                 return {
@@ -97,16 +112,19 @@ export const HabitCheckboxRow = ({
                 link so tapping the name navigates instead of cycling status. */}
             <button
                 type='button'
-                onClick={toggle}
+                onClick={() => {
+                    justToggled.current = true;
+                    toggle();
+                }}
                 aria-label={`Toggle status for ${habit.name}`}
                 // hit-target rather than a Button conversion: the status glyph's
                 // 16px box and per-status colors live on the inner span, and a
                 // Button variant's border/background chrome would visually grow
                 // this isolated control on every row of the Today panel.
-                className='hit-target shrink-0 outline-none focus-visible:opacity-80'
+                className='hit-target shrink-0 outline-none focus-visible:opacity-80 motion-safe:active:[&>span]:scale-90'
             >
                 <span
-                    className='flex h-4 w-4 items-center justify-center rounded-[5px] border'
+                    className='flex h-4 w-4 items-center justify-center rounded-[5px] border transition-[scale]'
                     style={box.style}
                 >
                     {box.icon}
@@ -127,14 +145,14 @@ export const HabitCheckboxRow = ({
                         onSelectHabit(habit.id);
                     }
                 }}
-                className={`flex min-h-[24px] min-w-0 flex-1 items-center truncate font-display text-[13px] underline-offset-2 outline-none transition-opacity hover:underline focus-visible:underline ${
+                className={`flex min-h-[24px] min-w-0 flex-1 items-center truncate font-display text-body underline-offset-2 outline-none transition-opacity hover:underline focus-visible:underline ${
                     isSkipped ? 'line-through' : ''
                 }`}
-                style={{ color: habit.color }}
+                style={{ color: legibleOnDark(habit.color) }}
             >
                 {habit.name}
             </Link>
-            <span className='shrink-0 font-mono text-[10px] text-text-faint'>
+            <span className='shrink-0 font-mono text-label text-text-faint'>
                 {getFrequencyString(habit.frequency, habit.range)}
             </span>
         </div>

@@ -1,5 +1,5 @@
 import type { HighlightSegment } from '@/components/ui/forms/highlighted-input';
-import { POPOVER_PANEL_CLASS, popoverPanelStyle } from '@/components/ui/menu';
+import { POPOVER_MOTION_CLASS, POPOVER_PANEL_CLASS, popoverPanelStyle } from '@/components/ui/menu';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { HelpCircle, X } from 'lucide-react';
 
@@ -70,7 +70,7 @@ export const TokenPillRow = <T extends string>({
             {pills.map((pill) => (
                 <span
                     key={pill.type}
-                    className='inline-flex min-h-[24px] items-center gap-1 rounded-chip border pl-2 pr-1 font-mono text-[10.5px] text-text-secondary'
+                    className='inline-flex min-h-[24px] items-center gap-1 rounded-chip border pl-2 pr-1 font-mono text-label text-text-secondary'
                     style={{
                         backgroundColor: 'var(--surface-input-bg)',
                         borderColor: 'var(--surface-input-border)'
@@ -95,7 +95,7 @@ export const TokenPillRow = <T extends string>({
 export const TokenCheatsheetPopover = ({ rows }: { rows: { token: string; label: string }[] }) => (
     <Popover className='relative shrink-0'>
         <PopoverButton
-            className='inline-flex min-h-[28px] min-w-[28px] items-center justify-center rounded-full p-0.5 text-text-faint outline-none transition-colors pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] hover:text-text-secondary focus-visible:ring-1 focus-visible:ring-now-accent'
+            className='inline-flex min-h-[28px] min-w-[28px] items-center justify-center rounded-full p-0.5 text-text-faint outline-none transition-colors pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] hover:text-text-secondary'
             aria-label='Quick-add token help'
             title='Quick-add tokens'
         >
@@ -103,27 +103,26 @@ export const TokenCheatsheetPopover = ({ rows }: { rows: { token: string; label:
         </PopoverButton>
         <PopoverPanel
             anchor='bottom end'
-            className={`${POPOVER_PANEL_CLASS} mt-1 w-72`}
+            transition
+            className={`${POPOVER_PANEL_CLASS} ${POPOVER_MOTION_CLASS} mt-1 w-72`}
             style={popoverPanelStyle}
         >
             <div className='flex flex-col gap-1.5 p-1'>
-                <p className='px-1 pb-1 font-mono text-[10px] uppercase tracking-[0.12em] text-text-faint'>
+                <p className='px-1 pb-1 font-mono text-label uppercase tracking-[0.12em] text-text-faint'>
                     Quick-add tokens
                 </p>
                 {rows.map((row) => (
                     <div key={row.token} className='flex items-baseline gap-2 px-1'>
                         <code
-                            className='shrink-0 rounded-[4px] px-1.5 py-0.5 font-mono text-[11px] text-text-secondary'
+                            className='shrink-0 rounded-[4px] px-1.5 py-0.5 font-mono text-label text-text-secondary'
                             style={{ backgroundColor: 'rgba(255,255,255,.06)' }}
                         >
                             {row.token}
                         </code>
-                        <span className='font-display text-[12px] text-text-muted'>
-                            {row.label}
-                        </span>
+                        <span className='font-display text-meta text-text-muted'>{row.label}</span>
                     </div>
                 ))}
-                <p className='px-1 pt-1 font-mono text-[10px] leading-relaxed text-text-faint'>
+                <p className='px-1 pt-1 font-mono text-label leading-relaxed text-text-faint'>
                     Dates also take today, tom, weekday names (fri), +3d.
                 </p>
             </div>

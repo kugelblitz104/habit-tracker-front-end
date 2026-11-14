@@ -94,7 +94,7 @@ export const CompletedSection = ({
                     text-* class, since the variant's own text color class would
                     otherwise win or lose unpredictably by stylesheet order. */}
                 <DisclosureButton
-                    className={`${buttonClass({ variant: 'subtle', size: 'sm' })} w-full justify-start gap-2 font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em]`}
+                    className={`${buttonClass({ variant: 'subtle', size: 'sm' })} w-full justify-start gap-2 active:scale-100! font-mono text-meta font-semibold uppercase tracking-[0.16em]`}
                     style={{ ...buttonStyle('subtle'), color: 'var(--color-whenever-label)' }}
                 >
                     {({ open }) => (
@@ -119,7 +119,7 @@ export const CompletedSection = ({
                 >
                     <div className='overflow-hidden'>
                         {tasks.length === 0 ? (
-                            <p className='mt-3 font-mono text-[12px] text-text-faint'>
+                            <p className='mt-3 font-mono text-meta text-text-faint'>
                                 Nothing closed yet.
                             </p>
                         ) : (
@@ -155,7 +155,7 @@ export const CompletedSection = ({
                                                     type='button'
                                                     onClick={() => onSelectTask(task)}
                                                     aria-pressed={selectedTaskId === task.id}
-                                                    className={`min-w-0 flex-1 truncate text-left font-display text-[13.5px] text-text-muted transition-colors hover:text-text-secondary ${
+                                                    className={`min-w-0 flex-1 truncate text-left font-display text-body text-text-muted transition-colors hover:text-text-secondary ${
                                                         cancelled ? 'line-through' : ''
                                                     }`}
                                                     title={task.title}
@@ -164,7 +164,7 @@ export const CompletedSection = ({
                                                 </button>
                                             ) : (
                                                 <span
-                                                    className={`min-w-0 flex-1 truncate font-display text-[13.5px] text-text-muted ${
+                                                    className={`min-w-0 flex-1 truncate font-display text-body text-text-muted ${
                                                         cancelled ? 'line-through' : ''
                                                     }`}
                                                 >
@@ -172,7 +172,7 @@ export const CompletedSection = ({
                                                 </span>
                                             )}
                                             {closed && (
-                                                <span className='shrink-0 font-mono text-[10px] text-text-faint'>
+                                                <span className='shrink-0 font-mono text-label text-text-faint'>
                                                     {closed}
                                                 </span>
                                             )}
@@ -186,7 +186,7 @@ export const CompletedSection = ({
                                 type='button'
                                 onClick={() => void query.fetchNextPage()}
                                 disabled={query.isFetchingNextPage}
-                                className='mt-3 w-full rounded-button border py-2 font-mono text-[11px] uppercase tracking-[0.08em] text-text-muted transition-colors hover:text-text-secondary disabled:opacity-50'
+                                className='mt-3 w-full rounded-button border py-2 font-mono text-label uppercase tracking-[0.08em] text-text-muted transition-colors hover:text-text-secondary disabled:opacity-50'
                                 style={{ borderColor: 'var(--color-whenever-ring)' }}
                             >
                                 {query.isFetchingNextPage ? 'Loading…' : 'Load more'}

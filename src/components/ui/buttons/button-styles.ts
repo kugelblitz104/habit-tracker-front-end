@@ -12,14 +12,14 @@ import type { CSSProperties } from 'react';
  * color comes via inline style so the exact design alpha is preserved.
  */
 export const ghostButtonClass =
-    'rounded-[8px] border px-3 py-1.5 text-[12.5px] text-text-secondary-soft transition-colors ' +
+    'rounded-[8px] border px-3 py-1.5 text-meta text-text-secondary-soft transition-colors ' +
     'hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50';
 
 export const ghostButtonBorder = 'rgba(255,255,255,.14)';
 
 /** Primary gradient button (Save changes / Create profile / Sign in). */
 export const primaryButtonClass =
-    'inline-block rounded-[9px] px-[18px] py-2.5 text-[13.5px] font-semibold transition-opacity ' +
+    'inline-block rounded-[9px] px-[18px] py-2.5 text-body font-semibold transition-opacity ' +
     'hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50';
 
 export const primaryButtonStyle: CSSProperties = {
@@ -41,9 +41,9 @@ export type ButtonVariant = 'primary' | 'ghost' | 'subtle' | 'icon';
  * 40.3px they measure today.
  */
 const SIZE: Record<ButtonSize, string> = {
-    sm: 'min-h-[28px] pointer-coarse:min-h-[44px] px-2.5 py-1.5 text-[11px]',
-    md: 'min-h-[36px] pointer-coarse:min-h-[44px] px-3 py-2 text-[12px]',
-    lg: 'min-h-[44px] pointer-coarse:min-h-[48px] px-[18px] py-2.5 text-[13.5px]'
+    sm: 'min-h-[28px] pointer-coarse:min-h-[44px] px-2.5 py-1.5 text-label',
+    md: 'min-h-[36px] pointer-coarse:min-h-[44px] px-3 py-2 text-meta',
+    lg: 'min-h-[44px] pointer-coarse:min-h-[48px] px-[18px] py-2.5 text-body'
 };
 
 /** Square minimums for icon-only buttons, which have no text to widen them. */
@@ -54,15 +54,16 @@ const ICON_WIDTH: Record<ButtonSize, string> = {
 };
 
 const VARIANT: Record<ButtonVariant, string> = {
-    primary: 'rounded-[9px] font-semibold transition-opacity hover:opacity-90',
-    ghost: 'rounded-[8px] border text-text-secondary-soft transition-colors hover:text-text-primary',
-    subtle: 'rounded-button text-text-faint transition-colors hover:text-text-secondary',
-    icon: 'rounded-button border text-text-secondary transition-colors hover:text-text-primary'
+    primary: 'rounded-[9px] font-semibold hover:opacity-90',
+    ghost: 'rounded-[8px] border text-text-secondary-soft hover:text-text-primary',
+    subtle: 'rounded-button text-text-faint hover:text-text-secondary',
+    icon: 'rounded-button border text-text-secondary hover:text-text-primary'
 };
 
 const BASE =
-    'inline-flex items-center justify-center gap-1.5 outline-none ' +
-    'focus-visible:ring-1 focus-visible:ring-now-accent ' +
+    'inline-flex items-center justify-center gap-1.5 ' +
+    'transition-[color,background-color,border-color,opacity,scale] ' +
+    'motion-safe:enabled:active:scale-[0.97] ' +
     'disabled:cursor-not-allowed disabled:opacity-50';
 
 export const buttonClass = ({

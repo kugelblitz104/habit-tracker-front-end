@@ -38,13 +38,13 @@ export const TimeTrackedChart = ({
                     <BarChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -22 }}>
                         <XAxis
                             dataKey='label'
-                            tick={{ fontSize: 10, fill: 'var(--color-text-faint)' }}
+                            tick={{ fontSize: 12, fill: 'var(--color-text-faint)' }}
                             axisLine={false}
                             tickLine={false}
                         />
                         <YAxis
                             width={30}
-                            tick={{ fontSize: 10, fill: 'var(--color-text-faint)' }}
+                            tick={{ fontSize: 12, fill: 'var(--color-text-faint)' }}
                             axisLine={false}
                             tickLine={false}
                             unit='h'

@@ -114,7 +114,7 @@ export const UpdateUserForm = ({ user, handleUpdateUser }: UpdateUserFormProps) 
                             {fieldError && (
                                 <span
                                     id={`account-${field.name}-error`}
-                                    className='mt-1 block text-[11px] text-danger'
+                                    className='mt-1 block text-label text-danger'
                                 >
                                     {fieldError.message}
                                 </span>

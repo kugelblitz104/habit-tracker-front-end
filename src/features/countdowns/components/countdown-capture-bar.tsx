@@ -12,6 +12,7 @@ import { parseLocalDate } from '@/lib/date-utils';
 import { Plus } from 'lucide-react';
 import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { toast } from 'react-toastify';
+import { markJustCreated } from '@/lib/just-created';
 import { useCreateCountdown } from '../api/create-countdowns';
 import { useCountdownCategories } from '../api/get-countdown-categories';
 import { parseCountdownInput, type CountdownTokenType } from '../utils/parse-countdown-input';
@@ -144,7 +145,8 @@ export const CountdownCaptureBar = ({
         if (categoryId != null) data.category_id = categoryId;
 
         createCountdown.mutate(data, {
-            onSuccess: () => {
+            onSuccess: (countdown) => {
+                markJustCreated('countdown', countdown.id);
                 toast.success('Countdown created');
                 setValue('');
             },
@@ -190,7 +192,7 @@ export const CountdownCaptureBar = ({
                     ariaLabel='Add a countdown'
                     inputRef={inputRef}
                 />
-                <span className='hidden shrink-0 items-center gap-2 font-mono text-[10px] text-text-faint sm:flex'>
+                <span className='hidden shrink-0 items-center gap-2 font-mono text-label text-text-faint sm:flex'>
                     <span>↵ add</span>
                     <span>⇧↵ details</span>
                 </span>

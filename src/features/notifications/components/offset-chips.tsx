@@ -57,14 +57,14 @@ export const OffsetChips = ({ value, onChange, label, disabled = false }: Offset
                     {value.map((minutes) => (
                         <li
                             key={minutes}
-                            className='inline-flex items-center gap-1 rounded-chip border py-0.5 pl-2.5 pr-0.5 font-mono text-[12px] text-text-secondary'
+                            className='inline-flex items-center gap-1 rounded-chip border py-0.5 pl-2.5 pr-0.5 font-mono text-meta text-text-secondary'
                             style={themedInputStyle}
                         >
                             {offsetLabel(minutes)}
                             <Button
                                 variant='subtle'
                                 size='sm'
-                                className='!px-1'
+                                className='!px-1 min-w-[28px] pointer-coarse:min-w-[44px]'
                                 disabled={disabled}
                                 aria-label={`Remove ${label} ${offsetLabel(minutes)}`}
                                 onClick={() => {
@@ -120,7 +120,7 @@ export const OffsetChips = ({ value, onChange, label, disabled = false }: Offset
                 </div>
             )}
             {shownProblem && (
-                <p role='alert' className='text-[11.5px] text-text-muted'>
+                <p role='alert' className='text-meta text-text-muted'>
                     {PROBLEM_TEXT[shownProblem]}
                 </p>
             )}

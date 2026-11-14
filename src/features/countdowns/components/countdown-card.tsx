@@ -27,6 +27,8 @@ type CountdownCardProps = {
     categoryColor?: string;
     /** The countdown's group name, shown in the meta line when set. */
     categoryName?: string;
+    /** The user just created this one: fade in and wash once. */
+    fresh?: boolean;
 };
 
 /**
@@ -43,7 +45,8 @@ export const CountdownCard = ({
     linkState,
     actions,
     categoryColor,
-    categoryName
+    categoryName,
+    fresh = false
 }: CountdownCardProps) => {
     const hero = countdownHero(calc);
     const heroColor = groupColor(calc.group);
@@ -65,18 +68,18 @@ export const CountdownCard = ({
                     {hero.value}
                 </span>
                 {hero.unit && (
-                    <span className='font-mono text-[11px] uppercase tracking-[0.08em] text-text-faint'>
+                    <span className='font-mono text-label uppercase tracking-[0.08em] text-text-faint'>
                         {hero.unit}
                     </span>
                 )}
             </div>
             <div className='mt-2.5 flex items-center gap-1.5'>
-                <span className='min-w-0 truncate font-display text-[14px] text-text-secondary'>
+                <span className='min-w-0 truncate font-display text-body text-text-secondary'>
                     {countdown.title}
                 </span>
                 {nth && (
                     <span
-                        className='shrink-0 rounded-chip px-1.5 py-0.5 font-mono text-[10px] font-semibold'
+                        className='shrink-0 rounded-chip px-1.5 py-0.5 font-mono text-label font-semibold'
                         style={{ color: heroColor, backgroundColor: 'rgba(255,255,255,.06)' }}
                     >
                         {nth}
@@ -94,7 +97,7 @@ export const CountdownCard = ({
                     </Link>
                 )}
             </div>
-            <div className='mt-1 flex flex-wrap items-center gap-x-2 font-mono text-[11px] text-text-faint'>
+            <div className='mt-1 flex flex-wrap items-center gap-x-2 font-mono text-label text-text-faint'>
                 <span>
                     {dateLabel}
                     {time ? ` · ${time}` : ''}
@@ -114,7 +117,11 @@ export const CountdownCard = ({
         </>
     );
 
-    const className = 'relative flex min-w-0 flex-col rounded-card border p-4';
+    const className = `relative flex min-w-0 flex-col rounded-card border p-4 ${
+        fresh
+            ? 'motion-safe:animate-wash motion-safe:transition-opacity duration-[280ms] ease-settle motion-safe:starting:opacity-0'
+            : ''
+    }`;
     const style: React.CSSProperties = {
         ...CARD_SURFACE_STYLE,
         borderLeft: `3px solid ${accent}`

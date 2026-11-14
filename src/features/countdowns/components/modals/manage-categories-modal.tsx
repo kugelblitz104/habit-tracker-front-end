@@ -176,7 +176,7 @@ export const ManageCategoriesModal = ({
 
     return (
         <BaseModal isOpen={isOpen} onClose={onClose} title='Manage groups'>
-            <p className='font-mono text-[11px] text-text-faint'>
+            <p className='font-mono text-label text-text-faint'>
                 Deleting a group keeps its countdowns; they move to Other.
             </p>
             <QueryState
@@ -187,7 +187,7 @@ export const ManageCategoriesModal = ({
                 size='sm'
             />
             {!categoriesQuery.isError && !categoriesQuery.isLoading && categories.length === 0 && (
-                <p className='font-mono text-[12px] text-text-muted'>No groups yet.</p>
+                <p className='font-mono text-meta text-text-muted'>No groups yet.</p>
             )}
             {categories.length > 0 && (
                 <ul className='flex flex-col gap-2'>

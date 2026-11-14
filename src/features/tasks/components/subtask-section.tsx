@@ -20,6 +20,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ArrowUpFromLine, FolderInput, GripVertical, Trash2 } from 'lucide-react';
 import { Fragment, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { toast } from 'react-toastify';
+import { markJustCreated } from '@/lib/just-created';
 import { useCreateTask } from '../api/create-tasks';
 import { useDeleteTask } from '../api/delete-tasks';
 import { useTasks } from '../api/get-tasks';
@@ -228,6 +229,7 @@ export const SubtaskSection = ({ parent }: SubtaskSectionProps) => {
         createTask.mutate(
             { profile_id: parent.profile_id, parent_id: parent.id, title, sort_order: nextOrder },
             {
+                onSuccess: (subtask) => markJustCreated('task', subtask.id),
                 onError: () => {
                     toast.error('Failed to add subtask. Please try again.');
                     setNewTitle((current) => current || title);
@@ -261,7 +263,7 @@ export const SubtaskSection = ({ parent }: SubtaskSectionProps) => {
                     <button
                         type='button'
                         onClick={() => setHideDone((v) => !v)}
-                        className='font-mono text-[10px] uppercase tracking-[0.12em] text-text-faint transition-colors hover:text-text-secondary'
+                        className='font-mono text-label uppercase tracking-[0.12em] text-text-faint transition-colors hover:text-text-secondary'
                     >
                         {hideDone ? 'Show done' : 'Hide done'}
                     </button>

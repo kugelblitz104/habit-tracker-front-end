@@ -18,14 +18,14 @@ export const SECTION_LABEL_COLOR = '#a5988a';
 
 export const themedInputClass =
     'min-h-[28px] pointer-coarse:min-h-[44px] w-full rounded-[9px] border px-3 py-2.5 ' +
-    'font-display text-[14px] text-text-primary outline-none transition-colors ' +
-    'placeholder:text-text-faint focus-visible:ring-1 focus-visible:ring-now-accent';
+    'font-display text-body text-text-primary outline-none transition-colors ' +
+    'placeholder:text-text-faint';
 
 export const themedInputStyle: CSSProperties = {
     backgroundColor: 'rgba(255,255,255,.04)',
     borderColor: 'rgba(255,255,255,.1)'
 };
 
-export const fieldLabelClass = 'mb-1.5 block text-[11.5px]';
+export const fieldLabelClass = 'mb-1.5 block text-meta';
 
 export const fieldLabelStyle: CSSProperties = { color: '#9a8f81' };

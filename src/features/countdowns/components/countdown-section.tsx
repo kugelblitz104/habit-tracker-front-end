@@ -4,6 +4,7 @@ import {
     type CountdownRepeat
 } from '@/features/countdowns/utils/countdown';
 import { Button } from '@/components/ui/buttons/button';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { useAuth } from '@/lib/auth-context';
 import { useNow } from '@/lib/use-now';
 import { useEffect, useMemo, useState } from 'react';
@@ -115,16 +116,17 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
     return (
         <section className='mb-[30px]'>
             <div className='mb-[13px] flex flex-wrap items-center gap-3'>
-                <h2 className='font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-text-muted'>
+                <h2 className='font-mono text-meta font-semibold uppercase tracking-[0.16em] text-habit-label'>
                     Countdowns
                 </h2>
                 {/* gap-1 (not the original gap-0.5) so the grown `sm` buttons don't
                     visually touch - these grow in place rather than via
                     expandHitArea, since eight overlapping 44px hit areas in one
                     pill would misroute taps. */}
-                <span
+                <SegmentedControl
                     className='flex items-center gap-1 rounded-chip border p-0.5'
                     style={{ borderColor: 'var(--surface-input-border)' }}
+                    highlightStyle={{ backgroundColor: 'rgba(255,255,255,.06)' }}
                 >
                     {COUNTDOWN_RANGE_PRESETS.map((preset) => {
                         const selected = preset.days === windowDays;
@@ -141,11 +143,9 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
                                 // deliberate pill shape (radius has no hover state,
                                 // so overriding it via style loses nothing).
                                 style={{
-                                    fontSize: '10px',
+                                    fontSize: '12px',
                                     borderRadius: 'var(--radius-chip)',
-                                    backgroundColor: selected
-                                        ? 'rgba(255,255,255,.06)'
-                                        : 'transparent',
+                                    backgroundColor: 'transparent',
                                     color: selected
                                         ? 'var(--color-now-accent)'
                                         : 'var(--color-text-muted)'
@@ -155,7 +155,7 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
                             </Button>
                         );
                     })}
-                </span>
+                </SegmentedControl>
                 {/* One `ml-auto` group rather than a `flex-1` spacer before the
                     chips: inside a wrapping row the spacer absorbs the first
                     row's slack, stranding whichever chip still fits out at the
@@ -172,7 +172,7 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
                                 onClick={() => toggleCategory(categoryId)}
                                 aria-pressed={!isHidden}
                                 title={isHidden ? 'Show this group' : 'Hide this group'}
-                                className='inline-flex min-h-[24px] items-center gap-1.5 font-mono text-[11px] transition-opacity pointer-coarse:min-h-[44px]'
+                                className='inline-flex min-h-[24px] items-center gap-1.5 font-mono text-label transition-opacity pointer-coarse:min-h-[44px]'
                                 style={{
                                     color: 'var(--color-text-muted)',
                                     opacity: isHidden ? 0.45 : 1
@@ -197,7 +197,7 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
                     })}
                     <Link
                         to='/countdown'
-                        className='inline-flex min-h-[24px] items-center font-mono text-[11px] text-text-faint transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary'
+                        className='inline-flex min-h-[24px] items-center font-mono text-label text-text-faint transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary'
                     >
                         View all
                     </Link>
@@ -205,14 +205,14 @@ export const CountdownSection = ({ profileId }: { profileId: number | null | und
             </div>
 
             {groups.length === 0 ? (
-                <p className='font-mono text-[12px] text-text-faint'>
+                <p className='font-mono text-meta text-text-faint'>
                     Nothing in this range. Widen it or show a hidden group.
                 </p>
             ) : (
                 <div className='flex flex-col gap-[18px]'>
                     {groups.map((group) => (
                         <div key={`cat-${group.categoryId ?? 'none'}`}>
-                            <div className='mb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-text-faint'>
+                            <div className='mb-2 font-mono text-label font-semibold uppercase tracking-[0.16em] text-text-faint'>
                                 {group.name}
                             </div>
                             <div className='grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3'>

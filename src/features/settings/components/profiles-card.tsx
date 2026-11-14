@@ -87,20 +87,20 @@ export const ProfilesCard = () => {
                             <ProfileAvatar profile={profile} size={34} />
                             <div className='min-w-0 flex-1'>
                                 <div
-                                    className={`truncate text-[15px] font-semibold ${
+                                    className={`truncate text-lead font-semibold ${
                                         isActive ? 'text-text-primary' : 'text-text-secondary'
                                     }`}
                                 >
                                     {profile.name}
                                 </div>
-                                <div className='mt-0.5 truncate font-mono text-[11px] text-text-muted'>
+                                <div className='mt-0.5 truncate font-mono text-label text-text-muted'>
                                     {profileSummary(profile)}
                                 </div>
                             </div>
 
                             {isActive ? (
                                 <span
-                                    className='rounded-chip px-2.5 py-1 font-mono text-[10px] font-medium uppercase tracking-[0.08em]'
+                                    className='rounded-chip px-2.5 py-1 font-mono text-label font-medium uppercase tracking-[0.08em]'
                                     style={{
                                         color: 'var(--color-status-duetoday)',
                                         backgroundColor: 'var(--status-duetoday-bg)'
@@ -147,7 +147,7 @@ export const ProfilesCard = () => {
                     <button
                         type='button'
                         onClick={() => setCreating(true)}
-                        className='flex min-h-[36px] items-center justify-center gap-2 rounded-row border border-dashed p-3 text-[13px] text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary'
+                        className='flex min-h-[36px] items-center justify-center gap-2 rounded-row border border-dashed p-3 text-body text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary'
                         style={{ borderColor: 'rgba(255,255,255,.12)' }}
                     >
                         <Plus size={15} />

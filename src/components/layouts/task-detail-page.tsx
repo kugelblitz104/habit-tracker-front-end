@@ -2,7 +2,7 @@ import { AppHeader } from '@/components/layouts/app-header';
 import { useDetailOrigin } from '@/components/layouts/detail-origin';
 import { BackLink } from '@/components/ui/back-link';
 import { ErrorPage } from '@/components/layouts/error-page';
-import { LoadingPage } from '@/components/layouts/loading-page';
+import { LoadingContent } from '@/components/layouts/loading-page';
 import { getTaskQueryOptions, useTaskBySlug } from '@/features/tasks/api/get-tasks';
 import { TaskDetailBody } from '@/features/tasks/components/task-detail-body';
 import { parseEntityRef } from '@/lib/entity-ref';
@@ -23,7 +23,7 @@ function TaskDetailShell({ children }: { children: React.ReactNode }) {
                     to={backTo}
                     label={backLabel}
                     ariaLabel={ariaLabel}
-                    className='mb-4 font-mono text-[12.5px] text-text-muted transition-colors hover:text-text-secondary'
+                    className='mb-4 font-mono text-meta text-text-muted transition-colors hover:text-text-secondary'
                 />
 
                 <div className='mx-auto max-w-[640px]'>{children}</div>
@@ -70,7 +70,7 @@ function TaskDetailBySlug({ slug }: { slug: string }) {
         queryClient.setQueryData(getTaskQueryOptions(task.id).queryKey, task);
     }
 
-    if (slugQuery.isPending) return <LoadingPage />;
+    if (slugQuery.isPending) return <LoadingContent />;
     if (!task) {
         return <ErrorPage message="That task link doesn't match a task in this profile." />;
     }

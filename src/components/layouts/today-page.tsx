@@ -1,5 +1,6 @@
 import { PageShell } from '@/components/layouts/page-shell';
 import { QueryState } from '@/components/ui/query-state';
+import { RollingNumber } from '@/components/ui/rolling-number';
 import { TodaySchedule } from '@/features/calendar/components/today-schedule';
 import { ActiveTimerPanel } from '@/features/time-entries/components/active-timer-panel';
 import { CountdownSection } from '@/features/countdowns/components/countdown-section';
@@ -97,7 +98,6 @@ export const TodayDashboard = () => {
         const now = new Date();
         return `${WEEKDAYS[now.getDay()]}, ${formatShortDate(now)}`;
     }, []);
-    const subline = `${openCount} open`;
 
     // Status roll-up shown under the header: in-progress (incl. scheduled) and
     // blocked (incl. needs-info) count top-level tasks only; "done today" counts
@@ -146,13 +146,17 @@ export const TodayDashboard = () => {
         >
             {/* Header */}
             <header className='mb-[30px]'>
-                <h1 className='font-display text-[23px] font-bold tracking-[-0.01em] text-text-primary'>
+                <h1 className='font-display text-title font-bold tracking-[-0.01em] text-text-primary'>
                     {headerDate}
                 </h1>
-                <div className='mt-1.5 flex flex-wrap items-center gap-2 font-mono text-[11px]'>
-                    <span className='text-text-muted'>{subline}</span>
+                <div className='mt-1.5 flex flex-wrap items-center gap-x-1 gap-y-0.5 font-mono sm:gap-x-2 text-label'>
+                    <span className='text-text-muted'>
+                        <RollingNumber value={openCount} /> open
+                    </span>
                     <span className='text-text-faint'>·</span>
-                    <span className='text-text-muted'>{statusCounts.inProgress} in progress</span>
+                    <span className='text-text-muted'>
+                        <RollingNumber value={statusCounts.inProgress} /> in progress
+                    </span>
                     <span className='text-text-faint'>·</span>
                     <span
                         style={
@@ -161,10 +165,12 @@ export const TodayDashboard = () => {
                                 : { color: 'var(--color-text-muted)' }
                         }
                     >
-                        {statusCounts.blocked} blocked
+                        <RollingNumber value={statusCounts.blocked} /> blocked
                     </span>
                     <span className='text-text-faint'>·</span>
-                    <span className='text-text-muted'>{statusCounts.doneToday} done today</span>
+                    <span className='text-text-muted'>
+                        <RollingNumber value={statusCounts.doneToday} /> done today
+                    </span>
                 </div>
             </header>
 

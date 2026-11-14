@@ -110,11 +110,11 @@ export const RegistrationPage = () => {
                             label='Create account'
                         />
                         {registrationError && (
-                            <div className='font-mono text-[11px] text-danger'>
+                            <div className='font-mono text-label text-danger'>
                                 {registrationError}
                             </div>
                         )}
-                        <div className='text-center text-[13px] text-text-muted'>
+                        <div className='text-center text-body text-text-muted'>
                             Already have an account?{' '}
                             <Link
                                 to='/login'

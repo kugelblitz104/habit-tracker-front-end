@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/forms/input';
 export type HighlightSegment = { text: string; type: string };
 
 // Shared with the input so the overlay glyphs sit exactly under the real text.
-const SHARED_TEXT_CLASS = 'font-display text-[14px] leading-normal tracking-normal';
+const SHARED_TEXT_CLASS = 'font-display text-body leading-normal tracking-normal';
 
 // Shared with the input's `task` tier (border + px-2.5/py-1.5) so the overlay's
 // content box has the same left offset as the real input's; a tier change here

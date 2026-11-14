@@ -37,6 +37,8 @@ export type HabitListProps = {
     /** Wide (lg/xl) master-detail: name clicks open the pane instead of navigating. */
     isWide?: boolean;
     selectedHabitId?: number | null;
+    /** Id returned by the capture bar's create call; that row washes in. */
+    newHabitId?: number | null;
     onSelectHabit?: (habitId: number) => void;
     /** When true, render one section per category (alphabetical, Uncategorized last). */
     groupByCategory?: boolean;
@@ -52,6 +54,7 @@ export const HabitList = ({
     isSmall = false,
     isWide = false,
     selectedHabitId = null,
+    newHabitId = null,
     onSelectHabit,
     groupByCategory = false,
     onToggleGroupByCategory,
@@ -175,7 +178,7 @@ export const HabitList = ({
 
     if (!habits || habits.length === 0) {
         return (
-            <div className='rounded-card border border-dashed border-[var(--habit-container-border)] px-5 py-10 text-center font-mono text-[13px] text-[#8ba3b5]'>
+            <div className='rounded-card border border-dashed border-[var(--habit-container-border)] px-5 py-10 text-center font-mono text-body text-[#8ba3b5]'>
                 No habits found.
             </div>
         );
@@ -230,7 +233,7 @@ export const HabitList = ({
                 />
             </div>
             {showAllDone ? (
-                <div className='rounded-card border border-dashed border-[var(--habit-container-border)] px-5 py-10 text-center font-mono text-[13px] text-[#8ba3b5]'>
+                <div className='rounded-card border border-dashed border-[var(--habit-container-border)] px-5 py-10 text-center font-mono text-body text-[#8ba3b5]'>
                     Everything done for today! 🎉
                 </div>
             ) : (
@@ -241,8 +244,8 @@ export const HabitList = ({
                                 <tr className='border-b border-[var(--habit-container-border)]'>
                                     <th
                                         scope='col'
-                                        className={`px-4 py-3 text-left font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--color-habit-label)] ${
-                                            isSmall ? 'w-[42%] max-w-[42%]' : 'w-1/4'
+                                        className={`px-4 py-3 text-left font-mono text-label font-medium uppercase tracking-[0.12em] text-[var(--color-habit-label)] ${
+                                            isSmall ? 'w-[46%] max-w-[46%]' : 'w-1/4'
                                         }`}
                                     >
                                         Habit
@@ -250,7 +253,7 @@ export const HabitList = ({
                                     {!isSmall && (
                                         <th
                                             scope='col'
-                                            className='w-12 py-3 text-center font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--color-habit-label)]'
+                                            className='w-12 py-3 text-center font-mono text-label font-medium uppercase tracking-[0.12em] text-[var(--color-habit-label)]'
                                         >
                                             Streak
                                         </th>
@@ -259,7 +262,7 @@ export const HabitList = ({
                                         <th
                                             key={i}
                                             scope='col'
-                                            className={`w-9 py-3 text-center font-mono text-[10px] ${
+                                            className={`w-9 py-3 text-center font-mono text-label ${
                                                 i === 0
                                                     ? 'text-[var(--color-habit-accent)]'
                                                     : 'text-[#5f7688]'
@@ -291,7 +294,7 @@ export const HabitList = ({
                                                 <tr className='border-b border-[rgba(120,168,205,.08)]'>
                                                     <td
                                                         colSpan={1 + (isSmall ? 0 : 1) + days}
-                                                        className='px-4 pb-1.5 pt-4 font-mono text-[10px] uppercase tracking-[0.14em] text-habit-label'
+                                                        className='px-4 pb-1.5 pt-4 font-mono text-label uppercase tracking-[0.14em] text-habit-label'
                                                     >
                                                         {category}
                                                     </td>
@@ -308,6 +311,7 @@ export const HabitList = ({
                                                         isSmall={isSmall}
                                                         isWide={isWide}
                                                         isSelected={selectedHabitId === habit.id}
+                                                        isNew={newHabitId === habit.id}
                                                         onSelectHabit={onSelectHabit}
                                                         filterIncomplete={incompleteActive}
                                                         row={row}
@@ -324,8 +328,10 @@ export const HabitList = ({
                     </div>
                 </div>
             )}
-            <div className='font-mono text-[10.5px] text-[#5f7688]'>
-                Right click to add or edit notes
+            <div className='font-mono text-label text-[#5f7688]'>
+                <span className='pointer-coarse:hidden'>Right click</span>
+                <span className='hidden pointer-coarse:inline'>Long press</span> to add or edit
+                notes
             </div>
             <NoteDialog
                 isOpen={noteDialog.isOpen}

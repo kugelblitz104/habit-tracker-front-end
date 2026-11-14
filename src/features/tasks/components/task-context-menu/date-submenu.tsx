@@ -46,7 +46,7 @@ export const DateSubmenu = ({
                     className={`${itemClass} text-text-secondary`}
                 >
                     {quickLabel}
-                    <span className='ml-auto font-mono text-[10.5px] text-text-faint'>
+                    <span className='ml-auto font-mono text-label text-text-faint'>
                         {formatShortDate(parseLocalDate(date))}
                     </span>
                 </button>

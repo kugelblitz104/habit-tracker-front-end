@@ -48,7 +48,7 @@ export const TaskDetailTimestamps = ({
             // Located by testid in e2e, as the priority meter is: every label
             // here is time-relative, so there is no stable string to match on.
             data-testid='task-detail-timestamps'
-            className='flex flex-wrap items-center gap-x-[6px] gap-y-[2px] border-t pt-[10px] font-mono text-[11px] text-text-faint'
+            className='flex flex-wrap items-center gap-x-[6px] gap-y-[2px] border-t pt-[10px] font-mono text-label text-text-faint'
             style={{ borderColor: 'var(--surface-card-border)' }}
         >
             {stamps.map(({ label, value, relative }, index) => (

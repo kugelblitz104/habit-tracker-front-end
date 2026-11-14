@@ -15,7 +15,7 @@ const PROVIDER_LABEL: Record<string, string> = {
 };
 
 const LINKED_ACTION_CLASS =
-    'inline-flex items-center gap-1 rounded-button border px-2 py-1 font-mono text-[11px] pointer-coarse:min-h-[44px] text-text-muted transition-colors hover:text-text-secondary disabled:opacity-50';
+    'inline-flex items-center gap-1 rounded-button border px-2 py-1 font-mono text-label pointer-coarse:min-h-[44px] text-text-muted transition-colors hover:text-text-secondary disabled:opacity-50';
 
 type Props = {
     task: TaskRead;
@@ -126,7 +126,7 @@ export const TaskIntegrationActions = ({ task }: Props) => {
 
     return (
         <div>
-            <h3 className='mb-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-text-faint'>
+            <h3 className='mb-1.5 font-mono text-label uppercase tracking-[0.14em] text-text-faint'>
                 Link
             </h3>
 
@@ -146,7 +146,7 @@ export const TaskIntegrationActions = ({ task }: Props) => {
                             href={task.external_url!}
                             target='_blank'
                             rel='noreferrer'
-                            className='inline-flex min-h-[24px] min-w-0 items-center gap-1 font-mono text-[12px] pointer-coarse:min-h-[44px]'
+                            className='inline-flex min-h-[24px] min-w-0 items-center gap-1 font-mono text-meta pointer-coarse:min-h-[44px]'
                             style={{ color: externalLinkChipStyle(task.source).color }}
                         >
                             <span className='truncate'>{task.external_ref}</span>
@@ -185,7 +185,7 @@ export const TaskIntegrationActions = ({ task }: Props) => {
                                 onClick={() => handlePublish(c.id)}
                                 disabled={publishingId === c.id}
                                 title={`Create a new item in ${c.name}`}
-                                className='inline-flex items-center gap-1 rounded-button border px-2.5 py-1 font-mono text-[11.5px] pointer-coarse:min-h-[44px] text-text-secondary transition-colors hover:text-text-primary disabled:opacity-50'
+                                className='inline-flex items-center gap-1 rounded-button border px-2.5 py-1 font-mono text-meta pointer-coarse:min-h-[44px] text-text-secondary transition-colors hover:text-text-primary disabled:opacity-50'
                                 style={{ borderColor: 'rgba(255,255,255,.12)' }}
                             >
                                 <Send size={12} />
@@ -198,7 +198,7 @@ export const TaskIntegrationActions = ({ task }: Props) => {
                             <button
                                 type='button'
                                 onClick={() => setLinking(true)}
-                                className='inline-flex items-center gap-1 rounded-button border px-2.5 py-1 font-mono text-[11.5px] pointer-coarse:min-h-[44px] text-text-muted transition-colors hover:text-text-secondary'
+                                className='inline-flex items-center gap-1 rounded-button border px-2.5 py-1 font-mono text-meta pointer-coarse:min-h-[44px] text-text-muted transition-colors hover:text-text-secondary'
                                 style={{ borderColor: 'rgba(255,255,255,.12)' }}
                             >
                                 <Link2 size={12} />

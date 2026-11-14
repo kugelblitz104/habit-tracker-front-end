@@ -1,6 +1,7 @@
 import { CaptureFormCard } from '@/components/ui/forms/capture-form-card';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
+import { markJustCreated } from '@/lib/just-created';
 import { useCreateCountdown } from '../api/create-countdowns';
 import type { CountdownCaptureDraft } from './countdown-capture-bar';
 import { CountdownFormFields, type CountdownFormValues } from './countdown-form-fields';
@@ -49,7 +50,8 @@ export const CountdownCaptureForm = ({
                 show_occurrence: values.showOccurrence
             },
             {
-                onSuccess: () => {
+                onSuccess: (countdown) => {
+                    markJustCreated('countdown', countdown.id);
                     toast.success('Countdown created');
                     onClose();
                 },

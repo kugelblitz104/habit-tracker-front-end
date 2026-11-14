@@ -36,10 +36,10 @@ export const DaySection = ({
 }: DaySectionProps) => (
     <section aria-busy={isBusy}>
         <div className='mb-2.5 flex items-center gap-2'>
-            <h2 className='font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-text-muted'>
+            <h2 className='font-mono text-label font-semibold uppercase tracking-[0.16em] text-text-muted'>
                 {title}
             </h2>
-            {meta && <span className='font-mono text-[11px] text-text-faint'>{meta}</span>}
+            {meta && <span className='font-mono text-label text-text-faint'>{meta}</span>}
         </div>
 
         <QueryState
@@ -51,7 +51,7 @@ export const DaySection = ({
         />
 
         {!isError && !isLoading && isEmpty && (
-            <p className='font-mono text-[11px] text-text-faint'>{emptyMessage}</p>
+            <p className='font-mono text-label text-text-faint'>{emptyMessage}</p>
         )}
 
         {!isEmpty && <ul className='flex flex-col'>{children}</ul>}
@@ -72,7 +72,7 @@ type DayRowProps = {
 };
 
 const titleClass =
-    'flex min-h-[24px] min-w-0 flex-1 items-center py-1 text-left font-display text-[13.5px] text-text-muted pointer-coarse:min-h-[44px]';
+    'flex min-h-[24px] min-w-0 flex-1 items-center py-1 text-left font-display text-body text-text-muted pointer-coarse:min-h-[44px]';
 
 export const DayRow = ({ dotColor, title, onClick, selected, struck, trailing }: DayRowProps) => (
     <li
@@ -106,7 +106,7 @@ export const DayRow = ({ dotColor, title, onClick, selected, struck, trailing }:
             </span>
         )}
         {trailing && (
-            <div className='shrink-0 font-mono text-[10px] text-text-faint'>{trailing}</div>
+            <div className='shrink-0 font-mono text-label text-text-faint'>{trailing}</div>
         )}
     </li>
 );

@@ -23,7 +23,7 @@ const nowLocalInput = (offsetMinutes = 0): string =>
     toDateTimeLocal(new Date(Date.now() + offsetMinutes * 60_000));
 
 const fieldLabelClass =
-    'mb-1 block font-mono text-[10px] uppercase tracking-[0.1em] text-text-faint';
+    'mb-1 block font-mono text-label uppercase tracking-[0.1em] text-text-faint';
 const inputClass = formFieldClass;
 const inputStyle: CSSProperties = { ...formFieldStyle, colorScheme: 'dark' };
 
@@ -114,7 +114,7 @@ export const ManualEntryForm = ({ isOpen, onClose, profileId }: ManualEntryFormP
                                     type='button'
                                     onClick={() => setTargetType(option.type)}
                                     aria-pressed={selected}
-                                    className='min-h-[24px] rounded-chip px-3 py-1 font-mono text-[11px] uppercase tracking-[0.08em] transition-colors pointer-coarse:min-h-[44px]'
+                                    className='min-h-[24px] rounded-chip px-3 py-1 font-mono text-label uppercase tracking-[0.08em] transition-colors pointer-coarse:min-h-[44px]'
                                     style={{
                                         backgroundColor: selected
                                             ? 'rgba(255,255,255,.06)'
@@ -187,7 +187,7 @@ export const ManualEntryForm = ({ isOpen, onClose, profileId }: ManualEntryFormP
                 </div>
 
                 {rangeInvalid && (
-                    <p className='font-mono text-[11px] text-danger'>
+                    <p className='font-mono text-label text-danger'>
                         End must be on or after start.
                     </p>
                 )}
@@ -197,7 +197,7 @@ export const ManualEntryForm = ({ isOpen, onClose, profileId }: ManualEntryFormP
                         type='button'
                         onClick={handleClose}
                         disabled={createTimeEntry.isPending}
-                        className='inline-flex min-h-[36px] items-center gap-1.5 rounded-button px-3 py-1.5 font-mono text-[11.5px] text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary disabled:opacity-50'
+                        className='inline-flex min-h-[36px] items-center gap-1.5 rounded-button px-3 py-1.5 font-mono text-meta text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary disabled:opacity-50'
                     >
                         Cancel
                     </button>
@@ -205,7 +205,7 @@ export const ManualEntryForm = ({ isOpen, onClose, profileId }: ManualEntryFormP
                         type='button'
                         onClick={handleSubmit}
                         disabled={!canSubmit || createTimeEntry.isPending}
-                        className='inline-flex min-h-[36px] items-center gap-1.5 rounded-button px-3.5 py-1.5 font-display text-[12.5px] font-semibold transition-opacity pointer-coarse:min-h-[44px] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50'
+                        className='inline-flex min-h-[36px] items-center gap-1.5 rounded-button px-3.5 py-1.5 font-display text-meta font-semibold transition-opacity pointer-coarse:min-h-[44px] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50'
                         style={{
                             background: 'var(--button-primary-gradient)',
                             color: 'var(--button-primary-text)'

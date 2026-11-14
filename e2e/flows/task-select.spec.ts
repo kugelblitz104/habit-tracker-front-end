@@ -81,6 +81,9 @@ const filterToBeta = async (page: Page) => {
     await filtersButton(page).click();
     await projectFilter(page).selectOption({ label: GOLDEN.projects.beta });
     await page.keyboard.press('Escape');
+    // The panel has a short leave transition, and its own "All" buttons stay in
+    // the tree until it ends.
+    await expect(projectFilter(page)).toBeHidden();
     for (const title of betaTasks) await expect(cardTitle(page, title)).toBeVisible();
     await expect(cardTitle(page, GOLDEN.tasks.now)).toHaveCount(0);
 };

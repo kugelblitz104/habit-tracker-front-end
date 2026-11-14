@@ -121,13 +121,20 @@ export const getDisplayStatusForDate = (
  * @param status - The tracker status
  * @param className - Optional CSS class for the icon
  * @param habitColor - Optional habit color to use for completed/auto-skipped states
+ * @param animate - Draw the check in and pop it (COMPLETED only)
  */
-export const getTrackerIcon = (status: DisplayStatus, habitColor?: string) => {
+export const getTrackerIcon = (status: DisplayStatus, habitColor?: string, animate = false) => {
     const iconClass = 'w-5 h-5';
 
     switch (status) {
         case DisplayStatus.COMPLETED:
-            return <Check className={iconClass} color={habitColor || 'green'} strokeWidth={3} />;
+            return (
+                <Check
+                    className={`${iconClass} ${animate ? 'motion-safe:animate-pop motion-safe:[&_path]:animate-draw' : ''}`}
+                    color={habitColor || 'green'}
+                    strokeWidth={3}
+                />
+            );
         case DisplayStatus.SKIPPED:
             // Dashed container establishes the shared "dashed = skipped" language
             // used on the calendar, keeping it clearly distinct from the plain

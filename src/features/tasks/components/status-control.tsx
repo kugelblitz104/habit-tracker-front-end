@@ -1,5 +1,5 @@
 import type { TaskUpdate } from '@/api';
-import { POPOVER_PANEL_CLASS, popoverPanelStyle } from '@/components/ui/menu';
+import { POPOVER_MOTION_CLASS, POPOVER_PANEL_CLASS, popoverPanelStyle } from '@/components/ui/menu';
 import { apiErrorMessage } from '@/lib/api-error-message';
 import { TaskStatus, type TaskBand } from '@/types/types';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
@@ -121,7 +121,7 @@ export const StatusControl = ({
                     // No hit-target here: the labelled pill sits in a meta row
                     // beside other fields, and a 44px overlay would extend over
                     // them. It grows with min-height instead.
-                    className='flex min-h-[24px] items-center gap-[5px] rounded-button border px-[6px] text-[13px] leading-none outline-none transition-colors hover:brightness-125 focus-visible:ring-2 focus-visible:ring-now-accent disabled:cursor-not-allowed disabled:opacity-50 pointer-coarse:min-h-[44px]'
+                    className='flex min-h-[24px] items-center gap-[5px] rounded-button border px-[6px] text-body leading-none outline-none transition-colors hover:brightness-125 disabled:cursor-not-allowed disabled:opacity-50 pointer-coarse:min-h-[44px]'
                     style={{ borderColor: 'var(--surface-input-border)' }}
                 >
                     <StatusGlyph status={status} size={16} color={current.color} />
@@ -139,7 +139,7 @@ export const StatusControl = ({
                     // lives on the glyph, not the button, and Button's variant chrome
                     // (border/background) would visually grow an isolated round glyph
                     // that every task row repeats.
-                    className='hit-target flex items-center justify-center rounded-full outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-now-accent disabled:cursor-not-allowed disabled:opacity-50'
+                    className='hit-target flex items-center justify-center rounded-full outline-none transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50 [&>svg]:transition-[scale] motion-safe:enabled:active:[&>svg]:scale-90'
                 >
                     <StatusGlyph status={status} size={size} color={current.color} />
                 </PopoverButton>
@@ -148,7 +148,8 @@ export const StatusControl = ({
                 anchor={{ to: openUpward ? 'top start' : 'bottom start', gap: 8 }}
                 // The scheduled step renders the context menu's own DateSubmenu,
                 // so it takes that menu's width rather than the status list's.
-                className={`${step === 'scheduled' ? 'w-56' : 'w-52'} ${POPOVER_PANEL_CLASS}`}
+                transition
+                className={`${step === 'scheduled' ? 'w-56' : 'w-52'} ${POPOVER_PANEL_CLASS} ${POPOVER_MOTION_CLASS}`}
                 style={popoverPanelStyle}
             >
                 {({ close }) =>
@@ -164,7 +165,7 @@ export const StatusControl = ({
                             onSave={(values) => saveFollowUp(values, close)}
                         />
                     ) : (
-                        <ul className='font-display text-[13px]'>
+                        <ul className='font-display text-body'>
                             {STATUS_ORDER.map((s) => {
                                 const meta = STATUS_META[s];
                                 const isCurrent = s === status;

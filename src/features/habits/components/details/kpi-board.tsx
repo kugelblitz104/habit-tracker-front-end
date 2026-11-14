@@ -10,9 +10,9 @@ type KpiBoardProps = {
     compact?: boolean;
 };
 
-const LABEL = 'font-mono text-[9px] uppercase tracking-[0.1em] text-[#7f93a5]';
+const LABEL = 'font-mono text-label uppercase tracking-[0.1em] text-[#7f93a5]';
 const VALUE = 'font-display text-[27px] font-bold leading-none text-[#e6eef4]';
-const SUB = 'text-[11px] text-[#7f93a5]';
+const SUB = 'text-label text-[#7f93a5]';
 const CARD =
     'bg-[var(--habit-container-bg)] border border-[var(--habit-container-border)] rounded-[12px] px-3 py-[15px] flex flex-col gap-[5px] items-center text-center';
 
@@ -61,7 +61,7 @@ const Ring = ({ fraction, accent }: { fraction: number; accent: string }) => {
                     width: 31,
                     height: 31,
                     background: 'var(--bg)',
-                    fontSize: 11,
+                    fontSize: 12,
                     color: '#c6d6e2'
                 }}
             >

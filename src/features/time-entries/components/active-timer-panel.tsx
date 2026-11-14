@@ -40,9 +40,15 @@ export const ActiveTimerPanel = () => {
     return (
         <section className='mb-[30px]'>
             <div className='mb-2.5 flex items-center gap-2'>
-                <h2 className='font-mono text-[11.5px] uppercase tracking-[0.16em] text-text-muted'>
+                <h2 className='font-mono text-meta uppercase tracking-[0.16em] text-habit-label'>
                     Timer
                 </h2>
+                {active && (
+                    <span
+                        aria-hidden='true'
+                        className='size-2 rounded-full bg-now-accent motion-safe:animate-breathe'
+                    />
+                )}
             </div>
 
             {active ? (
@@ -83,7 +89,7 @@ export const ActiveTimerPanel = () => {
                                     }}
                                 />
                                 {context && (
-                                    <span className='shrink-0 truncate font-mono text-[11px] text-text-faint'>
+                                    <span className='shrink-0 truncate font-mono text-label text-text-faint'>
                                         · {context}
                                     </span>
                                 )}
@@ -95,7 +101,7 @@ export const ActiveTimerPanel = () => {
                             type='button'
                             onClick={handleStop}
                             disabled={isStopping}
-                            className='inline-flex min-h-[30px] items-center gap-1.5 rounded-button border px-3 py-1.5 font-display text-[12.5px] font-semibold transition-colors pointer-coarse:min-h-[44px] hover:brightness-125 disabled:opacity-50'
+                            className='inline-flex min-h-[30px] items-center gap-1.5 rounded-button border px-3 py-1.5 font-display text-meta font-semibold transition-colors pointer-coarse:min-h-[44px] hover:brightness-125 disabled:opacity-50'
                             style={{
                                 borderColor: 'var(--danger-border)',
                                 color: 'var(--color-danger)'
@@ -106,7 +112,7 @@ export const ActiveTimerPanel = () => {
                         </button>
                         <Link
                             to='/timer'
-                            className='inline-flex min-h-[30px] items-center rounded-button px-3 py-1.5 font-display text-[12.5px] text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary'
+                            className='inline-flex min-h-[30px] items-center rounded-button px-3 py-1.5 font-display text-meta text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary'
                         >
                             Open
                         </Link>
@@ -115,7 +121,7 @@ export const ActiveTimerPanel = () => {
             ) : (
                 <Link
                     to='/timer'
-                    className='flex items-center gap-2 rounded-card border px-4 py-3 font-mono text-[12px] text-text-faint transition-colors hover:text-text-muted'
+                    className='flex items-center gap-2 rounded-card border px-4 py-3 font-mono text-meta text-text-faint transition-colors hover:text-text-muted'
                     style={CARD_SURFACE_STYLE}
                 >
                     <Timer size={14} />

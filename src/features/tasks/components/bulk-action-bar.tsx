@@ -1,5 +1,5 @@
 import type { ProjectRead } from '@/api';
-import { POPOVER_PANEL_CLASS, popoverPanelStyle } from '@/components/ui/menu';
+import { POPOVER_MOTION_CLASS, POPOVER_PANEL_CLASS, popoverPanelStyle } from '@/components/ui/menu';
 import { TaskStatus } from '@/types/types';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { ChevronDown, Trash2, X } from 'lucide-react';
@@ -25,7 +25,7 @@ type BulkActionBarProps = {
 // Both floors, both axes: the same 24px AA / 44px coarse pair `button-styles.ts`
 // applies. `All` and the delete icon are each under 44 wide on their content alone.
 const barButtonClass =
-    'flex min-h-[24px] min-w-[24px] items-center justify-center gap-1 rounded-button px-2.5 py-1 font-mono text-[11px] text-text-secondary outline-none transition-colors pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] hover:bg-white/5 hover:text-text-primary focus-visible:ring-1 focus-visible:ring-now-accent disabled:opacity-50';
+    'flex min-h-[24px] min-w-[24px] items-center justify-center gap-1 rounded-button px-2.5 py-1 font-mono text-label text-text-secondary outline-none transition-colors pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] hover:bg-white/5 hover:text-text-primary disabled:opacity-50';
 
 /** Hairline group separator. Only meaningful in the single-row desktop pill. */
 const dividerClass = 'mx-1 hidden h-4 w-px bg-white/10 sm:block';
@@ -66,7 +66,7 @@ export const BulkActionBar = ({
             // the bar. Same opaque `--bg` the popovers it opens already use.
             style={popoverPanelStyle}
         >
-            <span className='px-1 font-mono text-[11px] text-text-muted'>{count} selected</span>
+            <span className='px-1 font-mono text-label text-text-muted'>{count} selected</span>
 
             <button
                 type='button'
@@ -89,8 +89,9 @@ export const BulkActionBar = ({
                     <ChevronDown size={12} />
                 </PopoverButton>
                 <PopoverPanel
+                    transition
                     anchor={{ to: 'top start', gap: 8, padding: 12 }}
-                    className={`${POPOVER_PANEL_CLASS} w-52`}
+                    className={`${POPOVER_PANEL_CLASS} ${POPOVER_MOTION_CLASS} w-52`}
                     style={popoverPanelStyle}
                 >
                     {({ close }) => (
@@ -112,8 +113,9 @@ export const BulkActionBar = ({
                     <ChevronDown size={12} />
                 </PopoverButton>
                 <PopoverPanel
+                    transition
                     anchor={{ to: 'top start', gap: 8, padding: 12 }}
-                    className={`${POPOVER_PANEL_CLASS} w-52`}
+                    className={`${POPOVER_PANEL_CLASS} ${POPOVER_MOTION_CLASS} w-52`}
                     style={popoverPanelStyle}
                 >
                     {({ close }) => (
@@ -135,8 +137,9 @@ export const BulkActionBar = ({
                     <ChevronDown size={12} />
                 </PopoverButton>
                 <PopoverPanel
+                    transition
                     anchor={{ to: 'top start', gap: 8, padding: 12 }}
-                    className={`${POPOVER_PANEL_CLASS} max-h-[60vh] w-56 overflow-y-auto`}
+                    className={`${POPOVER_PANEL_CLASS} ${POPOVER_MOTION_CLASS} max-h-[60vh] w-56 overflow-y-auto`}
                     style={popoverPanelStyle}
                 >
                     {({ close }) => (

@@ -59,8 +59,8 @@ export const HabitListSkeleton = ({ rows, days, isSmall = false }: HabitListSkel
                             <tr className='border-b border-[var(--habit-container-border)]'>
                                 <th
                                     scope='col'
-                                    className={`px-4 py-3 text-left font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--color-habit-label)] ${
-                                        isSmall ? 'w-[42%] max-w-[42%]' : 'w-1/4'
+                                    className={`px-4 py-3 text-left font-mono text-label font-medium uppercase tracking-[0.12em] text-[var(--color-habit-label)] ${
+                                        isSmall ? 'w-[46%] max-w-[46%]' : 'w-1/4'
                                     }`}
                                 >
                                     Habit
@@ -68,7 +68,7 @@ export const HabitListSkeleton = ({ rows, days, isSmall = false }: HabitListSkel
                                 {!isSmall && (
                                     <th
                                         scope='col'
-                                        className='w-12 py-3 text-center font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--color-habit-label)]'
+                                        className='w-12 py-3 text-center font-mono text-label font-medium uppercase tracking-[0.12em] text-[var(--color-habit-label)]'
                                     >
                                         Streak
                                     </th>

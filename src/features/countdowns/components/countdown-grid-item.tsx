@@ -6,6 +6,7 @@ import { CountdownCard } from '@/features/countdowns/components/countdown-card';
 import type { Countdown } from '@/features/countdowns/utils/countdown';
 import { Archive, ArchiveRestore, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { useJustCreated } from '@/lib/just-created';
 
 /** A read-only countdown card in the grid, with edit/archive/delete controls. */
 export const CountdownGridItem = ({
@@ -26,6 +27,7 @@ export const CountdownGridItem = ({
     const del = useDeleteCountdown();
     const update = useUpdateCountdown();
     const isArchived = countdown.archived_date != null;
+    const [fresh] = useJustCreated('countdown', countdown.id);
 
     const handleDelete = () => {
         if (del.isPending) return;
@@ -58,6 +60,7 @@ export const CountdownGridItem = ({
             now={now}
             categoryColor={categoryColor}
             categoryName={categoryName}
+            fresh={fresh}
             actions={
                 // gap-2, not gap-1: each control is now a 44px touch target on a
                 // coarse pointer, and the old 8px gap would overlap them.

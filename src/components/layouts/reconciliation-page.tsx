@@ -404,7 +404,7 @@ export const ReconciliationPage = () => {
 
                     {phase === 'queues' && step && (
                         <div className='flex flex-col gap-5'>
-                            <p className='font-mono text-[10.5px] uppercase tracking-[0.16em] text-text-faint'>
+                            <p className='font-mono text-label uppercase tracking-[0.16em] text-text-faint'>
                                 Step {stepIndex + 1} of {steps.length}
                                 {activeProfile ? ` · ${activeProfile.name}` : ''}
                             </p>

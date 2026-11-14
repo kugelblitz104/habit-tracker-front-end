@@ -127,7 +127,7 @@ export const SortHabitModal = ({
     if (habitsState.length === 0) {
         return (
             <BaseModal isOpen={isOpen} onClose={onClose} title='Sort Habits'>
-                <p className='font-mono text-[12px] text-text-muted'>No habits to sort.</p>
+                <p className='font-mono text-meta text-text-muted'>No habits to sort.</p>
             </BaseModal>
         );
     }
@@ -165,13 +165,13 @@ export const SortHabitModal = ({
             </DndContext>
             <div className='mt-4 flex w-full justify-end gap-2'>
                 <Button
-                    className='min-h-[28px] rounded-button px-3.5 py-1.5 font-mono text-[11.5px] uppercase tracking-[0.12em] text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary'
+                    className='min-h-[28px] rounded-button px-3.5 py-1.5 font-mono text-meta uppercase tracking-[0.12em] text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary'
                     onClick={onClose}
                 >
                     Cancel
                 </Button>
                 <Button
-                    className='min-h-[28px] rounded-button px-3.5 py-1.5 font-mono text-[11.5px] font-semibold uppercase tracking-[0.12em] transition-opacity pointer-coarse:min-h-[44px] hover:opacity-90'
+                    className='min-h-[28px] rounded-button px-3.5 py-1.5 font-mono text-meta font-semibold uppercase tracking-[0.12em] transition-opacity pointer-coarse:min-h-[44px] hover:opacity-90'
                     style={{
                         backgroundColor: 'var(--color-habit-accent)',
                         color: 'var(--bg)'

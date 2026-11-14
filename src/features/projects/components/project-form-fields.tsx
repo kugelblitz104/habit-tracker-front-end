@@ -73,7 +73,7 @@ export const ProjectFormFields = ({
                             onColorChange={field.onChange}
                         />
                         {errors.color && (
-                            <span className='-mt-2 mb-3 block text-[11px] text-red-400'>
+                            <span className='-mt-2 mb-3 block text-label text-red-400'>
                                 {errors.color.message as string}
                             </span>
                         )}
@@ -86,7 +86,7 @@ export const ProjectFormFields = ({
                     {...register('notes', validationPatterns.notes)}
                     rows={4}
                     placeholder='Optional project notes…'
-                    className='block w-full resize-y rounded-button border px-2.5 py-1.5 font-mono text-[12px] leading-relaxed text-text-secondary outline-none transition-colors placeholder:text-text-faint focus-visible:ring-1 focus-visible:ring-now-accent'
+                    className='block w-full resize-y rounded-button border px-2.5 py-1.5 font-mono text-meta leading-relaxed text-text-secondary outline-none transition-colors placeholder:text-text-faint'
                     style={{
                         backgroundColor: 'var(--surface-input-bg)',
                         borderColor: errors.notes
@@ -96,7 +96,7 @@ export const ProjectFormFields = ({
                     wrap='soft'
                 />
                 {errors.notes && (
-                    <span className='mt-1 block text-[11px] text-red-400'>
+                    <span className='mt-1 block text-label text-red-400'>
                         {errors.notes.message as string}
                     </span>
                 )}

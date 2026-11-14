@@ -1,4 +1,5 @@
 import type { CalendarEventRead } from '@/api';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { useCalendarConnections } from '@/features/calendar/api/get-calendar-connections';
 import { useCalendarEvents } from '@/features/calendar/api/get-calendar-events';
 import {
@@ -52,16 +53,16 @@ const EventRow = ({ event }: { event: CalendarEventRead }) => {
         >
             <div className='w-[54px] flex-none text-right font-mono'>
                 {event.all_day ? (
-                    <div className='text-[10.5px]' style={{ color: '#8a8177' }}>
+                    <div className='text-label' style={{ color: '#8a8177' }}>
                         all day
                     </div>
                 ) : (
                     <>
-                        <div className='text-[13px] font-medium' style={{ color: '#d7cec2' }}>
+                        <div className='text-body font-medium' style={{ color: '#d7cec2' }}>
                             {formatEventTime(event.start)}
                         </div>
                         {event.end && (
-                            <div className='text-[10.5px]' style={{ color: '#6f685e' }}>
+                            <div className='text-label' style={{ color: '#6f685e' }}>
                                 {formatEventTime(event.end)}
                             </div>
                         )}
@@ -69,17 +70,17 @@ const EventRow = ({ event }: { event: CalendarEventRead }) => {
                 )}
             </div>
             <div className='min-w-0 flex-1'>
-                <div className='text-[15px] font-medium' style={{ color: '#e7dccb' }}>
+                <div className='text-lead font-medium' style={{ color: '#e7dccb' }}>
                     {event.title}
                 </div>
                 {event.location && (
-                    <div className='mt-[3px] text-[12px]' style={{ color: '#8a8177' }}>
+                    <div className='mt-[3px] text-meta' style={{ color: '#8a8177' }}>
                         {event.location}
                     </div>
                 )}
             </div>
             <span
-                className='inline-flex flex-none items-center gap-1.5 text-[11.5px]'
+                className='inline-flex flex-none items-center gap-1.5 text-meta'
                 style={{ color: '#9a938a' }}
             >
                 <span className='h-2 w-2 rounded-[2px]' style={{ backgroundColor: event.color }} />
@@ -167,19 +168,17 @@ export const TodaySchedule = () => {
         <section className='mb-[30px] transition-opacity' style={{ opacity: 'var(--quiet)' }}>
             <div className='mb-[13px] flex flex-wrap items-center gap-3'>
                 {/* Same header treatment as the sibling band/habit sections
-                    (BandSection / TodayHabitsPanel); only the lavender color differs. */}
-                <h2
-                    className='font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em]'
-                    style={{ color: '#a29bcf' }}
-                >
+                    (BandSection / TodayHabitsPanel). */}
+                <h2 className='font-mono text-meta font-semibold uppercase tracking-[0.16em] text-habit-label'>
                     Today&apos;s schedule
                 </h2>
-                <span className='font-mono text-[10px]' style={{ color: '#615c72' }}>
+                <span className='font-mono text-label' style={{ color: '#615c72' }}>
                     read-only
                 </span>
-                <span
+                <SegmentedControl
                     className='flex items-center gap-0.5 rounded-chip border p-0.5'
                     style={{ borderColor: 'var(--surface-input-border)' }}
+                    highlightStyle={{ backgroundColor: 'rgba(255,255,255,.06)' }}
                 >
                     {DAY_PRESETS.map((preset) => {
                         const selected = preset.days === windowDays;
@@ -196,19 +195,14 @@ export const TodaySchedule = () => {
                                 // 36px clears the 24px AA minimum; the 44px
                                 // enhanced target is waived for the same reason.
                                 data-target-exempt='essential'
-                                className='inline-flex min-h-[28px] items-center justify-center rounded-chip px-3 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] transition-colors pointer-coarse:min-h-[36px]'
-                                style={{
-                                    backgroundColor: selected
-                                        ? 'rgba(255,255,255,.06)'
-                                        : 'transparent',
-                                    color: selected ? '#a29bcf' : 'var(--color-text-muted)'
-                                }}
+                                className='inline-flex min-h-[28px] items-center justify-center rounded-chip px-3 py-0.5 font-mono text-label uppercase tracking-[0.08em] transition-colors pointer-coarse:min-h-[36px]'
+                                style={{ color: selected ? '#a29bcf' : 'var(--color-text-muted)' }}
                             >
                                 {preset.label}
                             </button>
                         );
                     })}
-                </span>
+                </SegmentedControl>
                 <span className='flex-1' />
                 {enabledConnections.map((connection) => {
                     const hidden = hiddenIds.has(connection.id);
@@ -219,7 +213,7 @@ export const TodaySchedule = () => {
                             onClick={() => toggleHidden(connection.id)}
                             aria-pressed={!hidden}
                             title={hidden ? 'Show this calendar' : 'Hide this calendar'}
-                            className='inline-flex items-center gap-1.5 text-[11px] transition-opacity'
+                            className='inline-flex items-center gap-1.5 text-label transition-opacity'
                             style={{ color: '#8f8aa0', opacity: hidden ? 0.45 : 1 }}
                         >
                             <span
@@ -239,7 +233,7 @@ export const TodaySchedule = () => {
 
             {!hasEnabledConnections ? (
                 <div
-                    className='flex items-center gap-2 rounded-row border border-dashed px-4 py-6 font-mono text-[12px] text-text-faint'
+                    className='flex items-center gap-2 rounded-row border border-dashed px-4 py-6 font-mono text-meta text-text-faint'
                     style={{ borderColor: 'var(--surface-card-border)' }}
                 >
                     <CalendarDays size={16} className='text-text-faint' />
@@ -248,11 +242,11 @@ export const TodaySchedule = () => {
                         : 'All calendars are turned off in Settings.'}
                 </div>
             ) : eventsQuery.isError ? (
-                <p className='font-mono text-[12px] text-text-faint'>
+                <p className='font-mono text-meta text-text-faint'>
                     Couldn&apos;t load today&apos;s schedule.
                 </p>
             ) : eventsQuery.isLoading ? null : visibleEvents.length === 0 ? (
-                <p className='font-mono text-[12px] text-text-faint'>
+                <p className='font-mono text-meta text-text-faint'>
                     {events.length > 0
                         ? 'All shown calendars are hidden.'
                         : windowDays === 1
@@ -262,7 +256,7 @@ export const TodaySchedule = () => {
             ) : (
                 <>
                     {todayEvents.length === 0 ? (
-                        <p className='font-mono text-[12px] text-text-faint'>No events today.</p>
+                        <p className='font-mono text-meta text-text-faint'>No events today.</p>
                     ) : (
                         <div className='flex flex-col gap-[7px]'>
                             {todayEvents.map((event, index) => (
@@ -277,7 +271,7 @@ export const TodaySchedule = () => {
                         // Quieter than today's list — today is the focus.
                         <div className='mt-[18px]' style={{ opacity: 0.75 }}>
                             <div
-                                className='mb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em]'
+                                className='mb-2 font-mono text-label font-semibold uppercase tracking-[0.16em]'
                                 style={{ color: '#6f685e' }}
                             >
                                 Upcoming
@@ -286,7 +280,7 @@ export const TodaySchedule = () => {
                                 {visibleUpcomingDays.map((day) => (
                                     <div key={day.date}>
                                         <div
-                                            className='mb-[6px] font-mono text-[10px] uppercase tracking-[0.16em]'
+                                            className='mb-[6px] font-mono text-label uppercase tracking-[0.16em]'
                                             style={{ color: '#8a8177' }}
                                         >
                                             {formatUpcomingDayLabel(day.date)}
@@ -304,7 +298,7 @@ export const TodaySchedule = () => {
                             </div>
                             {hiddenUpcomingCount > 0 && (
                                 <p
-                                    className='mt-2 font-mono text-[10.5px]'
+                                    className='mt-2 font-mono text-label'
                                     style={{ color: '#6f685e' }}
                                 >
                                     +{hiddenUpcomingCount} more
@@ -317,7 +311,7 @@ export const TodaySchedule = () => {
 
             {errors.length > 0 && (
                 <p
-                    className='mt-2 font-mono text-[10.5px]'
+                    className='mt-2 font-mono text-label'
                     style={{ color: 'var(--color-danger)', opacity: 0.65 }}
                 >
                     Couldn&apos;t refresh: {errors.join(' · ')}

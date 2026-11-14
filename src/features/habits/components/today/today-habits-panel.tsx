@@ -1,6 +1,7 @@
 import type { HabitRead, ProfileRead } from '@/api';
 import { getHabits } from '@/features/habits/api/get-habits';
 import { habitKeys } from '@/features/habits/api/query-keys';
+import { RollingNumber } from '@/components/ui/rolling-number';
 import { useResponsiveLayout } from '@/lib/use-responsive-layout';
 import { DisplayStatus } from '@/types/types';
 import { Switch } from '@headlessui/react';
@@ -108,19 +109,19 @@ export const TodayHabitsPanel = ({ profile, onSelectHabit }: TodayHabitsPanelPro
         <section className='mb-[30px]' style={{ opacity: 'var(--quiet)' }}>
             {/* Header sits OUTSIDE the card so it aligns with the band/section
                 headers on the Today page (see band-section.tsx). */}
-            <div className='mb-2.5 flex items-start justify-between gap-3'>
-                <div className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1'>
-                    <h2 className='font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-habit-label'>
-                        Today&apos;s habits
-                    </h2>
-                    <span className='font-mono text-[10.5px] text-text-faint'>
-                        {summary.done} done · {summary.auto} auto · {summary.skipped} skipped
-                    </span>
-                </div>
+            <div className='mb-2.5 flex flex-wrap items-center gap-x-3 gap-y-1'>
+                <h2 className='font-mono text-meta font-semibold uppercase tracking-[0.16em] text-habit-label'>
+                    Today&apos;s habits
+                </h2>
+                <span className='order-last w-full font-mono text-label text-text-faint sm:order-none sm:w-auto'>
+                    <RollingNumber value={summary.done} /> done ·{' '}
+                    <RollingNumber value={summary.auto} /> auto ·{' '}
+                    <RollingNumber value={summary.skipped} /> skipped
+                </span>
                 {summary.auto > 0 && (
-                    <label className='flex shrink-0 cursor-pointer items-center gap-2'>
+                    <label className='ml-auto flex shrink-0 cursor-pointer items-center gap-2'>
                         <span
-                            className={`font-mono text-[10.5px] uppercase tracking-[0.12em] ${
+                            className={`font-mono text-label uppercase tracking-[0.12em] ${
                                 showAutoSkipped ? 'text-habit-label' : 'text-text-muted'
                             }`}
                         >
@@ -166,11 +167,11 @@ export const TodayHabitsPanel = ({ profile, onSelectHabit }: TodayHabitsPanelPro
                 }}
             >
                 {habitsQuery.isLoading ? (
-                    <p className='font-mono text-[12px] text-text-faint'>Loading habits…</p>
+                    <p className='font-mono text-meta text-text-faint'>Loading habits…</p>
                 ) : habits.length === 0 ? (
-                    <p className='font-mono text-[12px] text-text-faint'>No habits yet.</p>
+                    <p className='font-mono text-meta text-text-faint'>No habits yet.</p>
                 ) : visibleGroups.length === 0 ? (
-                    <p className='font-mono text-[12px] text-text-faint'>
+                    <p className='font-mono text-meta text-text-faint'>
                         All caught up — {summary.auto} auto-skipped hidden
                     </p>
                 ) : (
@@ -181,7 +182,7 @@ export const TodayHabitsPanel = ({ profile, onSelectHabit }: TodayHabitsPanelPro
                     >
                         {visibleGroups.map(([category, categoryHabits]) => (
                             <div key={category}>
-                                <p className='mb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-habit-label'>
+                                <p className='mb-1.5 font-mono text-label uppercase tracking-[0.14em] text-habit-label'>
                                     {category}
                                 </p>
                                 <div className='flex flex-col'>

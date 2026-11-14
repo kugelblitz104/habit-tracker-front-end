@@ -68,7 +68,7 @@ export const DayQualityPicker = memo(function DayQualityPicker({
             <div className='mb-2.5 flex min-h-[28px] items-center justify-between gap-3 pointer-coarse:min-h-[44px]'>
                 <span
                     aria-hidden='true'
-                    className='font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-text-muted'
+                    className='font-mono text-label font-semibold uppercase tracking-[0.16em] text-text-muted'
                 >
                     Day quality
                 </span>
@@ -76,14 +76,14 @@ export const DayQualityPicker = memo(function DayQualityPicker({
                     // "No quality yet" is a real state, and has to look different
                     // from a chosen word rather than just being the absence of a
                     // highlight.
-                    <span className='font-mono text-[11px] text-text-faint'>Not set</span>
+                    <span className='font-mono text-label text-text-faint'>Not set</span>
                 ) : (
                     <Button
                         size='sm'
                         variant='subtle'
                         onClick={() => onChange(null)}
                         aria-label='Clear the day quality'
-                        className='font-mono text-[11px] uppercase tracking-[0.1em]'
+                        className='font-mono text-label uppercase tracking-[0.1em]'
                     >
                         <X size={12} />
                         Clear
@@ -99,7 +99,7 @@ export const DayQualityPicker = memo(function DayQualityPicker({
                     <div key={group.key} className='flex flex-col gap-1 sm:flex-row sm:items-start'>
                         <span
                             aria-hidden='true'
-                            className='shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] sm:w-[58px] sm:pt-2.5'
+                            className='shrink-0 font-mono text-label uppercase tracking-[0.12em] sm:w-[58px] sm:pt-2.5'
                             style={{ color: group.color, opacity: 0.75 }}
                         >
                             {group.label}
@@ -118,7 +118,7 @@ export const DayQualityPicker = memo(function DayQualityPicker({
                                             className='peer sr-only'
                                         />
                                         <span
-                                            className='inline-flex min-h-[32px] cursor-pointer items-center rounded-chip border px-3 font-display text-[13px] transition-colors pointer-coarse:min-h-[44px] peer-focus-visible:ring-1 peer-focus-visible:ring-now-accent peer-disabled:cursor-not-allowed'
+                                            className='inline-flex min-h-[32px] cursor-pointer items-center rounded-chip border px-3 font-display text-body transition-colors pointer-coarse:min-h-[44px] peer-focus-visible:ring-1 peer-focus-visible:ring-now-accent peer-disabled:cursor-not-allowed'
                                             style={
                                                 selected
                                                     ? {

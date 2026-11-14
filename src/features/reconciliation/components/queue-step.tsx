@@ -55,12 +55,12 @@ export const QueueStep = ({
     return (
         <section>
             <div className='mb-1 flex items-center gap-2'>
-                <h2 className='font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-text-muted'>
+                <h2 className='font-mono text-label font-semibold uppercase tracking-[0.16em] text-text-muted'>
                     {title}
                 </h2>
-                <span className='font-mono text-[11px] text-text-faint'>{rows.length}</span>
+                <span className='font-mono text-label text-text-faint'>{rows.length}</span>
             </div>
-            <p className='mb-3 font-display text-[12.5px] text-text-faint'>{hint}</p>
+            <p className='mb-3 font-display text-meta text-text-faint'>{hint}</p>
 
             <QueryState
                 isError={isError}
@@ -71,7 +71,7 @@ export const QueueStep = ({
             />
 
             {!isError && !isLoading && rows.length === 0 && (
-                <p className='font-mono text-[11px] text-text-faint'>
+                <p className='font-mono text-label text-text-faint'>
                     Nothing here. This queue is clear.
                 </p>
             )}
@@ -101,12 +101,12 @@ export const QueueStep = ({
                                 />
                                 <div className='min-w-0 flex-1'>
                                     <p
-                                        className='truncate font-display text-[13.5px] text-text-muted'
+                                        className='truncate font-display text-body text-text-muted'
                                         title={row.title}
                                     >
                                         {row.title}
                                     </p>
-                                    <p className='font-mono text-[10.5px] text-text-faint'>
+                                    <p className='font-mono text-label text-text-faint'>
                                         {row.meta}
                                     </p>
                                 </div>
@@ -120,7 +120,7 @@ export const QueueStep = ({
                         </Button>
                         {selectedIds.size > 0 && (
                             <>
-                                <span className='font-mono text-[11px] text-text-faint'>
+                                <span className='font-mono text-label text-text-faint'>
                                     {selectedIds.size} selected
                                 </span>
                                 {actions}

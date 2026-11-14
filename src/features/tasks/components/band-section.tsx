@@ -2,6 +2,7 @@ import type { ProjectRead, TaskRead } from '@/api';
 import type { TaskStatus } from '@/types/types';
 import { ChevronRight } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useExitingRows } from '../hooks/use-exiting-rows';
 import { upwardFrom } from '../utils/task-bands';
 import type { SluggedEntity } from '@/lib/entity-ref';
 import { Button } from '@/components/ui/buttons/button';
@@ -72,22 +73,23 @@ export const BandSection = ({
     collapsed,
     onToggleCollapsed
 }: BandSectionProps) => {
-    if (tasks.length === 0 && !emptyHint) return null;
+    const { rows, exitingStatus, holdIfClosing } = useExitingRows(tasks);
+    if (rows.length === 0 && !emptyHint) return null;
 
     const meta = BAND_META[band];
     const isQuiet = band === 'whenever';
 
     // The last row(s) open their status picker upward so it never covers the
     // section below.
-    const upwardIdx = upwardFrom(tasks.length);
+    const upwardIdx = upwardFrom(rows.length);
 
     const label = <SectionHeader label={meta.label} color={meta.labelColor} count={tasks.length} />;
 
     // The band body (tasks, or the empty hint). Only collapsible bands wrap this
     // in the animated overflow-hidden container.
     const content =
-        tasks.length === 0 ? (
-            <p className='font-mono text-[12px] text-text-faint'>{emptyHint}</p>
+        rows.length === 0 ? (
+            <p className='font-mono text-meta text-text-faint'>{emptyHint}</p>
         ) : (
             <div
                 className='overflow-hidden rounded-card border'
@@ -96,7 +98,7 @@ export const BandSection = ({
                     borderColor: 'var(--surface-card-border)'
                 }}
             >
-                {tasks.map((task, i) => (
+                {rows.map((task, i) => (
                     <div
                         key={task.id}
                         className={i === 0 ? '' : 'border-t'}
@@ -110,7 +112,10 @@ export const BandSection = ({
                                     ? projectsById.get(task.project_id)
                                     : undefined
                             }
-                            onStatusChange={(status) => onStatusChange(task.id, status)}
+                            onStatusChange={(status) => {
+                                holdIfClosing(task, status);
+                                onStatusChange(task.id, status);
+                            }}
                             notesOpen={notesTaskId === task.id}
                             editing={selectedEditTaskId === task.id}
                             onToggleNotes={() => onToggleNotes(task.id)}
@@ -122,7 +127,8 @@ export const BandSection = ({
                             onStartTimer={onStartTimer ? () => onStartTimer(task.id) : undefined}
                             openUpward={i >= upwardIdx}
                             isFirst={i === 0}
-                            isLast={i === tasks.length - 1}
+                            isLast={i === rows.length - 1}
+                            exitingStatus={exitingStatus(task.id)}
                         />
                     </div>
                 ))}

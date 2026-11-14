@@ -1,5 +1,7 @@
 import type { Page, Route } from '@playwright/test';
 
+import { DEFAULT_SKELETON_ROWS } from '@/features/tasks/utils/remembered-task-count';
+
 import { GOLDEN } from '../fixtures/golden-profile';
 import { expect, gotoAppRoute, taskRowTitle, test } from '../fixtures/test';
 
@@ -23,10 +25,10 @@ import { expect, gotoAppRoute, taskRowTitle, test } from '../fixtures/test';
  * then update the literal in the same commit.
  */
 
-const PAGE_ERROR = 'font-mono text-[12px] text-danger';
-const PAGE_QUIET = 'font-mono text-[12px] text-text-faint';
-const INLINE_ERROR = 'font-mono text-[11px] text-danger';
-const INLINE_QUIET = 'font-mono text-[11px] text-text-faint';
+const PAGE_ERROR = 'font-mono text-meta text-danger';
+const PAGE_QUIET = 'font-mono text-meta text-text-faint';
+const INLINE_ERROR = 'font-mono text-label text-danger';
+const INLINE_QUIET = 'font-mono text-label text-text-faint';
 
 /** Fail every request whose URL matches, with a 500 (NOT a 401 — that would
  *  send the axios interceptor down the token-refresh path and redirect). */
@@ -99,16 +101,20 @@ test('All tasks reports both its loading and error states', async ({ authedPage 
     await stall(authedPage, '**/tasks/?*');
     await gotoAppRoute(authedPage, '/tasks');
 
-    const loading = authedPage.getByText('Loading tasks…', { exact: true });
-    await expect(loading).toBeVisible();
-    await expect(loading).toHaveClass(PAGE_QUIET);
+    // All tasks loads as a row skeleton rather than a text line. This browser has
+    // never loaded the profile's list, so no count is remembered and the default
+    // row count paints; each row has one title-line placeholder.
+    const skeletonRows = authedPage.locator('.w-3\\/5 > .react-loading-skeleton');
+    await expect(skeletonRows).toHaveCount(DEFAULT_SKELETON_ROWS);
+    await expect(skeletonRows.first()).toBeVisible();
+    await expect(authedPage.getByText('Loading tasks…', { exact: true })).toHaveCount(0);
 
     // The same stalled route resolves 500, so the error line replaces the
-    // loading line in place — which also pins that they are mutually exclusive.
+    // skeleton in place — which also pins that they are mutually exclusive.
     const error = authedPage.getByText('Failed to load tasks.', { exact: true });
     await expect(error).toBeVisible();
     await expect(error).toHaveClass(PAGE_ERROR);
-    await expect(loading).toHaveCount(0);
+    await expect(authedPage.locator('.react-loading-skeleton')).toHaveCount(0);
 });
 
 test('Projects reports both its loading and error states', async ({ authedPage }) => {

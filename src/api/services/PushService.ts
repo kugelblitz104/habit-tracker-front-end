@@ -33,7 +33,8 @@ export class PushService {
      * Save a browser's push subscription for a profile.
      *
      * Registering an endpoint the profile already has replaces its keys, so a
-     * browser that rotated them can call this again.
+     * browser that rotated them can call this again. Returns 409 when the profile
+     * already has the maximum number of other browsers registered.
      * @param requestBody
      * @returns void
      * @throws ApiError

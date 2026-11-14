@@ -145,7 +145,7 @@ export const ManageDataCard = () => {
                 </Button>
             </div>
             <div className='mt-4'>
-                <div className='mb-2 text-[12px]' style={{ color: '#9a8f81' }}>
+                <div className='mb-2 text-meta' style={{ color: '#9a8f81' }}>
                     Export tasks &mdash; download this profile&apos;s tasks as a Markdown checklist
                 </div>
                 <Button
@@ -158,10 +158,10 @@ export const ManageDataCard = () => {
                 </Button>
             </div>
             <div className='mt-5'>
-                <div className='mb-1 text-[12px]' style={{ color: '#9a8f81' }}>
+                <div className='mb-1 text-meta' style={{ color: '#9a8f81' }}>
                     Export by type (JSON) &mdash; one entity of this profile at a time
                 </div>
-                <div className='mb-2.5 text-[11px]' style={{ color: '#7d7369' }}>
+                <div className='mb-2.5 text-label' style={{ color: '#7d7369' }}>
                     A snapshot for portability. For a full, re-importable backup use the Full backup
                     card below. Integration tokens are never included.
                 </div>

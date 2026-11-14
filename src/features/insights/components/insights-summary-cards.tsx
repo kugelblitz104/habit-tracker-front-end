@@ -3,9 +3,9 @@ import { formatHumanDuration } from '@/features/time-entries/utils/format-durati
 import type { InsightsData } from '../hooks/use-insights-data';
 
 const cardLabelClass =
-    'font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-text-faint';
+    'font-mono text-label font-semibold uppercase tracking-[0.12em] text-text-faint';
 const cardValueClass = 'font-display text-[26px] font-semibold leading-none text-text-primary';
-const cardSubClass = 'font-mono text-[11px] text-text-muted';
+const cardSubClass = 'font-mono text-label text-text-muted';
 
 const Card = ({ label, value, sub }: { label: string; value: string; sub?: string }) => (
     <div className={CARD_SURFACE_CLASS} style={CARD_SURFACE_STYLE}>

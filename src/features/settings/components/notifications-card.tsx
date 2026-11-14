@@ -71,10 +71,10 @@ const Row = ({
     <div className='border-t py-3.5 first:border-t-0 first:pt-0' style={rowBorderStyle}>
         <div className='flex items-center justify-between gap-4'>
             <div className='min-w-0'>
-                <div className='text-[14.5px] font-medium' style={{ color: '#f0e7db' }}>
+                <div className='text-lead font-medium' style={{ color: '#f0e7db' }}>
                     {title}
                 </div>
-                {hint && <div className='mt-0.5 text-[12px] text-text-muted'>{hint}</div>}
+                {hint && <div className='mt-0.5 text-meta text-text-muted'>{hint}</div>}
             </div>
             {control}
         </div>
@@ -228,7 +228,7 @@ export const NotificationsCard = ({ profile }: NotificationsCardProps) => {
                 }
             >
                 {(deviceMessage ?? (blocked ? 'blocked' : null)) && (
-                    <p role='alert' className='text-[12px] text-text-muted'>
+                    <p role='alert' className='text-meta text-text-muted'>
                         {deviceMessage ??
                             'Notifications are blocked for this site. Allow them in the browser’s site settings to turn this on.'}
                     </p>

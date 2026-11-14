@@ -6,7 +6,7 @@ describe('buttonClass', () => {
         const c = buttonClass({});
         expect(c).toContain('min-h-[36px]');
         expect(c).toContain('pointer-coarse:min-h-[44px]');
-        expect(c).toContain('text-[12px]');
+        expect(c).toContain('text-meta');
     });
 
     it('clears the 24px AA floor on every size at a fine pointer', () => {
@@ -53,7 +53,7 @@ describe('buttonClass', () => {
         const c = buttonClass({ size: 'lg', variant: 'primary' });
         expect(c).toContain('px-[18px]');
         expect(c).toContain('py-2.5');
-        expect(c).toContain('text-[13.5px]');
+        expect(c).toContain('text-body');
     });
 
     it('pins every buttonStyle branch: primary gradient, ghost/icon border, subtle none', () => {

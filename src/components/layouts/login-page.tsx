@@ -80,9 +80,9 @@ export const LoginPage = () => {
                             label='Sign in'
                         />
                         {loginError && (
-                            <div className='font-mono text-[11px] text-danger'>{loginError}</div>
+                            <div className='font-mono text-label text-danger'>{loginError}</div>
                         )}
-                        <div className='text-center text-[13px] text-text-muted'>
+                        <div className='text-center text-body text-text-muted'>
                             <Link
                                 to='/forgot-password'
                                 className='text-text-secondary-soft transition-colors hover:text-now-accent'
@@ -90,7 +90,7 @@ export const LoginPage = () => {
                                 Forgot password?
                             </Link>
                         </div>
-                        <div className='text-center text-[13px] text-text-muted'>
+                        <div className='text-center text-body text-text-muted'>
                             Don't have an account?{' '}
                             <Link
                                 to='/register'

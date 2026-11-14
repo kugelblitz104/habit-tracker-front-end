@@ -46,9 +46,9 @@ export const ConnectionListState = ({
 }: ConnectionListStateProps) => (
     <>
         {isLoading && (
-            <div className='py-1 font-mono text-[11px] text-text-faint'>{loadingMessage}</div>
+            <div className='py-1 font-mono text-label text-text-faint'>{loadingMessage}</div>
         )}
-        {isError && <div className='py-1 font-mono text-[11px] text-danger'>{errorMessage}</div>}
+        {isError && <div className='py-1 font-mono text-label text-danger'>{errorMessage}</div>}
     </>
 );
 
@@ -56,7 +56,7 @@ export const ConnectionListState = ({
 export const ConnectionLastError = ({ message }: { message: string | null | undefined }) => {
     if (!message) return null;
     return (
-        <div className='mt-1 flex items-center gap-1 font-mono text-[11px] text-danger'>
+        <div className='mt-1 flex items-center gap-1 font-mono text-label text-danger'>
             <TriangleAlert size={11} className='flex-none' />
             <span className='truncate'>{message}</span>
         </div>
@@ -97,7 +97,7 @@ export const AddConnectionButton = ({ label, onClick }: { label: string; onClick
     <button
         type='button'
         onClick={onClick}
-        className='flex min-h-[36px] items-center justify-center gap-2 rounded-[10px] border border-dashed p-2.5 text-[12.5px] text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary'
+        className='flex min-h-[36px] items-center justify-center gap-2 rounded-[10px] border border-dashed p-2.5 text-meta text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary'
         style={{ borderColor: 'rgba(255,255,255,.12)' }}
     >
         <Plus size={14} />
@@ -113,7 +113,7 @@ export const ConnectionsSubtitle = ({
     profileName: string;
     children: ReactNode;
 }) => (
-    <div className='mb-2.5 text-[12px]' style={{ color: '#9a8f81' }}>
+    <div className='mb-2.5 text-meta' style={{ color: '#9a8f81' }}>
         {children} · for{' '}
         <span className='font-semibold text-text-secondary-soft'>{profileName}</span>
     </div>

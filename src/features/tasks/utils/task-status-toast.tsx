@@ -21,7 +21,7 @@ export const toastTaskClosed = (kind: 'done' | 'cancelled', onUndo?: () => void)
                     onUndo();
                     closeToast();
                 }}
-                className='shrink-0 rounded-[6px] border px-2.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-wide text-text-primary transition-colors hover:bg-white/10'
+                className='shrink-0 rounded-[6px] border px-2.5 py-1 font-mono text-label font-semibold uppercase tracking-wide text-text-primary transition-colors hover:bg-white/10'
                 style={{ borderColor: 'rgba(255,255,255,.28)' }}
             >
                 Undo

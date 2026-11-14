@@ -95,10 +95,10 @@ export const JournalCard = ({ profile }: JournalCardProps) => {
         <SettingsCard label='Journal' labelGapClass='mb-1.5'>
             <div className='flex items-center justify-between gap-4 py-3.5'>
                 <div>
-                    <div className='text-[14.5px] font-medium' style={{ color: '#f0e7db' }}>
+                    <div className='text-lead font-medium' style={{ color: '#f0e7db' }}>
                         Daily journal
                     </div>
-                    <div className='mt-0.5 text-[12px] text-text-muted'>
+                    <div className='mt-0.5 text-meta text-text-muted'>
                         Show the Journal tab for a per-day prose entry
                     </div>
                 </div>
@@ -122,12 +122,12 @@ export const JournalCard = ({ profile }: JournalCardProps) => {
                 <div>
                     <label
                         htmlFor='journal-prompt-time'
-                        className='text-[14.5px] font-medium'
+                        className='text-lead font-medium'
                         style={{ color: '#f0e7db' }}
                     >
                         Reminder time
                     </label>
-                    <div className='mt-0.5 text-[12px] text-text-muted'>
+                    <div className='mt-0.5 text-meta text-text-muted'>
                         Nudge to check in once this time has passed today
                     </div>
                 </div>
@@ -169,10 +169,10 @@ export const JournalCard = ({ profile }: JournalCardProps) => {
                 style={rowBorderStyle}
             >
                 <div>
-                    <div className='text-[14.5px] font-medium' style={{ color: '#f0e7db' }}>
+                    <div className='text-lead font-medium' style={{ color: '#f0e7db' }}>
                         Gratitude prompt
                     </div>
-                    <div className='mt-0.5 text-[12px] text-text-muted'>
+                    <div className='mt-0.5 text-meta text-text-muted'>
                         Also ask &ldquo;Something you&rsquo;re grateful for?&rdquo; each day
                     </div>
                 </div>
@@ -189,10 +189,10 @@ export const JournalCard = ({ profile }: JournalCardProps) => {
                 style={rowBorderStyle}
             >
                 <div className='min-w-0'>
-                    <div className='text-[14.5px] font-medium' style={{ color: '#f0e7db' }}>
+                    <div className='text-lead font-medium' style={{ color: '#f0e7db' }}>
                         Import from Obsidian
                     </div>
-                    <div className='mt-0.5 text-[12px] text-text-muted'>
+                    <div className='mt-0.5 text-meta text-text-muted'>
                         A zip of a daily-notes folder, one YYYY-MM-DD.md per day. A day that already
                         has an entry is never overwritten.
                     </div>

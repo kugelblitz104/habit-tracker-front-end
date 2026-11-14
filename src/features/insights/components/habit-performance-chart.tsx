@@ -34,10 +34,10 @@ export const HabitPerformanceChart = ({
                 {habits.map((h) => (
                     <li key={h.id}>
                         <div className='mb-1 flex items-baseline justify-between gap-2'>
-                            <span className='truncate font-display text-[13px] text-text-secondary'>
+                            <span className='truncate font-display text-body text-text-secondary'>
                                 {h.name}
                             </span>
-                            <span className='flex shrink-0 items-center gap-2 font-mono text-[11px] text-text-muted tabular-nums'>
+                            <span className='flex shrink-0 items-center gap-2 font-mono text-label text-text-muted tabular-nums'>
                                 {h.currentStreak > 0 && (
                                     <span
                                         className='flex items-center gap-0.5'

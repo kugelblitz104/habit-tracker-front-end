@@ -55,8 +55,8 @@ export const Banner = ({
         )}
 
         <div className='min-w-0 flex-1'>
-            <p className='font-display text-[14px] text-text-primary'>{title}</p>
-            {detail && <p className='font-mono text-[11px] text-text-faint'>{detail}</p>}
+            <p className='font-display text-body text-text-primary'>{title}</p>
+            {detail && <p className='font-mono text-label text-text-faint'>{detail}</p>}
         </div>
 
         {action &&

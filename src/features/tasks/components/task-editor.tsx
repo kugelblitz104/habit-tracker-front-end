@@ -236,7 +236,7 @@ export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
                     type='text'
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className={`${formFieldClass} font-display text-[13px] text-text-primary`}
+                    className={`${formFieldClass} font-display text-body text-text-primary`}
                     style={formFieldStyle}
                 />
             </div>
@@ -350,7 +350,7 @@ export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
                         onChange={setEstimatedEffort}
                     />
                     {trackedSeconds > 0 && (
-                        <p className='mt-1 font-mono text-[11px] text-text-faint'>
+                        <p className='mt-1 font-mono text-label text-text-faint'>
                             {formatHumanDuration(trackedSeconds)} tracked
                         </p>
                     )}
@@ -386,7 +386,7 @@ export const TaskEditor = ({ task, onClose, onDeleted }: TaskEditorProps) => {
                     disabled={isDeletePending}
                     className='font-mono hover:brightness-125'
                     style={{
-                        fontSize: '11.5px',
+                        fontSize: '13px',
                         borderColor: 'var(--danger-border)',
                         color: 'var(--color-danger)'
                     }}

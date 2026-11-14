@@ -75,6 +75,21 @@ export class AuthenticationService {
         });
     }
     /**
+     * Logout
+     * Revoke every access and refresh token issued to the current user.
+     *
+     * The token version is per user, so this ends the session on every device,
+     * not only the one that called it.
+     * @returns MessageResponse Successful Response
+     * @throws ApiError
+     */
+    public static logoutAuthLogoutPost(): CancelablePromise<MessageResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/auth/logout',
+        });
+    }
+    /**
      * Forgot Password
      * Begin a password reset.
      *

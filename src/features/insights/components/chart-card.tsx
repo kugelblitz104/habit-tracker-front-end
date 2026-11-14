@@ -2,8 +2,7 @@ import type { ReactNode } from 'react';
 import { CARD_SURFACE_CLASS, CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
 
 /** Private to this module — the four insights charts each redeclared this identically. */
-const titleClass =
-    'font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-text-muted';
+const titleClass = 'font-mono text-label font-semibold uppercase tracking-[0.14em] text-text-muted';
 
 type ChartCardProps = {
     /** Chart heading, e.g. "Time tracked". */
@@ -24,12 +23,8 @@ export const ChartCard = ({ title, meta, isEmpty, emptyMessage, children }: Char
     <section className={CARD_SURFACE_CLASS} style={CARD_SURFACE_STYLE}>
         <div className='mb-3 flex items-baseline justify-between'>
             <h2 className={titleClass}>{title}</h2>
-            <span className='font-mono text-[11px] text-text-faint'>{meta}</span>
+            <span className='font-mono text-label text-text-faint'>{meta}</span>
         </div>
-        {isEmpty ? (
-            <p className='font-mono text-[12px] text-text-faint'>{emptyMessage}</p>
-        ) : (
-            children
-        )}
+        {isEmpty ? <p className='font-mono text-meta text-text-faint'>{emptyMessage}</p> : children}
     </section>
 );

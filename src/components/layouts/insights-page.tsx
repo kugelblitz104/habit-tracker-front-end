@@ -45,10 +45,10 @@ export const InsightsPage = () => {
             <div className={`mx-auto px-5 py-7 md:px-7 ${PAGE_MAX_WIDTH}`}>
                 <header className='mb-[26px] flex flex-wrap items-start justify-between gap-4'>
                     <div>
-                        <h1 className='font-display text-[23px] font-bold tracking-[-0.01em] text-text-primary'>
+                        <h1 className='font-display text-title font-bold tracking-[-0.01em] text-text-primary'>
                             Insights
                         </h1>
-                        <p className='mt-0.5 font-mono text-[12px] text-text-muted'>
+                        <p className='mt-0.5 font-mono text-meta text-text-muted'>
                             Your last {rangeDays} days at a glance
                         </p>
                     </div>
@@ -62,10 +62,10 @@ export const InsightsPage = () => {
                         className='rounded-card border p-10 text-center'
                         style={CARD_SURFACE_STYLE}
                     >
-                        <p className='font-display text-[15px] text-text-secondary'>
+                        <p className='font-display text-lead text-text-secondary'>
                             Nothing to show yet
                         </p>
-                        <p className='mt-1 font-mono text-[12px] text-text-muted'>
+                        <p className='mt-1 font-mono text-meta text-text-muted'>
                             Complete tasks, track time, or check off habits and your trends will
                             appear here.
                         </p>

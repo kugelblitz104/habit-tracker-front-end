@@ -4,6 +4,7 @@ import { getUser } from '@/features/users/api/get-users';
 import { useQueryClient } from '@tanstack/react-query';
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { getUserIdFromToken, isTokenExpired } from './token-utils';
+import { Logout } from '@/features/auth/api/logout';
 import { Refresh } from '@/features/auth/api/refresh';
 import { updateProfile } from '@/features/profiles/api/update-profiles';
 import { getBrowserTimeZone } from './date-utils';
@@ -244,6 +245,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const logout = () => {
+        // Fired before the token is cleared below: the client reads it synchronously.
+        // The response is not awaited, so a slow or failing call never blocks sign-out.
+        if (OpenAPI.TOKEN) void Logout();
+
         // Clear storage (including the active-profile selection so it can't leak
         // into the next user's session).
         localStorage.removeItem('access_token');

@@ -15,7 +15,7 @@ export const ErrorPage = ({ message }: ErrorPageProps) => {
                 <p className='font-display text-[16px] font-semibold text-text-primary'>
                     Something went wrong
                 </p>
-                <p className='font-mono text-[12px] text-text-muted'>
+                <p className='font-mono text-meta text-text-muted'>
                     {message || 'An unexpected error occurred.'}
                 </p>
             </div>

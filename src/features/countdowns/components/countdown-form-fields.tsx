@@ -7,7 +7,7 @@ import { TaskSelect } from '@/features/time-entries/components/task-select';
 const inputClass = `${compactFieldClass} placeholder:text-text-faint`;
 const inputStyle = compactFieldStyle;
 const labelCls =
-    'mb-1 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-text-faint';
+    'mb-1 font-mono text-label font-semibold uppercase tracking-[0.12em] text-text-faint';
 
 export type CountdownFormValues = {
     title: string;
@@ -109,7 +109,7 @@ export const CountdownFormFields = ({
                     ))}
                 </select>
                 {repeat !== 'none' && (
-                    <label className='mt-2 flex cursor-pointer items-center gap-1.5 font-mono text-[11px] text-text-muted'>
+                    <label className='mt-2 flex cursor-pointer items-center gap-1.5 font-mono text-label text-text-muted'>
                         <input
                             type='checkbox'
                             checked={showOccurrence}

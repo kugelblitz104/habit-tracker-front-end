@@ -215,16 +215,16 @@ export const IntegrationConnectionsSection = ({ profile }: Props) => {
                             />
                             <div className='min-w-0 flex-1'>
                                 <div className='truncate'>
-                                    <span className='text-[14px] text-text-secondary'>
+                                    <span className='text-body text-text-secondary'>
                                         {connection.name}
                                     </span>
-                                    <span className='font-mono text-[11px] text-text-muted'>
+                                    <span className='font-mono text-label text-text-muted'>
                                         {' '}
                                         ·{' '}
                                         {PROVIDER_LABEL[connection.provider] ?? connection.provider}
                                     </span>
                                 </div>
-                                <div className='mt-0.5 truncate font-mono text-[11px] text-text-muted'>
+                                <div className='mt-0.5 truncate font-mono text-label text-text-muted'>
                                     {providerSubline(connection)}
                                     {connection.last_synced_at && (
                                         <> · synced {connection.last_synced_at.split('T')[0]}</>
@@ -245,7 +245,7 @@ export const IntegrationConnectionsSection = ({ profile }: Props) => {
                                     disabled={syncingId === connection.id}
                                     title={`Sync "${connection.name}" now`}
                                     aria-label={`Sync "${connection.name}" now`}
-                                    className='flex min-h-[28px] items-center gap-1 rounded-[8px] px-2 py-1 text-[11.5px] text-text-secondary transition-colors pointer-coarse:min-h-[44px] hover:text-text-primary disabled:opacity-50'
+                                    className='flex min-h-[28px] items-center gap-1 rounded-[8px] px-2 py-1 text-meta text-text-secondary transition-colors pointer-coarse:min-h-[44px] hover:text-text-primary disabled:opacity-50'
                                 >
                                     <RefreshCw
                                         size={13}
@@ -294,7 +294,7 @@ export const IntegrationConnectionsSection = ({ profile }: Props) => {
                 )}
             </div>
 
-            <p className='mt-3 font-mono text-[11px] text-text-faint'>
+            <p className='mt-3 font-mono text-label text-text-faint'>
                 Uses a personal access token you create in Azure DevOps or GitHub — stored
                 encrypted, never shown again.
             </p>

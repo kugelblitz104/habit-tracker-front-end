@@ -16,7 +16,7 @@ type LabeledSwitchProps = {
 export const LabeledSwitch = ({ label, checked, onChange }: LabeledSwitchProps) => {
     return (
         <Field className='mb-3 flex items-center justify-between'>
-            <Label className='font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-text-faint'>
+            <Label className='font-mono text-label font-semibold uppercase tracking-[0.12em] text-text-faint'>
                 {label}
             </Label>
             <Switch

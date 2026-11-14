@@ -44,7 +44,7 @@ export const EmberToggle = ({
             onChange={onChange}
             disabled={disabled}
             aria-label={label}
-            className='hit-target relative inline-block flex-none rounded-chip outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-now-accent disabled:cursor-not-allowed disabled:opacity-50'
+            className='hit-target relative inline-block flex-none rounded-chip outline-none transition-opacity disabled:cursor-not-allowed disabled:opacity-50'
             style={{
                 width: d.width,
                 height: d.height,

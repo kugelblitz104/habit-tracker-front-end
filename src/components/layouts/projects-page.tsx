@@ -32,10 +32,10 @@ const ProjectCard = ({ project }: { project: ProjectRead }) => {
                 style={{ backgroundColor: project.color }}
             />
             <div className='min-w-0'>
-                <div className='truncate font-display text-[15px] font-medium text-text-primary'>
+                <div className='truncate font-display text-lead font-medium text-text-primary'>
                     {project.name}
                 </div>
-                <div className='mt-0.5 font-mono text-[11.5px] text-text-muted'>
+                <div className='mt-0.5 font-mono text-meta text-text-muted'>
                     {openCount} open · {doneCount} done
                 </div>
             </div>
@@ -84,7 +84,7 @@ export const ProjectsPage = () => {
                     <div className='mb-5 flex items-center justify-end'>
                         <label className='flex cursor-pointer items-center gap-2'>
                             <span
-                                className={`font-mono text-[10.5px] uppercase tracking-[0.12em] ${
+                                className={`font-mono text-label uppercase tracking-[0.12em] ${
                                     showArchived ? 'text-habit-label' : 'text-text-muted'
                                 }`}
                             >
@@ -144,7 +144,7 @@ export const ProjectsPage = () => {
                 />
 
                 {!projectsQuery.isLoading && !projectsQuery.isError && allProjects.length === 0 && (
-                    <p className='font-mono text-[12px] text-text-faint'>
+                    <p className='font-mono text-meta text-text-faint'>
                         No projects yet. Type a name above to create one.
                     </p>
                 )}
@@ -163,7 +163,7 @@ export const ProjectsPage = () => {
 
                 {showArchived && archivedProjects.length > 0 && (
                     <section className='mt-[30px]'>
-                        <h2 className='mb-2.5 font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-text-muted'>
+                        <h2 className='mb-2.5 font-mono text-meta font-semibold uppercase tracking-[0.16em] text-text-muted'>
                             Archived
                         </h2>
                         <div className='grid grid-cols-[minmax(0,1fr)] gap-2.5 sm:grid-cols-2'>

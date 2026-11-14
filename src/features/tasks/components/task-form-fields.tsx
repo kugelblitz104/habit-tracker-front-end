@@ -96,14 +96,14 @@ export const PriorityField = ({ value, onChange }: PriorityFieldProps) => (
                         </span>
                         <span className='min-w-0'>
                             <span
-                                className='block font-display text-[13px] font-semibold'
+                                className='block font-display text-body font-semibold'
                                 style={{
                                     color: selected ? option.accent : 'var(--color-text-secondary)'
                                 }}
                             >
                                 {option.label}
                             </span>
-                            <span className='mt-0.5 block font-mono text-[11px] leading-snug text-text-faint'>
+                            <span className='mt-0.5 block font-mono text-label leading-snug text-text-faint'>
                                 {option.description}
                             </span>
                         </span>
@@ -167,7 +167,7 @@ export const DateTimeField = ({
                     <button
                         type='button'
                         onClick={clear}
-                        className='inline-flex items-center gap-0.5 font-mono text-[11px] text-text-faint hover:text-text-muted'
+                        className='inline-flex items-center gap-0.5 font-mono text-label text-text-faint hover:text-text-muted'
                     >
                         <X size={12} />
                         clear

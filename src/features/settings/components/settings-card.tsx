@@ -38,7 +38,7 @@ export const SettingsCard = ({
         >
             <div className={`flex items-center justify-between gap-3 ${labelGapClass}`}>
                 <div
-                    className='font-mono text-[10px] font-medium uppercase tracking-[0.14em]'
+                    className='font-mono text-label font-medium uppercase tracking-[0.14em]'
                     style={{ color: labelColor }}
                 >
                     {label}

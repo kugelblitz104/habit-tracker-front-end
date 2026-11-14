@@ -46,10 +46,9 @@ test('a wrong password shows an error and stays on /login', async ({ page, accou
     await page.getByLabel('Password').fill('definitely-not-the-password');
     await page.getByRole('button', { name: /sign in/i }).click();
 
+    // The form shows the API's own `detail`, not a client-side string.
     await expect(
-        page.getByText('Login failed. Please check your credentials and try again.', {
-            exact: true
-        })
+        page.getByText('Incorrect username/email or password', { exact: true })
     ).toBeVisible();
     await expect(page).toHaveURL(/\/login$/);
     // A 401 on /auth/login must NOT be treated as an expired session: with no

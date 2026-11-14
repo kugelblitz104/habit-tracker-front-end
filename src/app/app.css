@@ -37,6 +37,8 @@
  *   are currently unconsumed — their Now-band glow and ambient wash overlay
  *   were retired with the row redesign's per-band card decoration.
  *
+ * TYPE:    text-label (12), text-meta (13), text-body (14), text-lead (15), text-title (24)
+ *
  * COLOR TOKENS (Tailwind utilities `bg-*` / `text-*` / `border-*`)
  *   Surfaces: surface-ember, surface-cool, surface-espresso, titlebar
  *   Text ramp: text-primary, text-now, text-secondary, text-secondary-soft,
@@ -75,6 +77,63 @@
         'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
     --font-mono:
         'JetBrains Mono', ui-monospace, 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
+
+    /* Type scale. Display sizes above `title` stay arbitrary at their call sites. */
+    --text-label: 12px;
+    --text-meta: 13px;
+    --text-body: 14px;
+    --text-lead: 15px;
+    --text-title: 24px;
+
+    /* Motion. Use as `motion-safe:animate-*` so reduced-motion users get none.
+       `draw` goes on an SVG path (`[&_path]:animate-draw`). */
+    --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --animate-pop: pop 260ms var(--ease-pop);
+    --animate-draw: draw 220ms ease-out;
+    --animate-roll: roll 240ms var(--ease-settle);
+    --animate-kick: kick 500ms var(--ease-pop);
+    --animate-wash: wash 1s ease-out;
+    --animate-breathe: breathe 2s ease-in-out infinite;
+
+    @keyframes pop {
+        from {
+            scale: 0.7;
+        }
+    }
+    @keyframes draw {
+        from {
+            stroke-dasharray: 24;
+            stroke-dashoffset: 24;
+        }
+        to {
+            stroke-dasharray: 24;
+            stroke-dashoffset: 0;
+        }
+    }
+    @keyframes roll {
+        from {
+            opacity: 0;
+            translate: 0 70%;
+        }
+    }
+    @keyframes kick {
+        40% {
+            scale: 1.45;
+            rotate: -8deg;
+        }
+    }
+    @keyframes wash {
+        from {
+            background-color: rgba(255, 138, 69, 0.24);
+        }
+    }
+    @keyframes breathe {
+        50% {
+            opacity: 0.35;
+            scale: 0.8;
+        }
+    }
 
     /* Surfaces & titlebar */
     --color-surface-ember: #17130c;
@@ -254,6 +313,11 @@
     --button-primary-text: #1c0f07;
     --danger-border: rgba(209, 136, 154, 0.3);
     --danger-bg: rgba(193, 78, 106, 0.14);
+
+    /* ---- Motion durations ---- */
+    --dur-fast: 120ms;
+    --dur-base: 220ms;
+    --dur-slow: 320ms;
 
     /* ---- Spacing scale ---- */
     --space-frame: 28px;
@@ -484,4 +548,15 @@ html[data-vt-nav] * {
         height: 44px;
         transform: translate(-50%, -50%);
     }
+}
+
+/*
+ * Keyboard focus ring for every interactive control. Unlayered, so it beats
+ * Tailwind's layered `outline-none`; `:where()` keeps specificity at zero so a
+ * later unlayered rule can still override it. Programmatically focused
+ * containers (tabindex="-1") are excluded.
+ */
+:where(a, button, input, select, textarea, summary, [tabindex]:not([tabindex='-1'])):focus-visible {
+    outline: 2px solid var(--color-now-accent);
+    outline-offset: 2px;
 }

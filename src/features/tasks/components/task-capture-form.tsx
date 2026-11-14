@@ -6,6 +6,7 @@ import { sanitizeMultilineText } from '@/lib/input-sanitization';
 import { TaskStatus } from '@/types/types';
 import { useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { toast } from 'react-toastify';
+import { markJustCreated } from '@/lib/just-created';
 import { useCreateTask } from '../api/create-tasks';
 import { parseTaskInput } from '../utils/parse-task-input';
 import type { TaskCaptureDraft } from './task-capture-bar';
@@ -113,7 +114,8 @@ export const TaskCaptureForm = ({ profileId, initial, onClose }: TaskCaptureForm
         if (projectId !== null) data.project_id = projectId;
 
         createTask.mutate(data, {
-            onSuccess: () => {
+            onSuccess: (task) => {
+                markJustCreated('task', task.id);
                 toast.success('Task created');
                 onClose();
             },

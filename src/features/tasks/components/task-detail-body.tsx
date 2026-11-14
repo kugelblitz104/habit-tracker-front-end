@@ -91,7 +91,7 @@ export const TaskDetailBody = ({
 
     if (!task) {
         return (
-            <div className='p-4 font-mono text-[12px] text-text-faint'>
+            <div className='p-4 font-mono text-meta text-text-faint'>
                 {taskQuery.isError ? 'Failed to load task.' : 'Loading…'}
             </div>
         );
@@ -101,7 +101,7 @@ export const TaskDetailBody = ({
         return (
             <div className='flex flex-col gap-3'>
                 <div className='flex items-center justify-between gap-3'>
-                    <h2 className='font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-text-muted'>
+                    <h2 className='font-mono text-meta font-semibold uppercase tracking-[0.16em] text-text-muted'>
                         Edit task
                     </h2>
                     {/* Raw <button>, not <Button>: the icon variant's rounded-button
@@ -149,10 +149,10 @@ export const TaskDetailBody = ({
             {/* Notes */}
             {notes && (
                 <div>
-                    <h3 className='mb-1 font-mono text-[11px] uppercase tracking-[0.14em] text-text-faint'>
+                    <h3 className='mb-1 font-mono text-label uppercase tracking-[0.14em] text-text-faint'>
                         Notes
                     </h3>
-                    <p className='whitespace-pre-wrap font-display text-[13.5px] leading-relaxed text-text-secondary'>
+                    <p className='whitespace-pre-wrap font-display text-body leading-relaxed text-text-secondary'>
                         {notes}
                     </p>
                 </div>
@@ -182,7 +182,7 @@ export const TaskDetailBody = ({
                     offsets != null && (
                         <p
                             key={label}
-                            className='flex items-center gap-1.5 font-mono text-[11.5px] text-text-secondary'
+                            className='flex items-center gap-1.5 font-mono text-meta text-text-secondary'
                         >
                             <Bell size={12} aria-hidden='true' />
                             {label}: {offsets.length ? offsets.map(offsetLabel).join(', ') : 'none'}
@@ -206,7 +206,7 @@ export const TaskDetailBody = ({
                     disabled={isDeletePending}
                     className='font-mono hover:brightness-125'
                     style={{
-                        fontSize: '11.5px',
+                        fontSize: '13px',
                         borderColor: 'var(--danger-border)',
                         color: 'var(--color-danger)'
                     }}

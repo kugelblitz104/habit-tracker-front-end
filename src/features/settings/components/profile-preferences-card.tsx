@@ -11,7 +11,7 @@ import { toast } from 'react-toastify';
 import { SettingsCard } from './settings-card';
 
 const menuItemClass =
-    'flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-left font-display text-[13px] text-text-secondary data-focus:bg-white/5';
+    'flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-left font-display text-body text-text-secondary data-focus:bg-white/5';
 
 type ToggleRowConfig = {
     key:
@@ -159,10 +159,10 @@ export const ProfilePreferencesCard = ({
                     style={index > 0 ? { borderColor: 'rgba(255,255,255,.06)' } : undefined}
                 >
                     <div>
-                        <div className='text-[14.5px] font-medium' style={{ color: '#f0e7db' }}>
+                        <div className='text-lead font-medium' style={{ color: '#f0e7db' }}>
                             {row.title}
                         </div>
-                        <div className='mt-0.5 text-[12px] text-text-muted'>{row.description}</div>
+                        <div className='mt-0.5 text-meta text-text-muted'>{row.description}</div>
                     </div>
                     <EmberToggle
                         checked={profile[row.key] ?? row.defaultOn ?? false}
@@ -178,16 +178,14 @@ export const ProfilePreferencesCard = ({
                 style={{ borderColor: 'rgba(255,255,255,.06)' }}
             >
                 <div>
-                    <div className='text-[14.5px] font-medium' style={{ color: '#f0e7db' }}>
+                    <div className='text-lead font-medium' style={{ color: '#f0e7db' }}>
                         Default landing
                     </div>
-                    <div className='mt-0.5 text-[12px] text-text-muted'>
-                        Where this profile opens
-                    </div>
+                    <div className='mt-0.5 text-meta text-text-muted'>Where this profile opens</div>
                 </div>
                 <Menu as='div' className='relative'>
                     <MenuButton
-                        className='inline-flex min-h-[36px] items-center gap-1.5 rounded-[8px] border px-3 py-[7px] text-[12.5px] text-text-secondary-soft outline-none transition-colors pointer-coarse:min-h-[44px] hover:text-text-primary focus-visible:ring-2 focus-visible:ring-now-accent disabled:opacity-50'
+                        className='inline-flex min-h-[36px] items-center gap-1.5 rounded-[8px] border px-3 py-[7px] text-meta text-text-secondary-soft outline-none transition-colors pointer-coarse:min-h-[44px] hover:text-text-primary disabled:opacity-50'
                         style={{
                             backgroundColor: 'rgba(255,255,255,.04)',
                             borderColor: 'rgba(255,255,255,.1)'

@@ -2,6 +2,7 @@ import { Input } from '@/components/ui/forms/input';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-toastify';
+import { markJustCreated } from '@/lib/just-created';
 import { useCreateTask } from '../api/create-tasks';
 import type { MenuPoint } from './task-context-menu/index';
 
@@ -61,7 +62,8 @@ export const SubtaskQuickAdd = ({ profileId, parentId, point, onClose }: Subtask
         createTask.mutate(
             { profile_id: profileId, parent_id: parentId, title: trimmed },
             {
-                onSuccess: () => {
+                onSuccess: (subtask) => {
+                    markJustCreated('task', subtask.id);
                     setTitle('');
                     setAddedCount((n) => n + 1);
                 },
@@ -82,13 +84,11 @@ export const SubtaskQuickAdd = ({ profileId, parentId, point, onClose }: Subtask
             }}
         >
             <div className='mb-1 flex items-center justify-between px-0.5'>
-                <span className='font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-text-faint'>
+                <span className='font-mono text-label font-semibold uppercase tracking-[0.12em] text-text-faint'>
                     Add subtask
                 </span>
                 {addedCount > 0 && (
-                    <span className='font-mono text-[10px] text-text-faint'>
-                        {addedCount} added
-                    </span>
+                    <span className='font-mono text-label text-text-faint'>{addedCount} added</span>
                 )}
             </div>
             <Input

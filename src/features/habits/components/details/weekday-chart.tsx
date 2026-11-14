@@ -43,7 +43,7 @@ export const WeekdayChart = ({ rates, weekStartMonday = true }: WeekdayChartProp
                                 title={`${Math.round(rate * 100)}%`}
                             />
                             <span
-                                className='font-mono text-[10px]'
+                                className='font-mono text-label'
                                 style={{ color: isStrong ? '#8ba3b5' : '#5f7688' }}
                             >
                                 {col.label}

@@ -35,7 +35,7 @@ export const ProjectHeader = ({
             to={backTo}
             label={backLabel}
             ariaLabel={backAriaLabel}
-            className='font-mono text-[12px] text-text-muted hover:text-text-secondary'
+            className='font-mono text-meta text-text-muted hover:text-text-secondary'
         />
 
         <div className='mt-3 flex items-start justify-between gap-4'>
@@ -46,12 +46,12 @@ export const ProjectHeader = ({
                         style={{ backgroundColor: project.color }}
                     />
                 )}
-                <h1 className='truncate font-display text-[23px] font-bold tracking-[-0.01em] text-text-primary'>
+                <h1 className='truncate font-display text-title font-bold tracking-[-0.01em] text-text-primary'>
                     {project?.name ?? 'Project'}
                 </h1>
                 {project?.archived && (
                     <span
-                        className='shrink-0 rounded-chip border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-text-muted'
+                        className='shrink-0 rounded-chip border px-2 py-0.5 font-mono text-label uppercase tracking-[0.12em] text-text-muted'
                         style={{ borderColor: 'var(--surface-card-border)' }}
                     >
                         Archived
@@ -73,7 +73,7 @@ export const ProjectHeader = ({
             )}
         </div>
 
-        <p className='mt-1.5 font-mono text-[12px] text-text-muted'>
+        <p className='mt-1.5 font-mono text-meta text-text-muted'>
             {openCount} open · {doneCount} done
         </p>
         <div

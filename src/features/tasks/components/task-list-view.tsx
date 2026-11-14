@@ -4,6 +4,7 @@ import type { TaskStatus } from '@/types/types';
 import { ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { computeBand, toActiveBand } from '../utils/compute-band';
+import { useExitingRows } from '../hooks/use-exiting-rows';
 import { upwardFrom } from '../utils/task-bands';
 import { buildTaskSections, type TaskControlsState } from '../utils/task-controls';
 import type { SluggedEntity } from '@/lib/entity-ref';
@@ -62,9 +63,10 @@ export const TaskListView = ({
     selectedIds,
     onToggleSelect
 }: TaskListViewProps) => {
+    const { rows, exitingStatus, holdIfClosing } = useExitingRows(tasks);
     const sections = useMemo(
-        () => buildTaskSections(tasks, controls, projectsById),
-        [tasks, controls, projectsById]
+        () => buildTaskSections(rows, controls, projectsById),
+        [rows, controls, projectsById]
     );
 
     // Keys of collapsible sections the user has flipped from their default.
@@ -84,8 +86,8 @@ export const TaskListView = ({
     if (total === 0) {
         // Distinguish a genuinely empty surface from one whose tasks are all
         // filtered out — the fix is different (add one vs. loosen filters).
-        const hint = tasks.length === 0 ? emptyHint : noMatchesHint;
-        return <p className='font-mono text-[12px] text-text-faint'>{hint}</p>;
+        const hint = rows.length === 0 ? emptyHint : noMatchesHint;
+        return <p className='font-mono text-meta text-text-faint'>{hint}</p>;
     }
 
     return (
@@ -155,9 +157,10 @@ export const TaskListView = ({
                                                     : undefined
                                             }
                                             showProject={showProject}
-                                            onStatusChange={(status) =>
-                                                onStatusChange(task.id, status)
-                                            }
+                                            onStatusChange={(status) => {
+                                                holdIfClosing(task, status);
+                                                onStatusChange(task.id, status);
+                                            }}
                                             notesOpen={notesTaskId === task.id}
                                             editing={selectedEditTaskId === task.id}
                                             onToggleNotes={() => onToggleNotes(task.id)}
@@ -176,6 +179,7 @@ export const TaskListView = ({
                                             openUpward={i >= upwardIdx}
                                             isFirst={i === 0}
                                             isLast={i === section.tasks.length - 1}
+                                            exitingStatus={exitingStatus(task.id)}
                                             selectable={selectionMode}
                                             selected={selectedIds?.has(task.id) ?? false}
                                             onToggleSelect={

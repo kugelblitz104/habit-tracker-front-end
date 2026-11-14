@@ -361,7 +361,7 @@ test('a connection with a last_error renders the warning row', async ({
     // Warning glyph + message on their own mono danger line beneath the name.
     const errorRow = errorLine.locator('xpath=..');
     await expect(errorRow).toHaveClass(
-        'mt-1 flex items-center gap-1 font-mono text-[11px] text-danger'
+        'mt-1 flex items-center gap-1 font-mono text-label text-danger'
     );
     await expect(errorRow.locator('svg.lucide-triangle-alert')).toBeVisible();
 

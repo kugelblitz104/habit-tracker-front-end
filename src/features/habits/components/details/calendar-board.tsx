@@ -123,7 +123,7 @@ const DayCell = ({
 
     return (
         <div
-            className={`relative flex select-none items-center justify-center rounded-cell text-[13px] transition-colors ${
+            className={`relative flex select-none items-center justify-center rounded-cell text-body transition-colors ${
                 isFuture ? 'cursor-default' : 'cursor-pointer'
             }`}
             style={{ aspectRatio: '1', ...cellStyle(status, isToday, isFuture) }}
@@ -151,7 +151,7 @@ const DayCell = ({
 };
 
 const LegendSwatch = ({ label, style }: { label: string; style: CSSProperties }) => (
-    <span className='inline-flex items-center gap-[6px] text-[10.5px] text-[#8ba3b5]'>
+    <span className='inline-flex items-center gap-[6px] text-label text-[#8ba3b5]'>
         <span className='h-[11px] w-[11px] rounded-[3px]' style={style} />
         {label}
     </span>
@@ -267,7 +267,7 @@ export const CalendarBoard = ({
     const isFuture = (date: Date) => date.getTime() > today.getTime();
 
     const pagerBtn = (enabled: boolean) =>
-        `inline-flex h-6 w-6 items-center justify-center rounded-[6px] border text-[13px] transition-colors ${
+        `inline-flex h-6 w-6 items-center justify-center rounded-[6px] border text-body transition-colors ${
             enabled
                 ? 'border-[rgba(120,168,205,.2)] text-[#8ba3b5] hover:bg-[var(--habit-container-bg)]'
                 : 'border-[rgba(120,168,205,.12)] text-[#4a5966] cursor-not-allowed'
@@ -302,7 +302,7 @@ export const CalendarBoard = ({
             <div className='mb-[6px] grid grid-cols-7 gap-[6px]'>
                 {(weekStartMonday ? WEEKDAY_HEADERS_MONDAY : WEEKDAY_HEADERS_SUNDAY).map(
                     (label, i) => (
-                        <span key={i} className='text-center font-mono text-[10px] text-[#5f7688]'>
+                        <span key={i} className='text-center font-mono text-label text-[#5f7688]'>
                             {label}
                         </span>
                     )
@@ -352,7 +352,7 @@ export const CalendarBoard = ({
                     style={{ background: '#191d22', border: '1px solid #2a3138' }}
                 />
             </div>
-            <div className='mt-[10px] font-mono text-[10.5px] text-[#5f7688]'>
+            <div className='mt-[10px] font-mono text-label text-[#5f7688]'>
                 Tap any day to set or backdate its status
             </div>
 

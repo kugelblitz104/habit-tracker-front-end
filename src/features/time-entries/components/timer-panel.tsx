@@ -134,7 +134,7 @@ export const TimerPanel = ({ profile, profileId }: TimerPanelProps) => {
                                 type='button'
                                 onClick={() => setSelectedMode(option.kind)}
                                 aria-pressed={selected}
-                                className='min-h-[24px] rounded-chip px-4 py-1.5 font-display text-[13px] font-medium transition-colors pointer-coarse:min-h-[44px]'
+                                className='min-h-[24px] rounded-chip px-4 py-1.5 font-display text-body font-medium transition-colors pointer-coarse:min-h-[44px]'
                                 style={{
                                     backgroundColor: selected
                                         ? 'rgba(255,255,255,.06)'
@@ -153,12 +153,20 @@ export const TimerPanel = ({ profile, profileId }: TimerPanelProps) => {
 
             {/* Phase label */}
             <div
-                className='mb-2 text-center font-mono text-[11.5px] uppercase tracking-[0.16em]'
+                className='mb-2 text-center font-mono text-meta uppercase tracking-[0.16em]'
                 style={{
                     color: onBreak ? 'var(--color-soon-text, #cbb994)' : 'var(--color-text-muted)'
                 }}
             >
-                {phaseLabel}
+                <span className='relative inline-block'>
+                    {phaseLabel}
+                    {running && !onBreak && (
+                        <span
+                            aria-hidden='true'
+                            className='absolute -right-4 top-1/2 size-2 -translate-y-1/2 rounded-full bg-now-accent motion-safe:animate-breathe'
+                        />
+                    )}
+                </span>
             </div>
 
             {/* Big readout */}
@@ -191,7 +199,7 @@ export const TimerPanel = ({ profile, profileId }: TimerPanelProps) => {
                                     type='button'
                                     onClick={() => setTargetType(option.type)}
                                     aria-pressed={selected}
-                                    className='min-h-[24px] rounded-chip px-3 py-1 font-mono text-[11px] uppercase tracking-[0.08em] transition-colors pointer-coarse:min-h-[44px]'
+                                    className='min-h-[24px] rounded-chip px-3 py-1 font-mono text-label uppercase tracking-[0.08em] transition-colors pointer-coarse:min-h-[44px]'
                                     style={{
                                         backgroundColor: selected
                                             ? 'rgba(255,255,255,.06)'
@@ -253,7 +261,7 @@ export const TimerPanel = ({ profile, profileId }: TimerPanelProps) => {
                     <button
                         type='button'
                         onClick={skipBreak}
-                        className='inline-flex min-h-[44px] items-center gap-2 rounded-button border px-5 py-2.5 font-display text-[14px] font-semibold text-text-secondary transition-colors hover:text-text-primary'
+                        className='inline-flex min-h-[44px] items-center gap-2 rounded-button border px-5 py-2.5 font-display text-body font-semibold text-text-secondary transition-colors hover:text-text-primary'
                         style={{ borderColor: 'var(--surface-input-border)' }}
                     >
                         <SkipForward size={16} />
@@ -264,7 +272,7 @@ export const TimerPanel = ({ profile, profileId }: TimerPanelProps) => {
                         type='button'
                         onClick={handleStop}
                         disabled={isStopping}
-                        className='inline-flex min-h-[44px] items-center gap-2 rounded-button border px-6 py-2.5 font-display text-[14px] font-semibold transition-colors hover:brightness-125 disabled:opacity-50'
+                        className='inline-flex min-h-[44px] items-center gap-2 rounded-button border px-6 py-2.5 font-display text-body font-semibold transition-colors hover:brightness-125 disabled:opacity-50'
                         style={{
                             borderColor: 'var(--danger-border)',
                             color: 'var(--color-danger)'
@@ -278,7 +286,7 @@ export const TimerPanel = ({ profile, profileId }: TimerPanelProps) => {
                         type='button'
                         onClick={handleStart}
                         disabled={!profileId || createTimeEntry.isPending}
-                        className='inline-flex min-h-[44px] items-center gap-2 rounded-button px-7 py-2.5 font-display text-[14px] font-semibold transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50'
+                        className='inline-flex min-h-[44px] items-center gap-2 rounded-button px-7 py-2.5 font-display text-body font-semibold transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50'
                         style={{
                             background: 'var(--button-primary-gradient)',
                             color: 'var(--button-primary-text)'
@@ -292,7 +300,7 @@ export const TimerPanel = ({ profile, profileId }: TimerPanelProps) => {
 
             {/* Pomodoro cadence hint */}
             {isPomodoro && !running && !onBreak && (
-                <p className='mt-4 flex items-center justify-center gap-1.5 font-mono text-[11px] text-text-faint'>
+                <p className='mt-4 flex items-center justify-center gap-1.5 font-mono text-label text-text-faint'>
                     <Coffee size={12} />
                     {work}m focus · {breakMin}m break · {longBreakMin}m long break every {cycles}
                 </p>

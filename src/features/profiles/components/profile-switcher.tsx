@@ -27,17 +27,17 @@ export const ProfileSwitcher = () => {
         <>
             <Menu as='div' className='relative'>
                 <MenuButton
-                    className='flex min-h-[34px] items-center gap-2 rounded-chip border py-1 pl-1 pr-2.5 outline-none transition-colors pointer-coarse:min-h-[44px] hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-now-accent'
+                    className='flex min-h-[34px] items-center gap-2 rounded-chip border py-1 pl-1 pr-2.5 outline-none transition-colors pointer-coarse:min-h-[44px] hover:bg-white/5'
                     style={{ borderColor: 'var(--surface-card-border)' }}
                 >
                     <ProfileAvatar profile={activeProfile} size={24} />
-                    <span className='font-display text-[13px] text-text-secondary'>
+                    <span className='font-display text-body text-text-secondary'>
                         {activeProfile?.name ?? 'Profile'}
                     </span>
                     <ChevronDown size={14} className='text-text-muted' />
                 </MenuButton>
                 <ThemedMenuItems anchor={{ to: 'bottom end', gap: 8 }} className='w-56'>
-                    <p className='px-2 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-text-faint'>
+                    <p className='px-2 py-1 font-mono text-label uppercase tracking-[0.16em] text-text-faint'>
                         Profiles
                     </p>
                     {profiles.map((profile) => {
@@ -50,7 +50,7 @@ export const ProfileSwitcher = () => {
                                     className='flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-left data-focus:bg-white/5'
                                 >
                                     <ProfileAvatar profile={profile} size={20} />
-                                    <span className='font-display text-[13px] text-text-secondary'>
+                                    <span className='font-display text-body text-text-secondary'>
                                         {profile.name}
                                     </span>
                                     {isActive && (
@@ -74,7 +74,7 @@ export const ProfileSwitcher = () => {
                         <button
                             type='button'
                             onClick={() => navigate('/settings')}
-                            className='flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-left font-display text-[13px] text-text-secondary data-focus:bg-white/5'
+                            className='flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-left font-display text-body text-text-secondary data-focus:bg-white/5'
                         >
                             <Settings size={16} className='text-text-muted' />
                             Settings
@@ -84,7 +84,7 @@ export const ProfileSwitcher = () => {
                         <button
                             type='button'
                             onClick={() => setLogoutOpen(true)}
-                            className='flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-left font-display text-[13px] data-focus:bg-white/5'
+                            className='flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-left font-display text-body data-focus:bg-white/5'
                             style={{ color: 'var(--color-danger)' }}
                         >
                             <LogOut size={16} />

@@ -1,7 +1,7 @@
 import type { ProjectRead } from '@/api';
 import { useDetailOrigin } from '@/components/layouts/detail-origin';
 import { ErrorPage } from '@/components/layouts/error-page';
-import { LoadingPage } from '@/components/layouts/loading-page';
+import { LoadingContent } from '@/components/layouts/loading-page';
 import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
 import { QueryState } from '@/components/ui/query-state';
 import { useDeleteProject } from '@/features/projects/api/delete-projects';
@@ -259,10 +259,10 @@ function ProjectContent({ projectId }: { projectId: number }) {
                             className='mb-[30px] rounded-card border p-4'
                             style={CARD_SURFACE_STYLE}
                         >
-                            <h2 className='mb-2 font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-text-muted'>
+                            <h2 className='mb-2 font-mono text-meta font-semibold uppercase tracking-[0.16em] text-text-muted'>
                                 Project notes
                             </h2>
-                            <div className='font-mono text-[12px] leading-relaxed whitespace-pre-wrap text-text-secondary-soft'>
+                            <div className='font-mono text-meta leading-relaxed whitespace-pre-wrap text-text-secondary-soft'>
                                 {sanitizeText(notes)}
                             </div>
                         </div>
@@ -396,7 +396,7 @@ function ProjectBySlug({ slug }: { slug: string }) {
     if (isPending) {
         return (
             <ProjectStateShell>
-                <LoadingPage />
+                <LoadingContent />
             </ProjectStateShell>
         );
     }

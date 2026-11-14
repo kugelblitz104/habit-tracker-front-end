@@ -196,7 +196,7 @@ export const CountdownDashboard = () => {
                         innerStyle={CARD_SURFACE_STYLE}
                     >
                         <div className='mb-3 flex items-center justify-between'>
-                            <h2 className='font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-habit-label'>
+                            <h2 className='font-mono text-label font-semibold uppercase tracking-[0.16em] text-habit-label'>
                                 {paneTitle}
                             </h2>
                             <button
@@ -231,10 +231,10 @@ export const CountdownDashboard = () => {
                 to their own line instead of pushing the page sideways. */}
             <header className='mb-[24px] flex flex-wrap items-start justify-between gap-3'>
                 <div className='min-w-0'>
-                    <h1 className='font-display text-[23px] font-bold tracking-[-0.01em] text-text-primary'>
+                    <h1 className='font-display text-title font-bold tracking-[-0.01em] text-text-primary'>
                         Countdown
                     </h1>
-                    <div className='mt-1.5 flex flex-wrap items-center gap-2 font-mono text-[11px]'>
+                    <div className='mt-1.5 flex flex-wrap items-center gap-2 font-mono text-label'>
                         <span className='text-text-muted'>
                             {total}
                             {showArchived ? ' archived' : ''}{' '}
@@ -330,7 +330,7 @@ export const CountdownDashboard = () => {
             )}
 
             {disabled ? (
-                <p className='font-mono text-[12px] text-text-faint'>
+                <p className='font-mono text-meta text-text-faint'>
                     Countdowns are turned off for this profile. Enable them in Settings.
                 </p>
             ) : (
@@ -356,7 +356,7 @@ export const CountdownDashboard = () => {
                         size='md'
                     />
                     {!countdownsQuery.isError && !countdownsQuery.isLoading && total === 0 && (
-                        <p className='font-mono text-[12px] text-text-faint'>
+                        <p className='font-mono text-meta text-text-faint'>
                             {showArchived
                                 ? 'Nothing archived yet. Archive a countdown to retire it without deleting it.'
                                 : 'No countdowns yet. Add one to track a deadline — with or without a task.'}
@@ -375,10 +375,10 @@ export const CountdownDashboard = () => {
                                             className='h-2 w-2 rounded-full'
                                             style={{ backgroundColor: section.color }}
                                         />
-                                        <h2 className='font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-text-muted'>
+                                        <h2 className='font-mono text-label font-semibold uppercase tracking-[0.14em] text-text-muted'>
                                             {section.label}
                                         </h2>
-                                        <span className='font-mono text-[11px] text-text-faint'>
+                                        <span className='font-mono text-label text-text-faint'>
                                             {section.rows.length}
                                         </span>
                                     </>

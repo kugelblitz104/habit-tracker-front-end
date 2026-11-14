@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Trash2 } from 'lucide-react';
 import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { toast } from 'react-toastify';
+import { markJustCreated } from '@/lib/just-created';
 import { useCreateTask } from '../api/create-tasks';
 import { useDeleteTask } from '../api/delete-tasks';
 import { useTasks } from '../api/get-tasks';
@@ -86,7 +87,10 @@ export const TaskDetailSubtasks = ({ profileId, parentId }: TaskDetailSubtasksPr
         createTask.mutate(
             { profile_id: profileId, parent_id: parentId, title, sort_order: nextOrder },
             {
-                onSuccess: invalidateParent,
+                onSuccess: (subtask) => {
+                    markJustCreated('task', subtask.id);
+                    invalidateParent();
+                },
                 onError: () => {
                     toast.error('Failed to add subtask. Please try again.');
                     setNewTitle((current) => current || title);
@@ -108,7 +112,7 @@ export const TaskDetailSubtasks = ({ profileId, parentId }: TaskDetailSubtasksPr
     return (
         <div>
             <div className='mb-1.5 flex items-center justify-between gap-2'>
-                <h3 className='font-mono text-[11px] uppercase tracking-[0.14em] text-text-faint'>
+                <h3 className='font-mono text-label uppercase tracking-[0.14em] text-text-faint'>
                     Subtasks{allSubtasks.length > 0 ? ` · ${doneCount}/${allSubtasks.length}` : ''}
                 </h3>
                 {doneCount > 0 && (
@@ -117,7 +121,7 @@ export const TaskDetailSubtasks = ({ profileId, parentId }: TaskDetailSubtasksPr
                         size='sm'
                         onClick={() => setHideDone((v) => !v)}
                         className='font-mono uppercase tracking-[0.12em]'
-                        style={{ fontSize: '10px' }}
+                        style={{ fontSize: '12px' }}
                     >
                         {hideDone ? 'Show done' : 'Hide done'}
                     </Button>

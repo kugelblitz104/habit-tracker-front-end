@@ -2,8 +2,9 @@ import type { ProjectRead, TaskRead } from '@/api';
 import { sanitizeText } from '@/lib/input-sanitization';
 import { useLongPress } from '@/lib/use-long-press';
 import { TaskStatus, type TaskBand } from '@/types/types';
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useRef, useState, type CSSProperties } from 'react';
 import { useLocation } from 'react-router';
+import { useJustCreated } from '@/lib/just-created';
 import { getScheduledLabel } from '../utils/task-format';
 import { formatDueColumn } from '../utils/due-column';
 import { PRIORITY_LEVELS, PRIORITY_SHORT_LABELS } from '../utils/priority-config';
@@ -53,6 +54,11 @@ export type TaskRowProps = {
     isFirst?: boolean;
     /** Whether this is the last row in its list container (rounds the rail's bottom-left corner). */
     isLast?: boolean;
+    /**
+     * Set while the list holds this row for its exit after the user closed it
+     * (see useExitingRows): the status shown, which the stale `task` lacks.
+     */
+    exitingStatus?: TaskStatus;
 };
 
 /**
@@ -88,11 +94,14 @@ export const TaskRow = ({
     selected = false,
     onToggleSelect,
     isFirst = false,
-    isLast = false
+    isLast = false,
+    exitingStatus
 }: TaskRowProps) => {
     const { pathname, search } = useLocation();
     const originPath = `${pathname}${search}`;
-    const status = (task.status ?? TaskStatus.OPEN) as TaskStatus;
+    const exiting = exitingStatus != null;
+    const status = (exitingStatus ?? task.status ?? TaskStatus.OPEN) as TaskStatus;
+    const [fresh, settle] = useJustCreated('task', task.id);
     const statusMeta = STATUS_META[status];
     const isCancelled = status === TaskStatus.CANCELLED;
     const scheduledLabel = getScheduledLabel(task.scheduled_date, task.scheduled_time);
@@ -131,34 +140,6 @@ export const TaskRow = ({
     // Inline "add subtask" quick-entry popover, opened from the context menu at
     // the same cursor point.
     const [subtaskAddPoint, setSubtaskAddPoint] = useState<MenuPoint | null>(null);
-
-    // Completing / cancelling from the list "ejects" the row like a jenga block:
-    // it slides out sideways while its height collapses so the rows below settle
-    // up, THEN the real status change fires (which drops it from the active list
-    // on refetch). Any other status change applies immediately.
-    const [exiting, setExiting] = useState(false);
-    const exitTimerRef = useRef<number | null>(null);
-    useEffect(
-        () => () => {
-            if (exitTimerRef.current) window.clearTimeout(exitTimerRef.current);
-        },
-        []
-    );
-    const handleStatusSelect = useCallback(
-        (next: TaskStatus) => {
-            const closing = next === TaskStatus.DONE || next === TaskStatus.CANCELLED;
-            const reduceMotion =
-                typeof window !== 'undefined' &&
-                window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            if (!closing || exiting || reduceMotion) {
-                onStatusChange(next);
-                return;
-            }
-            setExiting(true);
-            exitTimerRef.current = window.setTimeout(() => onStatusChange(next), 320);
-        },
-        [exiting, onStatusChange]
-    );
 
     // Swallow the click that trails a long-press so it can't also fire the
     // title's edit action (or a menu item that lands under the finger).
@@ -203,7 +184,7 @@ export const TaskRow = ({
                 break;
             case 'x':
                 e.preventDefault();
-                handleStatusSelect(status === TaskStatus.DONE ? TaskStatus.OPEN : TaskStatus.DONE);
+                onStatusChange(status === TaskStatus.DONE ? TaskStatus.OPEN : TaskStatus.DONE);
                 break;
             case 's':
                 if (onStartTimer) {
@@ -215,253 +196,264 @@ export const TaskRow = ({
     };
 
     return (
-        // Eject wrapper: the grid row collapses 1fr -> 0fr (rows below settle up)
-        // while the inner slides out sideways. `overflow-hidden` is only applied
-        // mid-eject so it never clips the row's focus ring / editing accent at
-        // rest. The explicit minmax(0,1fr) column is load-bearing: an implicit
-        // `auto` track floors at the row's min-content width, which for a nowrap
-        // (truncate) title is the WHOLE title, so the row would then overhang
-        // the content column and scroll the page sideways on mobile instead of
-        // the title truncating.
+        // Fold wrapper: a just-created row opens 0fr -> 1fr and an exiting one
+        // folds 1fr -> 0fr after its strike has read. `overflow-hidden` is only
+        // applied during either so it never clips the row's focus ring / editing
+        // accent at rest. An exiting row is inert and hidden from the a11y tree,
+        // so role queries see only the row's new home. The explicit
+        // minmax(0,1fr) column is load-bearing: an implicit `auto` track floors
+        // at the row's min-content width, which for a nowrap (truncate) title is
+        // the WHOLE title, so the row would then overhang the content column and
+        // scroll the page sideways on mobile instead of the title truncating.
         <div
-            className={`grid grid-cols-[minmax(0,1fr)] transition-[grid-template-rows] duration-300 ease-out ${
-                exiting ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'
+            className={`grid grid-cols-[minmax(0,1fr)] grid-rows-[1fr] duration-[280ms] ease-settle ${
+                fresh
+                    ? 'motion-safe:transition-[grid-template-rows,opacity] motion-safe:starting:grid-rows-[0fr] motion-safe:starting:opacity-0'
+                    : ''
+            } ${
+                exiting
+                    ? 'motion-safe:transition-[grid-template-rows,opacity] motion-safe:delay-[380ms] motion-safe:grid-rows-[0fr] motion-safe:opacity-0'
+                    : ''
             }`}
+            aria-hidden={exiting || undefined}
+            inert={exiting}
+            onAnimationEnd={(e) => {
+                if (e.animationName === 'wash') settle();
+            }}
         >
-            <div className={exiting ? 'overflow-hidden' : undefined}>
+            <div className={fresh || exiting ? 'motion-safe:overflow-hidden' : undefined}>
                 <div
-                    className={`transition duration-300 ease-in ${
-                        exiting ? 'translate-x-[110%] opacity-0' : ''
-                    }`}
+                    onKeyDown={handleKeyDown}
+                    // Suppress the BROWSER context menu on task rows only, showing ours
+                    // instead. (Android also routes native long-press through here.)
+                    onContextMenu={(e) => {
+                        e.preventDefault();
+                        setMenuPoint({ x: e.clientX, y: e.clientY });
+                    }}
+                    onTouchStart={(e) => {
+                        // Portal events bubble through the React tree — don't restart a
+                        // long-press from touches on the open menu itself.
+                        if (menuPoint) return;
+                        const touch = e.touches[0];
+                        if (touch) touchPointRef.current = { x: touch.clientX, y: touch.clientY };
+                        longPressHandlers.onTouchStart(e);
+                    }}
+                    onTouchMove={longPressHandlers.onTouchMove}
+                    onTouchEnd={longPressHandlers.onTouchEnd}
+                    // Wash and rail sit here, not on the clickable row below, so both run
+                    // the full height of the block including any expanded notes/subtask
+                    // panel. The rail is the band (Whenever's is transparent, which still
+                    // reserves the 3px so every band's content starts at the same x),
+                    // overridden by the ONE row open in the detail pane; multi-select never
+                    // lights it, or it would stop meaning "one". It is a left border rather
+                    // than a ring around the row because the list container is
+                    // `rounded-card overflow-hidden`, which slices a ring's corners off on
+                    // the first and last rows.
+                    //
+                    // The fills go through custom properties rather than an inline
+                    // `backgroundColor`, which would outrank the hover class and leave the
+                    // washed Now rows with no hover state at all.
+                    //
+                    // The top-left/bottom-left radius on the first/last row matches the
+                    // list container's own radius, so the rail follows the container's
+                    // rounded corner instead of being clipped square by it.
+                    className={`border-l-[3px] bg-[var(--row-bg)] transition-colors hover:bg-[var(--row-bg-hover)] ${
+                        isFirst ? 'rounded-tl-card' : ''
+                    } ${isLast ? 'rounded-bl-card' : ''} ${fresh ? 'motion-safe:animate-wash' : ''}`}
+                    style={
+                        {
+                            borderLeftColor: editing ? 'var(--color-now-accent)' : tier.rail,
+                            '--row-bg': editing ? 'var(--surface-row-selected)' : tier.wash,
+                            '--row-bg-hover': editing
+                                ? 'var(--surface-row-selected)'
+                                : 'var(--surface-row-hover)'
+                        } as CSSProperties
+                    }
                 >
                     <div
-                        onKeyDown={handleKeyDown}
-                        // Suppress the BROWSER context menu on task rows only, showing ours
-                        // instead. (Android also routes native long-press through here.)
-                        onContextMenu={(e) => {
-                            e.preventDefault();
-                            setMenuPoint({ x: e.clientX, y: e.clientY });
-                        }}
-                        onTouchStart={(e) => {
-                            // Portal events bubble through the React tree — don't restart a
-                            // long-press from touches on the open menu itself.
-                            if (menuPoint) return;
-                            const touch = e.touches[0];
-                            if (touch)
-                                touchPointRef.current = { x: touch.clientX, y: touch.clientY };
-                            longPressHandlers.onTouchStart(e);
-                        }}
-                        onTouchMove={longPressHandlers.onTouchMove}
-                        onTouchEnd={longPressHandlers.onTouchEnd}
-                        // Wash and rail sit here, not on the clickable row below, so both run
-                        // the full height of the block including any expanded notes/subtask
-                        // panel. The rail is the band (Whenever's is transparent, which still
-                        // reserves the 3px so every band's content starts at the same x),
-                        // overridden by the ONE row open in the detail pane; multi-select never
-                        // lights it, or it would stop meaning "one". It is a left border rather
-                        // than a ring around the row because the list container is
-                        // `rounded-card overflow-hidden`, which slices a ring's corners off on
-                        // the first and last rows.
-                        //
-                        // The fills go through custom properties rather than an inline
-                        // `backgroundColor`, which would outrank the hover class and leave the
-                        // washed Now rows with no hover state at all.
-                        //
-                        // The top-left/bottom-left radius on the first/last row matches the
-                        // list container's own radius, so the rail follows the container's
-                        // rounded corner instead of being clipped square by it.
-                        className={`border-l-[3px] bg-[var(--row-bg)] transition-colors hover:bg-[var(--row-bg-hover)] ${
-                            isFirst ? 'rounded-tl-card' : ''
-                        } ${isLast ? 'rounded-bl-card' : ''}`}
-                        style={
-                            {
-                                borderLeftColor: editing ? 'var(--color-now-accent)' : tier.rail,
-                                '--row-bg': editing ? 'var(--surface-row-selected)' : tier.wash,
-                                '--row-bg-hover': editing
-                                    ? 'var(--surface-row-selected)'
-                                    : 'var(--surface-row-hover)'
-                            } as CSSProperties
-                        }
+                        onClick={() => onSelectEdit()}
+                        className='flex cursor-pointer items-start gap-[10px] pr-[14px] pl-[10px]'
                     >
-                        <div
-                            onClick={() => onSelectEdit()}
-                            className='flex cursor-pointer items-start gap-[10px] pr-[14px] pl-[10px]'
-                        >
-                            {/* Both controls: the row's padY on the outer box so they start level
+                        {/* Both controls: the row's padY on the outer box so they start level
                                 with the title column, then `controlBox` centres them on line 1's
                                 line box. The two cannot share one element, since `h-` counts
                                 padding under border-box. */}
-                            {selectable && (
-                                <div className={tier.padY}>
-                                    <div className={tier.controlBox}>
-                                        <input
-                                            type='checkbox'
-                                            checked={selected}
-                                            onChange={onToggleSelect}
-                                            onClick={(e) => e.stopPropagation()}
-                                            aria-label={`Select task: ${task.title}`}
-                                            className='h-4 w-4 cursor-pointer accent-[var(--color-now-accent)]'
-                                        />
-                                    </div>
-                                </div>
-                            )}
-
+                        {selectable && (
                             <div className={tier.padY}>
                                 <div className={tier.controlBox}>
-                                    <StatusControl
-                                        status={status}
-                                        onSelect={handleStatusSelect}
-                                        followUp={{
-                                            taskId: task.id,
-                                            blockReason: task.block_reason,
-                                            scheduledDate: task.scheduled_date,
-                                            scheduledTime: task.scheduled_time
-                                        }}
-                                        band={band}
-                                        openUpward={openUpward}
+                                    <input
+                                        type='checkbox'
+                                        checked={selected}
+                                        onChange={onToggleSelect}
+                                        onClick={(e) => e.stopPropagation()}
+                                        aria-label={`Select task: ${task.title}`}
+                                        className='h-4 w-4 cursor-pointer accent-[var(--color-now-accent)]'
                                     />
                                 </div>
                             </div>
+                        )}
 
-                            <div className={`min-w-0 flex-1 ${tier.padY}`}>
-                                <div className='flex items-baseline gap-[10px]'>
-                                    <button
-                                        type='button'
-                                        onClick={(e) => {
-                                            // The row itself now also opens the detail (below); stop
-                                            // here so a title click doesn't fire onSelectEdit twice
-                                            // in one event, which would toggle it open then closed.
-                                            e.stopPropagation();
-                                            onSelectEdit();
-                                        }}
-                                        aria-pressed={editing}
-                                        aria-label={`${task.title}${due ? `, ${due.text}` : ''}${
-                                            !isDone && priorityLabel
-                                                ? `, ${priorityLabel} priority`
-                                                : ''
-                                        }`}
-                                        // Equivalent exception: the row container below (onClick
-                                        // at line ~286) opens the same detail view and is far
-                                        // larger than the 44px coarse-pointer floor.
-                                        data-target-exempt='equivalent'
-                                        // The focus ring lives on the title, not on the row: the
-                                        // list container clips a full-row ring's corners.
-                                        className={`min-h-[24px] min-w-0 flex-1 truncate rounded-[4px] text-left font-display leading-snug outline-none hover:opacity-90 focus-visible:ring-2 focus-visible:ring-now-accent ${
-                                            tier.title
-                                        } ${isDone ? 'text-text-muted line-through' : ''}`}
-                                        title={task.title}
-                                    >
-                                        {task.title}
-                                    </button>
-
-                                    {/* Fixed-width track so the chip's RIGHT edge lines up down
-                                        the list whatever its text; the chip itself only shows a
-                                        fill when the date is overdue or imminent. */}
-                                    <span className='flex w-[80px] shrink-0 justify-end'>
-                                        {due && (
-                                            <span
-                                                className='rounded-chip px-[6px] py-[1px] font-mono text-[12px]'
-                                                style={due.style}
-                                            >
-                                                {due.text}
-                                            </span>
-                                        )}
-                                    </span>
-
-                                    {!isDone && (
-                                        // Below sm the bars stay and only the LABEL is dropped: the
-                                        // title carries band, not priority, so hiding the whole column
-                                        // would leave priority visible nowhere on a phone.
-                                        <span
-                                            className='flex w-[20px] shrink-0 items-center justify-end gap-[5px] font-mono text-[12px] sm:w-[48px]'
-                                            style={PRIORITY_LEVELS[priority]?.labelStyle}
-                                        >
-                                            {/* No meter at priority 0: an empty one on most rows
-                                                is noise, and the blank column already says none. */}
-                                            {priority > 0 && <PriorityMeter priority={priority} />}
-                                            <span className='hidden sm:inline'>
-                                                {priorityLabel}
-                                            </span>
-                                        </span>
-                                    )}
-                                </div>
-
-                                <TaskRowMeta
-                                    task={task}
-                                    project={project}
-                                    showProject={showProject}
-                                    originPath={originPath}
-                                    statusMeta={statusMeta}
+                        <div className={tier.padY}>
+                            <div
+                                className={`${tier.controlBox} ${
+                                    exiting
+                                        ? 'motion-safe:animate-pop motion-safe:[&_path]:animate-draw'
+                                        : ''
+                                }`}
+                            >
+                                <StatusControl
                                     status={status}
-                                    pillLabel={pillLabel}
-                                    metaClass={isDone ? 'text-text-muted' : tier.meta}
-                                    subtaskCount={subtaskCount}
-                                    subtaskDoneCount={subtaskDoneCount}
-                                    subtasksOpen={subtasksOpen}
-                                    onToggleSubtasks={onToggleSubtasks}
-                                    hasNotes={hasNotes}
-                                    notesOpen={notesOpen}
-                                    onToggleNotes={onToggleNotes}
+                                    onSelect={onStatusChange}
+                                    followUp={{
+                                        taskId: task.id,
+                                        blockReason: task.block_reason,
+                                        scheduledDate: task.scheduled_date,
+                                        scheduledTime: task.scheduled_time
+                                    }}
+                                    band={band}
+                                    openUpward={openUpward}
                                 />
                             </div>
                         </div>
 
-                        {/* Expanded panels. Indented to the title's left edge and inset from
-                            the card's right, so they read as belonging to this row rather than
-                            spanning the whole list container. */}
-                        {(showNotesPanel || showSubtasksPanel) && (
-                            <div className={`${tier.panelIndent} pr-[14px] pb-[12px]`}>
-                                {/* Read-only notes view, opened by the meta-row "notes" chip.
-                                    Mirrors the project-notes rendering: sanitized,
-                                    whitespace-preserved, mono/secondary. */}
-                                {showNotesPanel && (
-                                    <div
-                                        className='mt-2 rounded-button border p-3 font-mono text-[12px] leading-relaxed whitespace-pre-wrap text-text-secondary-soft'
-                                        style={{
-                                            backgroundColor: 'var(--surface-input-bg)',
-                                            borderColor: 'var(--surface-input-border)'
-                                        }}
-                                    >
-                                        {sanitizeText(task.notes ?? '')}
-                                    </div>
-                                )}
+                        <div className={`min-w-0 flex-1 ${tier.padY}`}>
+                            <div className='flex items-baseline gap-[10px]'>
+                                <button
+                                    type='button'
+                                    onClick={(e) => {
+                                        // The row itself now also opens the detail (below); stop
+                                        // here so a title click doesn't fire onSelectEdit twice
+                                        // in one event, which would toggle it open then closed.
+                                        e.stopPropagation();
+                                        onSelectEdit();
+                                    }}
+                                    aria-pressed={editing}
+                                    aria-label={`${task.title}${due ? `, ${due.text}` : ''}${
+                                        !isDone && priorityLabel
+                                            ? `, ${priorityLabel} priority`
+                                            : ''
+                                    }`}
+                                    // Equivalent exception: the row container below (onClick
+                                    // at line ~286) opens the same detail view and is far
+                                    // larger than the 44px coarse-pointer floor.
+                                    data-target-exempt='equivalent'
+                                    // The focus ring lives on the title, not on the row: the
+                                    // list container clips a full-row ring's corners.
+                                    className={`min-h-[24px] min-w-0 flex-1 truncate rounded-[4px] text-left font-display leading-snug outline-none hover:opacity-90 ${
+                                        tier.title
+                                    } ${isDone ? 'text-text-muted line-through' : ''} ${
+                                        exiting ? 'motion-safe:transition-colors' : ''
+                                    }`}
+                                    title={task.title}
+                                >
+                                    {task.title}
+                                </button>
 
-                                {/* Subtask quick-clear checklist, opened by the subtask chip. */}
-                                {showSubtasksPanel && (
-                                    <CardSubtaskChecklist
-                                        profileId={task.profile_id}
-                                        parentId={task.id}
-                                    />
+                                {/* Fixed-width track so the chip's RIGHT edge lines up down
+                                        the list whatever its text; the chip itself only shows a
+                                        fill when the date is overdue or imminent. */}
+                                <span className='flex w-[80px] shrink-0 justify-end'>
+                                    {due && (
+                                        <span
+                                            className='rounded-chip px-[6px] py-[1px] font-mono text-meta'
+                                            style={due.style}
+                                        >
+                                            {due.text}
+                                        </span>
+                                    )}
+                                </span>
+
+                                {!isDone && (
+                                    // Below sm the bars stay and only the LABEL is dropped: the
+                                    // title carries band, not priority, so hiding the whole column
+                                    // would leave priority visible nowhere on a phone.
+                                    <span
+                                        className='flex w-[20px] shrink-0 items-center justify-end gap-[5px] font-mono text-meta sm:w-[48px]'
+                                        style={PRIORITY_LEVELS[priority]?.labelStyle}
+                                    >
+                                        {/* No meter at priority 0: an empty one on most rows
+                                                is noise, and the blank column already says none. */}
+                                        {priority > 0 && <PriorityMeter priority={priority} />}
+                                        <span className='hidden sm:inline'>{priorityLabel}</span>
+                                    </span>
                                 )}
                             </div>
-                        )}
 
-                        {menuPoint && (
-                            <TaskContextMenu
+                            <TaskRowMeta
                                 task={task}
-                                point={menuPoint}
-                                onClose={closeMenu}
-                                onStatusChange={handleStatusSelect}
-                                onSelectEdit={onSelectEdit}
-                                editing={editing}
-                                onStartTimer={onStartTimer}
-                                onAddSubtask={
-                                    task.parent_id == null
-                                        ? () => setSubtaskAddPoint(menuPoint)
-                                        : undefined
-                                }
+                                project={project}
+                                showProject={showProject}
+                                originPath={originPath}
+                                statusMeta={statusMeta}
+                                status={status}
+                                pillLabel={pillLabel}
+                                metaClass={isDone ? 'text-text-muted' : tier.meta}
+                                subtaskCount={subtaskCount}
+                                subtaskDoneCount={subtaskDoneCount}
+                                subtasksOpen={subtasksOpen}
+                                onToggleSubtasks={onToggleSubtasks}
+                                hasNotes={hasNotes}
+                                notesOpen={notesOpen}
+                                onToggleNotes={onToggleNotes}
                             />
-                        )}
-
-                        {subtaskAddPoint && (
-                            <SubtaskQuickAdd
-                                profileId={task.profile_id}
-                                parentId={task.id}
-                                point={subtaskAddPoint}
-                                onClose={() => setSubtaskAddPoint(null)}
-                            />
-                        )}
+                        </div>
                     </div>
+
+                    {/* Expanded panels. Indented to the title's left edge and inset from
+                            the card's right, so they read as belonging to this row rather than
+                            spanning the whole list container. */}
+                    {(showNotesPanel || showSubtasksPanel) && (
+                        <div className={`${tier.panelIndent} pr-[14px] pb-[12px]`}>
+                            {/* Read-only notes view, opened by the meta-row "notes" chip.
+                                    Mirrors the project-notes rendering: sanitized,
+                                    whitespace-preserved, mono/secondary. */}
+                            {showNotesPanel && (
+                                <div
+                                    className='mt-2 rounded-button border p-3 font-mono text-meta leading-relaxed whitespace-pre-wrap text-text-secondary-soft'
+                                    style={{
+                                        backgroundColor: 'var(--surface-input-bg)',
+                                        borderColor: 'var(--surface-input-border)'
+                                    }}
+                                >
+                                    {sanitizeText(task.notes ?? '')}
+                                </div>
+                            )}
+
+                            {/* Subtask quick-clear checklist, opened by the subtask chip. */}
+                            {showSubtasksPanel && (
+                                <CardSubtaskChecklist
+                                    profileId={task.profile_id}
+                                    parentId={task.id}
+                                />
+                            )}
+                        </div>
+                    )}
+
+                    {menuPoint && (
+                        <TaskContextMenu
+                            task={task}
+                            point={menuPoint}
+                            onClose={closeMenu}
+                            onStatusChange={onStatusChange}
+                            onSelectEdit={onSelectEdit}
+                            editing={editing}
+                            onStartTimer={onStartTimer}
+                            onAddSubtask={
+                                task.parent_id == null
+                                    ? () => setSubtaskAddPoint(menuPoint)
+                                    : undefined
+                            }
+                        />
+                    )}
+
+                    {subtaskAddPoint && (
+                        <SubtaskQuickAdd
+                            profileId={task.profile_id}
+                            parentId={task.id}
+                            point={subtaskAddPoint}
+                            onClose={() => setSubtaskAddPoint(null)}
+                        />
+                    )}
                 </div>
             </div>
         </div>

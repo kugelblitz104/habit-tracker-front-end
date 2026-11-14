@@ -78,7 +78,7 @@ export const HabitDetailBody = ({
 
     if (habitQuery.isLoading) {
         return (
-            <div className='flex items-center justify-center py-16 font-mono text-[12px] text-text-muted'>
+            <div className='flex items-center justify-center py-16 font-mono text-meta text-text-muted'>
                 Loading habit…
             </div>
         );
@@ -86,7 +86,7 @@ export const HabitDetailBody = ({
 
     if (habitQuery.isError) {
         return (
-            <div className='flex items-center justify-center py-16 font-mono text-[12px] text-[var(--color-danger)]'>
+            <div className='flex items-center justify-center py-16 font-mono text-meta text-[var(--color-danger)]'>
                 Couldn’t load this habit.
             </div>
         );
@@ -100,7 +100,7 @@ export const HabitDetailBody = ({
         : '';
 
     const ghostButton =
-        'inline-flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11.5px] transition-colors';
+        'inline-flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-meta transition-colors';
 
     // The detail view's accent, threaded to every child (KPI rings, streak bars,
     // weekday-chart fills, month-grid completed chips, note pips) as CSS custom
@@ -167,7 +167,7 @@ export const HabitDetailBody = ({
                         empty question, so only render when there is one. */}
                     {habit?.question && (
                         <p
-                            className='mt-1.5 flex items-start gap-1.5 font-display text-[13px] leading-snug text-text-secondary'
+                            className='mt-1.5 flex items-start gap-1.5 font-display text-body leading-snug text-text-secondary'
                             title='Check-in prompt, used by reminders'
                         >
                             <MessageCircleQuestion
@@ -179,7 +179,7 @@ export const HabitDetailBody = ({
                         </p>
                     )}
                     {habit && (
-                        <div className='mt-1.5 flex flex-wrap items-center gap-2 font-mono text-[11.5px] text-[#8ba3b5]'>
+                        <div className='mt-1.5 flex flex-wrap items-center gap-2 font-mono text-meta text-[#8ba3b5]'>
                             <span
                                 className='h-3 w-3 rounded-[4px]'
                                 style={{ background: habit.color }}

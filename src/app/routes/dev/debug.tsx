@@ -49,7 +49,7 @@ const VIEWS = ['loading', 'error', 'login', 'register', 'banner'] as const;
  */
 const BannerGallery = () => (
     <div className='mx-auto flex max-w-[720px] flex-col gap-4 px-5 py-7'>
-        <p className='font-mono text-[11px] uppercase tracking-[0.16em] text-text-muted'>Banner</p>
+        <p className='font-mono text-label uppercase tracking-[0.16em] text-text-muted'>Banner</p>
         <Banner
             icon={<Scale className='h-4 w-4' />}
             title='Everything at once'
@@ -71,7 +71,7 @@ const BannerGallery = () => (
             onDismiss={() => {}}
             dismissLabel='Dismiss the long banner'
         />
-        <Link className='font-display text-[13px] text-text-muted underline' to='/dev/debug'>
+        <Link className='font-display text-body text-text-muted underline' to='/dev/debug'>
             Back to the playground
         </Link>
     </div>
@@ -97,10 +97,10 @@ export default function DebugPlayground() {
             className='flex min-h-screen flex-col items-center justify-center gap-3'
             style={{ backgroundColor: 'transparent' }}
         >
-            <p className='font-mono text-[11px] uppercase tracking-[0.16em] text-text-muted'>
+            <p className='font-mono text-label uppercase tracking-[0.16em] text-text-muted'>
                 Dev debug playground
             </p>
-            <div className='flex gap-4 font-display text-[13px]'>
+            <div className='flex gap-4 font-display text-body'>
                 {VIEWS.map((v) => (
                     <Link
                         key={v}

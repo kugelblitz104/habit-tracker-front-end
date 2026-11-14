@@ -13,12 +13,12 @@ import { projectDetailPath } from '@/lib/entity-ref';
 
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
     <div>
-        <p className='font-mono text-[11px] uppercase tracking-[0.04em] text-text-muted'>{label}</p>
+        <p className='font-mono text-label uppercase tracking-[0.04em] text-text-muted'>{label}</p>
         {/* min-h tracks the status pill's control floor at BOTH pointer types
             (StatusControl's labelled pill grows to 44px on a coarse pointer), so
             every field's value centres on the same line instead of the
             plain-text ones riding high beside the taller pill. */}
-        <div className='mt-[1px] flex min-h-[24px] items-center gap-[6px] text-[13px] text-text-primary pointer-coarse:min-h-[44px]'>
+        <div className='mt-[1px] flex min-h-[24px] items-center gap-[6px] text-body text-text-primary pointer-coarse:min-h-[44px]'>
             {children}
         </div>
     </div>
@@ -81,7 +81,7 @@ export const TaskDetailHeader = ({
             <div className='flex items-start justify-between gap-3'>
                 <div className='min-w-0 flex-1'>
                     {project && (
-                        <p className='mb-[3px] flex items-center gap-[6px] text-[12px] text-text-secondary'>
+                        <p className='mb-[3px] flex items-center gap-[6px] text-meta text-text-secondary'>
                             <span
                                 aria-hidden='true'
                                 className='h-[7px] w-[7px] shrink-0 rounded-full'
@@ -146,7 +146,7 @@ export const TaskDetailHeader = ({
                     style={{ backgroundColor: 'var(--danger-bg)' }}
                 >
                     <span
-                        className='inline-flex items-center gap-[6px] text-[13px] font-semibold'
+                        className='inline-flex items-center gap-[6px] text-body font-semibold'
                         style={{ color: 'var(--color-danger)' }}
                     >
                         <TriangleAlert size={14} />
@@ -160,7 +160,7 @@ export const TaskDetailHeader = ({
                     {reasons.map((reason) => (
                         <span
                             key={reason}
-                            className='max-w-[220px] truncate rounded-chip border px-[9px] py-[2px] text-[12px]'
+                            className='max-w-[220px] truncate rounded-chip border px-[9px] py-[2px] text-meta'
                             style={{
                                 color: 'var(--color-danger)',
                                 borderColor: 'var(--danger-border)'
@@ -185,9 +185,7 @@ export const TaskDetailHeader = ({
                     }}
                 >
                     <Ban size={14} className='mt-0.5 shrink-0' />
-                    <span className='font-mono text-[12px] leading-snug'>
-                        Blocked: {blockReason}
-                    </span>
+                    <span className='font-mono text-meta leading-snug'>Blocked: {blockReason}</span>
                 </div>
             )}
 

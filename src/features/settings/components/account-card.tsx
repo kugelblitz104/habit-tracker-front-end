@@ -32,7 +32,7 @@ export const AccountCard = () => {
     return (
         <SettingsCard label='Account' labelGapClass='mb-4'>
             <UpdateUserForm user={user} handleUpdateUser={handleUserUpdate} />
-            <p className='mt-3 font-mono text-[11px] text-text-faint'>
+            <p className='mt-3 font-mono text-label text-text-faint'>
                 Saving signs you out so you can log back in with the updated details.
             </p>
         </SettingsCard>

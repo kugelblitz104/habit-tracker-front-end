@@ -208,7 +208,7 @@ export const TaskRowMeta = ({
 
     return (
         <div
-            className={`items-center gap-[6px] overflow-hidden font-mono text-[12px] whitespace-nowrap ${
+            className={`items-center gap-[6px] overflow-hidden font-mono text-meta whitespace-nowrap ${
                 allHiddenBelowSm ? 'hidden sm:flex' : 'flex'
             } ${metaClass}`}
         >

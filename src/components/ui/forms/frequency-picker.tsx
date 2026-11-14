@@ -28,7 +28,7 @@ const InlineNumberField = ({
                 name={name}
                 placeholder={placeholder}
                 defaultValue={defaultValue}
-                className='w-8 rounded-button border px-1 py-0.5 text-center font-mono text-[12px] text-text-secondary outline-none focus-visible:ring-1 focus-visible:ring-now-accent'
+                className='w-8 rounded-button border px-1 py-0.5 text-center font-mono text-meta text-text-secondary outline-none'
                 style={{
                     backgroundColor: 'var(--surface-input-bg)',
                     borderColor: 'var(--surface-input-border)'
@@ -68,7 +68,7 @@ export const FrequencyPicker = ({
                         <Radio
                             key={freq.name}
                             value={freq}
-                            className='flex-1 cursor-pointer rounded-button border px-3 py-1.5 text-center font-mono text-[12px] transition-colors'
+                            className='flex-1 cursor-pointer rounded-button border px-3 py-1.5 text-center font-mono text-meta transition-colors'
                             style={{
                                 backgroundColor: isSelected
                                     ? 'rgba(255, 255, 255, 0.05)'
@@ -90,7 +90,7 @@ export const FrequencyPicker = ({
                 `inline-block` are both display utilities, so relying on class
                 order to hide this row is unreliable. */}
             {selected.name === 'custom' && (
-                <span className='mt-2 inline-block font-mono text-[12px] text-text-secondary'>
+                <span className='mt-2 inline-block font-mono text-meta text-text-secondary'>
                     <InlineNumberField
                         name='frequency'
                         placeholder='3'

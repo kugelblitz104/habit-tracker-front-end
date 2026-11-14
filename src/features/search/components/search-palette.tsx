@@ -20,7 +20,7 @@ type SearchPaletteProps = {
 };
 
 const groupLabelClass =
-    'px-3 pt-3 pb-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-text-faint';
+    'px-3 pt-3 pb-1 font-mono text-label font-semibold uppercase tracking-[0.14em] text-text-faint';
 
 const Dot = ({ color }: { color: string }) => (
     <span
@@ -33,7 +33,7 @@ const Dot = ({ color }: { color: string }) => (
 const ResultRow = ({ result }: { result: SearchResult }) => (
     <ComboboxOption
         value={result}
-        className='flex cursor-pointer items-center gap-2.5 rounded-[6px] px-3 py-2 font-display text-[13.5px] text-text-secondary data-focus:bg-white/5'
+        className='flex cursor-pointer items-center gap-2.5 rounded-[6px] px-3 py-2 font-display text-body text-text-secondary data-focus:bg-white/5'
     >
         {result.kind === 'task' && (
             <CheckSquare size={14} className='shrink-0 text-text-faint' aria-hidden='true' />
@@ -46,7 +46,7 @@ const ResultRow = ({ result }: { result: SearchResult }) => (
             {result.title}
         </span>
         {'meta' in result && result.meta && (
-            <span className='shrink-0 font-mono text-[10.5px] text-text-faint'>{result.meta}</span>
+            <span className='shrink-0 font-mono text-label text-text-faint'>{result.meta}</span>
         )}
     </ComboboxOption>
 );
@@ -119,7 +119,7 @@ export const SearchPalette = ({ open, onClose }: SearchPaletteProps) => {
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
                                 placeholder='Search tasks, habits, projects…'
-                                className='w-full bg-transparent font-display text-[15px] text-text-primary outline-none placeholder:text-text-faint'
+                                className='w-full bg-transparent font-display text-lead text-text-primary outline-none placeholder:text-text-faint'
                             />
                         </div>
 
@@ -135,15 +135,15 @@ export const SearchPalette = ({ open, onClose }: SearchPaletteProps) => {
                             className='min-h-0 flex-1 overflow-y-auto p-1'
                         >
                             {!hasQuery ? (
-                                <p className='px-3 py-6 text-center font-mono text-[12px] text-text-faint'>
+                                <p className='px-3 py-6 text-center font-mono text-meta text-text-faint'>
                                     Type to search across tasks, habits and projects.
                                 </p>
                             ) : isLoading ? (
-                                <p className='px-3 py-6 text-center font-mono text-[12px] text-text-faint'>
+                                <p className='px-3 py-6 text-center font-mono text-meta text-text-faint'>
                                     Searching…
                                 </p>
                             ) : isEmpty ? (
-                                <p className='px-3 py-6 text-center font-mono text-[12px] text-text-faint'>
+                                <p className='px-3 py-6 text-center font-mono text-meta text-text-faint'>
                                     No matches for “{query.trim()}”.
                                 </p>
                             ) : (
@@ -178,7 +178,7 @@ export const SearchPalette = ({ open, onClose }: SearchPaletteProps) => {
                     </Combobox>
 
                     <div
-                        className='hidden items-center gap-4 border-t px-3.5 py-2 font-mono text-[10px] text-text-faint sm:flex'
+                        className='hidden items-center gap-4 border-t px-3.5 py-2 font-mono text-label text-text-faint sm:flex'
                         style={{ borderColor: 'var(--surface-card-border)' }}
                     >
                         <span>↑↓ navigate</span>

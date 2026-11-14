@@ -87,7 +87,7 @@ const Stepper = ({ value, unit, min, max, disabled, onStep }: StepperProps) => {
             >
                 <Minus size={13} />
             </button>
-            <span className='w-14 text-center font-mono text-[13px] tabular-nums text-text-primary'>
+            <span className='w-14 text-center font-mono text-body tabular-nums text-text-primary'>
                 {value}
                 {unit ? <span className='ml-1 text-text-faint'>{unit}</span> : null}
             </span>
@@ -129,16 +129,16 @@ export const PomodoroSettingsGroup = ({ profile }: { profile: ProfileRead }) => 
 
     return (
         <div className='border-t pt-3.5' style={{ borderColor: 'rgba(255,255,255,.06)' }}>
-            <div className='mb-1 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-text-faint'>
+            <div className='mb-1 font-mono text-label font-medium uppercase tracking-[0.14em] text-text-faint'>
                 Pomodoro timer
             </div>
             {ROWS.map((row) => (
                 <div key={row.key} className='flex items-center justify-between gap-4 py-3'>
                     <div>
-                        <div className='text-[14.5px] font-medium' style={{ color: '#f0e7db' }}>
+                        <div className='text-lead font-medium' style={{ color: '#f0e7db' }}>
                             {row.title}
                         </div>
-                        <div className='mt-0.5 text-[12px] text-text-muted'>{row.description}</div>
+                        <div className='mt-0.5 text-meta text-text-muted'>{row.description}</div>
                     </div>
                     <Stepper
                         value={profile[row.key] ?? row.defaultValue}

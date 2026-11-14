@@ -294,7 +294,7 @@ export const JournalDayPage = () => {
                         <div className='mt-3 flex min-h-[36px] items-center justify-between gap-3 pointer-coarse:min-h-[44px]'>
                             <span
                                 aria-live='polite'
-                                className='font-mono text-[11px] text-text-faint'
+                                className='font-mono text-label text-text-faint'
                                 style={dirty ? { color: 'var(--color-now-accent)' } : undefined}
                             >
                                 {status}

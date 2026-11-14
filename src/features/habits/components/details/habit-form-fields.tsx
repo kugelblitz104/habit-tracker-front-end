@@ -46,7 +46,7 @@ const ReminderDays = ({ mask, onChange, weekStartMonday }: ReminderDaysProps) =>
                     title={isLast ? 'At least one day is needed' : col.name}
                     disabled={isLast}
                     onClick={() => onChange(toggleDay(mask, col.py))}
-                    className='flex min-h-[28px] min-w-[24px] flex-1 items-center justify-center rounded-button border py-1.5 font-mono text-[12px] transition-colors disabled:cursor-not-allowed pointer-coarse:min-h-[44px]'
+                    className='flex min-h-[28px] min-w-[24px] flex-1 items-center justify-center rounded-button border py-1.5 font-mono text-meta transition-colors disabled:cursor-not-allowed pointer-coarse:min-h-[44px]'
                     // Same selected/unselected treatment as FrequencyPicker's options.
                     style={{
                         backgroundColor: on
@@ -195,7 +195,7 @@ export const HabitFormFields = ({ onNameEnter, autoFocusName = false }: HabitFor
                 <Textarea
                     {...register('notes', validationPatterns.notes)}
                     rows={4}
-                    className='block w-full resize-y rounded-button border px-2.5 py-1.5 font-mono text-[12px] leading-relaxed text-text-secondary outline-none transition-colors placeholder:text-text-faint focus-visible:ring-1 focus-visible:ring-now-accent'
+                    className='block w-full resize-y rounded-button border px-2.5 py-1.5 font-mono text-meta leading-relaxed text-text-secondary outline-none transition-colors placeholder:text-text-faint'
                     style={{
                         backgroundColor: 'var(--surface-input-bg)',
                         borderColor: errors.notes
@@ -205,7 +205,7 @@ export const HabitFormFields = ({ onNameEnter, autoFocusName = false }: HabitFor
                     wrap='soft'
                 />
                 {errors.notes && (
-                    <span className='mt-1 block text-[11px] text-red-400'>
+                    <span className='mt-1 block text-label text-red-400'>
                         {errors.notes.message as string}
                     </span>
                 )}

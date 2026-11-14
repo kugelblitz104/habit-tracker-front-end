@@ -1,3 +1,5 @@
+import { RollingNumber } from '@/components/ui/rolling-number';
+
 type SectionHeaderProps = {
     label: string;
     /** Header accent — colors the label text (and the dot, when shown). */
@@ -20,11 +22,13 @@ export const SectionHeader = ({ label, color, count, dot }: SectionHeaderProps) 
             <span className='h-2 w-2 rounded-[2px]' style={{ backgroundColor: color }} />
         )}
         <h2
-            className='font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em]'
+            className='font-mono text-meta font-semibold uppercase tracking-[0.16em]'
             style={{ color: color ?? 'var(--color-text-muted)' }}
         >
             {label}
         </h2>
-        <span className='font-mono text-[11px] text-text-faint'>{count}</span>
+        <span className='font-mono text-label text-text-faint'>
+            <RollingNumber value={count} />
+        </span>
     </>
 );

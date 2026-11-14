@@ -57,7 +57,7 @@ export const TextField = ({
                 aria-describedby={`${name}-error`}
             />
             {fieldError && (
-                <span id={`${name}-error`} className='mt-1 block text-[11px] text-red-400'>
+                <span id={`${name}-error`} className='mt-1 block text-label text-red-400'>
                     {(fieldError.message as string) || errorMessage}
                 </span>
             )}

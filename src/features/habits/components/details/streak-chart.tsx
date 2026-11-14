@@ -24,7 +24,7 @@ export const StreakChart = ({ streaks, max = 6 }: StreakChartProps) => {
     if (rows.length === 0) {
         return (
             <DetailPanel title='Recent streaks'>
-                <div className='mt-3 font-mono text-[10.5px] text-[#5f7688]'>No streaks yet</div>
+                <div className='mt-3 font-mono text-label text-[#5f7688]'>No streaks yet</div>
             </DetailPanel>
         );
     }
@@ -40,7 +40,7 @@ export const StreakChart = ({ streaks, max = 6 }: StreakChartProps) => {
                     const widthPct = Math.max((streak.length / longest) * 100, 8);
                     return (
                         <div key={i} className='flex items-center gap-[10px]'>
-                            <span className='w-[52px] flex-none font-mono text-[10.5px] text-[#7f93a5]'>
+                            <span className='w-[52px] flex-none font-mono text-label text-[#7f93a5]'>
                                 {label}
                             </span>
                             <div className='h-[22px] flex-1 overflow-hidden rounded-[6px] bg-[rgba(255,255,255,0.04)]'>
@@ -53,7 +53,7 @@ export const StreakChart = ({ streaks, max = 6 }: StreakChartProps) => {
                                             : 'var(--habit-detail-accent, #6f9dc0)'
                                     }}
                                 >
-                                    <span className='font-mono text-[11px] font-semibold text-[#0f1418]'>
+                                    <span className='font-mono text-label font-semibold text-[#0f1418]'>
                                         {streak.length}
                                     </span>
                                 </div>

@@ -6,10 +6,12 @@ import {
     useEffect,
     useRef,
     useState,
+    type AnimationEvent,
     type CSSProperties,
     type KeyboardEvent,
     type ReactNode
 } from 'react';
+import { useJustCreated } from '@/lib/just-created';
 import { StatusControl } from './status-control';
 
 type SubtaskRowProps = {
@@ -63,6 +65,29 @@ export const SubtaskRow = ({
     // (via sortSubtasks) sunk to the bottom of the list.
     const struck = status === TaskStatus.DONE || status === TaskStatus.CANCELLED;
 
+    // Close feedback plays only for a close the user picked here, once the
+    // refetch delivers it: the glyph pops (Done's check draws in) and the title
+    // dims. Reopening is instant.
+    const [pickedClose, setPickedClose] = useState(false);
+    const changeStatus = (next: TaskStatus) => {
+        setPickedClose(next === TaskStatus.DONE || next === TaskStatus.CANCELLED);
+        onStatusChange(next);
+    };
+    const closing = pickedClose && struck;
+    const glyphClass = `flex shrink-0 ${
+        closing ? 'motion-safe:animate-pop motion-safe:[&_path]:animate-draw' : ''
+    }`;
+    const titleMotion = closing ? 'motion-safe:transition-colors' : '';
+
+    // A subtask just added here opens into the list and washes once.
+    const [fresh, settle] = useJustCreated('task', subtask.id);
+    const freshClass = fresh
+        ? 'motion-safe:animate-wash motion-safe:overflow-hidden motion-safe:max-h-16 motion-safe:transition-[max-height,opacity] duration-[280ms] ease-settle motion-safe:starting:max-h-0 motion-safe:starting:opacity-0'
+        : '';
+    const onAnimationEnd = (e: AnimationEvent) => {
+        if (e.animationName === 'wash') settle();
+    };
+
     const [editing, setEditing] = useState(false);
     const [draft, setDraft] = useState(subtask.title);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -102,7 +127,8 @@ export const SubtaskRow = ({
         return (
             <li
                 ref={setNodeRef}
-                className='flex items-center gap-2 border-b py-1.5'
+                className={`flex items-center gap-2 border-b py-1.5 ${freshClass}`}
+                onAnimationEnd={onAnimationEnd}
                 style={{
                     ...style,
                     borderColor: 'var(--surface-input-border)',
@@ -114,12 +140,14 @@ export const SubtaskRow = ({
                 {/* No followUp: a subtask shows only its status, so a block
                     reason or scheduled date would have nowhere to render. One
                     that needs either gets promoted to a full task. */}
-                <StatusControl
-                    status={status}
-                    onSelect={onStatusChange}
-                    band='whenever'
-                    disabled={disabled}
-                />
+                <span className={glyphClass}>
+                    <StatusControl
+                        status={status}
+                        onSelect={changeStatus}
+                        band='whenever'
+                        disabled={disabled}
+                    />
+                </span>
                 {editing ? (
                     <Input
                         ref={inputRef}
@@ -139,9 +167,9 @@ export const SubtaskRow = ({
                         onClick={startEdit}
                         disabled={!onRename}
                         title={onRename ? `Rename "${subtask.title}"` : subtask.title}
-                        className={`min-w-0 flex-1 truncate text-left font-mono text-[12px] ${
+                        className={`min-w-0 flex-1 truncate text-left font-mono text-meta ${
                             struck ? 'text-text-faint line-through' : 'text-text-secondary'
-                        } ${onRename ? 'cursor-text hover:text-text-primary' : 'cursor-default'}`}
+                        } ${onRename ? 'cursor-text hover:text-text-primary' : 'cursor-default'} ${titleMotion}`}
                     >
                         {subtask.title}
                     </button>
@@ -152,9 +180,14 @@ export const SubtaskRow = ({
     }
 
     return (
-        <div className='flex items-center gap-2 rounded-button px-1.5 py-1'>
+        <div
+            className={`flex items-center gap-2 rounded-button px-1.5 py-1 ${freshClass}`}
+            onAnimationEnd={onAnimationEnd}
+        >
             {/* No followUp, same reason as the checklist variant above. */}
-            <StatusControl status={status} onSelect={onStatusChange} band='whenever' />
+            <span className={glyphClass}>
+                <StatusControl status={status} onSelect={changeStatus} band='whenever' />
+            </span>
             {editing ? (
                 // `style` (not className) forces the font here: the compact tier sets
                 // font-mono/12px via its own classes, and this row's display text is
@@ -182,9 +215,9 @@ export const SubtaskRow = ({
                     onClick={startEdit}
                     disabled={!onRename}
                     title={onRename ? `Rename "${subtask.title}"` : subtask.title}
-                    className={`min-w-0 flex-1 truncate text-left font-display text-[13px] ${
+                    className={`min-w-0 flex-1 truncate text-left font-display text-body ${
                         struck ? 'text-text-faint line-through' : 'text-text-secondary'
-                    } ${onRename ? 'cursor-text hover:text-text-primary' : 'cursor-default'}`}
+                    } ${onRename ? 'cursor-text hover:text-text-primary' : 'cursor-default'} ${titleMotion}`}
                 >
                     {subtask.title}
                 </button>

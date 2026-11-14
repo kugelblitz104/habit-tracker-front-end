@@ -44,10 +44,10 @@ export const SettingsPage = () => {
             <div className={`mx-auto px-5 py-7 md:px-7 ${PAGE_MAX_WIDTH}`}>
                 <div className='mx-auto max-w-[820px]'>
                     <header className='mb-[22px]'>
-                        <h1 className='font-display text-[24px] font-bold tracking-[-0.01em] text-text-primary'>
+                        <h1 className='font-display text-title font-bold tracking-[-0.01em] text-text-primary'>
                             Settings
                         </h1>
-                        <p className='mt-0.5 font-mono text-[12px] text-text-muted'>
+                        <p className='mt-0.5 font-mono text-meta text-text-muted'>
                             {sublineParts.join(' · ')}
                         </p>
                     </header>

@@ -5,7 +5,7 @@ import { Menu, MenuButton, MenuItem } from '@headlessui/react';
 import { Check, ChevronDown } from 'lucide-react';
 
 const itemClass =
-    'flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-left font-display text-[13px] text-text-secondary data-focus:bg-white/5';
+    'flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-left font-display text-body text-text-secondary data-focus:bg-white/5';
 
 type ProfileSelectorProps = {
     profiles: ProfileRead[];
@@ -20,7 +20,7 @@ type ProfileSelectorProps = {
 export const ProfileSelector = ({ profiles, selected, onSelect }: ProfileSelectorProps) => (
     <Menu as='div' className='relative'>
         <MenuButton
-            className='inline-flex items-center gap-[7px] rounded-chip border px-[11px] py-1 text-[12px] text-text-secondary-soft outline-none transition-colors hover:text-text-primary focus-visible:ring-2 focus-visible:ring-now-accent'
+            className='inline-flex items-center gap-[7px] rounded-chip border px-[11px] py-1 text-meta text-text-secondary-soft outline-none transition-colors hover:text-text-primary'
             style={{
                 backgroundColor: 'rgba(255,255,255,.04)',
                 borderColor: 'rgba(255,255,255,.1)'

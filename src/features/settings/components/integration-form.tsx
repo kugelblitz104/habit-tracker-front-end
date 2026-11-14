@@ -50,7 +50,7 @@ const isBaseUrl = (value: string): boolean => {
     return !v || v.startsWith('http://') || v.startsWith('https://');
 };
 
-const labelClass = 'mb-1.5 block text-[11.5px]';
+const labelClass = 'mb-1.5 block text-meta';
 const labelStyle = { color: '#9a8f81' } as const;
 
 /**
@@ -132,7 +132,7 @@ export const IntegrationForm = ({
                                 // Not a <Button variant>: its active-state tint
                                 // is a meaningful colour no ghost/subtle variant
                                 // reproduces, so the floor is added directly.
-                                className='min-h-[36px] rounded-[8px] border px-3 py-1.5 text-[12.5px] transition-colors pointer-coarse:min-h-[44px]'
+                                className='min-h-[36px] rounded-[8px] border px-3 py-1.5 text-meta transition-colors pointer-coarse:min-h-[44px]'
                                 style={{
                                     borderColor: active
                                         ? 'rgba(120,168,205,.5)'
@@ -167,7 +167,7 @@ export const IntegrationForm = ({
                         style={themedInputStyle}
                     />
                     {touched && !nameValid && (
-                        <span className='mt-1 block text-[11px] text-danger'>Name is required</span>
+                        <span className='mt-1 block text-label text-danger'>Name is required</span>
                     )}
                 </label>
                 <label>
@@ -180,11 +180,11 @@ export const IntegrationForm = ({
                         onChange={(e) => set({ token: e.target.value })}
                         placeholder={isEdit ? '••••••••' : 'Paste your PAT'}
                         autoComplete='off'
-                        className={`${themedInputClass} font-mono text-[12.5px]`}
+                        className={`${themedInputClass} font-mono text-meta`}
                         style={themedInputStyle}
                     />
                     {touched && !tokenValid && (
-                        <span className='mt-1 block text-[11px] text-danger'>
+                        <span className='mt-1 block text-label text-danger'>
                             A personal access token is required
                         </span>
                     )}
@@ -205,7 +205,7 @@ export const IntegrationForm = ({
                                 style={themedInputStyle}
                             />
                             {touched && !orgValid && (
-                                <span className='mt-1 block text-[11px] text-danger'>
+                                <span className='mt-1 block text-label text-danger'>
                                     Organization is required
                                 </span>
                             )}
@@ -223,7 +223,7 @@ export const IntegrationForm = ({
                                 style={themedInputStyle}
                             />
                             {touched && !projectValid && (
-                                <span className='mt-1 block text-[11px] text-danger'>
+                                <span className='mt-1 block text-label text-danger'>
                                     Project is required
                                 </span>
                             )}
@@ -250,16 +250,16 @@ export const IntegrationForm = ({
                                 value={values.baseUrl}
                                 onChange={(e) => set({ baseUrl: e.target.value })}
                                 placeholder='https://dev.azure.com'
-                                className={`${themedInputClass} font-mono text-[12.5px]`}
+                                className={`${themedInputClass} font-mono text-meta`}
                                 style={themedInputStyle}
                             />
-                            <span className='mt-1 block text-[11px] text-text-faint'>
+                            <span className='mt-1 block text-label text-text-faint'>
                                 Host of an on-prem Azure DevOps Server / TFS, e.g.{' '}
                                 <span className='font-mono'>https://tfs.example.com</span>. Leave
                                 blank for the dev.azure.com cloud.
                             </span>
                             {touched && !baseUrlValid && (
-                                <span className='mt-1 block text-[11px] text-danger'>
+                                <span className='mt-1 block text-label text-danger'>
                                     Must start with http:// or https://
                                 </span>
                             )}
@@ -275,11 +275,11 @@ export const IntegrationForm = ({
                             value={values.defaultRepo}
                             onChange={(e) => set({ defaultRepo: e.target.value })}
                             placeholder='owner/repo'
-                            className={`${themedInputClass} font-mono text-[12.5px]`}
+                            className={`${themedInputClass} font-mono text-meta`}
                             style={themedInputStyle}
                         />
                         {touched && !repoValid && (
-                            <span className='mt-1 block text-[11px] text-danger'>
+                            <span className='mt-1 block text-label text-danger'>
                                 Use the form "owner/repo"
                             </span>
                         )}

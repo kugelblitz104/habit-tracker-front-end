@@ -42,7 +42,7 @@ export const BaseModal = ({
                     }}
                 >
                     {title && (
-                        <DialogTitle className='font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-habit-label'>
+                        <DialogTitle className='font-mono text-label font-semibold uppercase tracking-[0.16em] text-habit-label'>
                             {title}
                         </DialogTitle>
                     )}

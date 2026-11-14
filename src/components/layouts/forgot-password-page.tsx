@@ -47,14 +47,14 @@ export const ForgotPasswordPage = () => {
         return (
             <AuthCardLayout subtitle='Check your email'>
                 <div className='space-y-4'>
-                    <p className='text-[13px] leading-relaxed text-text-secondary'>
+                    <p className='text-body leading-relaxed text-text-secondary'>
                         If an account exists for that email, we've sent a link to reset your
                         password. The link expires in 30 minutes.
                     </p>
-                    <p className='font-mono text-[11px] text-text-faint'>
+                    <p className='font-mono text-label text-text-faint'>
                         Didn't get it? Check your spam folder, or try again.
                     </p>
-                    <div className='text-center text-[13px] text-text-muted'>
+                    <div className='text-center text-body text-text-muted'>
                         <Link
                             to='/login'
                             className='text-text-secondary-soft transition-colors hover:text-now-accent'
@@ -71,7 +71,7 @@ export const ForgotPasswordPage = () => {
         <AuthCardLayout subtitle='Reset your password'>
             <FormProvider {...methods}>
                 <form onSubmit={methods.handleSubmit(onSubmit)} className='space-y-4'>
-                    <p className='text-[13px] leading-relaxed text-text-secondary'>
+                    <p className='text-body leading-relaxed text-text-secondary'>
                         Enter your account email and we'll send you a link to choose a new password.
                     </p>
                     <Fieldset className='space-y-4'>
@@ -90,8 +90,8 @@ export const ForgotPasswordPage = () => {
                             submittingLabel='Sending...'
                             label='Send reset link'
                         />
-                        {error && <div className='font-mono text-[11px] text-danger'>{error}</div>}
-                        <div className='text-center text-[13px] text-text-muted'>
+                        {error && <div className='font-mono text-label text-danger'>{error}</div>}
+                        <div className='text-center text-body text-text-muted'>
                             Remembered it?{' '}
                             <Link
                                 to='/login'

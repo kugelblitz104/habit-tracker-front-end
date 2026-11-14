@@ -66,7 +66,7 @@ export const ColorPicker = ({
                     aria-label={hexLabel}
                     className='w-24'
                 />
-                {error && <span className='text-[11px] text-danger'>{error}</span>}
+                {error && <span className='text-label text-danger'>{error}</span>}
             </span>
         );
     }
@@ -93,7 +93,7 @@ export const ColorPicker = ({
                         style={fieldStyle('compact')}
                     />
                     <div className='flex flex-col gap-1'>
-                        <span className='font-mono text-[10px] uppercase tracking-[0.12em] text-text-faint'>
+                        <span className='font-mono text-label uppercase tracking-[0.12em] text-text-faint'>
                             Recent
                         </span>
                         <div className='grid grid-cols-6 gap-1'>

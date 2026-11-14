@@ -25,7 +25,7 @@ const KIND_LABELS: Record<ChangeKind, string> = {
 };
 
 const pagerButtonClass =
-    'inline-flex items-center gap-1 rounded-[9px] border px-[13px] py-[7px] text-[12px] ' +
+    'inline-flex items-center gap-1 rounded-[9px] border px-[13px] py-[7px] text-meta ' +
     'text-text-secondary transition-colors hover:text-text-primary ' +
     'disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-text-secondary';
 
@@ -40,15 +40,13 @@ const ReleaseCard = ({ release }: { release: Release }) => (
             <h2 className='font-display text-[16px] font-bold text-text-primary'>
                 {release.version}
             </h2>
-            <span className='font-mono text-[11px] text-text-muted'>
+            <span className='font-mono text-label text-text-muted'>
                 {formatReleaseDate(release.date)}
             </span>
         </div>
 
         {release.summary && (
-            <p className='mt-2 text-[13px] leading-relaxed text-text-secondary'>
-                {release.summary}
-            </p>
+            <p className='mt-2 text-body leading-relaxed text-text-secondary'>{release.summary}</p>
         )}
 
         <div className='mt-[15px] flex flex-col gap-3.5'>
@@ -59,7 +57,7 @@ const ReleaseCard = ({ release }: { release: Release }) => (
                 return (
                     <div key={kind}>
                         <div
-                            className='font-mono text-[10px] font-medium uppercase tracking-[0.14em]'
+                            className='font-mono text-label font-medium uppercase tracking-[0.14em]'
                             style={{ color: SECTION_LABEL_COLOR }}
                         >
                             {KIND_LABELS[kind]}
@@ -68,7 +66,7 @@ const ReleaseCard = ({ release }: { release: Release }) => (
                             {changes.map((change) => (
                                 <li
                                     key={change.text}
-                                    className='text-[13px] leading-relaxed text-text-secondary'
+                                    className='text-body leading-relaxed text-text-secondary'
                                 >
                                     {change.text}
                                 </li>
@@ -121,15 +119,15 @@ export const ReleaseNotesPage = () => {
             <div className={`mx-auto px-5 py-7 md:px-7 ${PAGE_MAX_WIDTH}`}>
                 <div className='mx-auto max-w-[820px]'>
                     <header className='mb-[22px]'>
-                        <h1 className='font-display text-[24px] font-bold tracking-[-0.01em] text-text-primary'>
+                        <h1 className='font-display text-title font-bold tracking-[-0.01em] text-text-primary'>
                             Ergosphere
                         </h1>
-                        <p className='mt-0.5 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-text-muted'>
+                        <p className='mt-0.5 font-mono text-label font-medium uppercase tracking-[0.14em] text-text-muted'>
                             Release notes
                         </p>
                         <Link
                             to='/'
-                            className='mt-3 inline-flex items-center gap-1.5 text-[13px] text-text-secondary-soft transition-colors hover:text-now-accent'
+                            className='mt-3 inline-flex items-center gap-1.5 text-body text-text-secondary-soft transition-colors hover:text-now-accent'
                         >
                             <ArrowLeft size={14} aria-hidden='true' />
                             Back to Ergosphere
@@ -137,9 +135,7 @@ export const ReleaseNotesPage = () => {
                     </header>
 
                     {total === 0 ? (
-                        <p className='font-mono text-[12px] text-text-faint'>
-                            No release notes yet.
-                        </p>
+                        <p className='font-mono text-meta text-text-faint'>No release notes yet.</p>
                     ) : (
                         <>
                             <QueryState
@@ -166,7 +162,7 @@ export const ReleaseNotesPage = () => {
                                     Older
                                 </button>
 
-                                <span className='font-mono text-[11px] text-text-faint'>
+                                <span className='font-mono text-label text-text-faint'>
                                     {index + 1} of {total}
                                 </span>
 

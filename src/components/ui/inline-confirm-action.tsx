@@ -20,7 +20,7 @@ type InlineConfirmActionProps = {
 };
 
 const baseConfirmButtonClass =
-    'min-h-[28px] rounded-[8px] px-2.5 text-[12px] font-semibold transition-opacity pointer-coarse:min-h-[44px] hover:opacity-90 disabled:opacity-50';
+    'min-h-[28px] rounded-[8px] px-2.5 text-meta font-semibold transition-opacity pointer-coarse:min-h-[44px] hover:opacity-90 disabled:opacity-50';
 
 /**
  * Inline "Delete? / Confirm / Cancel" mini-toolbar shared by the profiles and
@@ -47,7 +47,7 @@ export const InlineConfirmAction = ({
 
     return (
         <span className='flex items-center gap-1.5'>
-            <span className='font-mono text-[11px] text-text-muted'>{confirmPrompt}</span>
+            <span className='font-mono text-label text-text-muted'>{confirmPrompt}</span>
             <button
                 type='button'
                 onClick={onConfirm}

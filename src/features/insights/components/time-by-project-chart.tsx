@@ -65,7 +65,7 @@ export const TimeByProjectChart = ({
                     {projects.slice(0, 6).map((p) => (
                         <li
                             key={String(p.projectId)}
-                            className='flex items-center justify-between gap-2 py-0.5 font-mono text-[11.5px]'
+                            className='flex items-center justify-between gap-2 py-0.5 font-mono text-meta'
                         >
                             <span className='flex min-w-0 items-center gap-2 text-text-muted'>
                                 <span

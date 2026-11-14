@@ -32,7 +32,7 @@ export const JournalEditor = ({
     disabled
 }: JournalEditorProps) => (
     <div className='min-w-0'>
-        <label htmlFor={id} className='mb-2 block font-display text-[15px] text-text-secondary'>
+        <label htmlFor={id} className='mb-2 block font-display text-lead text-text-secondary'>
             {prompt}
         </label>
         <Textarea

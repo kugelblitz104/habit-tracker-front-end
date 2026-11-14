@@ -80,10 +80,10 @@ export const ReconciliationEntry = ({
     <div className='flex flex-col gap-6'>
         <div className='flex flex-wrap items-baseline justify-between gap-2'>
             <h1 className='font-display text-[20px] text-text-primary'>The reconciliation</h1>
-            <span className='font-mono text-[11px] text-text-faint'>{lastRunLabel(daysSince)}</span>
+            <span className='font-mono text-label text-text-faint'>{lastRunLabel(daysSince)}</span>
         </div>
 
-        <p className='max-w-prose font-display text-[13.5px] text-text-muted'>
+        <p className='max-w-prose font-display text-body text-text-muted'>
             Decisions, not insights. Clear a queue and the list gets smaller. Everything below is
             measured from dates the server stamps for you, so nothing here depends on your having
             remembered to log something.
@@ -92,13 +92,11 @@ export const ReconciliationEntry = ({
         <ul className='flex flex-col gap-2'>
             {queues.map((queue) => (
                 <li key={queue.key} className='flex items-baseline gap-3'>
-                    <span className='w-8 shrink-0 text-right font-mono text-[15px] text-text-primary'>
+                    <span className='w-8 shrink-0 text-right font-mono text-lead text-text-primary'>
                         {queue.count}
                     </span>
-                    <span className='font-display text-[13.5px] text-text-muted'>
-                        {queue.label}
-                    </span>
-                    <span className='font-mono text-[10.5px] text-text-faint'>{queue.detail}</span>
+                    <span className='font-display text-body text-text-muted'>{queue.label}</span>
+                    <span className='font-mono text-label text-text-faint'>{queue.detail}</span>
                 </li>
             ))}
         </ul>
@@ -106,7 +104,7 @@ export const ReconciliationEntry = ({
         <div className='flex flex-wrap gap-4'>
             {(Object.keys(CHOICES) as WindowKey[]).map((key) => (
                 <label key={key} className='flex flex-col gap-1'>
-                    <span className='font-mono text-[10.5px] uppercase tracking-[0.12em] text-text-faint'>
+                    <span className='font-mono text-label uppercase tracking-[0.12em] text-text-faint'>
                         {WINDOW_LABEL[key]}
                     </span>
                     <Select

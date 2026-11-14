@@ -42,7 +42,7 @@ export const NewProfileForm = ({ pending, onCreate, onCancel }: NewProfileFormPr
         >
             <div className='flex flex-wrap items-end gap-3'>
                 <label className='min-w-[160px] flex-1'>
-                    <span className='mb-1.5 block text-[11.5px]' style={{ color: '#9a8f81' }}>
+                    <span className='mb-1.5 block text-meta' style={{ color: '#9a8f81' }}>
                         Name
                     </span>
                     <input
@@ -59,7 +59,7 @@ export const NewProfileForm = ({ pending, onCreate, onCancel }: NewProfileFormPr
                     />
                 </label>
                 <label className='flex flex-col'>
-                    <span className='mb-1.5 block text-[11.5px]' style={{ color: '#9a8f81' }}>
+                    <span className='mb-1.5 block text-meta' style={{ color: '#9a8f81' }}>
                         Gradient
                     </span>
                     <span className='flex items-center gap-1.5'>

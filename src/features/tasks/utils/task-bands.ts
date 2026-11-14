@@ -134,7 +134,7 @@ export const BAND_TIER: Record<Exclude<TaskBand, 'hidden'>, BandTier> = {
         panelIndent: 'pl-[44px]'
     },
     soon: {
-        title: 'text-[15px] font-medium text-text-secondary',
+        title: 'text-lead font-medium text-text-secondary',
         meta: 'text-text-secondary-soft',
         padY: 'py-[9px]',
         controlBox: 'flex h-[20.625px] items-center',
@@ -143,7 +143,7 @@ export const BAND_TIER: Record<Exclude<TaskBand, 'hidden'>, BandTier> = {
         panelIndent: 'pl-[40px]'
     },
     whenever: {
-        title: 'text-[14px] font-normal text-text-secondary-soft',
+        title: 'text-body font-normal text-text-secondary-soft',
         meta: 'text-text-muted',
         padY: 'py-[8px]',
         controlBox: 'flex h-[19.25px] items-center',

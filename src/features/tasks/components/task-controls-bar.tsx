@@ -1,5 +1,5 @@
 import type { ProjectRead } from '@/api';
-import { POPOVER_PANEL_CLASS, popoverPanelStyle } from '@/components/ui/menu';
+import { POPOVER_MOTION_CLASS, POPOVER_PANEL_CLASS, popoverPanelStyle } from '@/components/ui/menu';
 import { Button } from '@/components/ui/buttons/button';
 import { fieldClass } from '@/components/ui/forms/field-tiers';
 import { Input } from '@/components/ui/forms/input';
@@ -51,8 +51,7 @@ const selectStyle = {
     borderColor: 'var(--surface-input-border)',
     colorScheme: 'dark' as const
 };
-const labelClass =
-    'font-mono text-[9.5px] font-semibold uppercase tracking-[0.12em] text-text-faint';
+const labelClass = 'font-mono text-label font-semibold uppercase tracking-[0.12em] text-text-faint';
 
 /** Mono caption + control, wrapped in a `<label>` so clicking the caption
  *  focuses the control. Only for controls where that's valid HTML — a
@@ -94,10 +93,10 @@ const filterGridClass = 'flex flex-col gap-3 p-2 sm:flex-row sm:items-start sm:g
 const filterButtonClass = `${fieldClass('compact')} flex items-center gap-1 hover:text-text-primary`;
 
 const checkboxRowClass =
-    'flex w-full cursor-pointer items-center gap-2 rounded-[6px] px-2 py-1.5 text-left font-display text-[13px] text-text-secondary hover:bg-white/5';
+    'flex w-full cursor-pointer items-center gap-2 rounded-[6px] px-2 py-1.5 text-left font-display text-body text-text-secondary hover:bg-white/5';
 
 const quickActionClass =
-    'font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-text-faint hover:text-text-secondary';
+    'font-mono text-label font-semibold uppercase tracking-[0.08em] text-text-faint hover:text-text-secondary';
 
 type CheckboxOption = { value: number; label: string; color?: string };
 
@@ -132,7 +131,7 @@ const CheckboxFilterList = ({
                     variant='subtle'
                     size='sm'
                     className={quickActionClass}
-                    style={{ fontSize: '10px' }}
+                    style={{ fontSize: '12px' }}
                     onClick={() => onChange([...allValues])}
                 >
                     All
@@ -141,7 +140,7 @@ const CheckboxFilterList = ({
                     variant='subtle'
                     size='sm'
                     className={quickActionClass}
-                    style={{ fontSize: '10px' }}
+                    style={{ fontSize: '12px' }}
                     onClick={() => onChange([])}
                 >
                     None
@@ -212,7 +211,7 @@ const DATE_PRESETS: { label: string; range: () => { dateFrom: string; dateTo: st
 ];
 
 const presetButtonClass =
-    'rounded-button border px-1.5 py-1 font-mono text-[10px] uppercase tracking-[0.06em] text-text-secondary transition-colors hover:text-text-primary';
+    'rounded-button border px-1.5 py-1 font-mono text-label uppercase tracking-[0.06em] text-text-secondary transition-colors hover:text-text-primary';
 
 type DateFilterFieldsProps = {
     controls: TaskControlsState;
@@ -291,7 +290,7 @@ const DateFilterFields = ({ controls, onChange }: DateFilterFieldsProps) => {
                         variant='subtle'
                         size='sm'
                         className={`${quickActionClass} self-start`}
-                        style={{ fontSize: '10px' }}
+                        style={{ fontSize: '12px' }}
                         onClick={() => onChange({ dateFrom: '', dateTo: '' })}
                     >
                         Clear range
@@ -339,11 +338,12 @@ export const TaskControlsBar = ({
                             <ChevronDown size={12} />
                         </PopoverButton>
                         <PopoverPanel
+                            transition
                             anchor='bottom start'
                             // One column on a phone; from `sm` the four categories run
                             // across so the panel fits on screen instead of running off
                             // the bottom of a 720px viewport.
-                            className={`${POPOVER_PANEL_CLASS} mt-1 w-64 sm:w-[680px] sm:max-w-[calc(100vw-2rem)]`}
+                            className={`${POPOVER_PANEL_CLASS} ${POPOVER_MOTION_CLASS} mt-1 w-64 sm:w-[680px] sm:max-w-[calc(100vw-2rem)]`}
                             style={popoverPanelStyle}
                         >
                             <div className={filterGridClass}>
@@ -465,7 +465,7 @@ export const TaskControlsBar = ({
                             size='sm'
                             onClick={() => onChange(DEFAULT_TASK_CONTROLS)}
                             className={quickActionClass}
-                            style={{ fontSize: '10px' }}
+                            style={{ fontSize: '12px' }}
                             title='Reset grouping, sort and filters to defaults'
                         >
                             Reset
@@ -503,7 +503,7 @@ export const TaskControlsBar = ({
                     {chips.map((chip) => (
                         <span
                             key={chip.key}
-                            className='inline-flex max-w-[240px] items-center gap-[6px] rounded-chip border py-[2px] pr-[6px] pl-[10px] text-[12px] text-text-secondary'
+                            className='inline-flex max-w-[240px] items-center gap-[6px] rounded-chip border py-[2px] pr-[6px] pl-[10px] text-meta text-text-secondary'
                             style={{ borderColor: 'var(--surface-input-border)' }}
                             title={chip.label}
                         >

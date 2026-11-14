@@ -19,10 +19,10 @@ export const AuthCardLayout = ({ subtitle, children }: AuthCardLayoutProps) => (
     >
         <div className='w-full max-w-[400px]'>
             <header className='mb-6 text-center'>
-                <h1 className='font-display text-[24px] font-bold text-text-primary'>
+                <h1 className='font-display text-title font-bold text-text-primary'>
                     Habit Tracker
                 </h1>
-                <p className='mt-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-text-muted'>
+                <p className='mt-1.5 font-mono text-label font-medium uppercase tracking-[0.14em] text-text-muted'>
                     {subtitle}
                 </p>
             </header>

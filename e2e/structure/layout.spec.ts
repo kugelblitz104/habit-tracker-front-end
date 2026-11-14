@@ -78,7 +78,7 @@ const HABIT_PANE_CARD = 'relative rounded-card border p-4';
 
 const SETTINGS_CARD = 'rounded-card border p-4 md:px-[22px] md:py-5';
 const CHART_CARD = 'rounded-card border p-4';
-const QUERY_STATE_ERROR_LINE = 'font-mono text-[12px] text-danger';
+const QUERY_STATE_ERROR_LINE = 'font-mono text-meta text-danger';
 
 /**
  * The centred content container: the app header's next element sibling inside the

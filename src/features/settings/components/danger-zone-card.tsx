@@ -75,7 +75,7 @@ const PROFILE_DELETES: ProfileDelete[] = [
 
 const outlineDangerButtonClass =
     'inline-flex min-h-[36px] items-center justify-center rounded-[9px] border px-[15px] py-[9px] ' +
-    'text-[13px] transition-colors pointer-coarse:min-h-[44px] hover:brightness-110 ' +
+    'text-body transition-colors pointer-coarse:min-h-[44px] hover:brightness-110 ' +
     'disabled:cursor-not-allowed disabled:opacity-50';
 
 const outlineDangerButtonStyle = {
@@ -83,7 +83,7 @@ const outlineDangerButtonStyle = {
     borderColor: 'var(--danger-border)'
 } as const;
 
-const scopeLabelClass = 'mb-2 text-[11px] font-semibold uppercase tracking-wide';
+const scopeLabelClass = 'mb-2 text-label font-semibold uppercase tracking-wide';
 
 /**
  * DANGER ZONE card. Every entity delete is profile-scoped and grouped under
@@ -192,7 +192,7 @@ export const DangerZoneCard = () => {
                                 'data across every profile.'
                         })
                     }
-                    className='inline-flex min-h-[36px] items-center justify-center rounded-[9px] px-[15px] py-[9px] text-[13px] font-semibold transition-opacity pointer-coarse:min-h-[44px] hover:opacity-90'
+                    className='inline-flex min-h-[36px] items-center justify-center rounded-[9px] px-[15px] py-[9px] text-body font-semibold transition-opacity pointer-coarse:min-h-[44px] hover:opacity-90'
                     style={{
                         backgroundColor: 'var(--color-danger-solid)',
                         color: 'var(--button-primary-text)'

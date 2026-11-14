@@ -23,22 +23,22 @@ export const ReconciliationSummary = ({ tally, onRestart }: ReconciliationSummar
             <h1 className='font-display text-[20px] text-text-primary'>Done</h1>
 
             {total === 0 ? (
-                <p className='max-w-prose font-display text-[13.5px] text-text-muted'>
+                <p className='max-w-prose font-display text-body text-text-muted'>
                     Nothing changed. Everything you looked at is marked as reviewed, so it will stay
                     out of the way until its window comes round again.
                 </p>
             ) : (
                 <>
-                    <p className='max-w-prose font-display text-[13.5px] text-text-muted'>
+                    <p className='max-w-prose font-display text-body text-text-muted'>
                         {total} {total === 1 ? 'decision' : 'decisions'} made.
                     </p>
                     <ul className='flex flex-col gap-2'>
                         {acted.map((entry) => (
                             <li key={entry.verb} className='flex items-baseline gap-3'>
-                                <span className='w-8 shrink-0 text-right font-mono text-[15px] text-text-primary'>
+                                <span className='w-8 shrink-0 text-right font-mono text-lead text-text-primary'>
                                     {entry.count}
                                 </span>
-                                <span className='font-display text-[13.5px] text-text-muted'>
+                                <span className='font-display text-body text-text-muted'>
                                     {entry.verb}
                                 </span>
                             </li>

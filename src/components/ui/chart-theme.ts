@@ -10,7 +10,7 @@ export const CHART_TOOLTIP_CONTENT_STYLE: CSSProperties = {
     backgroundColor: 'var(--bg)',
     border: '1px solid var(--surface-card-border)',
     borderRadius: 8,
-    fontSize: 11
+    fontSize: 12
 };
 
 export const CHART_TOOLTIP_LABEL_STYLE: CSSProperties = { color: 'var(--color-text-muted)' };

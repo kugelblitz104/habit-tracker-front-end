@@ -74,7 +74,7 @@ export const ConnectionForm = ({
         >
             <div className='grid grid-cols-1 gap-3 md:grid-cols-2'>
                 <label>
-                    <span className='mb-1.5 block text-[11.5px]' style={{ color: '#9a8f81' }}>
+                    <span className='mb-1.5 block text-meta' style={{ color: '#9a8f81' }}>
                         Name
                     </span>
                     <input
@@ -87,11 +87,11 @@ export const ConnectionForm = ({
                         style={themedInputStyle}
                     />
                     {touched && !nameValid && (
-                        <span className='mt-1 block text-[11px] text-danger'>Name is required</span>
+                        <span className='mt-1 block text-label text-danger'>Name is required</span>
                     )}
                 </label>
                 <label>
-                    <span className='mb-1.5 block text-[11.5px]' style={{ color: '#9a8f81' }}>
+                    <span className='mb-1.5 block text-meta' style={{ color: '#9a8f81' }}>
                         Provider (optional)
                     </span>
                     <input
@@ -104,7 +104,7 @@ export const ConnectionForm = ({
                     />
                 </label>
                 <label className='md:col-span-2'>
-                    <span className='mb-1.5 block text-[11.5px]' style={{ color: '#9a8f81' }}>
+                    <span className='mb-1.5 block text-meta' style={{ color: '#9a8f81' }}>
                         ICS URL
                     </span>
                     <input
@@ -112,11 +112,11 @@ export const ConnectionForm = ({
                         value={values.url}
                         onChange={(e) => set({ url: e.target.value })}
                         placeholder='https://…/calendar.ics'
-                        className={`${themedInputClass} font-mono text-[12.5px]`}
+                        className={`${themedInputClass} font-mono text-meta`}
                         style={themedInputStyle}
                     />
                     {touched && !urlValid && (
-                        <span className='mt-1 block text-[11px] text-danger'>
+                        <span className='mt-1 block text-label text-danger'>
                             Enter an http(s) or webcal:// URL
                         </span>
                     )}

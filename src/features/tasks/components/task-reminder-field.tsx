@@ -50,7 +50,7 @@ export const TaskReminderField = ({
                         role='radio'
                         aria-checked={selected}
                         onClick={() => onModeChange(option.mode)}
-                        className={`min-h-[28px] pointer-coarse:min-h-[44px] rounded-button border px-3 text-[12px] outline-none transition-colors focus-visible:ring-1 focus-visible:ring-now-accent ${
+                        className={`min-h-[28px] pointer-coarse:min-h-[44px] rounded-button border px-3 text-meta outline-none transition-colors ${
                             selected
                                 ? 'text-text-primary'
                                 : 'text-text-faint hover:text-text-secondary'

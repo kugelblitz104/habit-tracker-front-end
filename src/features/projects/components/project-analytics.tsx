@@ -18,9 +18,9 @@ import { computeProjectAnalytics, type ThroughputWeek } from '../utils/project-a
 const HIDE_KEY = 'project_hide_analytics';
 
 const sectionLabelClass =
-    'font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-text-muted';
+    'font-mono text-meta font-semibold uppercase tracking-[0.16em] text-text-muted';
 const tileLabelClass =
-    'font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-text-faint';
+    'font-mono text-label font-semibold uppercase tracking-[0.12em] text-text-faint';
 
 type Segment = { label: string; color: string; count: number };
 
@@ -32,7 +32,7 @@ const MixBlock = ({ title, segments }: { title: string; segments: Segment[] }) =
         <div>
             <div className='mb-2 flex items-baseline justify-between'>
                 <h3 className={tileLabelClass}>{title}</h3>
-                <span className='font-mono text-[11px] text-text-faint'>{total}</span>
+                <span className='font-mono text-label text-text-faint'>{total}</span>
             </div>
             <div className='flex h-2.5 w-full overflow-hidden rounded-full'>
                 {segments.map((s) => (
@@ -47,7 +47,7 @@ const MixBlock = ({ title, segments }: { title: string; segments: Segment[] }) =
                 {segments.map((s) => (
                     <span
                         key={s.label}
-                        className='flex items-center gap-1.5 font-mono text-[11px] text-text-muted'
+                        className='flex items-center gap-1.5 font-mono text-label text-text-muted'
                     >
                         <span
                             className='h-2 w-2 shrink-0 rounded-full'
@@ -68,12 +68,12 @@ const ThroughputChart = ({ weeks, color }: { weeks: ThroughputWeek[]; color: str
         <div>
             <div className='mb-2 flex items-baseline justify-between'>
                 <h3 className={tileLabelClass}>Throughput</h3>
-                <span className='font-mono text-[11px] text-text-faint'>
+                <span className='font-mono text-label text-text-faint'>
                     {totalDone} done · 8 wks
                 </span>
             </div>
             {totalDone === 0 ? (
-                <p className='font-mono text-[12px] text-text-faint'>
+                <p className='font-mono text-meta text-text-faint'>
                     No tasks completed in the last 8 weeks.
                 </p>
             ) : (
@@ -82,14 +82,14 @@ const ThroughputChart = ({ weeks, color }: { weeks: ThroughputWeek[]; color: str
                         <BarChart data={weeks} margin={{ top: 4, right: 4, bottom: 0, left: -22 }}>
                             <XAxis
                                 dataKey='label'
-                                tick={{ fontSize: 10, fill: 'var(--color-text-faint)' }}
+                                tick={{ fontSize: 12, fill: 'var(--color-text-faint)' }}
                                 axisLine={false}
                                 tickLine={false}
                             />
                             <YAxis
                                 allowDecimals={false}
                                 width={30}
-                                tick={{ fontSize: 10, fill: 'var(--color-text-faint)' }}
+                                tick={{ fontSize: 12, fill: 'var(--color-text-faint)' }}
                                 axisLine={false}
                                 tickLine={false}
                             />
@@ -172,7 +172,7 @@ export const ProjectAnalytics = ({
 
             {!collapsed &&
                 (!data.hasTaskData && data.total === 0 ? (
-                    <p className='mt-3 font-mono text-[12px] text-text-faint'>
+                    <p className='mt-3 font-mono text-meta text-text-faint'>
                         Add tasks to see analytics.
                     </p>
                 ) : (
@@ -185,7 +185,7 @@ export const ProjectAnalytics = ({
                                     <span className='font-display text-[28px] font-semibold leading-none text-text-primary'>
                                         {data.donePct}%
                                     </span>
-                                    <span className='font-mono text-[11px] text-text-muted'>
+                                    <span className='font-mono text-label text-text-muted'>
                                         {data.done} of {data.total} done
                                     </span>
                                 </div>
@@ -210,7 +210,7 @@ export const ProjectAnalytics = ({
                                     <span className='font-display text-[28px] font-semibold leading-none text-text-primary'>
                                         {formatHumanDuration(data.totalSeconds)}
                                     </span>
-                                    <span className='font-mono text-[11px] text-text-muted'>
+                                    <span className='font-mono text-label text-text-muted'>
                                         {data.entryCount}{' '}
                                         {data.entryCount === 1 ? 'entry' : 'entries'}
                                     </span>
@@ -221,7 +221,7 @@ export const ProjectAnalytics = ({
                                             {data.topTasksByTime.slice(0, 3).map((t) => (
                                                 <li
                                                     key={t.taskId}
-                                                    className='flex items-center justify-between gap-2 font-mono text-[11px] text-text-muted'
+                                                    className='flex items-center justify-between gap-2 font-mono text-label text-text-muted'
                                                 >
                                                     <span className='truncate'>{t.title}</span>
                                                     <span className='shrink-0 tabular-nums text-text-faint'>
@@ -230,7 +230,7 @@ export const ProjectAnalytics = ({
                                                 </li>
                                             ))}
                                         </ul>
-                                        <p className='mt-1.5 font-mono text-[10px] text-text-faint'>
+                                        <p className='mt-1.5 font-mono text-label text-text-faint'>
                                             This project&apos;s own tasks; subtask time is included
                                             above but not broken out here.
                                         </p>

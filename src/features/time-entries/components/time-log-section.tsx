@@ -32,29 +32,29 @@ type VariantConfig = {
 const TIME_LOG_VARIANTS: Record<TimeLogVariant, VariantConfig> = {
     task: {
         titleAs: 'h3',
-        titleClassName: 'font-mono text-[11px] uppercase tracking-[0.14em] text-text-faint',
+        titleClassName: 'font-mono text-label uppercase tracking-[0.14em] text-text-faint',
         headerClassName: 'mb-2 flex items-center justify-between',
-        summaryClassName: 'font-mono text-[11px] text-text-faint',
-        messageClass: 'font-mono text-[11.5px]',
+        summaryClassName: 'font-mono text-label text-text-faint',
+        messageClass: 'font-mono text-meta',
         card: false
     },
     project: {
         className: 'mt-[30px]',
         titleAs: 'h2',
         titleClassName:
-            'font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-text-muted',
+            'font-mono text-meta font-semibold uppercase tracking-[0.16em] text-text-muted',
         headerClassName: 'mb-2.5 flex items-center justify-between',
-        summaryClassName: 'font-mono text-[11px] text-text-faint',
-        messageClass: 'font-mono text-[12px]',
+        summaryClassName: 'font-mono text-label text-text-faint',
+        messageClass: 'font-mono text-meta',
         card: true
     },
     recent: {
         className: 'mt-8',
         titleAs: 'h2',
-        titleClassName: 'font-mono text-[11.5px] uppercase tracking-[0.16em] text-text-muted',
+        titleClassName: 'font-mono text-meta uppercase tracking-[0.16em] text-text-muted',
         headerClassName: 'mb-3 flex items-center justify-between',
-        summaryClassName: 'font-mono text-[11.5px] text-text-faint',
-        messageClass: 'font-mono text-[12px]',
+        summaryClassName: 'font-mono text-meta text-text-faint',
+        messageClass: 'font-mono text-meta',
         card: true
     }
 };

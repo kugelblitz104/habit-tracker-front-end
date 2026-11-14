@@ -101,7 +101,7 @@ export const ChangePasswordCard = () => {
                             {field.error && (
                                 <span
                                     id={`password-${field.name}-error`}
-                                    className='mt-1 block text-[11px] text-danger'
+                                    className='mt-1 block text-label text-danger'
                                 >
                                     {field.error.message}
                                 </span>
@@ -113,7 +113,7 @@ export const ChangePasswordCard = () => {
                     {isSubmitting ? 'Changing...' : 'Change password'}
                 </Button>
             </form>
-            <p className='mt-3 font-mono text-[11px] text-text-faint'>
+            <p className='mt-3 font-mono text-label text-text-faint'>
                 Changing your password signs you out so you can log back in with it.
             </p>
         </SettingsCard>

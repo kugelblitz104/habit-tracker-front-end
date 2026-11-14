@@ -12,8 +12,8 @@ type QueryStateProps = {
 };
 
 const SIZE_CLASS: Record<QueryStateSize, string> = {
-    md: 'font-mono text-[12px]',
-    sm: 'font-mono text-[11px]'
+    md: 'font-mono text-meta',
+    sm: 'font-mono text-label'
 };
 
 /**

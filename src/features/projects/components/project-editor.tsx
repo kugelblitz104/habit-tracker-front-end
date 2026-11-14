@@ -59,7 +59,7 @@ export const ProjectEditor = ({
             {/* Header row OUTSIDE the card (mirrors HabitEditor): mono uppercase
                 micro-label + an X that bails out without saving. */}
             <div className='mb-1 flex items-center justify-between'>
-                <h2 className='font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-text-muted'>
+                <h2 className='font-mono text-meta font-semibold uppercase tracking-[0.16em] text-text-muted'>
                     Edit project
                 </h2>
                 <button
@@ -82,7 +82,7 @@ export const ProjectEditor = ({
                                 <button
                                     type='button'
                                     onClick={onDelete}
-                                    className='inline-flex min-h-[28px] items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11.5px] transition-colors pointer-coarse:min-h-[44px] hover:brightness-125'
+                                    className='inline-flex min-h-[28px] items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-meta transition-colors pointer-coarse:min-h-[44px] hover:brightness-125'
                                     style={{
                                         borderColor: 'var(--danger-border)',
                                         color: 'var(--color-danger)'
@@ -98,14 +98,14 @@ export const ProjectEditor = ({
                                 <button
                                     type='button'
                                     onClick={onCancel}
-                                    className='min-h-[28px] rounded-button px-3 py-1.5 font-display text-[12px] text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary'
+                                    className='min-h-[28px] rounded-button px-3 py-1.5 font-display text-meta text-text-muted transition-colors pointer-coarse:min-h-[44px] hover:text-text-secondary'
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type='submit'
                                     disabled={isSaving}
-                                    className='min-h-[28px] rounded-button px-3 py-1.5 font-display text-[12px] font-semibold transition-opacity pointer-coarse:min-h-[44px] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50'
+                                    className='min-h-[28px] rounded-button px-3 py-1.5 font-display text-meta font-semibold transition-opacity pointer-coarse:min-h-[44px] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50'
                                     style={{
                                         background: 'var(--button-primary-gradient)',
                                         color: 'var(--button-primary-text)'

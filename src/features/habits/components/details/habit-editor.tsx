@@ -79,7 +79,7 @@ export const HabitEditor = ({
             {/* Header row OUTSIDE the card, mirroring the task pane's PaneHeader:
                 mono uppercase micro-label + an X that bails out without saving. */}
             <div className='mb-1 flex items-center justify-between'>
-                <h2 className='font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-text-muted'>
+                <h2 className='font-mono text-meta font-semibold uppercase tracking-[0.16em] text-text-muted'>
                     Edit habit
                 </h2>
                 <button
@@ -102,7 +102,7 @@ export const HabitEditor = ({
                                 <button
                                     type='button'
                                     onClick={onDelete}
-                                    className='inline-flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-[11.5px] transition-colors hover:brightness-125'
+                                    className='inline-flex items-center gap-1.5 rounded-button border px-2.5 py-1.5 font-mono text-meta transition-colors hover:brightness-125'
                                     style={{
                                         borderColor: 'var(--danger-border)',
                                         color: 'var(--color-danger)'
@@ -118,14 +118,14 @@ export const HabitEditor = ({
                                 <button
                                     type='button'
                                     onClick={onCancel}
-                                    className='rounded-button px-3 py-1.5 font-display text-[12px] text-text-muted transition-colors hover:text-text-secondary'
+                                    className='rounded-button px-3 py-1.5 font-display text-meta text-text-muted transition-colors hover:text-text-secondary'
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type='submit'
                                     disabled={isSaving}
-                                    className='rounded-button px-3 py-1.5 font-display text-[12px] font-semibold transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50'
+                                    className='rounded-button px-3 py-1.5 font-display text-meta font-semibold transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50'
                                     style={{
                                         background: 'var(--button-primary-gradient)',
                                         color: 'var(--button-primary-text)'

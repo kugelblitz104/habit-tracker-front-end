@@ -54,7 +54,7 @@ export const NoteDialog = ({ isOpen, date, note, onClose, onSave }: NoteDialogPr
                         <Label className='sr-only'>Note</Label>
                         <Textarea
                             {...methods.register('note', validationPatterns.notes)}
-                            className='h-32 w-full resize-none rounded-button border p-2.5 font-mono text-[12px] text-text-secondary outline-none transition-colors placeholder:text-text-faint focus-visible:ring-1 focus-visible:ring-[var(--color-habit-accent)]'
+                            className='h-32 w-full resize-none rounded-button border p-2.5 font-mono text-meta text-text-secondary outline-none transition-colors placeholder:text-text-faint'
                             style={{
                                 backgroundColor: 'var(--surface-input-bg)',
                                 borderColor: errors.note
@@ -65,7 +65,7 @@ export const NoteDialog = ({ isOpen, date, note, onClose, onSave }: NoteDialogPr
                             wrap='soft'
                         />
                         {errors.note && (
-                            <span className='mt-1 block font-mono text-[11px] text-danger'>
+                            <span className='mt-1 block font-mono text-label text-danger'>
                                 {errors.note.message as string}
                             </span>
                         )}
@@ -74,7 +74,7 @@ export const NoteDialog = ({ isOpen, date, note, onClose, onSave }: NoteDialogPr
                         <button
                             type='button'
                             onClick={onClose}
-                            className='inline-flex items-center gap-1.5 rounded-button px-3 py-1.5 font-mono text-[11.5px] text-text-muted transition-colors hover:text-text-secondary'
+                            className='inline-flex items-center gap-1.5 rounded-button px-3 py-1.5 font-mono text-meta text-text-muted transition-colors hover:text-text-secondary'
                         >
                             <X size={13} />
                             Cancel
@@ -82,7 +82,7 @@ export const NoteDialog = ({ isOpen, date, note, onClose, onSave }: NoteDialogPr
                         <button
                             type='button'
                             onClick={methods.handleSubmit(onSubmit)}
-                            className='inline-flex items-center gap-1.5 rounded-button px-3.5 py-1.5 font-mono text-[11.5px] font-semibold transition-opacity hover:opacity-90'
+                            className='inline-flex items-center gap-1.5 rounded-button px-3.5 py-1.5 font-mono text-meta font-semibold transition-opacity hover:opacity-90'
                             style={{
                                 backgroundColor: 'var(--color-habit-accent)',
                                 color: 'var(--bg)'

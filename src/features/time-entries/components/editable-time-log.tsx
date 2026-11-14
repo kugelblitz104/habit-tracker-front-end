@@ -63,7 +63,7 @@ type Group = {
 };
 
 const fieldLabelClass =
-    'w-16 shrink-0 font-mono text-[10px] uppercase tracking-[0.1em] text-text-faint';
+    'w-16 shrink-0 font-mono text-label uppercase tracking-[0.1em] text-text-faint';
 
 /**
  * Small secondary "pip" naming the project a row/group belongs to — bold text
@@ -227,7 +227,7 @@ const EntryEditor = ({ entry }: { entry: TimeEntryRead }) => {
                                 type='button'
                                 onClick={() => setTargetType(option.type)}
                                 aria-pressed={selected}
-                                className='min-h-[24px] rounded-chip px-2.5 py-0.5 font-mono text-[10.5px] uppercase tracking-[0.08em] transition-colors pointer-coarse:min-h-[44px]'
+                                className='min-h-[24px] rounded-chip px-2.5 py-0.5 font-mono text-label uppercase tracking-[0.08em] transition-colors pointer-coarse:min-h-[44px]'
                                 style={{
                                     backgroundColor: selected
                                         ? 'rgba(255,255,255,.06)'
@@ -308,7 +308,7 @@ const EntryEditor = ({ entry }: { entry: TimeEntryRead }) => {
                             className={`${inputClass} w-20`}
                             style={inputStyle}
                         />
-                        <span className='font-mono text-[11px] text-text-faint'>min</span>
+                        <span className='font-mono text-label text-text-faint'>min</span>
                     </label>
                 )}
             </div>
@@ -357,17 +357,17 @@ const EntryRow = ({
                 className='flex w-full items-center gap-2 text-left pointer-coarse:min-h-[44px]'
             >
                 <div className='min-w-0 flex-1'>
-                    <div className='truncate font-display text-[13px] text-text-secondary'>
+                    <div className='truncate font-display text-body text-text-secondary'>
                         {primary ?? dateTime}
                     </div>
                     {(primary || project) && (
-                        <div className='mt-0.5 flex items-center gap-1.5 font-mono text-[11px] text-text-faint'>
+                        <div className='mt-0.5 flex items-center gap-1.5 font-mono text-label text-text-faint'>
                             {primary && <span>{dateTime}</span>}
                             <ProjectPip project={project} />
                         </div>
                     )}
                 </div>
-                <span className='shrink-0 font-mono text-[11.5px] tabular-nums text-text-secondary'>
+                <span className='shrink-0 font-mono text-meta tabular-nums text-text-secondary'>
                     {duration}
                 </span>
             </button>
@@ -482,16 +482,16 @@ export const EditableTimeLog = ({
                             className='flex w-full items-center gap-2 text-left pointer-coarse:min-h-[44px]'
                         >
                             <span
-                                className='inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-chip px-1 font-mono text-[10.5px] text-text-secondary'
+                                className='inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-chip px-1 font-mono text-label text-text-secondary'
                                 style={{ backgroundColor: 'rgba(255,255,255,.06)' }}
                             >
                                 {group.entries.length}
                             </span>
                             <div className='min-w-0 flex-1'>
-                                <div className='truncate font-display text-[13px] text-text-secondary'>
+                                <div className='truncate font-display text-body text-text-secondary'>
                                     {heading}
                                 </div>
-                                <div className='mt-0.5 flex items-center gap-1.5 font-mono text-[11px] text-text-faint'>
+                                <div className='mt-0.5 flex items-center gap-1.5 font-mono text-label text-text-faint'>
                                     <span>
                                         {group.primary
                                             ? `${formatDate(first.started_at)} · entries`
@@ -506,7 +506,7 @@ export const EditableTimeLog = ({
                                     />
                                 </div>
                             </div>
-                            <span className='shrink-0 font-mono text-[11.5px] tabular-nums text-text-secondary'>
+                            <span className='shrink-0 font-mono text-meta tabular-nums text-text-secondary'>
                                 {formatHumanDuration(group.totalSeconds)}
                             </span>
                         </button>

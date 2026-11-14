@@ -148,11 +148,11 @@ export const ConnectionsCard = ({ profile }: ConnectionsCardProps) => {
                             />
                             <div className='min-w-0 flex-1'>
                                 <div className='truncate'>
-                                    <span className='text-[14px] text-text-secondary'>
+                                    <span className='text-body text-text-secondary'>
                                         {connection.name}
                                     </span>
                                     {connection.provider && (
-                                        <span className='font-mono text-[11px] text-text-muted'>
+                                        <span className='font-mono text-label text-text-muted'>
                                             {' '}
                                             · {connection.provider}
                                         </span>
