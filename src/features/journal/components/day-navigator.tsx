@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/buttons/button';
 import { fieldClass, fieldStyle } from '@/components/ui/forms/field-tiers';
 import { isValidDay, parseLocalDate, relativeDayLabel, shiftDay } from '@/lib/date-utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 
 type DayNavigatorProps = {
     /** The day on screen, `YYYY-MM-DD`. */
@@ -42,6 +42,25 @@ export const DayNavigator = ({ date, today, onNavigate, children }: DayNavigator
     // A hand-edited `?date=` can sit in the future; forward still stops there.
     const atOrPastToday = date >= today;
 
+    // ← / → step a day, except while typing or on a radio chip (arrows move between chips there).
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+            const target = e.target as HTMLElement;
+            if (
+                target.isContentEditable ||
+                ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)
+            )
+                return;
+            if (e.key === 'ArrowLeft') onNavigate(shiftDay(date, -1));
+            else if (e.key === 'ArrowRight' && !atOrPastToday) onNavigate(shiftDay(date, 1));
+            else return;
+            e.preventDefault();
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [date, atOrPastToday, onNavigate]);
+
     return (
         <header className='mb-[26px] flex flex-wrap items-end justify-between gap-3'>
             <div className='min-w-0'>
@@ -56,7 +75,8 @@ export const DayNavigator = ({ date, today, onNavigate, children }: DayNavigator
                     variant='icon'
                     onClick={() => onNavigate(shiftDay(date, -1))}
                     aria-label='Previous day'
-                    title='Previous day'
+                    aria-keyshortcuts='ArrowLeft'
+                    title='Previous day (←)'
                 >
                     <ChevronLeft size={16} />
                 </Button>
@@ -79,7 +99,8 @@ export const DayNavigator = ({ date, today, onNavigate, children }: DayNavigator
                     onClick={() => onNavigate(shiftDay(date, 1))}
                     disabled={atOrPastToday}
                     aria-label='Next day'
-                    title={atOrPastToday ? 'Today is the latest day' : 'Next day'}
+                    aria-keyshortcuts='ArrowRight'
+                    title={atOrPastToday ? 'Today is the latest day' : 'Next day (→)'}
                 >
                     <ChevronRight size={16} />
                 </Button>
