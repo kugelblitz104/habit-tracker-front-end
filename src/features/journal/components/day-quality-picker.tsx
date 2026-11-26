@@ -91,15 +91,15 @@ export const DayQualityPicker = memo(function DayQualityPicker({
                 )}
             </div>
 
-            <div className='flex flex-col gap-2.5'>
+            <div className='flex flex-col gap-2.5 sm:grid sm:grid-cols-[max-content_1fr] sm:gap-x-3'>
                 {DAY_QUALITY_GROUPS.map((group) => (
                     // Below `sm` the group label sits on its own line above its
                     // chips: inline, it left a narrow column that wrapped the
                     // thirteen words into a ragged block beside it.
-                    <div key={group.key} className='flex flex-col gap-1 sm:flex-row sm:items-start'>
+                    <div key={group.key} className='flex flex-col gap-1 sm:contents'>
                         <span
                             aria-hidden='true'
-                            className='shrink-0 font-mono text-label uppercase tracking-[0.12em] sm:w-[58px] sm:pt-2.5'
+                            className='shrink-0 font-mono text-label uppercase tracking-[0.12em] sm:pt-2.5'
                             style={{ color: group.color, opacity: 0.75 }}
                         >
                             {group.label}

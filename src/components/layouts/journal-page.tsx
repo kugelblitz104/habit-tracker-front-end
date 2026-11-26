@@ -2,6 +2,7 @@ import { PageShell } from '@/components/layouts/page-shell';
 import { Button } from '@/components/ui/buttons/button';
 import { QueryState } from '@/components/ui/query-state';
 import { CARD_SURFACE_CLASS, CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
+import { useJournalEntries } from '@/features/journal/api/get-journal-entries';
 import { useJournalEntry } from '@/features/journal/api/get-journal-entry';
 import { useUpsertJournalEntry } from '@/features/journal/api/upsert-journal-entry';
 import { DayCompletedTasks } from '@/features/journal/components/day-completed-tasks';
@@ -12,13 +13,14 @@ import { DayNavigator } from '@/features/journal/components/day-navigator';
 import { DayQualityPicker } from '@/features/journal/components/day-quality-picker';
 import { DayTimeLog } from '@/features/journal/components/day-time-log';
 import { JournalEditor } from '@/features/journal/components/journal-editor';
+import { firstUnwrittenDay } from '@/features/journal/utils/first-unwritten-day';
 import { TaskDetailPane } from '@/features/tasks/components/task-detail-pane';
 import { useTaskDetailPane } from '@/features/tasks/hooks/use-task-detail-pane';
 import { apiErrorMessage } from '@/lib/api-error-message';
 import { useAuth } from '@/lib/auth-context';
-import { isValidDay, toLocalDateString } from '@/lib/date-utils';
+import { isValidDay, parseLocalDate, shiftDay, toLocalDateString } from '@/lib/date-utils';
 import { useNow } from '@/lib/use-now';
-import { Bell } from 'lucide-react';
+import { Bell, SkipForward } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Navigate, useSearchParams } from 'react-router';
 import { toast } from 'react-toastify';
@@ -28,6 +30,9 @@ const GRATITUDE_PROMPT = "Something you're grateful for?";
 /** Asked when the profile has set no prompt of its own. There is exactly one
  *  question per box, so this is a heading and never a placeholder. */
 const DEFAULT_BODY_PROMPT = 'How did today go?';
+
+/** How far back the catch-up button looks for the last written day. */
+const CATCH_UP_LOOKBACK_DAYS = 60;
 
 /** How long "Saved" stays on screen after a successful save. */
 const SAVED_NOTICE_MS = 5_000;
@@ -83,6 +88,12 @@ export const JournalDayPage = () => {
     const date = isValidDay(requested) ? requested! : today;
 
     const entryQuery = useJournalEntry({ profileId: activeProfileId, date });
+    const recentQuery = useJournalEntries({
+        profileId: activeProfileId,
+        fromDate: shiftDay(today, -(CATCH_UP_LOOKBACK_DAYS - 1)),
+        toDate: today
+    });
+    const catchUpDay = firstUnwrittenDay(recentQuery.data?.entries ?? [], today);
     // A 404 is an unwritten day, not an error: the API layer resolves it to
     // null and the editors render empty.
     const entry = entryQuery.data ?? null;
@@ -233,6 +244,23 @@ export const JournalDayPage = () => {
                 the entry beside the task rather than a band of empty page. */}
             <div className={showPane ? 'w-full' : 'mx-auto w-full max-w-[760px]'}>
                 <DayNavigator date={date} today={today} onNavigate={goToDay}>
+                    {catchUpDay && (
+                        <Button
+                            variant='icon'
+                            onClick={() => goToDay(catchUpDay)}
+                            disabled={catchUpDay === date}
+                            title={`Go to the first unwritten day, ${parseLocalDate(
+                                catchUpDay
+                            ).toLocaleDateString(undefined, {
+                                weekday: 'long',
+                                month: 'short',
+                                day: 'numeric'
+                            })}`}
+                        >
+                            <SkipForward size={14} />
+                            <span>Catch up</span>
+                        </Button>
+                    )}
                     {canAskForNotifications && (
                         <Button
                             variant='icon'

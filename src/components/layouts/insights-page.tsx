@@ -2,6 +2,7 @@ import { AppHeader } from '@/components/layouts/app-header';
 import { CARD_SURFACE_STYLE } from '@/components/ui/surface-styles';
 import { HabitPerformanceChart } from '@/features/insights/components/habit-performance-chart';
 import { InsightsSkeleton } from '@/features/insights/components/insights-skeleton';
+import { MoodHeatmap } from '@/features/insights/components/mood-heatmap';
 import { InsightsSummaryCards } from '@/features/insights/components/insights-summary-cards';
 import { RangeToggle } from '@/features/insights/components/range-toggle';
 import { TaskThroughputChart } from '@/features/insights/components/task-throughput-chart';
@@ -73,6 +74,12 @@ export const InsightsPage = () => {
                 ) : (
                     <div className='flex flex-col gap-5'>
                         <InsightsSummaryCards data={data} />
+                        {activeProfile?.journal_enabled !== false && (
+                            <MoodHeatmap
+                                profileId={activeProfile?.id}
+                                weekStartMonday={activeProfile?.week_start_monday ?? true}
+                            />
+                        )}
                         <div className='grid gap-4 lg:grid-cols-2'>
                             <TaskThroughputChart
                                 buckets={data.buckets}
